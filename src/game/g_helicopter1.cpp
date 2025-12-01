@@ -1146,7 +1146,7 @@ void __cdecl HELI_CmdScale(char *move, float *outFracs)
       *outFracs = (float)((float)max / total) * *outFracs;
       outFracs[1] = (float)((float)max / total) * outFracs[1];
     }
-    if ( vehHelicopterStrafeDeadzone->current.value > COERCE_FLOAT((unsigned int)outFracs[1] & _mask__AbsFloat_) )
+    if ( vehHelicopterStrafeDeadzone->current.value > fabs((unsigned int)outFracs[1]) )
       outFracs[1] = 0.0f;
     if ( vehHelicopterScaleMovement->current.enabled )
     {
@@ -1178,10 +1178,10 @@ void __cdecl HELI_CmdScale(char *move, float *outFracs)
         outFracs[1] = outFracs[1] * (float)(1.0 - (float)(absAxis - absAxis_4));
     }
   }
-  if ( vehHelicopterRightStickDeadzone->current.value > COERCE_FLOAT((unsigned int)outFracs[2] & _mask__AbsFloat_) )
+  if ( vehHelicopterRightStickDeadzone->current.value > fabs((unsigned int)outFracs[2]) )
     outFracs[2] = 0.0f;
   if ( !vehHelicopterAlwaysFaceCamera->current.enabled
-    && vehHelicopterRightStickDeadzone->current.value > COERCE_FLOAT((unsigned int)outFracs[3] & _mask__AbsFloat_) )
+    && vehHelicopterRightStickDeadzone->current.value > fabs((unsigned int)outFracs[3]) )
   {
     outFracs[3] = 0.0f;
   }

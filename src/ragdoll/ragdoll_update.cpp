@@ -1568,9 +1568,9 @@ char  Ragdoll_TunnelTest@<al>(cStaticModel_s *a1@<ebp>, RagdollBody *body)
       *v3 = v11;
       v3[1] = v12;
       v3[2] = v13;
-      if ( COERCE_FLOAT(**(unsigned int **)LODWORD(last_position.w) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(*(unsigned int *)(*(unsigned int *)LODWORD(last_position.w) + 4) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(*(unsigned int *)(*(unsigned int *)LODWORD(last_position.w) + 8) & _mask__AbsFloat_) > 100000.0 )
+      if ( fabs(**(unsigned int **)LODWORD(last_position.w)) > 100000.0
+        || fabs(*(unsigned int *)(*(unsigned int *)LODWORD(last_position.w) + 4)) > 100000.0
+        || fabs(*(unsigned int *)(*(unsigned int *)LODWORD(last_position.w) + 8)) > 100000.0 )
       {
         phys_exec_debug_callback(*(void **)LODWORD(last_position.w));
       }

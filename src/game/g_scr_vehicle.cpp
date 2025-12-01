@@ -3543,9 +3543,9 @@ void  VEH_Teleport(NitrousVehicle *a1@<ebp>, gentity_s *pSelf, float *origin, fl
       z = physNewOrigin.z;
       y = physNewOrigin.y;
       phys_vec3::operator=((phys_vec3 *)(LODWORD(newAxis[2][0]) + 48), (const phys_vec3 *)&w);
-      if ( COERCE_FLOAT(*(unsigned int *)(LODWORD(newAxis[2][0]) + 48) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(*(unsigned int *)(LODWORD(newAxis[2][0]) + 52) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(*(unsigned int *)(LODWORD(newAxis[2][0]) + 56) & _mask__AbsFloat_) > 100000.0 )
+      if ( fabs(*(unsigned int *)(LODWORD(newAxis[2][0]) + 48)) > 100000.0
+        || fabs(*(unsigned int *)(LODWORD(newAxis[2][0]) + 52)) > 100000.0
+        || fabs(*(unsigned int *)(LODWORD(newAxis[2][0]) + 56)) > 100000.0 )
       {
         phys_exec_debug_callback(0);
       }
@@ -3553,9 +3553,9 @@ void  VEH_Teleport(NitrousVehicle *a1@<ebp>, gentity_s *pSelf, float *origin, fl
       *v12 = w;
       v12[1] = z;
       v12[2] = y;
-      if ( COERCE_FLOAT(***(unsigned int ***)(LODWORD(newAxis[2][2]) + 560) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(*(unsigned int *)(**(unsigned int **)(LODWORD(newAxis[2][2]) + 560) + 4) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(*(unsigned int *)(**(unsigned int **)(LODWORD(newAxis[2][2]) + 560) + 8) & _mask__AbsFloat_) > 100000.0 )
+      if ( fabs(***(unsigned int ***)(LODWORD(newAxis[2][2]) + 560)) > 100000.0
+        || fabs(*(unsigned int *)(**(unsigned int **)(LODWORD(newAxis[2][2]) + 560) + 4)) > 100000.0
+        || fabs(*(unsigned int *)(**(unsigned int **)(LODWORD(newAxis[2][2]) + 560) + 8)) > 100000.0 )
       {
         phys_exec_debug_callback(**(void ***)(LODWORD(newAxis[2][2]) + 560));
       }
@@ -7290,7 +7290,7 @@ void __cdecl VEH_CheckVerticalVelocityToGoal(scr_vehicle_s *veh, float verticalD
   float verticalSpeed; // [esp+28h] [ebp-4h]
 
   verticalSpeed = veh->phys.vel[2];
-  if ( COERCE_FLOAT((unsigned int)accelVec[2] & _mask__AbsFloat_) >= 0.001
+  if ( fabs((unsigned int)accelVec[2]) >= 0.001
     && fabs(verticalSpeed) >= 0.001
     && (float)(verticalSpeed * accelVec[2]) < 0.0
     && (float)(verticalDist * verticalSpeed) > 0.0 )

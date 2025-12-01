@@ -4034,10 +4034,10 @@ bool __cdecl is_inside(const float *a, const float *b, const float *n, const flo
   int i1; // [esp+58h] [ebp-8h]
   float denom; // [esp+5Ch] [ebp-4h]
 
-  if ( COERCE_FLOAT(*(unsigned int *)n & _mask__AbsFloat_) <= COERCE_FLOAT((unsigned int)n[1] & _mask__AbsFloat_) )
+  if ( fabs(*(unsigned int *)n) <= fabs((unsigned int)n[1]) )
   {
     i1 = 0;
-    if ( COERCE_FLOAT((unsigned int)n[1] & _mask__AbsFloat_) <= COERCE_FLOAT((unsigned int)n[2] & _mask__AbsFloat_) )
+    if ( fabs((unsigned int)n[1]) <= fabs((unsigned int)n[2]) )
       v9 = 1;
     else
       v9 = 2;
@@ -4046,7 +4046,7 @@ bool __cdecl is_inside(const float *a, const float *b, const float *n, const flo
   else
   {
     i1 = 1;
-    if ( COERCE_FLOAT(*(unsigned int *)n & _mask__AbsFloat_) <= COERCE_FLOAT((unsigned int)n[2] & _mask__AbsFloat_) )
+    if ( fabs(*(unsigned int *)n) <= fabs((unsigned int)n[2]) )
       v10 = 0;
     else
       v10 = 2;

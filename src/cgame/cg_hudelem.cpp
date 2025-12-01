@@ -471,20 +471,20 @@ char __cdecl WorldPosToScreenPos(int localClientNum, const float *worldPos, floa
   {
     *(unsigned int *)outScreenPos = LODWORD(projections[1]) ^ _mask__NegFloat_;
     *((unsigned int *)outScreenPos + 1) = LODWORD(projections[2]) ^ _mask__NegFloat_;
-    if ( COERCE_FLOAT(*(unsigned int *)outScreenPos & _mask__AbsFloat_) >= 0.001
-      || COERCE_FLOAT((unsigned int)outScreenPos[1] & _mask__AbsFloat_) >= 0.001 )
+    if ( fabs(*(unsigned int *)outScreenPos) >= 0.001
+      || fabs((unsigned int)outScreenPos[1]) >= 0.001 )
     {
-      if ( COERCE_FLOAT(*(unsigned int *)outScreenPos & _mask__AbsFloat_) < 0.001 )
+      if ( fabs(*(unsigned int *)outScreenPos) < 0.001 )
         *outScreenPos = 0.001f;
-      if ( COERCE_FLOAT((unsigned int)outScreenPos[1] & _mask__AbsFloat_) < 0.001 )
+      if ( fabs((unsigned int)outScreenPos[1]) < 0.001 )
         outScreenPos[1] = 0.001f;
-      while ( scrPlace->realViewportSize[0] > COERCE_FLOAT(*(unsigned int *)outScreenPos & _mask__AbsFloat_) )
+      while ( scrPlace->realViewportSize[0] > fabs(*(unsigned int *)outScreenPos) )
       {
         v5 = scrPlace->realViewportSize[0];
         *outScreenPos = v5 * *outScreenPos;
         outScreenPos[1] = v5 * outScreenPos[1];
       }
-      while ( scrPlace->realViewportSize[1] > COERCE_FLOAT((unsigned int)outScreenPos[1] & _mask__AbsFloat_) )
+      while ( scrPlace->realViewportSize[1] > fabs((unsigned int)outScreenPos[1]) )
       {
         v4 = scrPlace->realViewportSize[1];
         *outScreenPos = v4 * *outScreenPos;
@@ -554,20 +554,20 @@ char __cdecl WorldPosToExtraCamScreenPos(int localClientNum, const float *worldP
   {
     *(unsigned int *)outScreenPos = LODWORD(projections[1]) ^ _mask__NegFloat_;
     *((unsigned int *)outScreenPos + 1) = LODWORD(projections[2]) ^ _mask__NegFloat_;
-    if ( COERCE_FLOAT(*(unsigned int *)outScreenPos & _mask__AbsFloat_) >= 0.001
-      || COERCE_FLOAT((unsigned int)outScreenPos[1] & _mask__AbsFloat_) >= 0.001 )
+    if ( fabs(*(unsigned int *)outScreenPos) >= 0.001
+      || fabs((unsigned int)outScreenPos[1]) >= 0.001 )
     {
-      if ( COERCE_FLOAT(*(unsigned int *)outScreenPos & _mask__AbsFloat_) < 0.001 )
+      if ( fabs(*(unsigned int *)outScreenPos) < 0.001 )
         *outScreenPos = 0.001f;
-      if ( COERCE_FLOAT((unsigned int)outScreenPos[1] & _mask__AbsFloat_) < 0.001 )
+      if ( fabs((unsigned int)outScreenPos[1]) < 0.001 )
         outScreenPos[1] = 0.001f;
-      while ( scrPlace->realViewportSize[0] > COERCE_FLOAT(*(unsigned int *)outScreenPos & _mask__AbsFloat_) )
+      while ( scrPlace->realViewportSize[0] > fabs(*(unsigned int *)outScreenPos) )
       {
         v5 = scrPlace->realViewportSize[0];
         *outScreenPos = v5 * *outScreenPos;
         outScreenPos[1] = v5 * outScreenPos[1];
       }
-      while ( scrPlace->realViewportSize[1] > COERCE_FLOAT((unsigned int)outScreenPos[1] & _mask__AbsFloat_) )
+      while ( scrPlace->realViewportSize[1] > fabs((unsigned int)outScreenPos[1]) )
       {
         v4 = scrPlace->realViewportSize[1];
         *outScreenPos = v4 * *outScreenPos;

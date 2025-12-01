@@ -1677,7 +1677,7 @@ void  Phys_ObjSetPosition(int a1@<ebp>, int id, float *newPosition)
   if ( fabs(v12->body->m_mat.w.x) > 100000.0
     || fabs(v12->body->m_mat.w.y) > 100000.0
     || (v3 = (int)&v12->body->m_mat, *(float *)(v3 + 56) != *phys_vec3::operator[]<int>(&v12->body->m_mat.w, 2u))
-    || COERCE_FLOAT(*(unsigned int *)phys_vec3::operator[]<int>(&v12->body->m_mat.w, 2u) & _mask__AbsFloat_) > 100000.0 )
+    || fabs(*(unsigned int *)phys_vec3::operator[]<int>(&v12->body->m_mat.w, 2u)) > 100000.0 )
   {
     phys_exec_debug_callback(v12->body);
   }
@@ -1741,7 +1741,7 @@ void __cdecl Phys_ObjSetOrientation(int id, const float *newPosition, const floa
     || (p_m_mat = &userData->body->m_mat,
         v3 = phys_vec3::operator[]<int>(&userData->body->m_mat.w, 2u),
         *v3 != *phys_vec3::operator[]<int>(&p_m_mat->w, 2u))
-    || COERCE_FLOAT(*(unsigned int *)phys_vec3::operator[]<int>(&userData->body->m_mat.w, 2u) & _mask__AbsFloat_) > 100000.0 )
+    || fabs(*(unsigned int *)phys_vec3::operator[]<int>(&userData->body->m_mat.w, 2u)) > 100000.0 )
   {
     phys_exec_debug_callback(userData->body);
   }

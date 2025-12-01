@@ -357,7 +357,7 @@ void __cdecl Vec4DivideByW(const float *in, float *out)
 {
   float invW; // [esp+4h] [ebp-4h]
 
-  if ( COERCE_FLOAT((unsigned int)in[3] & _mask__AbsFloat_) > 0.001 )
+  if ( fabs((unsigned int)in[3]) > 0.001 )
   {
     invW = 1.0 / in[3];
     *out = *in * invW;

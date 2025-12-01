@@ -361,8 +361,8 @@ void __cdecl CM_PickProjectionAxes(const float *normal, int *i, int *j)
 {
   int k; // [esp+18h] [ebp-4h]
 
-  k = COERCE_FLOAT((unsigned int)normal[1] & _mask__AbsFloat_) > COERCE_FLOAT(*(unsigned int *)normal & _mask__AbsFloat_);
-  if ( COERCE_FLOAT((unsigned int)normal[2] & _mask__AbsFloat_) > fabs(normal[k]) )
+  k = fabs((unsigned int)normal[1]) > fabs(*(unsigned int *)normal);
+  if ( fabs((unsigned int)normal[2]) > fabs(normal[k]) )
     LOBYTE(k) = 2;
   *i = (k & 1) == 0;
   *j = ~(_BYTE)k & 2;

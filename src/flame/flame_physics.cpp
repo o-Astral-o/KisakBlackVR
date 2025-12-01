@@ -745,7 +745,7 @@ void __cdecl Flame_Impact_Process(bool is_server, flameGeneric_s *gen, trace_t *
   {
     if ( trace->fraction > 0.0 )
     {
-      isWall = COERCE_FLOAT(trace->normal.vec.u[2] & _mask__AbsFloat_) < 0.30000001;
+      isWall = fabs(trace->normal.vec.u[2]) < 0.30000001;
       if ( (char *)((unsigned int)&bg_vehicleInfos[11].rotorTailStartFx[20] & trace->sflags) != &cls.rankedServers[11866].game[59] )
       {
         if ( isWall )

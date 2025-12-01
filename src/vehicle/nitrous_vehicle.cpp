@@ -2785,7 +2785,7 @@ void __userpurge NitrousVehicle::update_steering(NitrousVehicle *this@<ecx>, flo
   }
   *(float *)(LODWORD(max_delta_angle) + 1032) = *(float *)(LODWORD(max_delta_angle) + 1032) + v51;
   v50 = *(unsigned int *)(LODWORD(max_delta_angle) + 1032);
-  if ( COERCE_FLOAT(v50 & _mask__AbsFloat_) > 0.0049999999 )
+  if ( fabs(v50) > 0.0049999999 )
   {
     v44 = 1;
     for ( j = 0; j < 6; ++j )
@@ -3188,14 +3188,14 @@ void __userpurge NitrousVehicle::update_from_network(
           goto LABEL_19;
         v22 = *(int **)LODWORD(aVelocity[35].x);
         v21 = *v22;
-        if ( COERCE_FLOAT(v21 & _mask__AbsFloat_) > 100000.0 )
+        if ( fabs(v21) > 100000.0 )
           goto LABEL_19;
         v20 = *(unsigned int *)LODWORD(aVelocity[35].x);
         v19 = *(unsigned int *)LODWORD(aVelocity[35].x);
         if ( *(float *)(v20 + 4) != *(float *)(v19 + 4)
           || (v18 = *(unsigned int *)LODWORD(aVelocity[35].x),
               v17 = *(unsigned int *)(v18 + 4),
-              COERCE_FLOAT(v17 & _mask__AbsFloat_) > 100000.0)
+              fabs(v17) > 100000.0)
           || (v16 = *(unsigned int *)LODWORD(aVelocity[35].x),
               predictedPos[2] = *(float *)LODWORD(aVelocity[35].x),
               *(float *)(v16 + 8) != *(float *)(LODWORD(predictedPos[2]) + 8))

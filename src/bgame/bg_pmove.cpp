@@ -220,7 +220,7 @@ void __cdecl PM_ProjectVelocity(const float *velIn, const float *normal, float *
   float lengthScale; // [esp+24h] [ebp-8h]
 
   lengthSq2D = (float)(*velIn * *velIn) + (float)(velIn[1] * velIn[1]);
-  if ( COERCE_FLOAT((unsigned int)normal[2] & _mask__AbsFloat_) < 0.001 || lengthSq2D == 0.0 )
+  if ( fabs((unsigned int)normal[2]) < 0.001 || lengthSq2D == 0.0 )
   {
     *velOut = *velIn;
     velOut[1] = velIn[1];

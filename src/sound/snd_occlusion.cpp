@@ -230,7 +230,7 @@ void  SND_TraceProximity(
   __libm_sse2_cos(v8);
   v28 = v31;
   *(float *)&i = v31 - front[1];
-  if ( COERCE_FLOAT(i & _mask__AbsFloat_) >= 0.0000152879
+  if ( fabs(i) >= 0.0000152879
     && !Assert_MyHandler(
           "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_occlusion.cpp",
           209,

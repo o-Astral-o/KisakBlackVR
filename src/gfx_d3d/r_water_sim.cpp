@@ -1332,7 +1332,7 @@ void  R_WaterSimulationUpdateFrame(channel_t<float4> *a1@<ebp>, const WaterSimul
       h.v[3] = (float)((float)(int)old0.u[3] * zero.v[1]) + (float)((float)(int)old0.u[2] * zero.v[2]);
       h.u[2] = d0.u[2];
       h.u[1] = d0.u[2] & _mask__AbsFloat_;
-      if ( config.windMax > COERCE_FLOAT(d0.u[2] & _mask__AbsFloat_) && h.v[3] > 0.0 )
+      if ( config.windMax > fabs(d0.u[2]) && h.v[3] > 0.0 )
       {
         v50 &= v111;
         LODWORD(wind_dist) &= *(unsigned int *)v112;
