@@ -156,7 +156,7 @@ void __cdecl DevGui_UpdateScrollStates(float deltaTime, DevGuiInputState *states
           times[axisIndex] = times[axisIndex] + deltaTime;
         }
       }
-      else if ( COERCE_FLOAT(LODWORD(axis[axisIndex]) & _mask__AbsFloat_) > 0.40000001 )
+      else if ( fabs(axis[axisIndex]) > 0.40000001 )
       {
         states[axisIndex] = SCROLL_PRESSED;
       }
@@ -176,9 +176,7 @@ void __cdecl DevGui_UpdateMenuScroll(float deltaTime)
   bool held; // [esp+2Fh] [ebp-5h]
   float axis; // [esp+30h] [ebp-4h]
 
-  if ( COERCE_FLOAT(LODWORD(s_input.analogAxis[0]) & _mask__AbsFloat_) <= COERCE_FLOAT(
-                                                                            LODWORD(s_input.analogAxis[1])
-                                                                          & _mask__AbsFloat_) )
+  if ( fabs(s_input.analogAxis[0]) <= fabs(s_input.analogAxis[1]) )
   {
     adjustedAnalogAxis[0] = 0.0f;
     adjustedAnalogAxis[1] = s_input.analogAxis[1];
@@ -198,7 +196,7 @@ void __cdecl DevGui_UpdateMenuScroll(float deltaTime)
     axis = (float)(s_input.digitalAxis[axisIndex] + adjustedAnalogAxis[axisIndex]) * s_input.scrollScale;
     if ( held )
     {
-      for ( s_input.menuScrollTime[axisIndex] = (float)(deltaTime * COERCE_FLOAT(LODWORD(axis) & _mask__AbsFloat_))
+      for ( s_input.menuScrollTime[axisIndex] = (float)(deltaTime * fabs(axis))
                                               + s_input.menuScrollTime[axisIndex];
             s_input.menuScrollTime[axisIndex] > 0.1;
             s_input.menuScrollTime[axisIndex] = s_input.menuScrollTime[axisIndex] - 0.1 )
@@ -323,7 +321,7 @@ __int64 __cdecl DevGui_UpdateIntScroll(float deltaTime, __int64 value, __int64 m
         v6 = 1.0f;
       scroll += (int)v6;
       s_input.analogSliderTime = s_input.analogSliderTime - stepTimea;
-      if ( s_input.gamePadIndex < 0 && COERCE_FLOAT(LODWORD(s_input.analogAxis[axis]) & _mask__AbsFloat_) <= 2.0 )
+      if ( s_input.gamePadIndex < 0 && fabs(s_input.analogAxis[axis]) <= 2.0 )
       {
         s_input.analogSliderTime = 0.0f;
         break;

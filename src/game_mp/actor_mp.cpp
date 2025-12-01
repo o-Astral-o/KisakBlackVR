@@ -4919,7 +4919,7 @@ void __userpurge Path_UpdateMovementDelta(actor_s *self@<ecx>, float fMoveDist)
     vEndPos[1] = self_->sideMove;
     LODWORD(vEndPos[0]) = LODWORD(vEndPos[1]) & _mask__AbsFloat_;
 
-    if ( vEndPos[2] > COERCE_FLOAT(LODWORD(vEndPos[1]) & _mask__AbsFloat_) )
+    if ( vEndPos[2] > fabs(vEndPos[1]) )
       vEndPos[2] = vEndPos[0];
 
     if ( self_->sideMove < 0.0 )

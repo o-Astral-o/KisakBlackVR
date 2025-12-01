@@ -16,14 +16,14 @@ void __cdecl InterpolateAnglesSmooth(float *curAngles, float *initialAngles, flo
 
   deltaAngles_4 = initialAngles[1];
   deltaAngles_8 = initialAngles[2];
-  for ( i = *initialAngles; COERCE_FLOAT(LODWORD(i) & _mask__AbsFloat_) > 90.0; i = i - (float)(180.0 * newDeltaYaw) )
+  for ( i = *initialAngles; fabs(i) > 90.0; i = i - (float)(180.0 * newDeltaYaw) )
   {
     if ( i <= 0.0 )
       newDeltaYaw = -1.0f;
     else
       newDeltaYaw = 1.0f;
   }
-  for ( j = *targetAngles; COERCE_FLOAT(LODWORD(j) & _mask__AbsFloat_) > 90.0; j = j - (float)(180.0 * time) )
+  for ( j = *targetAngles; fabs(j) > 90.0; j = j - (float)(180.0 * time) )
   {
     if ( j <= 0.0 )
       time = -1.0f;
@@ -32,7 +32,7 @@ void __cdecl InterpolateAnglesSmooth(float *curAngles, float *initialAngles, flo
   }
   newStartPitch = targetAngles[2] - deltaAngles_8;
   for ( k = targetAngles[1] - deltaAngles_4;
-        COERCE_FLOAT(LODWORD(k) & _mask__AbsFloat_) > 180.0;
+        fabs(k) > 180.0;
         k = k - (float)(360.0 * v6) )
   {
     if ( (float)(targetAngles[1] - deltaAngles_4) <= 0.0 )
@@ -1719,7 +1719,7 @@ void __cdecl CG_CalcVehicleViewValues(int localClientNum)
       {
         AnglesToAxis(ps->viewangles, viewAxis);
       }
-      if ( COERCE_FLOAT(LODWORD(offsetVec[0]) & _mask__AbsFloat_) <= 200.0 )
+      if ( fabs(offsetVec[0]) <= 200.0 )
       {
         desiredCamPos[0] = (float)(offsetVec[0] * playerMtx[0][0]) + desiredCamPos[0];
         desiredCamPos[1] = (float)(offsetVec[0] * playerMtx[0][1]) + desiredCamPos[1];
@@ -1813,12 +1813,12 @@ void __cdecl CG_CalcVehicleViewValues(int localClientNum)
         if ( CL_GetUserCmd(localClientNum, cmdNumber, &cmd) )
         {
           angleDiff = AngleDelta(ps->viewangles[1], vehicle->pose.angles[1]);
-          if ( maxDiff > COERCE_FLOAT(LODWORD(angleDiff) & _mask__AbsFloat_) && cmd.yawmove < 10 && cmd.yawmove > -10 )
+          if ( maxDiff > fabs(angleDiff) && cmd.yawmove < 10 && cmd.yawmove > -10 )
           {
             if ( (float)(viewVehicleInfluence
-                       - (float)((float)(1.0 - (float)(COERCE_FLOAT(LODWORD(angleDiff) & _mask__AbsFloat_) / maxDiff))
+                       - (float)((float)(1.0 - (float)(fabs(angleDiff) / maxDiff))
                                * maxInfluence)) < 0.0 )
-              v5 = (float)(1.0 - (float)(COERCE_FLOAT(LODWORD(angleDiff) & _mask__AbsFloat_) / maxDiff)) * maxInfluence;
+              v5 = (float)(1.0 - (float)(fabs(angleDiff) / maxDiff)) * maxInfluence;
             else
               v5 = viewVehicleInfluence;
             viewVehicleInfluence = v5;

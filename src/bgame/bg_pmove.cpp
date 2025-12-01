@@ -205,7 +205,7 @@ void __cdecl PM_ClipVelocity(const float *in, const float *normal, float *out)
   float v4; // [esp+0h] [ebp-8h]
 
   v3 = (float)((float)(*in * *normal) + (float)(in[1] * normal[1])) + (float)(in[2] * normal[2]);
-  LODWORD(v4) = COERCE_UNSIGNED_INT(v3 - (float)(COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_) * 0.001))
+  LODWORD(v4) = COERCE_UNSIGNED_INT(v3 - (float)(fabs(v3) * 0.001))
               ^ _mask__NegFloat_;
   *out = (float)(v4 * *normal) + *in;
   out[1] = (float)(v4 * normal[1]) + in[1];
@@ -737,7 +737,7 @@ void __cdecl PM_UpdateLean(
         ps->clientNum,
         &ents_params[74].targetname[43]);
       fLean = UnGetLeanFraction(trace.fraction);
-      if ( COERCE_FLOAT(LODWORD(ps->leanf) & _mask__AbsFloat_) > fLean )
+      if ( fabs(ps->leanf) > fLean )
       {
         if ( ps->leanf < 0.0 )
           v4 = -1.0f;
@@ -974,7 +974,7 @@ void __cdecl PM_UpdateViewAngles_Prone(
   if ( v11 || v10 )
   {
     maxDeltaYaw = (float)(55.0 * msec) * 0.001;
-    if ( maxDeltaYaw <= COERCE_FLOAT(LODWORD(delta) & _mask__AbsFloat_) )
+    if ( maxDeltaYaw <= fabs(delta) )
     {
       if ( delta <= 0.0 )
         v5 = ps->proneDirection + maxDeltaYaw;
@@ -992,8 +992,8 @@ void __cdecl PM_UpdateViewAngles_Prone(
       if ( !bRetry )
         goto LABEL_33;
       deltaa = AngleDelta(ps->proneDirection, newProneYaw);
-      bRetry = COERCE_FLOAT(LODWORD(deltaa) & _mask__AbsFloat_) > 1.0;
-      if ( COERCE_FLOAT(LODWORD(deltaa) & _mask__AbsFloat_) <= 1.0 )
+      bRetry = fabs(deltaa) > 1.0;
+      if ( fabs(deltaa) <= 1.0 )
       {
         proneBlocked = 1;
       }
@@ -1081,8 +1081,8 @@ LABEL_33:
       }
       if ( !bRetrya )
         goto LABEL_46;
-      bRetrya = COERCE_FLOAT(LODWORD(deltab) & _mask__AbsFloat_) > 1.0;
-      if ( COERCE_FLOAT(LODWORD(deltab) & _mask__AbsFloat_) > 1.0 )
+      bRetrya = fabs(deltab) > 1.0;
+      if ( fabs(deltab) > 1.0 )
       {
         if ( deltab <= 0.0 )
           deltab = -1.0f;
@@ -1111,7 +1111,7 @@ int __cdecl BG_CheckProneTurned(playerState_s *ps, float newProneYaw, unsigned _
   int savedregs; // [esp+3Ch] [ebp+0h] BYREF
 
   delta = AngleDelta(newProneYaw, ps->viewangles[1]);
-  fraction = COERCE_FLOAT(LODWORD(delta) & _mask__AbsFloat_) / 240.0;
+  fraction = fabs(delta) / 240.0;
   testYaw = AngleNormalize360(newProneYaw - (float)((float)(1.0 - fraction) * delta));
   return (unsigned __int8)BG_CheckProne(
                             (cStaticModel_s *)&savedregs,
@@ -1163,7 +1163,7 @@ void __cdecl PM_UpdateViewAngles_ProneYawClamp(
     ps->pm_flags |= 0x1000u;
     BG_AddPredictableEventToPlayerstate(0xCDu, 3u, ps);
     deltaYaw1 = AngleDelta(oldViewYaw, ps->viewangles[1]);
-    if ( COERCE_FLOAT(LODWORD(deltaYaw1) & _mask__AbsFloat_) <= 1.0 )
+    if ( fabs(deltaYaw1) <= 1.0 )
     {
       deltaYaw2 = AngleDelta(newViewYaw, ps->viewangles[1]);
       if ( (float)(deltaYaw1 * deltaYaw2) > 0.0 )
@@ -1266,8 +1266,8 @@ void __cdecl PM_UpdatePronePitch(pmove_t *pm, pml_t *pml)
     }
     else if ( (!pml->groundPlane || pml->groundTrace.walkable)
            && (ps->viewHeightTarget != 22
-            || COERCE_FLOAT(LODWORD(ps->fTorsoPitch) & _mask__AbsFloat_) <= 50.0
-            && COERCE_FLOAT(LODWORD(ps->fWaistPitch) & _mask__AbsFloat_) <= 50.0) )
+            || fabs(ps->fTorsoPitch) <= 50.0
+            && fabs(ps->fWaistPitch) <= 50.0) )
     {
       goto LABEL_24;
     }
@@ -1287,7 +1287,7 @@ LABEL_24:
     delta = AngleDelta(fTargPitch, ps->proneDirectionPitch);
     if ( delta != 0.0 )
     {
-      if ( COERCE_FLOAT(LODWORD(delta) & _mask__AbsFloat_) <= (float)(70.0 * pml->frametime) )
+      if ( fabs(delta) <= (float)(70.0 * pml->frametime) )
       {
         ps->proneDirectionPitch = ps->proneDirectionPitch + delta;
       }
@@ -1313,7 +1313,7 @@ LABEL_24:
     deltaa = v3;
     if ( deltaa != 0.0 )
     {
-      if ( COERCE_FLOAT(LODWORD(deltaa) & _mask__AbsFloat_) <= (float)(70.0 * pml->frametime) )
+      if ( fabs(deltaa) <= (float)(70.0 * pml->frametime) )
       {
         ps->proneTorsoPitch = ps->proneTorsoPitch + deltaa;
       }
@@ -2466,9 +2466,9 @@ double __cdecl PM_MoveScale(playerState_s *ps, float fmove, float rmove, float u
   float scalea; // [esp+8h] [ebp-4h]
 
   LODWORD(max) = LODWORD(fmove) & _mask__AbsFloat_;
-  if ( COERCE_FLOAT(LODWORD(rmove) & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(fmove) & _mask__AbsFloat_) )
+  if ( fabs(rmove) > fabs(fmove) )
     LODWORD(max) = LODWORD(rmove) & _mask__AbsFloat_;
-  if ( COERCE_FLOAT(LODWORD(umove) & _mask__AbsFloat_) > max )
+  if ( fabs(umove) > max )
     LODWORD(max) = LODWORD(umove) & _mask__AbsFloat_;
   if ( max == 0.0 )
     return 0.0;
@@ -4928,9 +4928,9 @@ double __cdecl PM_CalcPlayerPitch(playerState_s *ps, pml_t *pml)
   vectoangles(groundTrace, groundNormAngles);
   yawTrans = AngleNormalize360(groundNormAngles[1]);
   v3 = AngleDelta(playerYaw, yawTrans);
-  if ( COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_) >= 35.0 )
+  if ( fabs(v3) >= 35.0 )
   {
-    if ( COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_) <= 145.0 )
+    if ( fabs(v3) <= 145.0 )
       pitchTrans = 0.0f;
     else
       pitchTrans = groundNormAngles[0] + 90.0;
@@ -5335,9 +5335,9 @@ void __cdecl PM_LadderMove(pmove_t *pm, pml_t *pml)
         ps->velocity[0] = (float)(COERCE_FLOAT(LODWORD(fSideSpeed) ^ _mask__NegFloat_) * vSideDir[0]) + ps->velocity[0];
         velocity[1] = (float)(v13 * vSideDir[1]) + v14[1];
         fSpeedDrop = (float)(fSideSpeed * pml->frametime) * 16.0;
-        if ( COERCE_FLOAT(LODWORD(fSideSpeed) & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(fSpeedDrop) & _mask__AbsFloat_) )
+        if ( fabs(fSideSpeed) > fabs(fSpeedDrop) )
         {
-          if ( COERCE_FLOAT(LODWORD(fSpeedDrop) & _mask__AbsFloat_) < 1.0 )
+          if ( fabs(fSpeedDrop) < 1.0 )
           {
             if ( fSpeedDrop < 0.0 )
               v2 = -1.0f;

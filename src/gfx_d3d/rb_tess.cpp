@@ -1003,7 +1003,7 @@ void __cdecl RB_CreateParticleCloud2dAxis(const GfxParticleCloud *cloud, const f
       __debugbreak();
     }
     v5 = viewAxisLength - Vec2Length(&(*viewAxis)[2]);
-    if ( COERCE_FLOAT(LODWORD(v5) & _mask__AbsFloat_) >= 0.001
+    if ( fabs(v5) >= 0.001
       && !Assert_MyHandler(
             "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
             1166,

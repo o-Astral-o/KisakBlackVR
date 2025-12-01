@@ -1975,7 +1975,7 @@ int __cdecl PC_Directive_evalfloat(source_s *source)
   token.endwhitespace_p = source->scriptstack->script_p;
   token.linescrossed = 0;
   v2 = value;
-  sprintf(token.string, "%1.2f", COERCE_FLOAT(LODWORD(v2) & _mask__AbsFloat_));
+  sprintf(token.string, "%1.2f", fabs(v2));
   token.type = 3;
   token.subtype = 10248;
   PC_UnreadSourceToken(source, &token);
@@ -2053,7 +2053,7 @@ int __cdecl PC_DollarDirective_evalfloat(source_s *source)
   token.endwhitespace_p = source->scriptstack->script_p;
   token.linescrossed = 0;
   v2 = value;
-  sprintf(token.string, "%1.2f", COERCE_FLOAT(LODWORD(v2) & _mask__AbsFloat_));
+  sprintf(token.string, "%1.2f", fabs(v2));
   token.type = 3;
   token.subtype = 10248;
   token.intvalue = (__int64)value;

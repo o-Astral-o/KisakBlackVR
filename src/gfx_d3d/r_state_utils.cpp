@@ -521,9 +521,7 @@ void __cdecl R_DeriveNearPlaneConstantsForView(GfxCmdBufSourceState *source)
   float scale; // [esp+54h] [ebp-4h]
   float scalea; // [esp+54h] [ebp-4h]
 
-  if ( (float)(0.0000099999997 * source->viewParms.axis[2][1]) <= COERCE_FLOAT(
-                                                                    LODWORD(source->viewParms.inverseViewProjectionMatrix.m[3][3])
-                                                                  & _mask__AbsFloat_)
+  if ( (float)(0.0000099999997 * source->viewParms.axis[2][1]) <= fabs(source->viewParms.inverseViewProjectionMatrix.m[3][3])
     && !Assert_MyHandler(
           "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_state_utils.cpp",
           406,
@@ -534,9 +532,7 @@ void __cdecl R_DeriveNearPlaneConstantsForView(GfxCmdBufSourceState *source)
   {
     __debugbreak();
   }
-  if ( (float)(0.0000099999997 * source->viewParms.axis[2][1]) <= COERCE_FLOAT(
-                                                                    LODWORD(source->viewParms.origin[3])
-                                                                  & _mask__AbsFloat_)
+  if ( (float)(0.0000099999997 * source->viewParms.axis[2][1]) <= fabs(source->viewParms.origin[3])
     && !Assert_MyHandler(
           "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_state_utils.cpp",
           407,

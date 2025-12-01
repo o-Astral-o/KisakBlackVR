@@ -1856,7 +1856,7 @@ void __cdecl ikNormalizedMatrixAssert_func(float (*mat)[4])
       else
         v4 = (float)((float)((*mat)[4 * ja] * (*mat)[4 * ja + 4]) + (float)((*mat)[4 * ja + 1] * (*mat)[4 * ja + 5]))
            + (float)((*mat)[4 * ja + 2] * (*mat)[4 * ja + 6]);
-      if ( COERCE_FLOAT(LODWORD(v4) & _mask__AbsFloat_) >= 0.0020000001 )
+      if ( fabs(v4) >= 0.0020000001 )
       {
         v5 = va("dot == %f", v4);
         if ( !Assert_MyHandler(

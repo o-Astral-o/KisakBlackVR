@@ -1134,7 +1134,7 @@ double __cdecl GetSegmentParam(const float *a1, const float *a2, const float *p)
   float v5; // [esp+8h] [ebp-4h]
 
   v5 = *a2 - *a1;
-  if ( (float)(COERCE_FLOAT(LODWORD(v5) & _mask__AbsFloat_) - 0.0000099999997) < 0.0 )
+  if ( (float)(fabs(v5) - 0.0000099999997) < 0.0 )
     return (float)((float)(p[1] - a1[1]) / (float)(a2[1] - a1[1]));
   else
     return (float)((float)(*p - *a1) / v5);
@@ -1165,7 +1165,7 @@ char __cdecl Vec2IntesectLines(const float *a1, const float *a2, const float *b1
   float det; // [esp+14h] [ebp-4h]
 
   det = (float)((float)(*a1 - *a2) * (float)(b1[1] - b2[1])) - (float)((float)(a1[1] - a2[1]) * (float)(*b1 - *b2));
-  if ( COERCE_FLOAT(LODWORD(det) & _mask__AbsFloat_) <= 0.0000099999997 )
+  if ( fabs(det) <= 0.0000099999997 )
     return 0;
   *ret = (float)((float)((float)(*b1 - *b2) * (float)((float)(*a1 * a2[1]) - (float)(a1[1] * *a2)))
                - (float)((float)(*a1 - *a2) * (float)((float)(*b1 * b2[1]) - (float)(b1[1] * *b2))))
@@ -2189,7 +2189,7 @@ bool __thiscall GlassShard::Intersect(GlassShard *this, float *pos, float *dir, 
   float localDir[3]; // [esp+3Ch] [ebp-Ch] BYREF
 
   GlassShard::ToLocal(this, pos, dir, localPos, localDir);
-  if ( COERCE_FLOAT(LODWORD(localDir[2]) & _mask__AbsFloat_) <= 0.0000099999997 )
+  if ( fabs(localDir[2]) <= 0.0000099999997 )
     return 0;
   t = COERCE_FLOAT(LODWORD(localPos[2]) ^ _mask__NegFloat_) / localDir[2];
   if ( t < 0.0 )
@@ -3743,7 +3743,7 @@ bool __thiscall GlassShard::IsOnBottomEdge(GlassShard *this)
   {
     __debugbreak();
   }
-  if ( COERCE_FLOAT(LODWORD(this->axis[2][2]) & _mask__AbsFloat_) >= 0.0099999998 )
+  if ( fabs(this->axis[2][2]) >= 0.0099999998 )
     return 0;
   numEdges = 0;
   edgeIdx = -1;
@@ -3754,7 +3754,7 @@ bool __thiscall GlassShard::IsOnBottomEdge(GlassShard *this)
       if ( ++numEdges == 2 )
         return 0;
       GlassShard::ToWorldDir(this, this->outline.verts[i].edge.dir, wDir, 0);
-      if ( COERCE_FLOAT(LODWORD(wDir[2]) & _mask__AbsFloat_) < 0.0099999998 )
+      if ( fabs(wDir[2]) < 0.0099999998 )
         edgeIdx = i;
     }
   }

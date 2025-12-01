@@ -724,10 +724,10 @@ void __cdecl CL_GamepadMove(int localClientNum, usercmd_s *cmd)
         side = CL_GamepadAxisValue(localClientNum, 0);
         attack = CL_GamepadAxisValue(localClientNum, 5u);
         moveScale = 127.0f;
-        if ( COERCE_FLOAT(LODWORD(side) & _mask__AbsFloat_) > 0.0
-          || COERCE_FLOAT(LODWORD(forward) & _mask__AbsFloat_) > 0.0 )
+        if ( fabs(side) > 0.0
+          || fabs(forward) > 0.0 )
         {
-          if ( COERCE_FLOAT(LODWORD(side) & _mask__AbsFloat_) <= COERCE_FLOAT(LODWORD(forward) & _mask__AbsFloat_) )
+          if ( fabs(side) <= fabs(forward) )
           {
             length = side / forward;
             v2 = sqrtf((float)((float)(side / forward) * (float)(side / forward)) + 1.0);
@@ -851,10 +851,10 @@ void __cdecl CL_RandomMove(usercmd_s *cmd)
           CL_UpdateCmdButton(0, &cmd->button_bits, buttonFreqTable[i][0], buttonFreqTable[i][1], 1);
       }
       moveScale = 127.0f;
-      if ( COERCE_FLOAT(LODWORD(side) & _mask__AbsFloat_) > 0.0
-        || COERCE_FLOAT(LODWORD(forward) & _mask__AbsFloat_) > 0.0 )
+      if ( fabs(side) > 0.0
+        || fabs(forward) > 0.0 )
       {
-        if ( COERCE_FLOAT(LODWORD(side) & _mask__AbsFloat_) <= COERCE_FLOAT(LODWORD(forward) & _mask__AbsFloat_) )
+        if ( fabs(side) <= fabs(forward) )
         {
           length = side / forward;
           v1 = sqrtf((float)((float)(side / forward) * (float)(side / forward)) + 1.0);

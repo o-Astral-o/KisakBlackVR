@@ -504,11 +504,11 @@ char __cdecl R_CullBoxFromLightRegionHull(
                    + (float)(boxMidPoint[2] * dir->dir[2]))
            - dir->midPoint)
          & _mask__AbsFloat_) >= (float)((float)((float)((float)(*boxHalfSize
-                                                              * COERCE_FLOAT(LODWORD(dir->dir[0]) & _mask__AbsFloat_))
+                                                              * fabs(dir->dir[0]))
                                                       + (float)(boxHalfSize[1]
-                                                              * COERCE_FLOAT(LODWORD(dir->dir[1]) & _mask__AbsFloat_)))
+                                                              * fabs(dir->dir[1])))
                                               + (float)(boxHalfSize[2]
-                                                      * COERCE_FLOAT(LODWORD(dir->dir[2]) & _mask__AbsFloat_)))
+                                                      * fabs(dir->dir[2])))
                                       + dir->halfSize) )
       return 1;
   }

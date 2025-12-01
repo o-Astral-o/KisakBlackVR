@@ -780,9 +780,9 @@ void __cdecl R_GetMarkFragmentBounds(
 
   for ( coord = 0; coord < 3; ++coord )
   {
-    offset = (float)((float)(COERCE_FLOAT(LODWORD((*axis)[coord]) & _mask__AbsFloat_)
-                           + COERCE_FLOAT(LODWORD((*axis)[coord + 3]) & _mask__AbsFloat_))
-                   + COERCE_FLOAT(LODWORD((*axis)[coord + 6]) & _mask__AbsFloat_))
+    offset = (float)((float)(fabs((*axis)[coord])
+                           + fabs((*axis)[coord + 3]))
+                   + fabs((*axis)[coord + 6]))
            * radius;
     mins[coord] = origin[coord] - offset;
     maxs[coord] = origin[coord] + offset;

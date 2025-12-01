@@ -2610,7 +2610,7 @@ void __cdecl DevGui_UpdateGraph(int localClientNum, float deltaTime)
     {
       deltaY = updatedY - knot_4;
       v5 = COERCE_FLOAT(COERCE_UNSIGNED_INT(updatedX - knot) & _mask__AbsFloat_) > 0.000001
-        || COERCE_FLOAT(LODWORD(deltaY) & _mask__AbsFloat_) > 0.000001;
+        || fabs(deltaY) > 0.000001;
       graphUpdated = v5;
       graph->knots[graph->selectedKnot][0] = (float)((float)(updatedX - knot) * 3.0)
                                            + graph->knots[graph->selectedKnot][0];

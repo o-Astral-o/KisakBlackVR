@@ -433,7 +433,7 @@ double __cdecl CL_GamepadAxisValue(int localClientNum, unsigned int virtualAxis)
                      * axisDeflection;
     }
   }
-  if ( COERCE_FLOAT(LODWORD(axisDeflection) & _mask__AbsFloat_) < 0.0
+  if ( fabs(axisDeflection) < 0.0
     && !Assert_MyHandler(
           "C:\\projects_pc\\cod\\codsrc\\src\\client\\cl_gamepad.cpp",
           743,
@@ -443,7 +443,7 @@ double __cdecl CL_GamepadAxisValue(int localClientNum, unsigned int virtualAxis)
   {
     __debugbreak();
   }
-  if ( COERCE_FLOAT(LODWORD(axisDeflection) & _mask__AbsFloat_) > 1.0
+  if ( fabs(axisDeflection) > 1.0
     && !Assert_MyHandler(
           "C:\\projects_pc\\cod\\codsrc\\src\\client\\cl_gamepad.cpp",
           744,

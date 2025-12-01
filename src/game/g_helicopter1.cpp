@@ -363,7 +363,7 @@ char __cdecl VEH_HandleHeliLockHeight(gentity_s *ent)
   deltaHeight = testPoint[2] - veh->phys.heliLockHeight;
   moveStrength = 1.0f;
   LODWORD(absDeltaHeight) = LODWORD(deltaHeight) & _mask__AbsFloat_;
-  if ( inputFallOffRange > COERCE_FLOAT(LODWORD(deltaHeight) & _mask__AbsFloat_) )
+  if ( inputFallOffRange > fabs(deltaHeight) )
   {
     if ( stopInputRange <= absDeltaHeight )
       moveStrength = absDeltaHeight / inputFallOffRange;
@@ -529,7 +529,7 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
           else
             v11 = -1.0f;
           fraction = v11;
-          fraction = GraphFloat_GetValue(info->steerGraph, COERCE_FLOAT(LODWORD(v11) & _mask__AbsFloat_));
+          fraction = GraphFloat_GetValue(info->steerGraph, fabs(v11));
           if ( diff < 0.0 )
             fraction = fraction * -1.0;
           if ( (float)((float)(fraction * 128.0) - viewDiffInfleunce) < 0.0 )
@@ -994,7 +994,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
                 + targetTilt[1];
   targetTilt[1] = (float)((float)(newAccel[1] / maxAccel[1]) * info->tiltFromAcceleration[1]) + targetTilt[1];
   targetTilt[1] = (float)((float)(newDecel[1] / maxAccel[1]) * info->tiltFromDeceleration[1]) + targetTilt[1];
-  if ( phys->bodyVel[0] > 0.0 && COERCE_FLOAT(LODWORD(phys->rotVel[1]) & _mask__AbsFloat_) > 0.0 )
+  if ( phys->bodyVel[0] > 0.0 && fabs(phys->rotVel[1]) > 0.0 )
   {
     if ( maxSpeed[0] <= 0.0
       && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_helicopter.cpp", 379, 0, "%s", "maxSpeed[0] > 0") )

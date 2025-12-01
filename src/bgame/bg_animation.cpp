@@ -2364,7 +2364,7 @@ void __cdecl BG_RunLerpFrameRate(
                           * 0.001);
         v7 = AngleNormalize180(lf->oldFrameYaw - es->lerp.apos.trBase[1]);
         LODWORD(rotSpeed) = LODWORD(v7) & _mask__AbsFloat_;
-        rotSpeed = COERCE_FLOAT(LODWORD(v7) & _mask__AbsFloat_)
+        rotSpeed = fabs(v7)
                  / (float)((float)(*(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
                                                            + _tls_index)
                                                          + 8)
@@ -3018,7 +3018,7 @@ void __cdecl BG_SwingAngles(
   if ( *swinging )
   {
     swinga = AngleNormalize180(destination - *angle);
-    scale = COERCE_FLOAT(LODWORD(swinga) & _mask__AbsFloat_) * 0.050000001;
+    scale = fabs(swinga) * 0.050000001;
     if ( scale < 0.5 )
       scale = 0.5f;
     if ( swinga < 0.0 )

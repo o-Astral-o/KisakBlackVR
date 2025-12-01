@@ -154,7 +154,7 @@ double __cdecl FresnelTerm(float n0, float n1, float cosIncidentAngle)
     __debugbreak();
   }
   __libm_sse2_acos(v5);
-  sinTransmissionAngle_4 = COERCE_FLOAT(LODWORD(cosIncidentAngle) & _mask__AbsFloat_);
+  sinTransmissionAngle_4 = fabs(cosIncidentAngle);
   __libm_sse2_sin(v6);
   sinSum_4 = (float)(n0 / n1) * sinTransmissionAngle_4;
   if ( sinSum_4 <= 1.0 )

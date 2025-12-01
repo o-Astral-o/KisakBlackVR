@@ -1682,9 +1682,9 @@ void  init_winding(float a1@<ebp>, const plane_lt *plane, phys_static_array<phys
   v56 = LODWORD(x) & _mask__AbsFloat_;
   axis = LODWORD(y) & _mask__AbsFloat_;
   v58 = LODWORD(dist) & _mask__AbsFloat_;
-  v55 = COERCE_FLOAT(LODWORD(y) & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(x) & _mask__AbsFloat_);
+  v55 = fabs(y) > fabs(x);
   v54 = v55;
-  if ( COERCE_FLOAT(LODWORD(dist) & _mask__AbsFloat_) <= *((float *)&v56 + v55) )
+  if ( fabs(dist) <= *((float *)&v56 + v55) )
   {
     v47 = 0;
     v48 = 0;

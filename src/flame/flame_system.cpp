@@ -1028,7 +1028,7 @@ void __cdecl CG_Flame_Update_ViewModel(int localClientNum, centity_s *cent)
                                                            * (float)cgameGlob->frametime)
                                                    / 1000.0)
                                            + cgameGlob->flamethrowerKickOffset[i];
-      if ( COERCE_FLOAT(LODWORD(cgameGlob->flamethrowerKickOffset[i]) & _mask__AbsFloat_) > COERCE_FLOAT(
+      if ( fabs(cgameGlob->flamethrowerKickOffset[i]) > COERCE_FLOAT(
                                                                                               *(&flame_kick_offset->current.integer
                                                                                               + i)
                                                                                             & _mask__AbsFloat_) )
@@ -1045,9 +1045,7 @@ void __cdecl CG_Flame_Update_ViewModel(int localClientNum, centity_s *cent)
                                                                    * flame_kick_recover_speed->current.value)
                                                            * (float)cgameGlob->frametime)
                                                    / 1000.0);
-      if ( COERCE_FLOAT(LODWORD(cgameGlob->flamethrowerKickOffset[j]) & _mask__AbsFloat_) > COERCE_FLOAT(
-                                                                                              LODWORD(oldOffset)
-                                                                                            & _mask__AbsFloat_) )
+      if ( fabs(cgameGlob->flamethrowerKickOffset[j]) > fabs(oldOffset) )
         cgameGlob->flamethrowerKickOffset[j] = 0.0f;
     }
   }

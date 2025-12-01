@@ -1897,7 +1897,7 @@ int __cdecl FX_CollisionResponse(
       {
         __debugbreak();
       }
-      if ( COERCE_FLOAT(LODWORD(velocityAlongNormal) & _mask__AbsFloat_) >= 1000000.0
+      if ( fabs(velocityAlongNormal) >= 1000000.0
         && !Assert_MyHandler(
               "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
               1038,

@@ -6694,7 +6694,7 @@ void GScr_abs()
   float Float; // [esp+8h] [ebp-4h]
 
   Float = Scr_GetFloat(0, SCRIPTINSTANCE_SERVER);
-  Scr_AddFloat(COERCE_FLOAT(LODWORD(Float) & _mask__AbsFloat_), SCRIPTINSTANCE_SERVER);
+  Scr_AddFloat(fabs(Float), SCRIPTINSTANCE_SERVER);
 }
 
 void GScr_min()

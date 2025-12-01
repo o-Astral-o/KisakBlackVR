@@ -1105,17 +1105,17 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
   v78 = v80;
   v77 = LODWORD(v80) & _mask__AbsFloat_;
   v76 = tw->halfDeltaAbs.vec.v[0];
-  if ( COERCE_FLOAT(LODWORD(v80) & _mask__AbsFloat_) <= (float)(sum + v76) )
+  if ( fabs(v80) <= (float)(sum + v76) )
   {
     v75 = v81;
     v74 = LODWORD(v81) & _mask__AbsFloat_;
     v73 = tw->halfDeltaAbs.vec.v[1];
-    if ( COERCE_FLOAT(LODWORD(v81) & _mask__AbsFloat_) <= (float)(v84 + v73) )
+    if ( fabs(v81) <= (float)(v84 + v73) )
     {
       v72 = v82;
       v71 = LODWORD(v82) & _mask__AbsFloat_;
       v70 = tw->halfDeltaAbs.vec.v[2];
-      if ( COERCE_FLOAT(LODWORD(v82) & _mask__AbsFloat_) <= (float)(v85 + v70) )
+      if ( fabs(v82) <= (float)(v85 + v70) )
       {
         if ( tw->axialCullOnly )
         {
@@ -1128,7 +1128,7 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
           v67 = (float)(v69 * v82) - (float)(v68 * v81);
           v66 = LODWORD(v67) & _mask__AbsFloat_;
           v65 = *(_QWORD *)&tw->halfDeltaAbs.vec.unitVec[1].packed;
-          if ( COERCE_FLOAT(LODWORD(v67) & _mask__AbsFloat_) <= (float)((float)(v84 * *((float *)&v65 + 1))
+          if ( fabs(v67) <= (float)((float)(v84 * *((float *)&v65 + 1))
                                                                       + (float)(v85 * *(float *)&v65)) )
           {
             v64 = tw->halfDelta.vec.v[2];
@@ -1137,14 +1137,14 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
             v61 = LODWORD(v62) & _mask__AbsFloat_;
             v60 = tw->halfDeltaAbs.vec.v[0];
             v59 = tw->halfDeltaAbs.vec.v[2];
-            if ( COERCE_FLOAT(LODWORD(v62) & _mask__AbsFloat_) <= (float)((float)(v85 * v60) + (float)(sum * v59)) )
+            if ( fabs(v62) <= (float)((float)(v85 * v60) + (float)(sum * v59)) )
             {
               v58 = tw->halfDelta.vec.v[0];
               v57 = tw->halfDelta.vec.v[1];
               v56 = (float)(v58 * v81) - (float)(v57 * v80);
               v55 = LODWORD(v56) & _mask__AbsFloat_;
               v54 = *(_QWORD *)tw->halfDeltaAbs.vec.v;
-              v48 = COERCE_FLOAT(LODWORD(v56) & _mask__AbsFloat_) > (float)((float)(sum * *((float *)&v54 + 1))
+              v48 = fabs(v56) > (float)((float)(sum * *((float *)&v54 + 1))
                                                                           + (float)(v84 * *(float *)&v54));
             }
             else
@@ -1207,17 +1207,17 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
           v36 = v39;
           v35 = LODWORD(v39) & _mask__AbsFloat_;
           v34 = tw->halfDeltaAbs.vec.v[0];
-          if ( COERCE_FLOAT(LODWORD(v39) & _mask__AbsFloat_) <= (float)(v42 + v34) )
+          if ( fabs(v39) <= (float)(v42 + v34) )
           {
             v33 = v40;
             v32 = LODWORD(v40) & _mask__AbsFloat_;
             v31 = tw->halfDeltaAbs.vec.v[1];
-            if ( COERCE_FLOAT(LODWORD(v40) & _mask__AbsFloat_) <= (float)(v43 + v31) )
+            if ( fabs(v40) <= (float)(v43 + v31) )
             {
               v30 = v41;
               v29 = LODWORD(v41) & _mask__AbsFloat_;
               v28 = tw->halfDeltaAbs.vec.v[2];
-              if ( COERCE_FLOAT(LODWORD(v41) & _mask__AbsFloat_) <= (float)(v44 + v28) )
+              if ( fabs(v41) <= (float)(v44 + v28) )
               {
                 if ( tw->axialCullOnly )
                 {
@@ -1230,7 +1230,7 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
                   v25 = (float)(v27 * v41) - (float)(v26 * v40);
                   v24 = LODWORD(v25) & _mask__AbsFloat_;
                   v23 = *(_QWORD *)&tw->halfDeltaAbs.vec.unitVec[1].packed;
-                  if ( COERCE_FLOAT(LODWORD(v25) & _mask__AbsFloat_) <= (float)((float)(v43 * *((float *)&v23 + 1))
+                  if ( fabs(v25) <= (float)((float)(v43 * *((float *)&v23 + 1))
                                                                               + (float)(v44 * *(float *)&v23)) )
                   {
                     v22 = tw->halfDelta.vec.v[2];
@@ -1239,14 +1239,14 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
                     v19 = LODWORD(v20) & _mask__AbsFloat_;
                     v18 = tw->halfDeltaAbs.vec.v[0];
                     v17 = tw->halfDeltaAbs.vec.v[2];
-                    if ( COERCE_FLOAT(LODWORD(v20) & _mask__AbsFloat_) <= (float)((float)(v44 * v18) + (float)(v42 * v17)) )
+                    if ( fabs(v20) <= (float)((float)(v44 * v18) + (float)(v42 * v17)) )
                     {
                       v16 = tw->halfDelta.vec.v[0];
                       v15 = tw->halfDelta.vec.v[1];
                       v14 = (float)(v16 * v40) - (float)(v15 * v39);
                       v13 = LODWORD(v14) & _mask__AbsFloat_;
                       v12 = *(_QWORD *)tw->halfDeltaAbs.vec.v;
-                      v3 = COERCE_FLOAT(LODWORD(v14) & _mask__AbsFloat_) > (float)((float)(v42 * *((float *)&v12 + 1))
+                      v3 = fabs(v14) > (float)((float)(v42 * *((float *)&v12 + 1))
                                                                                  + (float)(v43 * *(float *)&v12));
                     }
                     else
@@ -1516,17 +1516,17 @@ void __cdecl CM_PositionTestInAabbTree_r(const traceWork_t *tw, CollisionAabbTre
   v36 = v39;
   v35 = LODWORD(v39) & _mask__AbsFloat_;
   v34 = tw->halfDeltaAbs.vec.v[0];
-  if ( COERCE_FLOAT(LODWORD(v39) & _mask__AbsFloat_) <= (float)(v42 + v34) )
+  if ( fabs(v39) <= (float)(v42 + v34) )
   {
     v33 = v40;
     v32 = LODWORD(v40) & _mask__AbsFloat_;
     v31 = tw->halfDeltaAbs.vec.v[1];
-    if ( COERCE_FLOAT(LODWORD(v40) & _mask__AbsFloat_) <= (float)(v43 + v31) )
+    if ( fabs(v40) <= (float)(v43 + v31) )
     {
       v30 = v41;
       v29 = LODWORD(v41) & _mask__AbsFloat_;
       v28 = tw->halfDeltaAbs.vec.v[2];
-      if ( COERCE_FLOAT(LODWORD(v41) & _mask__AbsFloat_) <= (float)(v44 + v28) )
+      if ( fabs(v41) <= (float)(v44 + v28) )
       {
         if ( tw->axialCullOnly )
         {
@@ -1539,7 +1539,7 @@ void __cdecl CM_PositionTestInAabbTree_r(const traceWork_t *tw, CollisionAabbTre
           v25 = (float)(v27 * v41) - (float)(v26 * v40);
           v24 = LODWORD(v25) & _mask__AbsFloat_;
           v23 = *(_QWORD *)&tw->halfDeltaAbs.vec.unitVec[1].packed;
-          if ( COERCE_FLOAT(LODWORD(v25) & _mask__AbsFloat_) <= (float)((float)(v43 * *((float *)&v23 + 1))
+          if ( fabs(v25) <= (float)((float)(v43 * *((float *)&v23 + 1))
                                                                       + (float)(v44 * *(float *)&v23)) )
           {
             v22 = tw->halfDelta.vec.v[2];
@@ -1548,14 +1548,14 @@ void __cdecl CM_PositionTestInAabbTree_r(const traceWork_t *tw, CollisionAabbTre
             v19 = LODWORD(v20) & _mask__AbsFloat_;
             v18 = tw->halfDeltaAbs.vec.v[0];
             v17 = tw->halfDeltaAbs.vec.v[2];
-            if ( COERCE_FLOAT(LODWORD(v20) & _mask__AbsFloat_) <= (float)((float)(v44 * v18) + (float)(v42 * v17)) )
+            if ( fabs(v20) <= (float)((float)(v44 * v18) + (float)(v42 * v17)) )
             {
               v16 = tw->halfDelta.vec.v[0];
               v15 = tw->halfDelta.vec.v[1];
               v14 = (float)(v16 * v40) - (float)(v15 * v39);
               v13 = LODWORD(v14) & _mask__AbsFloat_;
               v12 = *(_QWORD *)tw->halfDeltaAbs.vec.v;
-              v3 = COERCE_FLOAT(LODWORD(v14) & _mask__AbsFloat_) > (float)((float)(v42 * *((float *)&v12 + 1))
+              v3 = fabs(v14) > (float)((float)(v42 * *((float *)&v12 + 1))
                                                                          + (float)(v43 * *(float *)&v12));
             }
             else

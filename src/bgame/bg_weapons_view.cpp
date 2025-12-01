@@ -446,7 +446,7 @@ void __cdecl BG_CalculateWeaponMovement_Base_Internal_Movement(
     __debugbreak();
   }
   v9 = Vec2Length(ps->velocity) - ws->xyspeed;
-  if ( COERCE_FLOAT(LODWORD(v9) & _mask__AbsFloat_) >= 0.001
+  if ( fabs(v9) >= 0.001
     && !Assert_MyHandler(
           "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_weapons_view.cpp",
           543,

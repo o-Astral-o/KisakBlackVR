@@ -1546,9 +1546,7 @@ LABEL_48:
           if ( type != INFLUENCER_TYPE_GAME_MODE )
             goto LABEL_48;
           if ( influencer_score != 0.0
-            && COERCE_FLOAT(LODWORD(influencer_score) & _mask__AbsFloat_) > COERCE_FLOAT(
-                                                                              LODWORD(influencer_scores[6])
-                                                                            & _mask__AbsFloat_) )
+            && fabs(influencer_score) > fabs(influencer_scores[6]) )
           {
             influencer_scores[6] = influencer_score;
           }
@@ -2029,7 +2027,7 @@ void SpawnSystem_DebugRender()
         {
           if ( COERCE_FLOAT(
                  COERCE_UNSIGNED_INT((float)(diff * speedScale) * (float)((float)level.frametime * 0.001))
-               & _mask__AbsFloat_) <= COERCE_FLOAT(LODWORD(diff) & _mask__AbsFloat_) )
+               & _mask__AbsFloat_) <= fabs(diff) )
             sizeScale = sizeScale + (float)((float)(diff * speedScale) * (float)((float)level.frametime * 0.001));
           else
             sizeScale = newSizeScale;

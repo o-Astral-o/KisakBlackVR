@@ -866,7 +866,7 @@ void __cdecl UI_UpdateServerToolTips(int localClientNum, listBoxDef_s *listPtr)
     __debugbreak();
   v13 = uiInfo->uiDC.cursor.x - uiInfo->uiDC.prevCursor.x;
   dy = uiInfo->uiDC.cursor.y - uiInfo->uiDC.prevCursor.y;
-  if ( COERCE_FLOAT(LODWORD(v13) & _mask__AbsFloat_) <= 0.001 && COERCE_FLOAT(LODWORD(dy) & _mask__AbsFloat_) <= 0.001 )
+  if ( fabs(v13) <= 0.001 && fabs(dy) <= 0.001 )
   {
     if ( ui_showToolTipTime )
     {

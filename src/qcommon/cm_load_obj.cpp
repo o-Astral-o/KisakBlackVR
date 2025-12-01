@@ -488,8 +488,8 @@ unsigned int CMod_LoadSubmodels()
     {
       out->mins[j] = *(float *)&in[4 * j] - 1.0;
       out->maxs[j] = *(float *)&in[4 * j + 12] + 1.0;
-      if ( (float)(COERCE_FLOAT(LODWORD(out->mins[j]) & _mask__AbsFloat_)
-                 - COERCE_FLOAT(LODWORD(out->maxs[j]) & _mask__AbsFloat_)) < 0.0 )
+      if ( (float)(fabs(out->mins[j])
+                 - fabs(out->maxs[j])) < 0.0 )
         LODWORD(v1) = LODWORD(out->maxs[j]) & _mask__AbsFloat_;
       else
         LODWORD(v1) = LODWORD(out->mins[j]) & _mask__AbsFloat_;

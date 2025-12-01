@@ -1410,8 +1410,8 @@ void __cdecl turret_CalculateConvergenceAngularVelocity(
   nextFrameTime = self->nextthink - level.time;
   v4 = AngleNormalize180(self->s.lerp.u.turret.gunAngles[0] - *desiredAngles);
   v3 = AngleNormalize180(self->s.lerp.u.turret.gunAngles[1] - desiredAngles[1]);
-  *angularVelocity = (float)(COERCE_FLOAT(LODWORD(v4) & _mask__AbsFloat_) * 1000.0) / (float)nextFrameTime;
-  angularVelocity[1] = (float)(COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_) * 1000.0) / (float)nextFrameTime;
+  *angularVelocity = (float)(fabs(v4) * 1000.0) / (float)nextFrameTime;
+  angularVelocity[1] = (float)(fabs(v3) * 1000.0) / (float)nextFrameTime;
   if ( remainingYawConvergenceTime > 0 && nextFrameTime < remainingYawConvergenceTime )
     angularVelocity[1] = (float)((float)nextFrameTime / (float)remainingYawConvergenceTime) * angularVelocity[1];
   if ( remainingPitchConvergenceTime > 0 && nextFrameTime < remainingPitchConvergenceTime )
@@ -1801,9 +1801,9 @@ void __cdecl turret_aimat_vector_internal(gentity_s *self, const float *origin, 
   }
   if ( level.time >= turretInfo->targetTime + 250 && !alwaysCheckAngles
     || (v6 = AngleNormalize180(self->s.lerp.u.turret.gunAngles[0] - *desiredAngles),
-        COERCE_FLOAT(LODWORD(v6) & _mask__AbsFloat_) < 5.0)
+        fabs(v6) < 5.0)
     && (v5 = AngleNormalize180(self->s.lerp.u.turret.gunAngles[1] - desiredAngles[1]),
-        COERCE_FLOAT(LODWORD(v5) & _mask__AbsFloat_) < 5.0) )
+        fabs(v5) < 5.0) )
   {
     turret_SetState(self, 2);
 LABEL_13:
@@ -2213,8 +2213,8 @@ bool __cdecl turret_behind(gentity_s *self, gentity_s *other)
     __debugbreak();
   }
   minYaw = self->r.currentAngles[1] + pTurretInfo->arcmin[1];
-  yawSpan = (float)(COERCE_FLOAT(LODWORD(pTurretInfo->arcmax[1]) & _mask__AbsFloat_)
-                  + COERCE_FLOAT(LODWORD(pTurretInfo->arcmin[1]) & _mask__AbsFloat_))
+  yawSpan = (float)(fabs(pTurretInfo->arcmax[1])
+                  + fabs(pTurretInfo->arcmin[1]))
           * 0.5;
   centerYaw = AngleNormalize180(minYaw + yawSpan);
   YawVectors(centerYaw, forward, 0);

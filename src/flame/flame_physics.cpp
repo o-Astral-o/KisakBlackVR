@@ -21,7 +21,7 @@ void __cdecl Flame_ClipVelocity(const float *in, const float *normal, float *out
   float v4; // [esp+0h] [ebp-Ch]
 
   v3 = (float)((float)(*in * *normal) + (float)(in[1] * normal[1])) + (float)(in[2] * normal[2]);
-  LODWORD(v4) = COERCE_UNSIGNED_INT(v3 - (float)(FLAME_OVERCLIP * COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_)))
+  LODWORD(v4) = COERCE_UNSIGNED_INT(v3 - (float)(FLAME_OVERCLIP * fabs(v3)))
               ^ _mask__NegFloat_;
   *out = (float)(v4 * *normal) + *in;
   out[1] = (float)(v4 * normal[1]) + in[1];

@@ -2240,7 +2240,7 @@ char __cdecl CG_GetPlayerViewOrigin(int localClientNum, const playerState_s *ps,
       memset(offsetVec, 0, sizeof(offsetVec));
       if ( weapDef && attachedEnt->nextState.weapon )
         BG_CalcVehicleTurretWeaponPosOffset(ps->fWeaponPosFrac, weapDef, offsetVec);
-      if ( COERCE_FLOAT(LODWORD(offsetVec[0]) & _mask__AbsFloat_) <= 200.0 )
+      if ( fabs(offsetVec[0]) <= 200.0 )
       {
         v7 = offsetVec[0];
         *origin = (float)(offsetVec[0] * playerMtx[0][0]) + *origin;

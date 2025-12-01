@@ -31,7 +31,7 @@ PackedUnitVec __cdecl Vec3PackUnitVec(const float *unitVec)
     decoded[2] = (float)((float)testEncoding[2] - 127.0) * decodeScale;
     v2 = Vec3Normalize(decoded) - 1.0;
     LODWORD(lenError) = LODWORD(v2) & _mask__AbsFloat_;
-    if ( COERCE_FLOAT(LODWORD(v2) & _mask__AbsFloat_) < 0.001 )
+    if ( fabs(v2) < 0.001 )
     {
       LODWORD(dirError) = COERCE_UNSIGNED_INT(
                             (float)((float)((float)(decoded[0] * normalized[0]) + (float)(decoded[1] * normalized[1]))
@@ -96,7 +96,7 @@ int __cdecl Vec4PackQuat(const float *in)
   maxIndex = 0;
   for ( i = 0; i < 4; ++i )
   {
-    if ( maxValue < COERCE_FLOAT(LODWORD(value[i]) & _mask__AbsFloat_) )
+    if ( maxValue < fabs(value[i]) )
     {
       LODWORD(maxValue) = LODWORD(value[i]) & _mask__AbsFloat_;
       maxIndex = i;

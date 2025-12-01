@@ -305,7 +305,7 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
           {
             v277 = (float)(ikState->lastFrameMS[9] % 2000) - 1000.0;
             v276 = LODWORD(v277) & _mask__AbsFloat_;
-            ikState->footMats[0][3][2] = (float)((float)(6.0 * COERCE_FLOAT(LODWORD(v277) & _mask__AbsFloat_)) / 1000.0)
+            ikState->footMats[0][3][2] = (float)((float)(6.0 * fabs(v277)) / 1000.0)
                                        + ikState->footMats[0][3][2];
           }
           if ( IK_IsCalcBone(ikState, 21) )
@@ -594,7 +594,7 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
                 if ( IKImport_GetVar_IK_Debug() == 1 )
                   IKImport_DrawLine(&footTraceNormals[1][1], startPos, j);
                 footTraceNormals[1][0] = Abs(ikState->lastFootTraceGoalNormals[j]) - 1.0;
-                if ( COERCE_FLOAT(LODWORD(footTraceNormals[1][0]) & _mask__AbsFloat_) >= 0.1 )
+                if ( fabs(footTraceNormals[1][0]) >= 0.1 )
                 {
                   LODWORD(footTraceCacheDistThreshold) = &v143[3 * j];
                   *(unsigned int *)LODWORD(footTraceCacheDistThreshold) = 0;
@@ -671,7 +671,7 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
                         v125 = tracePos[1];
                         v126 = tracePos[2];
                         traceFootAdjust = Abs(thisTracePos) - 1.0;
-                        if ( COERCE_FLOAT(LODWORD(traceFootAdjust) & _mask__AbsFloat_) < 0.1 )
+                        if ( fabs(traceFootAdjust) < 0.1 )
                         {
                           LODWORD(lowerFootTerrainSteepnessScale) = &v143[3 * j];
                           *(unsigned int *)LODWORD(lowerFootTerrainSteepnessScale) = LODWORD(thisTracePos[0]);
@@ -778,7 +778,7 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
                   fastLerpScalar[1] = modifiedFeet;
                   fastLerpScalar[0] = modifiedFeet - ikState->lastTerrainMappingFootOffsetZ[j];
                   *(float *)&v96[2] = 128.0f;
-                  if ( COERCE_FLOAT(LODWORD(fastLerpScalar[0]) & _mask__AbsFloat_) < 128.0 )
+                  if ( fabs(fastLerpScalar[0]) < 128.0 )
                   {
                     v246 = v232;
                     if ( v245 )
@@ -860,7 +860,7 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
                 ikState->lastTerrainMappingFootOffsetZ[j] = modifiedFeet;
               }
               pelvisMoveScale = ikState->lastTerrainMappingFootOffsetZ[0] - ikState->lastTerrainMappingFootOffsetZ[1];
-              if ( COERCE_FLOAT(LODWORD(pelvisMoveScale) & _mask__AbsFloat_) > maxFootDropMoving )
+              if ( fabs(pelvisMoveScale) > maxFootDropMoving )
               {
                 pelvisForceZAdjust = ikState->lastTerrainMappingFootOffsetZ[0] > ikState->lastTerrainMappingFootOffsetZ[1];
                 v81 = (float)((float)(ikState->lastTerrainMappingFootOffsetZ[!pelvisForceZAdjust]
@@ -950,8 +950,8 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
                   v61 = Vec3DistanceSq((const float *)&v67[48], v66);
                   cMaxSq = *(float *)&v67[56] - ikState->footMats[j][3][2];
                   LODWORD(bSq) = LODWORD(cMaxSq) & _mask__AbsFloat_;
-                  if ( (float)(COERCE_FLOAT(LODWORD(cMaxSq) & _mask__AbsFloat_)
-                             * COERCE_FLOAT(LODWORD(cMaxSq) & _mask__AbsFloat_)) > v62 )
+                  if ( (float)(fabs(cMaxSq)
+                             * fabs(cMaxSq)) > v62 )
                   {
                     v58 = (float)(ikState->jointVars[j + 2].LowerLength + ikState->jointVars[j + 2].UpperLength)
                         - *(float *)&v67[72];
@@ -1006,7 +1006,7 @@ void  IK_Layer_TerrainMapping(float a1@<ebp>, IKState *ikState)
                     : (v41 = 1),
                       v41
                    || (v40 = Abs(ikState->lastFootTraceNormals[j]) - 1.0,
-                       COERCE_FLOAT(LODWORD(v40) & _mask__AbsFloat_) >= 0.1)) )
+                       fabs(v40) >= 0.1)) )
                 {
                   Vec3NormalizeTo((const float *)&v143[3 * j], ikState->lastFootTraceNormals[j]);
                 }
@@ -2726,7 +2726,7 @@ void  IK_Layer_PlayerPitch(float a1@<ebp>, IKState *ikState, bool preControllers
     {
       ofsUp[2] = v200;
       LODWORD(ofsUp[1]) = LODWORD(v200) & _mask__AbsFloat_;
-      v4 = (float)(COERCE_FLOAT(LODWORD(v200) & _mask__AbsFloat_) / 90.0);
+      v4 = (float)(fabs(v200) / 90.0);
       __libm_sse2_pow(v14, v16);
       *(float *)&v4 = v4;
       ofsUp[0] = *(float *)&v4 * playerAngles[1];
@@ -2770,7 +2770,7 @@ void  IK_Layer_PlayerPitch(float a1@<ebp>, IKState *ikState, bool preControllers
       LODWORD(ofsTwistVec[1]) = LODWORD(ofsTwistVec[2]) & _mask__AbsFloat_;
       __libm_sse2_pow(v15, v16);
       LODWORD(ofsUp[0]) = LODWORD(ofsTwistVec[2]) & _mask__AbsFloat_;
-      if ( (float)(1.0 - COERCE_FLOAT(LODWORD(ofsTwistVec[2]) & _mask__AbsFloat_)) < 0.0 )
+      if ( (float)(1.0 - fabs(ofsTwistVec[2])) < 0.0 )
         v5 = v178;
       else
         v5 = ofsUp[0];
@@ -2829,7 +2829,7 @@ void  IK_Layer_PlayerPitch(float a1@<ebp>, IKState *ikState, bool preControllers
       v163 = FLOAT_1_1;
       v162 = v200;
       v161 = LODWORD(v200) & _mask__AbsFloat_;
-      v7 = (float)(COERCE_FLOAT(LODWORD(v200) & _mask__AbsFloat_) / 90.0);
+      v7 = (float)(fabs(v200) / 90.0);
       __libm_sse2_pow(v14, v16);
       *(float *)&v7 = v7;
       weapOfs[2] = *(float *)&v7 * playerAngles[1];

@@ -690,7 +690,7 @@ void __cdecl GlassSv_PredictTouch(gentity_s *other)
         v21 = (float)(v32 * v10) + v21;
         if ( (float)((float)((float)(v18 * v10) + (float)((float)(v17 * v7) + (float)((float)(v16 * out[2]) + v11)))
                    * v21) < 0.0
-          && COERCE_FLOAT(LODWORD(v21) & _mask__AbsFloat_) > 100.0 )
+          && fabs(v21) > 100.0 )
         {
           GlassSv_Touch(v15->index, other);
         }

@@ -1625,7 +1625,7 @@ void  CG_UpdateVehicleEngineSounds(
           info->sndNames[v22]);
   SND_SetPlaybackPitch(v13, soundOrigin[1]);
   pitch = idleLoopModulation / info->engineModLoopNaturalRPMs;
-  loadLevel = (float)(COERCE_FLOAT(LODWORD(m_throttle) & _mask__AbsFloat_) - speedMPH) + engineRPMs;
+  loadLevel = (float)(fabs(m_throttle) - speedMPH) + engineRPMs;
   if ( (float)(loadLevel - 1.0) < 0.0 )
     noLoadLevel = loadLevel;
   else

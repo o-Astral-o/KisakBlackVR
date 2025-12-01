@@ -331,7 +331,7 @@ void __cdecl FX_GetOrientation(
         {
           v8 = orient->axis[0][2];
           up[0] = 0.0f;
-          if ( COERCE_FLOAT(LODWORD(v8) & _mask__AbsFloat_) < 0.99900001 )
+          if ( fabs(v8) < 0.99900001 )
           {
             up[1] = 0.0f;
             up[2] = 1.0f;
@@ -370,7 +370,7 @@ bool __cdecl Vec4IsNormalized(const float *v)
   float v2; // [esp+4h] [ebp-4h]
 
   v2 = Vec4LengthSq(v) - 1.0;
-  return COERCE_FLOAT(LODWORD(v2) & _mask__AbsFloat_) < 0.0020000001;
+  return fabs(v2) < 0.0020000001;
 }
 
 void __cdecl FX_GetVelocityAtTime(

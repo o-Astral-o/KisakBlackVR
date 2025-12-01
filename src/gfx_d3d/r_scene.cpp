@@ -3198,7 +3198,7 @@ void __cdecl R_GenerateSortedDrawSurfs(
     v21 = (double)den * rg.sunShadowmapScale + 0.5;
     v15 = floor(v21);
     v20 = (double)(unsigned int)(__int64)v15 / (double)den - rg.sunShadowmapScale;
-    if ( COERCE_FLOAT(LODWORD(v20) & _mask__AbsFloat_) < bestError )
+    if ( fabs(v20) < bestError )
     {
       LODWORD(bestError) = LODWORD(v20) & _mask__AbsFloat_;
       bestDen = den;
@@ -4176,9 +4176,9 @@ void __cdecl R_SetBloomInfo(GfxViewInfo *viewInfo, const GfxSceneParms *scenePar
        / tw;
     viewInfo->bloomExpansionXpos = (float)(tx * 0.5) + 0.5;
     viewInfo->bloomExpansionYpos = 0.5 - (float)(ty * 0.5);
-    if ( (float)((float)((float)(1.0 / (float)(0.75 - 1.0)) * COERCE_FLOAT(LODWORD(tx) & _mask__AbsFloat_))
+    if ( (float)((float)((float)(1.0 / (float)(0.75 - 1.0)) * fabs(tx))
                - (float)((float)(1.0 / (float)(0.75 - 1.0)) * 1.0)) >= 0.0 )
-      v5 = (float)((float)(1.0 / (float)(0.75 - 1.0)) * COERCE_FLOAT(LODWORD(tx) & _mask__AbsFloat_))
+      v5 = (float)((float)(1.0 / (float)(0.75 - 1.0)) * fabs(tx))
          - (float)((float)(1.0 / (float)(0.75 - 1.0)) * 1.0);
     else
       v5 = 0.0f;
@@ -4186,9 +4186,9 @@ void __cdecl R_SetBloomInfo(GfxViewInfo *viewInfo, const GfxSceneParms *scenePar
       v4 = v5;
     else
       v4 = 1.0f;
-    if ( (float)((float)((float)(1.0 / (float)(0.75 - 1.0)) * COERCE_FLOAT(LODWORD(ty) & _mask__AbsFloat_))
+    if ( (float)((float)((float)(1.0 / (float)(0.75 - 1.0)) * fabs(ty))
                - (float)((float)(1.0 / (float)(0.75 - 1.0)) * 1.0)) >= 0.0 )
-      v3 = (float)((float)(1.0 / (float)(0.75 - 1.0)) * COERCE_FLOAT(LODWORD(ty) & _mask__AbsFloat_))
+      v3 = (float)((float)(1.0 / (float)(0.75 - 1.0)) * fabs(ty))
          - (float)((float)(1.0 / (float)(0.75 - 1.0)) * 1.0);
     else
       v3 = 0.0f;

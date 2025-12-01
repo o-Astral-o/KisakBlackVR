@@ -2415,7 +2415,7 @@ bool  gjk_slide_move1@<eax>(
             v46 = v47;
             v43 = (float)((float)((float)(v49 * *p_x) + (float)(v48 * p_x[1])) + (float)(v47 * p_x[2])) - p_x[8];
             v42 = (float)((float)(v60.x * *p_x) + (float)(v60.y * p_x[1])) + (float)(v60.z * p_x[2]);
-            if ( COERCE_FLOAT(LODWORD(v42) & _mask__AbsFloat_) > 0.001 )
+            if ( fabs(v42) > 0.001 )
             {
               v41 = COERCE_FLOAT(LODWORD(v43) ^ _mask__NegFloat_) / v42;
               if ( v56 > v41 )

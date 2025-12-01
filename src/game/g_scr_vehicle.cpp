@@ -1522,11 +1522,11 @@ void __cdecl VEH_SetLinkAngleClamps(
       SetClientViewAngle(player, zero_vec);
       client->ps.viewAngleClampBase[0] = (float)(weapDef->bottomArc - weapDef->topArc) / 2.0;
       client->ps.viewAngleClampBase[1] = (float)(weapDef->leftArc - weapDef->rightArc) / 2.0;
-      client->ps.viewAngleClampRange[0] = (float)(COERCE_FLOAT(LODWORD(weapDef->topArc) & _mask__AbsFloat_)
-                                                + COERCE_FLOAT(LODWORD(weapDef->bottomArc) & _mask__AbsFloat_))
+      client->ps.viewAngleClampRange[0] = (float)(fabs(weapDef->topArc)
+                                                + fabs(weapDef->bottomArc))
                                         / 2.0;
-      client->ps.viewAngleClampRange[1] = (float)(COERCE_FLOAT(LODWORD(weapDef->leftArc) & _mask__AbsFloat_)
-                                                + COERCE_FLOAT(LODWORD(weapDef->rightArc) & _mask__AbsFloat_))
+      client->ps.viewAngleClampRange[1] = (float)(fabs(weapDef->leftArc)
+                                                + fabs(weapDef->rightArc))
                                         / 2.0;
     }
     else
@@ -1812,7 +1812,7 @@ double  Scr_Vehicle_DamageScale@<st0>(
            COERCE_UNSIGNED_INT(
              (float)((float)(*(float *)&a * vdir[3 * i]) + (float)(*(float *)&bestAxis * vdir[3 * i + 1]))
            + (float)(bestDot * vdir[3 * i + 2]))
-         & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(v19) & _mask__AbsFloat_) )
+         & _mask__AbsFloat_) > fabs(v19) )
     {
       v19 = (float)((float)(*(float *)&a * vdir[3 * i]) + (float)(*(float *)&bestAxis * vdir[3 * i + 1]))
           + (float)(bestDot * vdir[3 * i + 2]);
@@ -1873,8 +1873,8 @@ double  Scr_Vehicle_DamageScale@<st0>(
         height = *(float *)&v9;
         pointAdjusted_8 = vehicle_damage_zone_side->current.value;
       }
-      return (height * COERCE_FLOAT(LODWORD(v19) & _mask__AbsFloat_)
-            + (1.0 - COERCE_FLOAT(LODWORD(v19) & _mask__AbsFloat_)) * pointAdjusted_8)
+      return (height * fabs(v19)
+            + (1.0 - fabs(v19)) * pointAdjusted_8)
            * axis[2][0]
            * 0.69999999;
     }
@@ -6670,7 +6670,7 @@ void __cdecl VEH_UpdateMoveToGoal(gentity_s *ent, const float *goalPos)
     if ( (veh->flags & 0x100) != 0 || info->type != 2 )
       startMoveAngle = 90.0f;
     angleDiff = AngleNormalize180(desiredYaw - phys->angles[1]);
-    if ( startMoveAngle <= COERCE_FLOAT(LODWORD(angleDiff) & _mask__AbsFloat_) )
+    if ( startMoveAngle <= fabs(angleDiff) )
       speedScale = 0.0f;
     else
       speedScale = 1.0 - (float)(angleDiff / startMoveAngle);
@@ -7000,7 +7000,7 @@ void __cdecl VEH_UpdateAngleAndAngularVel(
       {
         __debugbreak();
       }
-      if ( (float)((float)(1.0 - overShoot) * (float)((float)(absCurAngleVel * 0.5) * (float)(absCurAngleVel / decel))) < COERCE_FLOAT(LODWORD(angleDiff) & _mask__AbsFloat_) )
+      if ( (float)((float)(1.0 - overShoot) * (float)((float)(absCurAngleVel * 0.5) * (float)(absCurAngleVel / decel))) < fabs(angleDiff) )
       {
         effectiveAccel = accel;
       }
@@ -7013,7 +7013,7 @@ void __cdecl VEH_UpdateAngleAndAngularVel(
     if ( angleDiff < 0.0 )
       LODWORD(targetAngleVel) ^= _mask__NegFloat_;
     if ( (float)(effectiveAccel * 0.050000001) <= absCurAngleVel
-      || (float)(absCurAngleVel * 0.050000001) <= COERCE_FLOAT(LODWORD(angleDiff) & _mask__AbsFloat_) )
+      || (float)(absCurAngleVel * 0.050000001) <= fabs(angleDiff) )
     {
       phys->rotVel[index] = VEH_AccelerateSpeed(phys->rotVel[index], targetAngleVel, effectiveAccel, 0.050000001);
       phys->angles[index] = (float)(phys->rotVel[index] * 0.050000001) + phys->angles[index];
@@ -7093,7 +7093,7 @@ void __cdecl VEH_UpdateYawAndNotify(gentity_s *ent, float desiredYaw)
   {
     initialYawDiff = AngleDelta(veh->phys.angles[1], veh->targetYaw);
   }
-  v2 = (veh->hasGoalYaw || veh->hasTargetYaw) && COERCE_FLOAT(LODWORD(initialYawDiff) & _mask__AbsFloat_) >= 1.5;
+  v2 = (veh->hasGoalYaw || veh->hasTargetYaw) && fabs(initialYawDiff) >= 1.5;
   initalVel = veh->phys.rotVel[1];
   yawAccel = veh->phys.yawAccel;
   yawDecel = veh->phys.yawDecel;
@@ -7120,7 +7120,7 @@ void __cdecl VEH_UpdateYawAndNotify(gentity_s *ent, float desiredYaw)
       finalYawDiff = AngleDelta(veh->phys.angles[1], veh->goalYaw);
     else
       finalYawDiff = AngleDelta(veh->phys.angles[1], veh->targetYaw);
-    if ( (float)(finalYawDiff * initialYawDiff) < 0.0 || COERCE_FLOAT(LODWORD(finalYawDiff) & _mask__AbsFloat_) <= 1.5 )
+    if ( (float)(finalYawDiff * initialYawDiff) < 0.0 || fabs(finalYawDiff) <= 1.5 )
       Scr_Notify(ent, scr_const.goal_yaw, 0);
   }
 }
@@ -7291,7 +7291,7 @@ void __cdecl VEH_CheckVerticalVelocityToGoal(scr_vehicle_s *veh, float verticalD
 
   verticalSpeed = veh->phys.vel[2];
   if ( COERCE_FLOAT((unsigned int)accelVec[2] & _mask__AbsFloat_) >= 0.001
-    && COERCE_FLOAT(LODWORD(verticalSpeed) & _mask__AbsFloat_) >= 0.001
+    && fabs(verticalSpeed) >= 0.001
     && (float)(verticalSpeed * accelVec[2]) < 0.0
     && (float)(verticalDist * verticalSpeed) > 0.0 )
   {

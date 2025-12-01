@@ -304,7 +304,7 @@ bool __fastcall Actor_Dog_ShouldTurn(actor_s *self)
   if ( dog_turn_min_goal_dist->current.value > self->Path.fLookaheadDist )
     return 0;
   angle = Actor_Dog_GetDeltaTurnYaw(self);
-  return COERCE_FLOAT(LODWORD(angle) & _mask__AbsFloat_) > dog_turn90_angle->current.value;
+  return fabs(angle) > dog_turn90_angle->current.value;
 }
 
 int __cdecl Actor_Dog_IsEnemyInAttackRange(actor_s *self, sentient_s *enemy, int *goalPosSet)

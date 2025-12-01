@@ -269,13 +269,13 @@ void __thiscall NitrousVehicleController::UpdateControlsStrafeMode(
   if ( rbveh->m_vehicle_info->cameraMode == 2 && rbveh->m_vehicle_info->type != 2 )
     move[0] = 0.0f;
   vehicleDeadZone = FLOAT_40_0;
-  if ( COERCE_FLOAT(LODWORD(move[1]) & _mask__AbsFloat_) >= 40.0 )
+  if ( fabs(move[1]) >= 40.0 )
   {
     if ( move[1] < 0.0 )
       v5 = -1.0f;
     else
       v5 = 1.0f;
-    vec[0] = (float)((float)(COERCE_FLOAT(LODWORD(move[1]) & _mask__AbsFloat_) - vehicleDeadZone)
+    vec[0] = (float)((float)(fabs(move[1]) - vehicleDeadZone)
                    / (float)(128.0 - vehicleDeadZone))
            * v5;
   }
@@ -283,13 +283,13 @@ void __thiscall NitrousVehicleController::UpdateControlsStrafeMode(
   {
     vec[0] = 0.0f;
   }
-  if ( vehicleDeadZone <= COERCE_FLOAT(LODWORD(move[0]) & _mask__AbsFloat_) )
+  if ( vehicleDeadZone <= fabs(move[0]) )
   {
     if ( move[0] < 0.0 )
       v4 = -1.0f;
     else
       v4 = 1.0f;
-    vec[1] = (float)((float)(COERCE_FLOAT(LODWORD(move[0]) & _mask__AbsFloat_) - vehicleDeadZone)
+    vec[1] = (float)((float)(fabs(move[0]) - vehicleDeadZone)
                    / (float)(128.0 - vehicleDeadZone))
            * v4;
   }
@@ -438,7 +438,7 @@ void __userpurge NitrousVehicleController::UpdateVehicleInputs(
       anglePreference = anglePreference + 30.0;
   }
   targetSpeed = (float)(v30 * forward_preference) + anglePreference;
-  if ( COERCE_FLOAT(LODWORD(input_fwd[1]) & _mask__AbsFloat_) > targetSpeed )
+  if ( fabs(input_fwd[1]) > targetSpeed )
   {
     if ( input_fwd[1] < 0.0 )
       fwd = -1.0f;
@@ -503,8 +503,8 @@ LABEL_46:
   v14 = m_parameter->m_steer_angle_max * 57.295776;
   if ( v32 && rbveh->m_vehicle_info->type != 2 )
     v14 = v14 * 2.0;
-  if ( v14 > COERCE_FLOAT(LODWORD(input_fwd[1]) & _mask__AbsFloat_) )
-    yaw_steer_range = (float)(COERCE_FLOAT(LODWORD(input_fwd[1]) & _mask__AbsFloat_) / v14) * yaw_steer_range;
+  if ( v14 > fabs(input_fwd[1]) )
+    yaw_steer_range = (float)(fabs(input_fwd[1]) / v14) * yaw_steer_range;
   if ( (float)(yaw_steer_range - 1.0) < 0.0 )
     hand_brake_min_speed = yaw_steer_range;
   else
@@ -518,7 +518,7 @@ LABEL_46:
   m_auto_hand_brake_min_speed = rbveh->m_parameter->m_auto_hand_brake_min_speed;
   v9 = LODWORD(input_fwd[1]) & _mask__AbsFloat_;
   v6 = 0;
-  if ( COERCE_FLOAT(LODWORD(input_fwd[1]) & _mask__AbsFloat_) > hand_brake_apply_delta )
+  if ( fabs(input_fwd[1]) > hand_brake_apply_delta )
   {
     v7 = NitrousVehicle::get_velocity(rbveh, &v8);
     if ( (float)((float)((float)(v7->x * v7->x) + (float)(v7->y * v7->y)) + (float)(v7->z * v7->z)) > (float)(m_auto_hand_brake_min_speed * m_auto_hand_brake_min_speed) )
@@ -770,13 +770,13 @@ double __cdecl RecalibrateInputCustom(float val, float threshold)
 {
   float v3; // [esp+0h] [ebp-8h]
 
-  if ( threshold <= COERCE_FLOAT(LODWORD(val) & _mask__AbsFloat_) )
+  if ( threshold <= fabs(val) )
   {
     if ( val <= 0.0 )
       v3 = -1.0f;
     else
       v3 = 1.0f;
-    return (float)((float)((float)((float)(COERCE_FLOAT(LODWORD(val) & _mask__AbsFloat_) - threshold)
+    return (float)((float)((float)((float)(fabs(val) - threshold)
                                  / (float)(128.0 - threshold))
                          * 128.0)
                  * v3);
@@ -871,14 +871,14 @@ void __userpurge NitrousVehicleController::UpdateControlsDefault(
         && (float)(COERCE_FLOAT(
                      COERCE_UNSIGNED_INT((float)((float)(velocity->x * *v7) + (float)(velocity->y * v7[1])) + (float)(velocity->z * v7[2]))
                    & _mask__AbsFloat_)
-                 - 2.0) > COERCE_FLOAT(LODWORD(rbveh->m_forward_vel) & _mask__AbsFloat_)
+                 - 2.0) > fabs(rbveh->m_forward_vel)
         && required_stop_time > v20->m_stopped_time;
       if ( rbveh->m_forward_vel > 1.0 || v4 )
       {
         v20->m_stopped_time = 0.0f;
         if ( v4 )
           v20->m_stopped_time = FLOAT_N0_2;
-        if ( COERCE_FLOAT(LODWORD(rbveh->m_steer_factor) & _mask__AbsFloat_) > breakHandbrakeThreshold
+        if ( fabs(rbveh->m_steer_factor) > breakHandbrakeThreshold
           || AnalogButtonValue > 0.0 )
         {
 LABEL_36:
@@ -940,7 +940,7 @@ void __thiscall NitrousVehicleController::UpdateControlsTank(NitrousVehicleContr
   else
     v5 = 1.0f;
   steering = COERCE_FLOAT(COERCE_UNSIGNED_INT(normalized_x * normalized_x) ^ _mask__NegFloat_) * v5;
-  if ( COERCE_FLOAT(LODWORD(steering) & _mask__AbsFloat_) < 0.98000002 )
+  if ( fabs(steering) < 0.98000002 )
     steering = steering * steer_reduce_frac;
   if ( rbveh->m_vehicle_info->cameraMode == 4 || rbveh->m_vehicle_info->type != 2 )
     v4 = 1.0f;
@@ -1059,9 +1059,9 @@ void __thiscall rigid_body::add_force(rigid_body *this, const phys_vec3 *force)
   this->m_force_sum.x = this->m_force_sum.x + force->x;
   this->m_force_sum.y = this->m_force_sum.y + force->y;
   this->m_force_sum.z = this->m_force_sum.z + force->z;
-  if ( COERCE_FLOAT(LODWORD(this->m_force_sum.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_force_sum.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_force_sum.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(this->m_force_sum.x) > 100000.0
+    || fabs(this->m_force_sum.y) > 100000.0
+    || fabs(this->m_force_sum.z) > 100000.0 )
   {
     phys_exec_debug_callback(this);
   }
@@ -1222,7 +1222,7 @@ void __userpurge NitrousVehicleController::UpdateApplyBoatAccel(
     forwardForce.x = *(float *)(LODWORD(center.w) + 60);
     turnProportion = rbveh->m_forward_vel;
     LODWORD(speedFactor) = LODWORD(turnProportion) & _mask__AbsFloat_;
-    rotSpeedFactor = COERCE_FLOAT(LODWORD(turnProportion) & _mask__AbsFloat_)
+    rotSpeedFactor = fabs(turnProportion)
                    / (float)(*(float *)(LODWORD(center.z) + 232) * rbveh->m_speed_scale);
     if ( rotSpeedFactor > 1.0 )
       rotSpeedFactor = 1.0f;
@@ -1237,7 +1237,7 @@ void __userpurge NitrousVehicleController::UpdateApplyBoatAccel(
       v115 = LODWORD(rotSpeedFactor) & _mask__AbsFloat_;
       throttle = GraphFloat_GetValue(
                    (const GraphFloat *)*(unsigned int *)(LODWORD(center.y) + 7324),
-                   COERCE_FLOAT(LODWORD(rotSpeedFactor) & _mask__AbsFloat_));
+                   fabs(rotSpeedFactor));
     }
     throttle = (float)((float)((float)(delta_t * 60.0) * *(float *)(LODWORD(center.z) + 236)) * rbveh->m_speed_scale)
              * throttle;
@@ -1401,7 +1401,7 @@ void __userpurge NitrousVehicleController::UpdateApplyBoatAccel(
             if ( v14 > 0.0 )
               v16 = v16 * -1.0;
             v13 = rbveh->m_steer_factor;
-            v11 = COERCE_FLOAT(LODWORD(v13) & _mask__AbsFloat_) > 0.60000002
+            v11 = fabs(v13) > 0.60000002
                && (v12 = rbveh->m_forward_vel, v12 > 100.0);
             v10 = v11;
             if ( v11 )

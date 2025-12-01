@@ -1606,7 +1606,7 @@ void __cdecl Rope_CollideWorld(int rope_index)
             v1 = (float)((float)((float)(p1[0] - pi[0]) * trace.normal.vec.v[0])
                        + (float)((float)(p1[1] - pi[1]) * trace.normal.vec.v[1]))
                + (float)((float)(p1[2] - pi[2]) * trace.normal.vec.v[2]);
-            d = v1 - (float)(COERCE_FLOAT(LODWORD(v1) & _mask__AbsFloat_) * 0.0099999998);
+            d = v1 - (float)(fabs(v1) * 0.0099999998);
             dir[0] = (float)(COERCE_FLOAT(LODWORD(d) ^ _mask__NegFloat_) * trace.normal.vec.v[0])
                    + (float)(p1[0] - pi[0]);
             dir[1] = (float)(COERCE_FLOAT(LODWORD(d) ^ _mask__NegFloat_) * trace.normal.vec.v[1])

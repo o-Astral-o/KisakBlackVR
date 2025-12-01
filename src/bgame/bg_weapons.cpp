@@ -962,7 +962,7 @@ void __cdecl PM_AdjustAimSpreadScale(pmove_t *pm, pml_t *pml)
             v2 = AngleNormalize180(
                    (float)((float)pm->cmd.angles[i] * 0.0054931641)
                  - (float)((float)pm->oldcmd.angles[i] * 0.0054931641));
-            viewchange = (float)((float)((float)(COERCE_FLOAT(LODWORD(v2) & _mask__AbsFloat_) * 0.0099999998)
+            viewchange = (float)((float)((float)(fabs(v2) * 0.0099999998)
                                        * weapDef->fHipSpreadTurnAdd)
                                / pml->frametime)
                        + viewchange;

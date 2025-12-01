@@ -231,16 +231,16 @@ bool __cdecl FX_CullElementForDraw_Sprite(const FxDrawState *draw)
   radius = v4;
   if ( (draw->elemDef->flags & 0x200000) != 0 )
   {
-    pivx = COERCE_FLOAT(LODWORD(draw->elemDef->billboardPivot[0]) & _mask__AbsFloat_) * draw->visState.size[0];
-    pivy = COERCE_FLOAT(LODWORD(draw->elemDef->billboardPivot[1]) & _mask__AbsFloat_) * draw->visState.size[1];
+    pivx = fabs(draw->elemDef->billboardPivot[0]) * draw->visState.size[0];
+    pivy = fabs(draw->elemDef->billboardPivot[1]) * draw->visState.size[1];
     if ( (float)(pivx - pivy) < 0.0 )
-      v3 = COERCE_FLOAT(LODWORD(draw->elemDef->billboardPivot[1]) & _mask__AbsFloat_) * draw->visState.size[1];
+      v3 = fabs(draw->elemDef->billboardPivot[1]) * draw->visState.size[1];
     else
-      v3 = COERCE_FLOAT(LODWORD(draw->elemDef->billboardPivot[0]) & _mask__AbsFloat_) * draw->visState.size[0];
+      v3 = fabs(draw->elemDef->billboardPivot[0]) * draw->visState.size[0];
     if ( (float)(pivy - pivx) < 0.0 )
-      v2 = COERCE_FLOAT(LODWORD(draw->elemDef->billboardPivot[1]) & _mask__AbsFloat_) * draw->visState.size[1];
+      v2 = fabs(draw->elemDef->billboardPivot[1]) * draw->visState.size[1];
     else
-      v2 = COERCE_FLOAT(LODWORD(draw->elemDef->billboardPivot[0]) & _mask__AbsFloat_) * draw->visState.size[0];
+      v2 = fabs(draw->elemDef->billboardPivot[0]) * draw->visState.size[0];
     radius = (float)((float)(v2 * 0.5) + v3) + radius;
   }
   pos[0] = draw->posWorld[0];

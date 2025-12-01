@@ -177,7 +177,7 @@ void __cdecl Actor_UpdateLookAt(actor_s *self)
       }
     }
     fYawDelta = fLookYawTarget - self->lookAtInfo.fLookAtTurnAngle;
-    if ( COERCE_FLOAT(LODWORD(fYawDelta) & _mask__AbsFloat_) >= 1.0 )
+    if ( fabs(fYawDelta) >= 1.0 )
     {
       fYawSpeed = self->lookAtInfo.fLookAtTurnSpeed;
       if ( fLookYawTarget < 0.0 || fLookYawTarget == 0.0 && fYawDelta < 0.0 )

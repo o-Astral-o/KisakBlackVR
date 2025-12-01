@@ -139,7 +139,7 @@ void __cdecl Ragdoll_QuatToAxisAngle(const float *quat, float *axisAngle)
 
   v4 = Q_acos(quat[3]);
   __libm_sse2_sin(v2);
-  if ( COERCE_FLOAT(LODWORD(v4) & _mask__AbsFloat_) <= 0.000001 )
+  if ( fabs(v4) <= 0.000001 )
   {
     *axisAngle = 0.0f;
     axisAngle[1] = 0.0f;

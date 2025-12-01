@@ -194,7 +194,7 @@ bool __cdecl Ragdoll_ValidatePrecalcBoneDef(RagdollDef *def, BoneDef *bone)
   {
     __debugbreak();
   }
-  return COERCE_FLOAT(LODWORD(bone->mass) & _mask__AbsFloat_) >= 0.000001;
+  return fabs(bone->mass) >= 0.000001;
 }
 
 void __cdecl Ragdoll_ExplosionEvent(

@@ -466,7 +466,7 @@ void __cdecl Actor_OrientCorpseToGround(gentity_s *self, int bLerp)
         &fNewRoll,
         &fNewHeight);
       v10 = AngleNormalize180(fNewPitch - pProneInfo->fTorsoPitch);
-      if ( COERCE_FLOAT(LODWORD(v10) & _mask__AbsFloat_) <= 12.0 )
+      if ( fabs(v10) <= 12.0 )
       {
         v9 = fNewPitch;
       }
@@ -480,7 +480,7 @@ void __cdecl Actor_OrientCorpseToGround(gentity_s *self, int bLerp)
       }
       pProneInfo->fTorsoPitch = v9;
       v8 = AngleNormalize180(fNewRoll - pProneInfo->fWaistPitch);
-      if ( COERCE_FLOAT(LODWORD(v8) & _mask__AbsFloat_) <= 12.0 )
+      if ( fabs(v8) <= 12.0 )
       {
         v7 = fNewRoll;
       }
@@ -494,7 +494,7 @@ void __cdecl Actor_OrientCorpseToGround(gentity_s *self, int bLerp)
       }
       pProneInfo->fWaistPitch = v7;
       v6 = fNewHeight - pProneInfo->fBodyHeight;
-      if ( COERCE_FLOAT(LODWORD(v6) & _mask__AbsFloat_) <= 0.60000002 )
+      if ( fabs(v6) <= 0.60000002 )
       {
         v5 = fNewHeight;
       }
@@ -561,7 +561,7 @@ void __cdecl Actor_OrientPitchToGround(gentity_s *self, int bLerp)
         0,
         &fNewHeight);
       v8 = AngleNormalize180(fNewPitch - pProneInfo->fTorsoPitch);
-      if ( COERCE_FLOAT(LODWORD(v8) & _mask__AbsFloat_) <= 12.0 )
+      if ( fabs(v8) <= 12.0 )
       {
         v7 = fNewPitch;
       }
@@ -575,7 +575,7 @@ void __cdecl Actor_OrientPitchToGround(gentity_s *self, int bLerp)
       }
       pProneInfo->fTorsoPitch = v7;
       v6 = fNewHeight - pProneInfo->fBodyHeight;
-      if ( COERCE_FLOAT(LODWORD(v6) & _mask__AbsFloat_) <= 0.60000002 )
+      if ( fabs(v6) <= 0.60000002 )
       {
         v5 = fNewHeight;
       }

@@ -400,8 +400,8 @@ void __cdecl Scr_Target_IsInRect()
   halfWidth = Scr_GetFloat(3u, SCRIPTINSTANCE_SERVER);
   halfHeight = Scr_GetFloat(4u, SCRIPTINSTANCE_SERVER);
   if ( ScrGetTargetScreenPos(screenPos)
-    && halfWidth > COERCE_FLOAT(LODWORD(screenPos[0]) & _mask__AbsFloat_)
-    && halfHeight > COERCE_FLOAT(LODWORD(screenPos[1]) & _mask__AbsFloat_) )
+    && halfWidth > fabs(screenPos[0])
+    && halfHeight > fabs(screenPos[1]) )
   {
     Scr_AddBool(1u, SCRIPTINSTANCE_SERVER);
   }

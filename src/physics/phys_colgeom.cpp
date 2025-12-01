@@ -1929,9 +1929,9 @@ void __userpurge gjk_cylinder_t::get_feature(gjk_cylinder_t *this@<ecx>, int a2@
   }
   *(&len + LODWORD(sr)) = 0.0f;
   v50 = (float)((float)(x * r1.y) + (float)(y * r1.z)) + (float)(z * r1.w);
-  if ( COERCE_FLOAT(LODWORD(v50) & _mask__AbsFloat_) >= 0.70709997 )
+  if ( fabs(v50) >= 0.70709997 )
   {
-    if ( COERCE_FLOAT(LODWORD(v50) & _mask__AbsFloat_) >= 0.99000001 )
+    if ( fabs(v50) >= 0.99000001 )
     {
       v30 = *phys_vec3::operator[]<int>((phys_vec3 *)&x, 2u);
       v29 = *phys_vec3::operator[]<int>((phys_vec3 *)&x, 0);

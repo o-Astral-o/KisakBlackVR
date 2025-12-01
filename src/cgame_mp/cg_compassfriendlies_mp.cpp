@@ -1830,8 +1830,8 @@ void __cdecl CG_CompassDrawFriendlies(
             && cgameGlob->nextSnap->ps.clientNum != num
             && !actor->inVehicle )
           {
-            if ( COERCE_FLOAT(LODWORD(actor->lastPos[0]) & _mask__AbsFloat_) > 1.0
-              || COERCE_FLOAT(LODWORD(actor->lastPos[1]) & _mask__AbsFloat_) > 1.0 )
+            if ( fabs(actor->lastPos[0]) > 1.0
+              || fabs(actor->lastPos[1]) > 1.0 )
             {
               posDelta[0] = actor->lastPos[0] - cgameGlob->refdef.vieworg[0];
               posDelta[1] = actor->lastPos[1] - cgameGlob->refdef.vieworg[1];

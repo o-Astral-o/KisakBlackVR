@@ -1122,7 +1122,7 @@ char __cdecl Bot_IsMovingFoward(const bot_info_t *botInfo, const client_t *bot, 
     AngleVectors(ps->viewangles, vForward, 0, 0);
     vDot = (float)((float)(ps->velocity[0] * vForward[0]) + (float)(ps->velocity[1] * vForward[1]))
          + (float)(ps->velocity[2] * vForward[2]);
-    v4 = COERCE_FLOAT(LODWORD(vDot) & _mask__AbsFloat_) > 1.0;
+    v4 = fabs(vDot) > 1.0;
     if ( g_DXDeviceThread == GetCurrentThreadId() )
       D3DPERF_EndEvent();
     return v4;
@@ -1620,12 +1620,12 @@ LABEL_4:
                   gameWorldMp.path.nodes[botInfo->path.pts[botInfo->path.lookaheadNextNode].iNodeNum].constant.forward,
                   viewAngles);
               angle = AngleNormalize180(viewAngles[0]);
-              if ( COERCE_FLOAT(LODWORD(angle) & _mask__AbsFloat_) >= 75.0 )
+              if ( fabs(angle) >= 75.0 )
                 Path_Clear(&botInfo->path);
-              if ( COERCE_FLOAT(LODWORD(angle) & _mask__AbsFloat_) <= 5.0 && ps->fWeaponPosFrac <= 0.000001 )
+              if ( fabs(angle) <= 5.0 && ps->fWeaponPosFrac <= 0.000001 )
               {
                 if ( COERCE_FLOAT(COERCE_UNSIGNED_INT(ps->viewangles[0] - botInfo->targetPitch) & _mask__AbsFloat_) <= 0.5
-                  || COERCE_FLOAT(LODWORD(botInfo->targetPitch) & _mask__AbsFloat_) > sv_botPitchDown->current.value )
+                  || fabs(botInfo->targetPitch) > sv_botPitchDown->current.value )
                 {
                   botInfo->targetPitch = flrand(sv_botPitchUp->current.value, sv_botPitchDown->current.value);
                 }
@@ -1741,12 +1741,12 @@ double __cdecl Bot_UpdatePitch(float currentPitch, float targetPitch, bool force
   v5 = AngleNormalize180(targetPitch - currentPitch);
   if ( (float)((float)(rate
                      - (float)(COERCE_FLOAT(
-                                 COERCE_UNSIGNED_INT(COERCE_FLOAT(LODWORD(v5) & _mask__AbsFloat_) / 180.0)
+                                 COERCE_UNSIGNED_INT(fabs(v5) / 180.0)
                                ^ _mask__NegFloat_)
                              * rate))
              - rate) < 0.0 )
     v4 = rate
-       - (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(COERCE_FLOAT(LODWORD(v5) & _mask__AbsFloat_) / 180.0) ^ _mask__NegFloat_)
+       - (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(fabs(v5) / 180.0) ^ _mask__NegFloat_)
                * rate);
   else
     v4 = rate;
@@ -1774,7 +1774,7 @@ double __cdecl Bot_UpdateYaw(float currentYaw, float targetYaw, bool forceSlow, 
     rate = sv_botYawSpeedAds->current.value;
   v8 = AngleNormalize180(targetYaw - currentYaw);
   LODWORD(diff) = LODWORD(v8) & _mask__AbsFloat_;
-  if ( COERCE_FLOAT(LODWORD(v8) & _mask__AbsFloat_) < 100.0 )
+  if ( fabs(v8) < 100.0 )
   {
     if ( (float)((float)(rate - (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(diff / 180.0) ^ _mask__NegFloat_) * rate))
                - rate) < 0.0 )

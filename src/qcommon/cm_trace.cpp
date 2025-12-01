@@ -847,7 +847,7 @@ LABEL_8:
     {
       __debugbreak();
     }
-    if ( fTotalHalfHeight >= COERCE_FLOAT(LODWORD(fHeightDiff) & _mask__AbsFloat_) )
+    if ( fTotalHalfHeight >= fabs(fHeightDiff) )
     {
       tmp[0] = *(float *)&top - p1;
       tmp[1] = *((float *)&top + 1) - p1_4;
@@ -1775,7 +1775,7 @@ int __cdecl CM_TraceCylinderThroughCylinder(
           {
             __debugbreak();
           }
-          if ( COERCE_FLOAT(LODWORD(fHitHeight) & _mask__AbsFloat_) <= fTotalHeighta )
+          if ( fabs(fHitHeight) <= fTotalHeighta )
           {
             if ( (float)(fEntry - 0.0) < 0.0 )
               v6 = 0.0f;
@@ -1829,7 +1829,7 @@ int __cdecl CM_TraceCylinderThroughCylinder(
     {
       __debugbreak();
     }
-    if ( COERCE_FLOAT(LODWORD(vDelta[2]) & _mask__AbsFloat_) <= fTotalHeight )
+    if ( fabs(vDelta[2]) <= fTotalHeight )
     {
       trace->fraction = 0.0f;
       trace->startsolid = 1;
@@ -1851,7 +1851,7 @@ int __cdecl CM_TraceCylinderThroughCylinder(
       {
         __debugbreak();
       }
-      if ( fTotalHeight >= COERCE_FLOAT(LODWORD(vDelta[2]) & _mask__AbsFloat_) )
+      if ( fTotalHeight >= fabs(vDelta[2]) )
         trace->allsolid = 1;
       return 0;
     }
@@ -2101,17 +2101,17 @@ void __cdecl CM_TraceThroughPrimitives(
           v38 = v41;
           v37 = LODWORD(v41) & _mask__AbsFloat_;
           v36 = tw->halfDeltaAbs.vec.v[0];
-          if ( COERCE_FLOAT(LODWORD(v41) & _mask__AbsFloat_) <= (float)(v44 + v36) )
+          if ( fabs(v41) <= (float)(v44 + v36) )
           {
             v35 = v42;
             v34 = LODWORD(v42) & _mask__AbsFloat_;
             v33 = tw->halfDeltaAbs.vec.v[1];
-            if ( COERCE_FLOAT(LODWORD(v42) & _mask__AbsFloat_) <= (float)(v45 + v33) )
+            if ( fabs(v42) <= (float)(v45 + v33) )
             {
               v32 = v43;
               v31 = LODWORD(v43) & _mask__AbsFloat_;
               v30 = tw->halfDeltaAbs.vec.v[2];
-              if ( COERCE_FLOAT(LODWORD(v43) & _mask__AbsFloat_) <= (float)(v46 + v30) )
+              if ( fabs(v43) <= (float)(v46 + v30) )
               {
                 if ( tw->axialCullOnly )
                 {
@@ -2124,7 +2124,7 @@ void __cdecl CM_TraceThroughPrimitives(
                   v27 = (float)(v29 * v43) - (float)(v28 * v42);
                   v26 = LODWORD(v27) & _mask__AbsFloat_;
                   v25 = *(_QWORD *)&tw->halfDeltaAbs.vec.unitVec[1].packed;
-                  if ( COERCE_FLOAT(LODWORD(v27) & _mask__AbsFloat_) <= (float)((float)(v45 * *((float *)&v25 + 1))
+                  if ( fabs(v27) <= (float)((float)(v45 * *((float *)&v25 + 1))
                                                                               + (float)(v46 * *(float *)&v25)) )
                   {
                     v24 = tw->halfDelta.vec.v[2];
@@ -2133,14 +2133,14 @@ void __cdecl CM_TraceThroughPrimitives(
                     v21 = LODWORD(v22) & _mask__AbsFloat_;
                     v20 = tw->halfDeltaAbs.vec.v[0];
                     v19 = tw->halfDeltaAbs.vec.v[2];
-                    if ( COERCE_FLOAT(LODWORD(v22) & _mask__AbsFloat_) <= (float)((float)(v46 * v20) + (float)(v44 * v19)) )
+                    if ( fabs(v22) <= (float)((float)(v46 * v20) + (float)(v44 * v19)) )
                     {
                       v18 = tw->halfDelta.vec.v[0];
                       v17 = tw->halfDelta.vec.v[1];
                       v16 = (float)(v18 * v42) - (float)(v17 * v41);
                       v15 = LODWORD(v16) & _mask__AbsFloat_;
                       v14 = *(_QWORD *)tw->halfDeltaAbs.vec.v;
-                      v5 = COERCE_FLOAT(LODWORD(v16) & _mask__AbsFloat_) > (float)((float)(v44 * *((float *)&v14 + 1))
+                      v5 = fabs(v16) > (float)((float)(v44 * *((float *)&v14 + 1))
                                                                                  + (float)(v45 * *(float *)&v14));
                     }
                     else
@@ -3525,7 +3525,7 @@ bool __cdecl CM_SightTraceCylinderThroughCylinder(
           {
             __debugbreak();
           }
-          return COERCE_FLOAT(LODWORD(fHitHeight) & _mask__AbsFloat_) > fTotalHeighta;
+          return fabs(fHitHeight) > fTotalHeighta;
         }
         else
         {
@@ -3555,7 +3555,7 @@ bool __cdecl CM_SightTraceCylinderThroughCylinder(
     {
       __debugbreak();
     }
-    return COERCE_FLOAT(LODWORD(vDelta[2]) & _mask__AbsFloat_) > fTotalHeight;
+    return fabs(vDelta[2]) > fTotalHeight;
   }
 }
 
@@ -4695,7 +4695,7 @@ char __cdecl trace_point_through_triangle(
   LODWORD(c2[2]) = *((unsigned int *)u0 + 2) ^ _mask__NegFloat_;
   Vec3Cross(c0, c1, cr_c0_c1);
   det = (float)((float)(cr_c0_c1[0] * c2[0]) + (float)(cr_c0_c1[1] * c2[1])) + (float)(cr_c0_c1[2] * c2[2]);
-  if ( COERCE_FLOAT(LODWORD(det) & _mask__AbsFloat_) < 0.000099999997 )
+  if ( fabs(det) < 0.000099999997 )
     return 0;
   rs[0] = *p0 - *v0;
   rs[1] = p0[1] - v0[1];
@@ -5536,7 +5536,7 @@ bool __cdecl collide_segment_triangle(
   LODWORD(c2[2]) = *((unsigned int *)u0 + 2) ^ _mask__NegFloat_;
   Vec3Cross(c0, c1, cr_c0_c1);
   det = (float)((float)(cr_c0_c1[0] * c2[0]) + (float)(cr_c0_c1[1] * c2[1])) + (float)(cr_c0_c1[2] * c2[2]);
-  if ( COERCE_FLOAT(LODWORD(det) & _mask__AbsFloat_) < 0.000099999997 )
+  if ( fabs(det) < 0.000099999997 )
     return 0;
   rs[0] = *p0 - *v0;
   rs[1] = p0[1] - v0[1];

@@ -289,9 +289,9 @@ void __cdecl UI_ScreenshotDraw(int localClientNum, int contextIndex, const rectD
   size = 0.5 / (float)(zoom + 1.0);
   Stick = GPad_GetStick(idx, GPAD_LX);
   dy = GPad_GetStick(idx, GPAD_LY);
-  if ( COERCE_FLOAT(LODWORD(Stick) & _mask__AbsFloat_) > 0.1 )
+  if ( fabs(Stick) > 0.1 )
     s_center_x = (float)((float)((float)uiInfo->uiDC.frameTime / 1000.0) * Stick) + s_center_x;
-  if ( COERCE_FLOAT(LODWORD(dy) & _mask__AbsFloat_) > 0.1 )
+  if ( fabs(dy) > 0.1 )
     s_center_y = s_center_y - (float)((float)((float)uiInfo->uiDC.frameTime / 1000.0) * dy);
   if ( (float)(s_center_x - (float)(1.0 - size)) < 0.0 )
     v7 = s_center_x;

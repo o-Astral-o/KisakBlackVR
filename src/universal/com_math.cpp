@@ -75,9 +75,9 @@ double __cdecl LinearTrack(float tgt, float cur, float rate, float deltaTime)
     step = COERCE_FLOAT(LODWORD(rate) ^ _mask__NegFloat_) * deltaTime;
   else
     step = rate * deltaTime;
-  if ( COERCE_FLOAT(LODWORD(err) & _mask__AbsFloat_) <= 0.001 )
+  if ( fabs(err) <= 0.001 )
     return tgt;
-  if ( COERCE_FLOAT(LODWORD(step) & _mask__AbsFloat_) <= COERCE_FLOAT(LODWORD(err) & _mask__AbsFloat_) )
+  if ( fabs(step) <= fabs(err) )
     return cur + step;
   return tgt;
 }
@@ -101,7 +101,7 @@ double __cdecl DiffTrack(float tgt, float cur, float rate, float deltaTime)
   step = (float)(rate * (float)(tgt - cur)) * deltaTime;
   if ( COERCE_FLOAT(COERCE_UNSIGNED_INT(tgt - cur) & _mask__AbsFloat_) <= 0.001 )
     return tgt;
-  if ( COERCE_FLOAT(LODWORD(step) & _mask__AbsFloat_) <= COERCE_FLOAT(COERCE_UNSIGNED_INT(tgt - cur) & _mask__AbsFloat_) )
+  if ( fabs(step) <= COERCE_FLOAT(COERCE_UNSIGNED_INT(tgt - cur) & _mask__AbsFloat_) )
     return cur + step;
   return tgt;
 }
@@ -1724,7 +1724,7 @@ double __cdecl RadiusFromBoundsSq(const float *mins, const float *maxs)
   for ( i = 0; i < 3; ++i )
   {
     LODWORD(a) = LODWORD(mins[i]) & _mask__AbsFloat_;
-    if ( a <= COERCE_FLOAT(LODWORD(maxs[i]) & _mask__AbsFloat_) )
+    if ( a <= fabs(maxs[i]) )
       LODWORD(v3) = LODWORD(maxs[i]) & _mask__AbsFloat_;
     else
       v3 = a;
@@ -1743,7 +1743,7 @@ double __cdecl RadiusFromBounds2DSq(const float *mins, const float *maxs)
   for ( i = 0; i < 2; ++i )
   {
     LODWORD(a) = LODWORD(mins[i]) & _mask__AbsFloat_;
-    if ( a <= COERCE_FLOAT(LODWORD(maxs[i]) & _mask__AbsFloat_) )
+    if ( a <= fabs(maxs[i]) )
       LODWORD(v3) = LODWORD(maxs[i]) & _mask__AbsFloat_;
     else
       v3 = a;
@@ -2797,18 +2797,18 @@ bool __cdecl CullBoxFromConicSectionOfSphere(
   deltaMid = *boxCenter - *coneOrg;
   deltaMid_4 = boxCenter[1] - coneOrg[1];
   deltaMid_8 = boxCenter[2] - coneOrg[2];
-  if ( (float)((float)(COERCE_FLOAT(LODWORD(deltaMid) & _mask__AbsFloat_) - *boxHalfSize) - 0.0) < 0.0 )
+  if ( (float)((float)(fabs(deltaMid) - *boxHalfSize) - 0.0) < 0.0 )
     v12 = 0.0f;
   else
-    v12 = COERCE_FLOAT(LODWORD(deltaMid) & _mask__AbsFloat_) - *boxHalfSize;
-  if ( (float)((float)(COERCE_FLOAT(LODWORD(deltaMid_4) & _mask__AbsFloat_) - boxHalfSize[1]) - 0.0) < 0.0 )
+    v12 = fabs(deltaMid) - *boxHalfSize;
+  if ( (float)((float)(fabs(deltaMid_4) - boxHalfSize[1]) - 0.0) < 0.0 )
     v11 = 0.0f;
   else
-    v11 = COERCE_FLOAT(LODWORD(deltaMid_4) & _mask__AbsFloat_) - boxHalfSize[1];
-  if ( (float)((float)(COERCE_FLOAT(LODWORD(deltaMid_8) & _mask__AbsFloat_) - boxHalfSize[2]) - 0.0) < 0.0 )
+    v11 = fabs(deltaMid_4) - boxHalfSize[1];
+  if ( (float)((float)(fabs(deltaMid_8) - boxHalfSize[2]) - 0.0) < 0.0 )
     v10 = 0.0f;
   else
-    v10 = COERCE_FLOAT(LODWORD(deltaMid_8) & _mask__AbsFloat_) - boxHalfSize[2];
+    v10 = fabs(deltaMid_8) - boxHalfSize[2];
   if ( (float)((float)((float)(v12 * v12) + (float)(v11 * v11)) + (float)(v10 * v10)) > (float)(radius * radius) )
     return 1;
   if ( *coneDir < 0.0 )

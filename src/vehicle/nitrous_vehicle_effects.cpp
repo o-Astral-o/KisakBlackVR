@@ -73,7 +73,7 @@ void __userpurge NitrousVehicle::_update_wheel_effect_states(NitrousVehicle *thi
           if ( (LODWORD(rbc_wheel[5].m_b2_hitn_loc.y) & 2) != 0
             && (t_vel_loc.w = rbc_wheel[2].m_side_fric_k,
                 LODWORD(t_vel_loc.z) = LODWORD(t_vel_loc.w) & _mask__AbsFloat_,
-                COERCE_FLOAT(LODWORD(t_vel_loc.w) & _mask__AbsFloat_) > s_ableToSkidSpeed) )
+                fabs(t_vel_loc.w) > s_ableToSkidSpeed) )
           {
             *((unsigned int *)&rbc_wheel->b1 + 4 * j) = 2;
             *((float *)&rbc_wheel->rigid_body_constraint + 4 * j + 3) = 1.0f;

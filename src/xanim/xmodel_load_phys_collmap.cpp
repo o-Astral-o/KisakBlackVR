@@ -79,7 +79,7 @@ void __cdecl SnapPlane(float *plane)
 
   SnapAxialVector(plane);
   v1 = plane[3] - Q_rint(plane[3]);
-  if ( COERCE_FLOAT(LODWORD(v1) & _mask__AbsFloat_) < 0.001 )
+  if ( fabs(v1) < 0.001 )
     plane[3] = Q_rint(plane[3]);
 }
 

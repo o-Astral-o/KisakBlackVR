@@ -5,9 +5,9 @@ void __thiscall rigid_body::add_force(rigid_body *this, const phys_vec3 *force)
   this->m_force_sum.x = this->m_force_sum.x + force->x;
   this->m_force_sum.y = this->m_force_sum.y + force->y;
   this->m_force_sum.z = this->m_force_sum.z + force->z;
-  if ( COERCE_FLOAT(LODWORD(this->m_force_sum.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_force_sum.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_force_sum.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(this->m_force_sum.x) > 100000.0
+    || fabs(this->m_force_sum.y) > 100000.0
+    || fabs(this->m_force_sum.z) > 100000.0 )
   {
     phys_exec_debug_callback(this);
   }

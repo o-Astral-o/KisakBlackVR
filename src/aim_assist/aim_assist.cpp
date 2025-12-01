@@ -1192,9 +1192,9 @@ void __cdecl AimAssist_ApplyTurnRates(const AimInput *input, AimOutput *output)
   else
     v4 = -1.0f;
   yawSign = v4;
-  //pitchDelta = COERCE_FLOAT(LODWORD(adjustedPitchAxis) & _mask__AbsFloat_) * pitchTurnRate;
+  //pitchDelta = fabs(adjustedPitchAxis) * pitchTurnRate;
   pitchDelta = fabs(adjustedPitchAxis) * pitchTurnRate;
-  //yawDelta = COERCE_FLOAT(LODWORD(adjustedYawAxis) & _mask__AbsFloat_) * yawTurnRate;
+  //yawDelta = fabs(adjustedYawAxis) * yawTurnRate;
   yawDelta = fabs(adjustedYawAxis) * yawTurnRate;
   if ( !aim_accel_turnrate_enabled->current.enabled || aim_assist_script_disable->current.enabled )
   {
@@ -1624,8 +1624,8 @@ void __cdecl AimAssist_ApplyAutoAim(const AimInput *input, AimOutput *output)
       aaGlob->autoAimYaw = newYaw;
       output->pitch = output->pitch + pitchDelta;
       output->yaw = output->yaw + yawDelta;
-      //if ( COERCE_FLOAT(LODWORD(pitchDelta) & _mask__AbsFloat_) < 0.001
-      //  && COERCE_FLOAT(LODWORD(yawDelta) & _mask__AbsFloat_) <= 0.001
+      //if ( fabs(pitchDelta) < 0.001
+      //  && fabs(yawDelta) <= 0.001
       //  && aaGlob->ps.fWeaponPosFrac == 0.0 )
       if ( fabs(pitchDelta) < 0.001f
         && fabs(yawDelta) <= 0.001f

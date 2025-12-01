@@ -221,7 +221,7 @@ void __cdecl RB_DrawSuperFlareOccluder(GfxGenericFilter *FilterInfo, int iFilter
                                  + (float)(position_8 * *(float *)(gfxCmdBufSourceState.sceneDef.time + 172)))
                          + *(float *)(gfxCmdBufSourceState.sceneDef.time + 188);
   if ( radius < 0.0 )
-    radius = COERCE_FLOAT(LODWORD(radius) & _mask__AbsFloat_) * transformedPosition_12;
+    radius = fabs(radius) * transformedPosition_12;
   sizeX = (float)((float)dword_B473FD4 * (float)(radius / transformedPosition_12)) / (float)dword_B473FD0;
   vert = RB_SetSuperFlareQuads();
   v3 = (float)(radius / transformedPosition_12) * transformedPosition_12;

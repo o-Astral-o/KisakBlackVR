@@ -155,9 +155,9 @@ void __thiscall NitrousVehicle::init(NitrousVehicle *this, gentity_s *owner, con
   AnglesToAxis(this->m_angles, (float (*)[3])axis);
   Phys_AxisToNitrousMat((float (*)[3])axis, &this->m_prev_rb_mat);
   Phys_Vec3ToNitrousVec(this->m_origin, &this->m_prev_rb_mat.w);
-  if ( COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(this->m_prev_rb_mat.w.x) > 100000.0
+    || fabs(this->m_prev_rb_mat.w.y) > 100000.0
+    || fabs(this->m_prev_rb_mat.w.z) > 100000.0 )
   {
     phys_exec_debug_callback(0);
   }
@@ -264,9 +264,9 @@ void __thiscall NitrousVehicle::init(
     AnglesToAxis(this->m_angles, (float (*)[3])axis);
     Phys_AxisToNitrousMat((float (*)[3])axis, &this->m_prev_rb_mat);
     Phys_Vec3ToNitrousVec(this->m_origin, &this->m_prev_rb_mat.w);
-    if ( COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.x) & _mask__AbsFloat_) > 100000.0
-      || COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.y) & _mask__AbsFloat_) > 100000.0
-      || COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.z) & _mask__AbsFloat_) > 100000.0 )
+    if ( fabs(this->m_prev_rb_mat.w.x) > 100000.0
+      || fabs(this->m_prev_rb_mat.w.y) > 100000.0
+      || fabs(this->m_prev_rb_mat.w.z) > 100000.0 )
     {
       phys_exec_debug_callback(0);
     }
@@ -773,7 +773,7 @@ void __userpurge NitrousVehicle::update_parms(
         v50 = com_spring_factor;
         v46 = v54;
         v45 = LODWORD(v54) & _mask__AbsFloat_;
-        v44 = COERCE_FLOAT(LODWORD(v54) & _mask__AbsFloat_) / v64;
+        v44 = fabs(v54) / v64;
         if ( (float)(v44 - 1.0) < 0.0 )
           mass = v44;
         else
@@ -1225,10 +1225,10 @@ double __thiscall NitrousVehicle::_calc_initial_susp_spring_k(
   float v4; // [esp-4h] [ebp-3Ch]
   float susp_spring_k; // [esp+0h] [ebp-38h]
 
-  susp_spring_k = COERCE_FLOAT(LODWORD(wheel_constraint->m_b1_wheel_center_loc.x) & _mask__AbsFloat_)
+  susp_spring_k = fabs(wheel_constraint->m_b1_wheel_center_loc.x)
                 / this->m_steer_front_back_length;
   if ( (float)(susp_spring_k - 1.0) < 0.0 )
-    v4 = COERCE_FLOAT(LODWORD(wheel_constraint->m_b1_wheel_center_loc.x) & _mask__AbsFloat_)
+    v4 = fabs(wheel_constraint->m_b1_wheel_center_loc.x)
        / this->m_steer_front_back_length;
   else
     v4 = 1.0f;
@@ -1638,12 +1638,12 @@ void __userpurge NitrousVehicle::_update_prolog(NitrousVehicle *this@<ecx>, int 
       v23 = 2;
     else
       v23 = v26;
-    ib = *(float *)&i * (float)(COERCE_FLOAT(LODWORD(this->m_throttle) & _mask__AbsFloat_) * (float)(6.0 / (float)v23));
+    ib = *(float *)&i * (float)(fabs(this->m_throttle) * (float)(6.0 / (float)v23));
     *(float *)&ia = NitrousVehicle::_get_stuck_accel_factor(this, delta_t) * ib;
   }
   else
   {
-    *(float *)&ia = COERCE_FLOAT(LODWORD(this->m_throttle) & _mask__AbsFloat_) * *(float *)&i;
+    *(float *)&ia = fabs(this->m_throttle) * *(float *)&i;
     if ( this->m_throttle < 0.0 )
     {
       *(float *)&ia = *(float *)&ia * this->m_parameter->m_reverse_scale;
@@ -1688,10 +1688,10 @@ void __userpurge NitrousVehicle::_update_prolog(NitrousVehicle *this@<ecx>, int 
       v16 = v17;
     else
       v16 = -1.0f;
-    v15 = (float)((float)(1.0 - COERCE_FLOAT(LODWORD(this->m_steer_factor) & _mask__AbsFloat_)) * this->m_throttle)
+    v15 = (float)((float)(1.0 - fabs(this->m_steer_factor)) * this->m_throttle)
         * v16;
     if ( (float)(v15 - 1.0) < 0.0 )
-      v14 = (float)((float)(1.0 - COERCE_FLOAT(LODWORD(this->m_steer_factor) & _mask__AbsFloat_)) * this->m_throttle)
+      v14 = (float)((float)(1.0 - fabs(this->m_steer_factor)) * this->m_throttle)
           * v16;
     else
       v14 = 1.0f;
@@ -1727,7 +1727,7 @@ void __userpurge NitrousVehicle::_update_prolog(NitrousVehicle *this@<ecx>, int 
     }
   }
   if ( scale_max_speed )
-    rbc_wheel = rbc_wheel * COERCE_FLOAT(LODWORD(this->m_throttle) & _mask__AbsFloat_);
+    rbc_wheel = rbc_wheel * fabs(this->m_throttle);
   if ( *(float *)&ia <= NitrousVehicle::get_maximum_acceleration_factor(this) )
     maximum_acceleration_factor = NitrousVehicle::get_maximum_acceleration_factor(this);
   else
@@ -1856,7 +1856,7 @@ void __thiscall NitrousVehicle::_update_friction(NitrousVehicle *this, float del
       else
       {
         this->m_current_front_side_fric_scale = this->m_parameter->m_tire_fric_hand_brake * fric_scaler;
-        if ( COERCE_FLOAT(LODWORD(this->m_throttle) & _mask__AbsFloat_) <= 0.1 )
+        if ( fabs(this->m_throttle) <= 0.1 )
           this->m_current_front_fwd_fric_scale = this->m_current_front_side_fric_scale;
         else
           this->m_current_front_fwd_fric_scale = this->m_parameter->m_tire_fric_fwd * fric_scaler;
@@ -1996,7 +1996,7 @@ void __thiscall NitrousVehicle::_update_fakey_stuff(NitrousVehicle *this, float 
   if ( peeling_out && this->m_throttle > 0.69999999 )
     high_rpm = 1;
   v4 = this->m_forward_vel / NitrousVehicle::get_max_speed(this, 1);
-  rpm_target = COERCE_FLOAT(LODWORD(this->m_throttle) & _mask__AbsFloat_) * COERCE_FLOAT(LODWORD(v4) & _mask__AbsFloat_);
+  rpm_target = fabs(this->m_throttle) * fabs(v4);
   if ( this->m_vehicle_info->type == 4 )
   {
     if ( (float)(this->m_throttle * 0.80000001) > rpm_target )
@@ -2045,9 +2045,9 @@ void __thiscall NitrousVehicle::start_path(NitrousVehicle *this, int attach_mode
       AnglesToAxis(this->m_owner->r.currentAngles, (float (*)[3])axis);
       Phys_AxisToNitrousMat((float (*)[3])axis, &this->m_prev_rb_mat);
       Phys_Vec3ToNitrousVec(origin, &this->m_prev_rb_mat.w);
-      if ( COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.x) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.y) & _mask__AbsFloat_) > 100000.0
-        || COERCE_FLOAT(LODWORD(this->m_prev_rb_mat.w.z) & _mask__AbsFloat_) > 100000.0 )
+      if ( fabs(this->m_prev_rb_mat.w.x) > 100000.0
+        || fabs(this->m_prev_rb_mat.w.y) > 100000.0
+        || fabs(this->m_prev_rb_mat.w.z) > 100000.0 )
       {
         phys_exec_debug_callback(0);
       }
@@ -3144,7 +3144,7 @@ void __userpurge NitrousVehicle::update_from_network(
     Phys_NitrousMat44ToVec33((const phys_mat44 *)LODWORD(localPos[2]), (float (*)[3])networkVel_12);
     Phys_Vec3ToNitrousVec(pos.trDelta, (phys_vec3 *)&v43);
     v42 = LODWORD(timeDifference) & _mask__AbsFloat_;
-    if ( timeCap > COERCE_FLOAT(LODWORD(timeDifference) & _mask__AbsFloat_) )
+    if ( timeCap > fabs(timeDifference) )
     {
       v41 = timeDifference * v43;
       v40 = timeDifference * v44;
@@ -3201,7 +3201,7 @@ void __userpurge NitrousVehicle::update_from_network(
               *(float *)(v16 + 8) != *(float *)(LODWORD(predictedPos[2]) + 8))
           || (predictedPos[1] = *(float *)LODWORD(aVelocity[35].x),
               predictedPos[0] = *(float *)(LODWORD(predictedPos[1]) + 8),
-              COERCE_FLOAT(LODWORD(predictedPos[0]) & _mask__AbsFloat_) > 100000.0) )
+              fabs(predictedPos[0]) > 100000.0) )
         {
 LABEL_19:
           phys_exec_debug_callback(*(void **)LODWORD(aVelocity[35].x));

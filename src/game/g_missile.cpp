@@ -2668,7 +2668,7 @@ char __cdecl GrenadeBounceVelocity(
   pos->trDelta[0] = (float)(1.0 - value) * pos->trDelta[0];
   pos->trDelta[1] = frictionScale * pos->trDelta[1];
   pos->trDelta[2] = frictionScale * pos->trDelta[2];
-  if ( COERCE_FLOAT(LODWORD(dot) & _mask__AbsFloat_) >= 25.0 )
+  if ( fabs(dot) >= 25.0 )
   {
     v18 = 1.0 - (float)((float)(1.0 - weapDef->perpendicularBounce[surfType]) * normal[2]);
     if ( (float)(grenadeBounceRestitutionMax->current.value - weapDef->perpendicularBounce[surfType]) < 0.0 )
@@ -3376,7 +3376,7 @@ void  Missile_ApplyAttractorsRepulsors(float a1@<ebp>, gentity_s *missile)
           }
           v9 = (float)(1.0 - (float)(angleToAttractor / attrGlob.attractors[LODWORD(attractorOrigin[1])].maxDist))
              * attrGlob.attractors[LODWORD(attractorOrigin[1])].strength;
-          v2 = (float)(COERCE_FLOAT(LODWORD(v12) & _mask__AbsFloat_) / perpDelta[1]);
+          v2 = (float)(fabs(v12) / perpDelta[1]);
           __libm_sse2_atan(v6);
           v3 = v2;
           if ( attrGlob.attractors[LODWORD(attractorOrigin[1])].isAttractor )
@@ -3970,7 +3970,7 @@ void __cdecl MissileHorzSteerToTarget(
                  / weapDef->maxSteeringAccel;
   if ( *toTargetRelative <= 0.0 || tvGuided )
   {
-    if ( (float)(tightestRadius + 60.0) <= COERCE_FLOAT(LODWORD(radius) & _mask__AbsFloat_) )
+    if ( (float)(tightestRadius + 60.0) <= fabs(radius) )
     {
       if ( toTargetRelative[1] <= 0.0 )
       {
@@ -4000,7 +4000,7 @@ void __cdecl MissileHorzSteerToTarget(
   }
   else if ( toTargetRelative[1] != 0.0 )
   {
-    if ( tightestRadius > COERCE_FLOAT(LODWORD(radius) & _mask__AbsFloat_) )
+    if ( tightestRadius > fabs(radius) )
     {
       if ( radius <= 0.0 )
         LODWORD(radius) = LODWORD(tightestRadius) ^ _mask__NegFloat_;

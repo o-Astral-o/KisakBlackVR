@@ -675,7 +675,7 @@ void __cdecl XModelLoadCollData(
         *pos += 4;
         plane[3] = v24;
         v23 = Abs(plane) - 1.0;
-        if ( COERCE_FLOAT(LODWORD(v23) & _mask__AbsFloat_) >= 0.0099999998
+        if ( fabs(v23) >= 0.0099999998
           && !Assert_MyHandler(
                 "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\xmodel_load_obj.cpp",
                 378,

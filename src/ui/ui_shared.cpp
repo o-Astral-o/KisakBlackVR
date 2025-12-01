@@ -2352,7 +2352,7 @@ bool __cdecl Script_ExecIfFloatsEqual(const char *dvarValue, const char *testVal
 
   v3 = atof(testValue);
   v4 = atof(dvarValue) - v3;
-  return COERCE_FLOAT(LODWORD(v4) & _mask__AbsFloat_) < 0.0000099999997;
+  return fabs(v4) < 0.0000099999997;
 }
 
 void __cdecl Script_ExecNowOnDvarStringValue(int localClientNum, UiContext *dc, itemDef_s *item, char **args)

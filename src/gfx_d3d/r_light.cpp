@@ -353,9 +353,7 @@ void __cdecl R_ComputeSpotLightCrossDirs(const GfxLight *light, float (*crossDir
   bestCrossAxis = 0;
   for ( axisIndex = 1; axisIndex < 3; ++axisIndex )
   {
-    if ( COERCE_FLOAT(LODWORD(light->dir[bestCrossAxis]) & _mask__AbsFloat_) > COERCE_FLOAT(
-                                                                                 LODWORD(light->dir[axisIndex])
-                                                                               & _mask__AbsFloat_) )
+    if ( fabs(light->dir[bestCrossAxis]) > fabs(light->dir[axisIndex]) )
       bestCrossAxis = axisIndex;
   }
   (*crossDirs)[0] = 0.0f;

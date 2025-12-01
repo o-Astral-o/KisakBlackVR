@@ -270,7 +270,7 @@ void __fastcall Actor_BroadcastLineEvent(
         vDelta[2] = (float)((float)(48.0 + 0.0) * 0.5) + vDelta[2];
         fDistSqrd = (float)(vDelta[0] * vDelta[0]) + (float)(vDelta[1] * vDelta[1]);
         if ( fRadiusSqrd >= fDistSqrd
-          && COERCE_FLOAT(LODWORD(fMaxHeightDiff) & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(vDelta[2]) & _mask__AbsFloat_) )
+          && fabs(fMaxHeightDiff) > fabs(vDelta[2]) )
         {
           Actor_ReceiveLineEvent(pActor, originator, hitEnt, eType, vStart, vEnd, vClosest, fDistSqrd, fRadiusSqrd);
         }
@@ -315,7 +315,7 @@ void __fastcall Actor_BroadcastLineEvent(
       vDelta[1] = ent->r.currentOrigin[1] - vClosest[1];
       vDelta[2] = ent->r.currentOrigin[2] - vClosest[2];
       if ( fRadiusSqrd >= (float)((float)(vDelta[0] * vDelta[0]) + (float)(vDelta[1] * vDelta[1]))
-        && COERCE_FLOAT(LODWORD(fMaxHeightDiff) & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(vDelta[2]) & _mask__AbsFloat_) )
+        && fabs(fMaxHeightDiff) > fabs(vDelta[2]) )
       {
         Actor_EventListener_NotifyToListener(ent, originator, eType, vClosest);
       }

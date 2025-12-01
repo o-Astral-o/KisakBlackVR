@@ -202,14 +202,14 @@ void __cdecl GPad_UpdateDigitals(int portIndex, const _XINPUT_GAMEPAD *xpad)
   gPad->lastDigitals = gPad->digitals;
   gPad->digitals = xpad->wButtons;
   rightDeflect = Dvar_GetFloat("gpad_button_rstick_deflect_max");
-  if ( COERCE_FLOAT(LODWORD(gPad->sticks[2]) & _mask__AbsFloat_) > rightDeflect )
+  if ( fabs(gPad->sticks[2]) > rightDeflect )
     gPad->digitals &= ~0x80u;
-  if ( COERCE_FLOAT(LODWORD(gPad->sticks[3]) & _mask__AbsFloat_) > rightDeflect )
+  if ( fabs(gPad->sticks[3]) > rightDeflect )
     gPad->digitals &= ~0x80u;
   leftDeflect = Dvar_GetFloat("gpad_button_lstick_deflect_max");
-  if ( COERCE_FLOAT(LODWORD(gPad->sticks[0]) & _mask__AbsFloat_) > leftDeflect )
+  if ( fabs(gPad->sticks[0]) > leftDeflect )
     gPad->digitals &= ~0x40u;
-  if ( COERCE_FLOAT(LODWORD(gPad->sticks[1]) & _mask__AbsFloat_) > leftDeflect )
+  if ( fabs(gPad->sticks[1]) > leftDeflect )
     gPad->digitals &= ~0x40u;
 }
 

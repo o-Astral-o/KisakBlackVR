@@ -1668,14 +1668,14 @@ void  Phys_ObjSetPosition(int a1@<ebp>, int id, float *newPosition)
   v12->savedPos[0] = *newPosition;
   savedPos[1] = newPosition[1];
   savedPos[2] = newPosition[2];
-  if ( COERCE_FLOAT(LODWORD(v12->body->m_last_position.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(v12->body->m_last_position.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(v12->body->m_last_position.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(v12->body->m_last_position.x) > 100000.0
+    || fabs(v12->body->m_last_position.y) > 100000.0
+    || fabs(v12->body->m_last_position.z) > 100000.0 )
   {
     phys_exec_debug_callback(v12->body);
   }
-  if ( COERCE_FLOAT(LODWORD(v12->body->m_mat.w.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(v12->body->m_mat.w.y) & _mask__AbsFloat_) > 100000.0
+  if ( fabs(v12->body->m_mat.w.x) > 100000.0
+    || fabs(v12->body->m_mat.w.y) > 100000.0
     || (v3 = (int)&v12->body->m_mat, *(float *)(v3 + 56) != *phys_vec3::operator[]<int>(&v12->body->m_mat.w, 2u))
     || COERCE_FLOAT(*(unsigned int *)phys_vec3::operator[]<int>(&v12->body->m_mat.w, 2u) & _mask__AbsFloat_) > 100000.0 )
   {
@@ -1730,14 +1730,14 @@ void __cdecl Phys_ObjSetOrientation(int id, const float *newPosition, const floa
   {
     __debugbreak();
   }
-  if ( COERCE_FLOAT(LODWORD(userData->body->m_last_position.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(userData->body->m_last_position.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(userData->body->m_last_position.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(userData->body->m_last_position.x) > 100000.0
+    || fabs(userData->body->m_last_position.y) > 100000.0
+    || fabs(userData->body->m_last_position.z) > 100000.0 )
   {
     phys_exec_debug_callback(userData->body);
   }
-  if ( COERCE_FLOAT(LODWORD(userData->body->m_mat.w.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(userData->body->m_mat.w.y) & _mask__AbsFloat_) > 100000.0
+  if ( fabs(userData->body->m_mat.w.x) > 100000.0
+    || fabs(userData->body->m_mat.w.y) > 100000.0
     || (p_m_mat = &userData->body->m_mat,
         v3 = phys_vec3::operator[]<int>(&userData->body->m_mat.w, 2u),
         *v3 != *phys_vec3::operator[]<int>(&p_m_mat->w, 2u))
@@ -1775,9 +1775,9 @@ void __thiscall rigid_body::dangerous_set_a_vel(rigid_body *this, const phys_vec
   this->m_a_vel.x = a_vel->x;
   this->m_a_vel.y = a_vel->y;
   this->m_a_vel.z = a_vel->z;
-  if ( COERCE_FLOAT(LODWORD(this->m_a_vel.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_a_vel.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_a_vel.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(this->m_a_vel.x) > 100000.0
+    || fabs(this->m_a_vel.y) > 100000.0
+    || fabs(this->m_a_vel.z) > 100000.0 )
   {
     phys_exec_debug_callback(this);
   }
@@ -1811,9 +1811,9 @@ void __thiscall rigid_body::dangerous_set_t_vel(rigid_body *this, const phys_vec
   this->m_t_vel.x = t_vel->x;
   this->m_t_vel.y = t_vel->y;
   this->m_t_vel.z = t_vel->z;
-  if ( COERCE_FLOAT(LODWORD(this->m_t_vel.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_t_vel.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_t_vel.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(this->m_t_vel.x) > 100000.0
+    || fabs(this->m_t_vel.y) > 100000.0
+    || fabs(this->m_t_vel.z) > 100000.0 )
   {
     phys_exec_debug_callback(this);
   }
@@ -2270,9 +2270,9 @@ void __thiscall rigid_body::add_torque(rigid_body *this, const phys_vec3 *torque
   this->m_torque_sum.x = this->m_torque_sum.x + torque->x;
   this->m_torque_sum.y = this->m_torque_sum.y + torque->y;
   this->m_torque_sum.z = this->m_torque_sum.z + torque->z;
-  if ( COERCE_FLOAT(LODWORD(this->m_torque_sum.x) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_torque_sum.y) & _mask__AbsFloat_) > 100000.0
-    || COERCE_FLOAT(LODWORD(this->m_torque_sum.z) & _mask__AbsFloat_) > 100000.0 )
+  if ( fabs(this->m_torque_sum.x) > 100000.0
+    || fabs(this->m_torque_sum.y) > 100000.0
+    || fabs(this->m_torque_sum.z) > 100000.0 )
   {
     phys_exec_debug_callback(this);
   }

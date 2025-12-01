@@ -4330,7 +4330,7 @@ void __cdecl CG_KickAngles(cg_s *cgameGlob)
           {
             cgameGlob->kickAVel[i] = 0.0f;
           }
-          else if ( COERCE_FLOAT(LODWORD(cgameGlob->kickAngles[i]) & _mask__AbsFloat_) > 10.0 )
+          else if ( fabs(cgameGlob->kickAngles[i]) > 10.0 )
           {
             if ( cgameGlob->kickAngles[i] <= 0.0 )
               v1 = -10.0f;

@@ -89,7 +89,7 @@ void __cdecl Mantle_CreateAnims(void *(__cdecl *xanimAlloc)(int))
           s_mantleAnimNames[animIndex],
           delta[0],
           16.0);
-      if ( COERCE_FLOAT(LODWORD(delta[1]) & _mask__AbsFloat_) > 1.0 )
+      if ( fabs(delta[1]) > 1.0 )
         Com_Error(
           ERR_DROP,
           "Mantle anim [%s] has Y translation %f, should be %f\n",
@@ -98,7 +98,7 @@ void __cdecl Mantle_CreateAnims(void *(__cdecl *xanimAlloc)(int))
           0.0);
       Height = Trans_GetHeight(transIndex);
       v3 = delta[2] - Height;
-      if ( COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_) > 1.0 )
+      if ( fabs(v3) > 1.0 )
       {
         v2 = Trans_GetHeight(transIndex);
         Com_Error(
@@ -260,7 +260,7 @@ void __cdecl Mount_CheckProne(pmove_t *pm)
     __debugbreak();
   if ( BG_GetWeaponDef(ps->weapon)->mountableWeapon
     && Mount_CanPlayerDeployTurret(ps)
-    && turretPronePitchMax > COERCE_FLOAT(LODWORD(ps->proneDirectionPitch) & _mask__AbsFloat_) )
+    && turretPronePitchMax > fabs(ps->proneDirectionPitch) )
   {
     traceStart[0] = ps->origin[0];
     traceStart[1] = ps->origin[1];
@@ -666,7 +666,7 @@ int __cdecl Mantle_FindTransition(float curHeight, float goalHeight)
   for ( transIndex = 1; transIndex < 7; ++transIndex )
   {
     v3 = Trans_GetHeight(transIndex) - height;
-    if ( bestDiff > COERCE_FLOAT(LODWORD(v3) & _mask__AbsFloat_) )
+    if ( bestDiff > fabs(v3) )
     {
       bestIndex = transIndex;
       LODWORD(bestDiff) = LODWORD(v3) & _mask__AbsFloat_;

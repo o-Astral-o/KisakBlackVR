@@ -177,9 +177,9 @@ LABEL_6:
     if ( bitarray<51>::testBit(&cmd->button_bits, 6u) )
       umove = umove - 127.0;
     LODWORD(max) = LODWORD(fmove) & _mask__AbsFloat_;
-    if ( COERCE_FLOAT(LODWORD(smove) & _mask__AbsFloat_) > COERCE_FLOAT(LODWORD(fmove) & _mask__AbsFloat_) )
+    if ( fabs(smove) > fabs(fmove) )
       LODWORD(max) = LODWORD(smove) & _mask__AbsFloat_;
-    if ( COERCE_FLOAT(LODWORD(umove) & _mask__AbsFloat_) > max )
+    if ( fabs(umove) > max )
       LODWORD(max) = LODWORD(umove) & _mask__AbsFloat_;
     total = sqrtf((float)((float)(fmove * fmove) + (float)(smove * smove)) + (float)(umove * umove));
     scale = (float)((float)(190.0 * max) / (float)(127.0 * total)) * 3.0;
@@ -665,7 +665,7 @@ void __cdecl CG_PredictPlayerState_Internal(int localClientNum)
       else
       {
         diff = *(float *)&dword_F54598[580 * localClientNum];
-        if ( COERCE_FLOAT(LODWORD(diff) & _mask__AbsFloat_) < cg_viewZSmoothingMin->current.value )
+        if ( fabs(diff) < cg_viewZSmoothingMin->current.value )
         {
           if ( (float)(cgameGlob->time - cgameGlob->stepViewStart) > (float)(cg_viewZSmoothingTime->current.value
                                                                            * 1000.0) )
