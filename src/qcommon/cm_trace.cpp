@@ -1071,7 +1071,7 @@ void __cdecl CM_TraceThroughLeafBrushNode_r(
         if ( p1[3] >= trace->fraction )
           return;
         diff = t2 - t1;
-        LODWORD(absDiff) = COERCE_UNSIGNED_INT(t2 - t1) & _mask__AbsFloat_;
+        absDiff = fabs(t2 - t1);
         if ( absDiff <= 0.00000047683716 )
         {
           side = 0;
@@ -1349,7 +1349,7 @@ void __cdecl CM_TraceThroughBrush(const traceWork_t *tw, const cbrush_t *brush, 
       {
         __debugbreak();
       }
-      LODWORD(offsetDotNormal) = COERCE_UNSIGNED_INT(plane->normal[2] * tw->offsetZ) & _mask__AbsFloat_;
+      offsetDotNormal = fabs(plane->normal[2] * tw->offsetZ);
       dist = (float)(plane->dist + tw->radius) + offsetDotNormal;
       if ( (LODWORD(dist) & 0x7F800000) == 0x7F800000
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_trace.cpp", 696, 0, "%s", "!IS_NAN(dist)") )
@@ -1925,7 +1925,7 @@ void __cdecl CM_TraceThroughTree(const traceWork_t *tw, int num, const float *p1
         if ( p1[3] >= trace->fraction )
           return;
         diff = t2 - t1;
-        LODWORD(absDiff) = COERCE_UNSIGNED_INT(t2 - t1) & _mask__AbsFloat_;
+        absDiff = fabs(t2 - t1);
         if ( absDiff <= 0.00000047683716 )
         {
           side = 0;
@@ -2897,7 +2897,7 @@ int __cdecl CM_SightTraceThroughTree(const traceWork_t *tw, int num, const float
       num = node->children[1];
     }
     diff = t2 - t1;
-    LODWORD(absDiff) = COERCE_UNSIGNED_INT(t2 - t1) & _mask__AbsFloat_;
+    absDiff = fabs(t2 - t1);
     if ( absDiff <= 0.00000047683716 )
     {
       side = 0;
@@ -3082,7 +3082,7 @@ LABEL_19:
       if ( COERCE_FLOAT(LODWORD(offset) ^ _mask__NegFloat_) < tmax )
       {
         diff = t2 - t1;
-        LODWORD(absDiff) = COERCE_UNSIGNED_INT(t2 - t1) & _mask__AbsFloat_;
+        absDiff = fabs(t2 - t1);
         if ( absDiff <= 0.00000047683716 )
         {
           side = 0;

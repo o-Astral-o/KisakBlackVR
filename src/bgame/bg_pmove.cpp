@@ -2848,12 +2848,12 @@ double __cdecl PM_CmdScale_Walk(pmove_t *pm, usercmd_s *cmd)
   v5 = (ps->pm_flags & 1) != 0 && ps->fWeaponPosFrac > 0.0;
   total = sqrtf((float)(cmd->rightmove * cmd->rightmove + cmd->forwardmove * cmd->forwardmove));
   if ( cmd->forwardmove >= 0 )
-    LODWORD(v2) = COERCE_UNSIGNED_INT((float)cmd->forwardmove) & _mask__AbsFloat_;
+    v2 = fabs((float)cmd->forwardmove);
   else
-    LODWORD(v2) = COERCE_UNSIGNED_INT((float)cmd->forwardmove * player_backSpeedScale->current.value) & _mask__AbsFloat_;
+    v2 = fabs((float)cmd->forwardmove * player_backSpeedScale->current.value);
   if ( (float)(v2
              - fabs((float)cmd->rightmove * player_strafeSpeedScale->current.value)) < 0.0 )
-    LODWORD(v4) = COERCE_UNSIGNED_INT((float)cmd->rightmove * player_strafeSpeedScale->current.value) & _mask__AbsFloat_;
+    v4 = fabs((float)cmd->rightmove * player_strafeSpeedScale->current.value);
   else
     v4 = v2;
   if ( v4 == 0.0 )

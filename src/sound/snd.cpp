@@ -779,7 +779,7 @@ void __cdecl SND_FaderUpdate(snd_fader_t *fader, float dt)
   else
     v4 = 1.0f;
   if ( (float)(fabs(goal - value) - (float)(rate * dt)) < 0.0 )
-    LODWORD(v3) = COERCE_UNSIGNED_INT(goal - value) & _mask__AbsFloat_;
+    v3 = fabs(goal - value);
   else
     v3 = rate * dt;
   if ( (float)(0.0 - rate) < 0.0 )

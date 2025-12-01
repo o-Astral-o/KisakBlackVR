@@ -3854,7 +3854,7 @@ void __cdecl XAnimClearGoalWeightKnobInternal(
       __debugbreak();
     }
     if ( childInfoIndex == infoIndex )
-      LODWORD(weight) = COERCE_UNSIGNED_INT(goalWeight - g_xAnimInfo[childInfoIndex].state.weight) & _mask__AbsFloat_;
+      weight = fabs(goalWeight - g_xAnimInfo[childInfoIndex].state.weight);
     else
       weight = g_xAnimInfo[childInfoIndex].state.weight;
     if ( (float)(largestWeightDiff - weight) < 0.0 )

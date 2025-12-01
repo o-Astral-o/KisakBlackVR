@@ -157,8 +157,7 @@ void __fastcall Path_AddTrimmedAmount(path_t *pPath, const float *vStartPos)
       {
         __debugbreak();
       }
-      LODWORD(height) = COERCE_UNSIGNED_INT((float)(pt->fDir2D[0] * offset[1]) - (float)(pt->fDir2D[1] * offset[0]))
-                      & _mask__AbsFloat_;
+      height = fabs((float)(pt->fDir2D[0] * offset[1]) - (float)(pt->fDir2D[1] * offset[0]));
       if ( pt->fOrigLength <= 0.0
         && !Assert_MyHandler(
               "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
@@ -3073,8 +3072,7 @@ void __fastcall Path_BacktrackCompletedPath(path_t *pPath, const float *vStartPo
   {
     __debugbreak();
   }
-  LODWORD(height) = COERCE_UNSIGNED_INT((float)(nextPt->fDir2D[0] * offset_4) - (float)(nextPt->fDir2D[1] * offset))
-                  & _mask__AbsFloat_;
+  height = fabs((float)(nextPt->fDir2D[0] * offset_4) - (float)(nextPt->fDir2D[1] * offset));
   LODWORD(amount) = COERCE_UNSIGNED_INT(height * pPath->fCurrLength) ^ _mask__NegFloat_;
   if ( nextPt->fOrigLength < pPath->fCurrLength
     && !Assert_MyHandler(
@@ -3342,8 +3340,7 @@ LABEL_127:
     {
       __debugbreak();
     }
-    LODWORD(height) = COERCE_UNSIGNED_INT((float)(pt->fDir2D[0] * offset_4a) - (float)(pt->fDir2D[1] * offseta))
-                    & _mask__AbsFloat_;
+    height = fabs((float)(pt->fDir2D[0] * offset_4a) - (float)(pt->fDir2D[1] * offseta));
   }
   d2 = (float)(pPath->lookaheadDir[0] * (float)(nextPt->vOrigPoint[0] - *vStartPos))
      + (float)(pPath->lookaheadDir[1] * (float)(nextPt->vOrigPoint[1] - vStartPos[1]));

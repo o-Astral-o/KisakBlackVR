@@ -7227,8 +7227,7 @@ void __cdecl VEH_CheckHorizontalVelocityToGoal(
       {
         __debugbreak();
       }
-      LODWORD(radiusVec[0]) = COERCE_UNSIGNED_INT((float)(perpDir[0] * *vecToGoal) + (float)(perpDir[1] * vecToGoal[1]))
-                            & _mask__AbsFloat_;
+      radiusVec[0] = fabs((float)(perpDir[0] * *vecToGoal) + (float)(perpDir[1] * vecToGoal[1]));
       if ( radiusVec[0] > horizontalDist )
       {
         radiusVec[1] = (float)(phys->vel[0] * *vecToGoal) + (float)(phys->vel[1] * vecToGoal[1]);
