@@ -17,6 +17,12 @@ struct XModelLodInfo // sizeof=0x20
         unsigned __int8 unused;
 };
 
+struct XModelNameMap // sizeof=0x4
+{                                                                             // XREF: ?XAnimResetAnimMap@@YAXPBUDObj@@I@Z/r
+    unsigned __int16 name;                            // XREF: XAnimResetAnimMap(DObj const *,uint)+10/w
+    unsigned __int16 index;
+};
+
 struct XModelLodInfo // sizeof=0x20
 {                                                                             // XREF: XModel/r
         float dist;
@@ -157,6 +163,19 @@ struct XModelSurfs // sizeof=0x18
 {                                                                             // XREF: XModelLoadFile/r
         XSurface *surfs;                                        // XREF: XModelLoadFile+B47/r
         int partBits[5];                                        // XREF: XModelLoadFile+926/r
+};
+
+struct XModelPiece // sizeof=0x10
+{
+    XModel *model;
+    float offset[3];
+};
+
+struct XModelPieces // sizeof=0xC
+{                                       // XREF: XAssetPoolEntry<XModelPieces>/r
+    const char *name;
+    int numpieces;
+    XModelPiece *pieces;
 };
 
 bool __cdecl XModelBad(const XModel *model);

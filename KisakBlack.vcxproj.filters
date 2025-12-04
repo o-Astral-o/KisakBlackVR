@@ -5027,5 +5027,8 @@
     <ClInclude Include="src\physics\phys_local.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\gfx_d3d\fxprimitives.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

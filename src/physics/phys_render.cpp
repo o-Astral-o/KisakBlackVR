@@ -1,19 +1,5 @@
 #include "phys_render.h"
 
-float *__thiscall phys_vec3::operator[]<int>(phys_vec3 *this, unsigned int i)
-{
-    if ( i > 2
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 34,
-                 "i >= 0 && i < 3",
-                 &toastPopupTitle) )
-    {
-        __debugbreak();
-    }
-    return (float *)this + i;
-}
-
 void    make_rotate(
                 int a1@<ebp>,
                 phys_mat44 *mat,
@@ -1128,7 +1114,7 @@ void    render_box(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                              32,
                              "i >= 0 && i < 3",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1141,7 +1127,7 @@ void    render_box(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                              32,
                              "i >= 0 && i < 3",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1153,7 +1139,7 @@ void    render_box(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                              34,
                              "i >= 0 && i < 3",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1253,7 +1239,7 @@ void    render_gjk_geom(float a1@<ebp>, gjk_base_t *geom, const phys_mat44 *cg2w
                              "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                              83,
                              "get_flag(FLAG_AABB_LOC_VALID)",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1264,7 +1250,7 @@ void    render_gjk_geom(float a1@<ebp>, gjk_base_t *geom, const phys_mat44 *cg2w
                                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                                  82,
                                  "get_flag(FLAG_AABB_LOC_VALID)",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1303,7 +1289,7 @@ void    render_gjk_geom(float a1@<ebp>, gjk_base_t *geom, const phys_mat44 *cg2w
                              "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                              83,
                              "get_flag(FLAG_AABB_LOC_VALID)",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1313,7 +1299,7 @@ void    render_gjk_geom(float a1@<ebp>, gjk_base_t *geom, const phys_mat44 *cg2w
                              "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                              82,
                              "get_flag(FLAG_AABB_LOC_VALID)",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1346,13 +1332,13 @@ void    debug_render(int a1@<ebp>, PhysObjUserData *userData)
                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                  1035,
                  "m_geom_count >= 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
     for ( i = userData->m_gjk_geom_list.m_first_geom; i; i = i->m_next_geom )
         render_gjk_geom(COERCE_FLOAT(&v7), i, (const phys_mat44 *)pt);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void    clip_winding(int a1@<ebp>, phys_static_array<phys_vec3,512> *winding, const plane_lt *clip)
@@ -1536,7 +1522,7 @@ void    clip_winding(int a1@<ebp>, phys_static_array<phys_vec3,512> *winding, co
                                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                                              32,
                                              "i >= 0 && i < 3",
-                                             &toastPopupTitle) )
+                                             "") )
                                 {
                                     __debugbreak();
                                 }
@@ -2370,7 +2356,7 @@ void    render_contact(contact_point_info *a1@<ebp>, rigid_body_constraint_conta
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_render.cpp",
                          1361,
                          "cpi.m_point_pair_count > 0",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2560,7 +2546,7 @@ const plane_lt *__thiscall phys_static_array<plane_lt,512>::operator[](phys_stat
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                      124,
                      "i >= 0 && i < m_alloc_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2593,7 +2579,7 @@ phys_vec3 *__thiscall phys_static_array<phys_vec3,512>::operator[](phys_static_a
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                      118,
                      "i >= 0 && i < m_alloc_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2609,7 +2595,7 @@ int *__thiscall phys_static_array<float,512>::operator[](phys_static_array<int,5
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                      118,
                      "i >= 0 && i < m_alloc_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2624,18 +2610,3 @@ void __thiscall phys_static_array<float,512>::call_destructors(phys_static_array
     for ( i = 0; i < this->m_alloc_count; ++i )
         ;
 }
-
-const float *__thiscall phys_vec3::operator[]<int>(phys_vec3 *this, unsigned int i)
-{
-    if ( i > 2
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 32,
-                 "i >= 0 && i < 3",
-                 &toastPopupTitle) )
-    {
-        __debugbreak();
-    }
-    return (const float *)this + i;
-}
-

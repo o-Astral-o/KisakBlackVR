@@ -1,4 +1,364 @@
 #include "db_load.h"
+#include "db_stream_load.h"
+#include "db_stream.h"
+#include <xanim/dobj.h>
+#include "db_stringtable_load.h"
+
+#include <xanim/xanim.h>
+#include <xanim/xmodel.h>
+#include <sound/snd.h>
+#include <gfx_d3d/r_image.h>
+#include <gfx_d3d/r_water.h>
+#include <sound/snd_radverb.h>
+#include <sound/snd_bank.h>
+#include <physics/phys_colgeom.h>
+#include <gfx_d3d/fxprimitives.h>
+
+// This seriously has to be one of the most aids parts of the COD codebases
+unsigned __int8 *varbyte;
+char *varchar;
+void *varint;
+void *varunsigned;
+void *varDWORD;
+void *varuint;
+float *varfloat;
+void *varraw_uint;
+unsigned __int8 *varraw_byte;
+void *varraw_uint128;
+unsigned __int8 *varraw_byte16;
+float (*varvec2_t)[2];
+float (*varvec3_t)[3];
+float (*varvec4_t)[4];
+DObjAnimMat *varDObjAnimMat;
+float (*varshared_vec3_t)[3];
+__int16 *varshort;
+unsigned __int16 *varushort;
+__int16 (*varXQuat2)[2];
+unsigned __int16 *varUnsignedShort;
+unsigned __int16 *varScriptString;
+const char *varConstChar;
+const char **varTempString;
+const char **varXString;
+ScriptStringList *varScriptStringList;
+complex_s *varcomplex_t;
+dmaterial_t *vardmaterial_t;
+XAnimParts *varXAnimParts;
+XAnimIndices *varXAnimIndices;
+XAnimDynamicIndices *varXAnimDynamicIndicesDeltaQuat;
+XAnimDeltaPartQuat *varXAnimDeltaPartQuat;
+XAnimDeltaPartQuatDataFrames *varXAnimDeltaPartQuatDataFrames;
+XAnimDeltaPartQuatData *varXAnimDeltaPartQuatData;
+XAnimDeltaPart *varXAnimDeltaPart;
+XAnimPartTrans *varXAnimPartTrans;
+XAnimDynamicIndices *varXAnimDynamicIndicesTrans;
+unsigned __int8 (*varByteVec)[3];
+unsigned __int16 (*varUShortVec)[3];
+XAnimDynamicFrames *varXAnimDynamicFrames;
+XAnimPartTransFrames *varXAnimPartTransFrames;
+XAnimPartTransData *varXAnimPartTransData;
+XAnimNotifyInfo *varXAnimNotifyInfo;
+XAnimParts **varXAnimPartsPtr;
+XBoneInfo *varXBoneInfo;
+snd_curve *varsnd_curve;
+snd_group *varsnd_group;
+snd_radverb *varsnd_radverb;
+snd_master *varsnd_master;
+snd_pan *varsnd_pan;
+snd_snapshot_group *varsnd_snapshot_group;
+snd_snapshot *varsnd_snapshot;
+snd_context *varsnd_context;
+SndDriverGlobals *varSndDriverGlobals;
+SndDriverGlobals **varSndDriverGlobalsPtr;
+PackIndexEntry *varPackIndexEntry;
+PackIndex *varPackIndex;
+PackIndex **varPackIndexPtr;
+char *varsnd_align_char;
+snd_asset *varsnd_asset;
+LoadedSound *varLoadedSound;
+char *varchar_align_2048;
+PrimedSound *varPrimedSound;
+PrimedSound **varPrimedSoundPtr;
+StreamedSound *varStreamedSound;
+SoundFile *varSoundFile;
+SoundFileRef *varSoundFileRef;
+snd_alias_t *varsnd_alias_t;
+snd_alias_list_t *varsnd_alias_list_t;
+SndIndexEntry *varSndIndexEntry;
+SndBank *varSndBank;
+SndBank **varSndBankPtr;
+SndPatch *varSndPatch;
+SndPatch **varSndPatchPtr;
+MaterialInfo *varMaterialInfo;
+GfxWorldVertex *varGfxWorldVertex0;
+GfxPackedVertex *varGfxPackedVertex0;
+GfxBrushModel *varGfxBrushModel;
+XSurfaceCollisionLeaf *varXSurfaceCollisionLeaf;
+XSurfaceCollisionNode *varXSurfaceCollisionNode;
+XSurfaceCollisionTree *varXSurfaceCollisionTree;
+XRigidVertList *varXRigidVertList;
+IDirect3DVertexBuffer9 **varGfxVertexBuffer;
+unsigned __int16 *varXBlendInfo;
+XSurfaceVertexInfo *varXSurfaceVertexInfo;
+unsigned __int16 *varr_index_t;
+unsigned __int16 *varr_index16_t;
+XSurface *varXSurface;
+GfxImageLoadDef **varGfxTextureLoad;
+GfxImageLoadDef *varGfxImageLoadDef;
+GfxImage *varGfxImage;
+GfxImage **varGfxImagePtr;
+GfxTexture *varGfxRawTexture;
+water_t *varwater_t;
+GfxVertexShaderLoadDef *varGfxVertexShaderLoadDef;
+GfxPixelShaderLoadDef *varGfxPixelShaderLoadDef;
+MaterialVertexShaderProgram *varMaterialVertexShaderProgram;
+MaterialVertexShader *varMaterialVertexShader;
+MaterialVertexShader **varMaterialVertexShaderPtr;
+MaterialPixelShaderProgram *varMaterialPixelShaderProgram;
+MaterialPixelShader *varMaterialPixelShader;
+MaterialPixelShader **varMaterialPixelShaderPtr;
+MaterialVertexDeclaration *varMaterialVertexDeclaration;
+MaterialArgumentCodeConst *varMaterialArgumentCodeConst;
+MaterialShaderArgument *varMaterialShaderArgument;
+MaterialArgumentDef *varMaterialArgumentDef;
+GfxStateBits *varGfxStateBits;
+MaterialVertexDeclaration **varMaterialPass;
+MaterialTechnique *varMaterialTechnique;
+MaterialTextureDef *varMaterialTextureDef;
+water_t **varMaterialTextureDefInfo;
+MaterialConstantDef *varMaterialConstantDef;
+MaterialTechnique **varMaterialTechniquePtr;
+MaterialTechniqueSet *varMaterialTechniqueSet;
+MaterialTechniqueSet **varMaterialTechniqueSetPtr;
+Material *varMaterial;
+Material **varMaterialHandle;
+GfxLightImage *varGfxLightImage;
+GfxLightDef *varGfxLightDef;
+GfxLightDef **varGfxLightDefPtr;
+GfxLight *varGfxLight;
+GfxSurface *varGfxSurface;
+GfxLightmapArray *varGfxLightmapArray;
+PhysPreset *varPhysPreset;
+PhysPreset **varPhysPresetPtr;
+PhysConstraints *varPhysConstraints;
+PhysConstraint *varPhysConstraint;
+PhysConstraints **varPhysConstraintsPtr;
+cplane_s *varcplane_t;
+cbrushside_t *varcbrushside_t;
+XModelCollTri_s *varXModelCollTri;
+XModelCollSurf_s *varXModelCollSurf;
+XModelHighMipBounds *varXModelHighMipBounds;
+XModelStreamInfo *varXModelStreamInfo;
+XModel *varXModel;
+XModel **varXModelPtr;
+PhysGeomInfo *varPhysGeomInfo;
+BrushWrapper *varBrushWrapper;
+PhysGeomList *varPhysGeomList;
+Collmap *varCollmap;
+XModelPieces *varXModelPieces;
+XModelPieces **varXModelPiecesPtr;
+XModelPiece *varXModelPiece;
+pathlink_s *varpathlink_t;
+pathnode_constant_t *varpathnode_constant_t;
+pathnode_t *varpathnode_t;
+pathbasenode_t *varpathbasenode_t;
+pathnode_tree_nodes_t *varpathnode_tree_nodes_t;
+pathnode_tree_t **varpathnode_tree_ptr;
+pathnode_tree_t *varpathnode_tree_t;
+PathData *varPathData;
+GameWorldSp *varGameWorldSp;
+GameWorldSp **varGameWorldSpPtr;
+GameWorldMp *varGameWorldMp;
+GameWorldMp **varGameWorldMpPtr;
+const FxEffectDef **varFxEffectDefHandle;
+FxElemMarkVisuals *varFxElemMarkVisuals;
+FxElemVisuals *varFxElemVisuals;
+FxElemVisualState *varFxElemVisualState;
+FxElemSpawnSound *varFxElemSpawnSound;
+FxElemVelStateSample *varFxElemVelStateSample;
+FxElemVisStateSample *varFxElemVisStateSample;
+FxElemDef *varFxElemDef;
+FxTrailVertex *varFxTrailVertex;
+FxTrailDef *varFxTrailDef;
+FxElemDefVisuals *varFxElemDefVisuals;
+FxEffectDefRef *varFxEffectDefRef;
+FxEffectDef *varFxEffectDef;
+DynEntityDef *varDynEntityDef;
+DynEntityPose *varDynEntityPose;
+DynEntityColl *varDynEntityColl;
+DynEntityClient *varDynEntityClient;
+DynEntityServer *varDynEntityServer;
+MapEnts *varMapEnts;
+MapEnts **varMapEntsPtr;
+cStaticModel_s *varcStaticModel_t;
+cNode_t *varcNode_t;
+cLeaf_s *varcLeaf_t;
+cLeafBrushNodeLeaf_t *varcLeafBrushNodeLeaf_t;
+unsigned __int16 *varLeafBrush;
+cLeafBrushNode_s *varcLeafBrushNode_t;
+cLeafBrushNodeChildren_t *varcLeafBrushNodeChildren_t;
+cLeafBrushNodeData_t *varcLeafBrushNodeData_t;
+CollisionBorder *varCollisionBorder;
+CollisionPartition *varCollisionPartition;
+CollisionAabbTree *varCollisionAabbTree;
+CollisionAabbTreeIndex *varCollisionAabbTreeIndex;
+cmodel_t *varcmodel_t;
+cbrush_t *varcbrush_t;
+rope_t *varrope_t;
+clipMap_t *varclipMap_t;
+clipMap_t **varclipMap_ptr;
+ComPrimaryLight *varComPrimaryLight;
+ComWaterCell *varComWaterCell;
+ComBurnableSample *varComBurnableSample;
+ComBurnableCell *varComBurnableCell;
+ComWorld *varComWorld;
+ComWorld **varComWorldPtr;
+Operand *varOperand;
+expDataType *varoperandDataType;
+operandInternalDataUnion *varoperandInternalDataUnion;
+expressionRpn *varexpressionRpn;
+expressionRpnDataUnion *varexpressionRpnDataUnion;
+expressionRpn *varexpressionRpn;
+ExpressionStatement *varExpressionStatement;
+ScriptCondition *varScriptCondition;
+ScriptCondition *varScriptConditionNext;
+GenericEventScript *varGenericEventScript;
+GenericEventScript *varGenericEventScriptNext;
+GenericEventHandler *varGenericEventHandler;
+GenericEventHandler *varGenericEventHandlerNext;
+ItemKeyHandler *varItemKeyHandler;
+ItemKeyHandler *varItemKeyHandlerNext;
+editFieldDef_s *vareditFieldDef_t;
+editFieldDef_s **vareditFieldDef_ptr;
+multiDef_s *varmultiDef_t;
+multiDef_s **varmultiDef_ptr;
+enumDvarDef_s *varenumDvarDef_t;
+enumDvarDef_s **varenumDvarDef_ptr;
+MenuCell *varMenuCell;
+MenuRow *varMenuRow;
+listBoxDef_s *varlistBoxDef_t;
+animParamsDef_t *varanimParamsDef_t;
+windowDef_t *varwindowDef_t;
+windowDef_t *varWindow;
+windowDef_t **varwindowDef_ptr;
+animParamsDef_t **varanimParamsDef_ptr;
+imageDef_s *varimageDef_t;
+imageDef_s **varimageDef_ptr;
+ownerDrawDef_s *varownerDrawDef_t;
+ownerDrawDef_s **varownerDrawDef_ptr;
+listBoxDef_s **varlistBoxDef_ptr;
+focusDefData_t *varfocusDefData_t;
+itemDef_s *varitemDef_t;
+focusDefData_t *varfocusDefData_t;
+focusItemDef_s *varfocusItemDef_t;
+focusItemDef_s **varfocusItemDef_ptr;
+gameMsgDef_s *vargameMsgDef_t;
+gameMsgDef_s **vargameMsgDef_ptr;
+textDefData_t *vartextDefData_t;
+textExp_s *vartextExp_t;
+textDef_s *vartextDef_t;
+textDef_s **vartextDef_ptr;
+rectData_s *varrectData_t;
+itemDefData_t *varitemDefData_t;
+UIAnimInfo *varUIAnimInfo;
+itemDef_s **varitemDef_ptr;
+menuDef_t *varmenuDef_t;
+menuDef_t **varmenuDef_ptr;
+MenuList **varMenuListPtr;
+MenuList *varMenuList;
+LocalizeEntry *varLocalizeEntry;
+LocalizeEntry **varLocalizeEntryPtr;
+FxImpactEntry *varFxImpactEntry;
+FxImpactTable *varFxImpactTable;
+FxImpactTable **varFxImpactTablePtr;
+DestructibleStage *varDestructibleStage;
+DestructiblePiece *varDestructiblePiece;
+DestructiblePiece **varDestructiblePiecePtr;
+DestructibleDef **varDestructibleDefPtr;
+DestructibleDef *varDestructibleDef;
+flameTable *varflameTable;
+flameTable **varflameTablePtr;
+WeaponDef *varWeaponDef;
+WeaponVariantDef **varWeaponVariantDefPtr;
+WeaponVariantDef *varWeaponVariantDef;
+EmblemIcon *varEmblemIcon;
+EmblemBackground *varEmblemBackground;
+EmblemLayer *varEmblemLayer;
+EmblemCategory *varEmblemCategory;
+EmblemSet *varEmblemSet;
+EmblemSet **varEmblemSetPtr;
+RawFile *varRawFile;
+RawFile **varRawFilePtr;
+XGlobals *varXGlobals;
+XGlobals **varXGlobalsPtr;
+StringTableCell *varStringTableCell;
+StringTable *varStringTable;
+StringTable **varStringTablePtr;
+ddlMemberDef_t *varddlMemberDef_t;
+ddlStructDef_t *varddlStructDef_t;
+ddlEnumDef_t *varddlEnumDef_t;
+ddlDef_t *varddlDef_t;
+ddlDef_t *varddlDefNext;
+ddlRoot_t *varddlRoot_t;
+ddlRoot_t **varddlRoot_ptr;
+GfxStaticModelDrawInst *varGfxStaticModelDrawInst;
+GfxStaticModelInst *varGfxStaticModelInst;
+sunflare_t *varsunflare_t;
+GfxReflectionProbeVolumeData *varGfxReflectionProbeVolumeData;
+GfxReflectionProbe *varGfxReflectionProbe;
+Occluder *varOccluder;
+unsigned __int16 *varStaticModelIndex;
+GfxAabbTree *varGfxAabbTree;
+GfxCell *varGfxCell;
+GfxPortal *varGfxPortal;
+GfxCullGroup *varGfxCullGroup;
+GfxLightGridEntry *varGfxLightGridEntry;
+GfxCompressedLightGridColors *varGfxCompressedLightGridColors;
+MaterialMemory *varMaterialMemory;
+GfxWorldVertexData *varGfxWorldVertexData;
+GfxWorldDraw *varGfxWorldDraw;
+GfxWorldVertexLayerData *varGfxWorldVertexLayerData;
+unsigned __int8 *varaligned_byte_pointer;
+GfxLightGrid *varGfxLightGrid;
+GfxLightGridEntry *varGfxLightGridEntry;
+GfxStreamingAabbTree *varGfxStreamingAabbTree;
+GfxWorldStreamInfo *varGfxWorldStreamInfo;
+GfxSceneDynModel *varGfxSceneDynModel;
+GfxSceneDynBrush *varGfxSceneDynBrush;
+GfxDrawSurf *varGfxDrawSurf;
+GfxShadowGeometry *varGfxShadowGeometry;
+GfxWaterBuffer *varGfxWaterBuffer;
+GfxWorldLodChain *varGfxWorldLodChain;
+GfxWorldLodInfo *varGfxWorldLodInfo;
+GfxLightCorona *varGfxLightCorona;
+GfxShadowMapVolume *varGfxShadowMapVolume;
+GfxExposureVolume *varGfxExposureVolume;
+GfxVolumePlane *varGfxVolumePlane;
+GfxLightRegionAxis *varGfxLightRegionAxis;
+GfxLightRegionHull *varGfxLightRegionHull;
+GfxLightRegion *varGfxLightRegion;
+GfxLightRegionAxis *varGfxLightRegionAxis;
+GfxLightRegionHull *varGfxLightRegionHull;
+GfxWorldDpvsDynamic *varGfxWorldDpvsDynamic;
+GfxWorld *varGfxWorld;
+GfxWorldDpvsStatic *varGfxWorldDpvsStatic;
+GfxWorldDpvsPlanes *varGfxWorldDpvsPlanes;
+GfxOutdoorBounds *varGfxOutdoorBounds;
+GfxHeroLight *varGfxHeroLight;
+GfxHeroLightTree *varGfxHeroLightTree;
+GfxWorld **varGfxWorldPtr;
+Glyph *varGlyph;
+Font_s *varFont;
+Font_s **varFontHandle;
+GlassDef *varGlassDef;
+Glasses *varGlasses;
+Glasses **varGlassesPtr;
+Glass *varGlass;
+XAsset *varXAsset;
+XAssetHeader *varXAssetHeader;
+
+
+
+
 
 void __cdecl Load_byteArray(bool atStreamStart, int count)
 {
@@ -25,7 +385,7 @@ void __cdecl Load_unsignedArray(bool atStreamStart, int count)
     Load_Stream(atStreamStart, (unsigned __int8 *)varunsigned, 4 * count);
 }
 
-void __cdecl Loadunsigned intArray(bool atStreamStart, int count)
+void __cdecl Load_DWORDArray(bool atStreamStart, int count)
 {
     Load_Stream(atStreamStart, (unsigned __int8 *)varDWORD, 4 * count);
 }
@@ -142,7 +502,7 @@ void __cdecl Load_UnsignedShortArray(bool atStreamStart, int count)
 
 void __cdecl Load_ScriptString(bool atStreamStart)
 {
-    Load_Stream(atStreamStart, varScriptString, 2);
+    Load_Stream(atStreamStart, (unsigned char *)varScriptString, 2);
     Load_ScriptStringCustom(varScriptString);
 }
 
@@ -161,9 +521,9 @@ void __cdecl Load_ScriptStringArray(bool atStreamStart, int count)
     }
 }
 
-ComBurnableSample *__cdecl AllocLoad_raw_byte()
+unsigned char *__cdecl AllocLoad_raw_byte()
 {
-    return (ComBurnableSample *)DB_AllocStreamPos(0);
+    return DB_AllocStreamPos(0);
 }
 
 void __cdecl Load_ConstCharArray(bool atStreamStart, int count)
@@ -184,7 +544,7 @@ void __cdecl Load_TempString(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varTempString);
+            DB_ConvertOffsetToPointer((unsigned int *)varTempString);
         }
     }
 }
@@ -217,7 +577,7 @@ void __cdecl Load_XString(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varXString);
+            DB_ConvertOffsetToPointer((unsigned int *)varXString);
         }
     }
 }
@@ -1034,7 +1394,7 @@ void __cdecl Load_PrimedSoundPtr(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varPrimedSoundPtr);
+            DB_ConvertOffsetToPointer((unsigned int*)varPrimedSoundPtr);
         }
     }
 }
@@ -1062,7 +1422,7 @@ void __cdecl Load_SoundFileRef()
             }
             else
             {
-                DB_ConvertOffsetToPointer(varSoundFileRef);
+                DB_ConvertOffsetToPointer((unsigned int *)varSoundFileRef);
             }
         }
     }
@@ -1076,7 +1436,7 @@ void __cdecl Load_SoundFileRef()
         }
         else
         {
-            DB_ConvertOffsetToPointer(varSoundFileRef);
+            DB_ConvertOffsetToPointer((unsigned int *)varSoundFileRef);
         }
     }
 }
@@ -1157,7 +1517,7 @@ void __cdecl Load_snd_alias_list_t(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(&varsnd_alias_list_t->head);
+            DB_ConvertOffsetToPointer((unsigned int *)&varsnd_alias_list_t->head);
         }
     }
 }
@@ -1385,7 +1745,7 @@ void __cdecl Load_XRigidVertList(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(&varXRigidVertList->collisionTree);
+            DB_ConvertOffsetToPointer((unsigned int *)&varXRigidVertList->collisionTree);
         }
     }
 }
@@ -1433,7 +1793,7 @@ void __cdecl Load_XSurfaceVertexInfo(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(&varXSurfaceVertexInfo->vertsBlend);
+            DB_ConvertOffsetToPointer((unsigned int *)&varXSurfaceVertexInfo->vertsBlend);
         }
     }
     if ( varXSurfaceVertexInfo->tensionData )
@@ -1452,7 +1812,7 @@ void __cdecl Load_XSurfaceVertexInfo(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(&varXSurfaceVertexInfo->tensionData);
+            DB_ConvertOffsetToPointer((unsigned int *)&varXSurfaceVertexInfo->tensionData);
         }
     }
 }
@@ -1495,7 +1855,7 @@ void __cdecl Load_XSurface(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(&varXSurface->vertList);
+            DB_ConvertOffsetToPointer((unsigned int *)&varXSurface->vertList);
         }
     }
     if ( varXSurface->triIndices )
@@ -1508,7 +1868,7 @@ void __cdecl Load_XSurface(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(&varXSurface->triIndices);
+            DB_ConvertOffsetToPointer((unsigned int *)&varXSurface->triIndices);
         }
     }
 }
@@ -1702,8 +2062,8 @@ void __cdecl Load_GfxVertexShaderLoadDef(bool atStreamStart)
     if ( varGfxVertexShaderLoadDef->program )
     {
         varGfxVertexShaderLoadDef->program = (unsigned int *)AllocLoad_FxElemVisStateSample();
-        varunsigned int= varGfxVertexShaderLoadDef->program;
-        Loadunsigned intArray(1, varGfxVertexShaderLoadDef->programSize);
+        varDWORD = varGfxVertexShaderLoadDef->program;
+        Load_DWORDArray(1, varGfxVertexShaderLoadDef->programSize);
     }
 }
 
@@ -1713,8 +2073,8 @@ void __cdecl Load_GfxPixelShaderLoadDef(bool atStreamStart)
     if ( varGfxPixelShaderLoadDef->program )
     {
         varGfxPixelShaderLoadDef->program = (unsigned int *)AllocLoad_FxElemVisStateSample();
-        varunsigned int= varGfxPixelShaderLoadDef->program;
-        Loadunsigned intArray(1, varGfxPixelShaderLoadDef->programSize);
+        varDWORD = varGfxPixelShaderLoadDef->program;
+        Load_DWORDArray(1, varGfxPixelShaderLoadDef->programSize);
     }
 }
 
@@ -1756,7 +2116,7 @@ void __cdecl Load_MaterialVertexShaderPtr(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varMaterialVertexShaderPtr);
+            DB_ConvertOffsetToPointer((unsigned int *)varMaterialVertexShaderPtr);
         }
     }
 }
@@ -1783,7 +2143,7 @@ void __cdecl Load_MaterialPixelShaderPtr(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varMaterialPixelShaderPtr);
+            DB_ConvertOffsetToPointer((unsigned int *)varMaterialPixelShaderPtr);
         }
     }
 }
@@ -1814,7 +2174,7 @@ void __cdecl Load_MaterialArgumentDef(bool atStreamStart)
                 }
                 else
                 {
-                    DB_ConvertOffsetToPointer(varMaterialArgumentDef);
+                    DB_ConvertOffsetToPointer((unsigned int *)varMaterialArgumentDef);
                 }
             }
             break;
@@ -1884,7 +2244,7 @@ void __cdecl Load_MaterialPass(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varMaterialPass);
+            DB_ConvertOffsetToPointer((unsigned int *)varMaterialPass);
         }
     }
     varMaterialVertexShaderPtr = (MaterialVertexShader **)(varMaterialPass + 1);
@@ -1962,7 +2322,7 @@ void __cdecl Load_MaterialTextureDefInfo(bool atStreamStart)
             }
             else
             {
-                DB_ConvertOffsetToPointer(varMaterialTextureDefInfo);
+                DB_ConvertOffsetToPointer((unsigned int *)varMaterialTextureDefInfo);
             }
         }
     }
@@ -2013,7 +2373,7 @@ void __cdecl Load_MaterialTechniquePtr(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varMaterialTechniquePtr);
+            DB_ConvertOffsetToPointer((unsigned int *)varMaterialTechniquePtr);
         }
     }
 }
@@ -2618,7 +2978,7 @@ void __cdecl Load_cbrushside_t(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varcbrushside_t);
+            DB_ConvertOffsetToPointer((unsigned int *)varcbrushside_t);
         }
     }
 }
@@ -2794,7 +3154,7 @@ void __cdecl Load_CollmapArray(bool atStreamStart, int count)
 
 void __cdecl Load_XModel(bool atStreamStart)
 {
-    Load_Stream(atStreamStart, varXModel, 252);
+    Load_Stream(atStreamStart, (unsigned char *)varXModel, 252);
     DB_PushStreamPos(4u);
     varXString = &varXModel->name;
     Load_XString(0);
@@ -3009,7 +3369,7 @@ void __cdecl Load_XModelPiecesPtr(bool atStreamStart)
         }
         else
         {
-            DB_ConvertOffsetToPointer(varXModelPiecesPtr);
+            DB_ConvertOffsetToPointer((unsigned int *)varXModelPiecesPtr);
         }
     }
 }

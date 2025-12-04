@@ -3,12 +3,12 @@
 void __cdecl phys_task_manager_init()
 {
     if ( g_phys_task_manager_inited
-        && _tlAssert("source/phys_task_manager.cpp", 30, "g_phys_task_manager_inited == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 30, "g_phys_task_manager_inited == 0", "") )
     {
         __debugbreak();
     }
     if ( g_phys_task_manager_current_worker_count
-        && _tlAssert("source/phys_task_manager.cpp", 31, "g_phys_task_manager_current_worker_count == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 31, "g_phys_task_manager_current_worker_count == 0", "") )
     {
         __debugbreak();
     }
@@ -21,12 +21,12 @@ void __cdecl phys_task_manager_init()
 void __cdecl phys_task_manager_shutdown()
 {
     if ( g_phys_task_manager_inited != 1
-        && _tlAssert("source/phys_task_manager.cpp", 49, "g_phys_task_manager_inited == 1", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 49, "g_phys_task_manager_inited == 1", "") )
     {
         __debugbreak();
     }
     if ( g_phys_task_manager_current_worker_count
-        && _tlAssert("source/phys_task_manager.cpp", 50, "g_phys_task_manager_current_worker_count == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 50, "g_phys_task_manager_current_worker_count == 0", "") )
     {
         __debugbreak();
     }
@@ -36,7 +36,7 @@ void __cdecl phys_task_manager_shutdown()
 bool __cdecl phys_task_manager_needs_flush()
 {
     if ( g_phys_task_manager_inited != 1
-        && _tlAssert("source/phys_task_manager.cpp", 83, "g_phys_task_manager_inited == 1", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 83, "g_phys_task_manager_inited == 1", "") )
     {
         __debugbreak();
     }
@@ -46,7 +46,7 @@ bool __cdecl phys_task_manager_needs_flush()
 void __cdecl phys_task_manager_flush()
 {
     if ( g_phys_task_manager_inited != 1
-        && _tlAssert("source/phys_task_manager.cpp", 89, "g_phys_task_manager_inited == 1", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 89, "g_phys_task_manager_inited == 1", "") )
     {
         __debugbreak();
     }
@@ -63,12 +63,12 @@ void __cdecl phys_task_manager_process(jqModule *module, void *input, int input_
     int v4; // esi
 
     if ( g_phys_task_manager_inited != 1
-        && _tlAssert("source/phys_task_manager.cpp", 60, "g_phys_task_manager_inited == 1", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 60, "g_phys_task_manager_inited == 1", "") )
     {
         __debugbreak();
     }
     if ( g_phys_task_manager_current_worker_count
-        && _tlAssert("source/phys_task_manager.cpp", 61, "g_phys_task_manager_current_worker_count == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_task_manager.cpp", 61, "g_phys_task_manager_current_worker_count == 0", "") )
     {
         __debugbreak();
     }

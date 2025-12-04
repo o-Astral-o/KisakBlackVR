@@ -1,6 +1,5 @@
 #pragma once
 
-float *__thiscall phys_vec3::operator[]<int>(phys_vec3 *this, unsigned int i);
 void    make_rotate(
                 int a1@<ebp>,
                 phys_mat44 *mat,
@@ -95,4 +94,3 @@ phys_vec3 *__thiscall phys_static_array<phys_vec3,512>::add(
 phys_vec3 *__thiscall phys_static_array<phys_vec3,512>::operator[](phys_static_array<phys_vec3,512> *this, int i);
 int *__thiscall phys_static_array<float,512>::operator[](phys_static_array<int,512> *this, int i);
 void __thiscall phys_static_array<float,512>::call_destructors(phys_static_array<int,512> *this);
-const float *__thiscall phys_vec3::operator[]<int>(phys_vec3 *this, unsigned int i);

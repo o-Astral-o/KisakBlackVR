@@ -115,7 +115,7 @@ int __cdecl LoadMapFiles(char *msg)
     char *curPosa; // [esp+8h] [ebp-4h]
     char *curPosb; // [esp+8h] [ebp-4h]
 
-    LoadMapFilesForDir(&toastPopupTitle);
+    LoadMapFilesForDir("");
     if ( !msg )
         return 0;
     curPos = msg;

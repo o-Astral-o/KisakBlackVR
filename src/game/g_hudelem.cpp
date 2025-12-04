@@ -1699,7 +1699,7 @@ void __cdecl HECmd_ClearAllTextAfterHudElem(scr_entref_t entref)
             "Hud elem doesn't reference any text.    Make sure to call setText before using clearAllTextAfterHudElem.",
             0);
     for ( configStringIndex = hud->elem.text + 1; configStringIndex < 1023; ++configStringIndex )
-        SV_SetConfigstring(configStringIndex + 515, (char *)&toastPopupTitle);
+        SV_SetConfigstring(configStringIndex + 515, (char *)"");
 }
 
 void __cdecl HECmd_SetMaterial(scr_entref_t entref)

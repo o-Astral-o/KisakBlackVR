@@ -148,7 +148,7 @@ void __cdecl CG_PlayFxOnTag(int localClientNum, centity_s *cent, int eventParm)
 
     csIndex = eventParm + 2276;
     tagAndEffect = CL_GetConfigString(eventParm + 2276);
-    if ( !Demo_IsPlaying() || I_strcmp(tagAndEffect, &toastPopupTitle) && I_strcmp(tagAndEffect + 1, &toastPopupTitle) )
+    if ( !Demo_IsPlaying() || I_strcmp(tagAndEffect, "") && I_strcmp(tagAndEffect + 1, "") )
     {
         if ( !*tagAndEffect )
         {
@@ -223,15 +223,15 @@ void __cdecl CG_DoFootstepEvent(
     {
         if ( cg_footsteps->current.enabled )
             CScr_PlayerFootstepEvent(localClientNum, cent, isPlayerView, event, surfaceType, quiet);
-        BLOPS_NULLSUB();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
 }
 
 void __cdecl CG_DoJumpEvent(int localClientNum, centity_s *cent, bool isPlayerView, int surfaceType, bool quiet)
 {
     CScr_PlayerJumpEvent(localClientNum, cent, isPlayerView, surfaceType, quiet);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl CG_DoLandEvent(
@@ -243,7 +243,7 @@ void __cdecl CG_DoLandEvent(
                 bool damagePlayer)
 {
     CScr_PlayerLandEvent(localClientNum, cent, isPlayerView, surfaceType, quiet, damagePlayer);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl CG_DoFoliageEvent(int localClientNum, centity_s *cent, bool isPlayerView, bool quiet)
@@ -927,7 +927,7 @@ LABEL_180:
                             && ps->viewlocked_entNum != cent->nextState.number )
                         {
                             CG_CompassAddWeaponPingInfo(localClientNum, attackerCent, cent->pose.origin, 50);
-                            BLOPS_NULLSUB();
+                            //BLOPS_NULLSUB();
                         }
                         if ( ((*((unsigned int *)attackerCent + 201) >> 1) & 1) != 0 && attackerCent->nextState.eType == 11 )
                             CG_AddTurretWeaponPingInfo(localClientNum, attackerCent, cent->pose.origin, 50);
@@ -1762,7 +1762,7 @@ LABEL_437:
                             && ps->viewlocked_entNum != cent->nextState.number )
                         {
                             CG_CompassAddWeaponPingInfo(localClientNum, v102, cent->pose.origin, 50);
-                            BLOPS_NULLSUB();
+                            //BLOPS_NULLSUB();
                         }
                         CG_CompassAddVehicleWeaponPingInfo(localClientNum, cent, cent->pose.origin, 50);
                         return;

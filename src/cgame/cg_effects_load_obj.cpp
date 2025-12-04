@@ -52,7 +52,7 @@ FxImpactTable *__cdecl CG_RegisterImpactEffects_LoadObj(const char *mapname)
     }
     else
     {
-        fx->name = &toastPopupTitle;
+        fx->name = "";
         Hunk_ClearTempMemory();
         return fx;
     }
@@ -258,6 +258,6 @@ int __cdecl compare_impact_files(const char **pe0, const char **pe1)
 
 FxImpactTable *__cdecl CG_RegisterImpactEffects_FastFile()
 {
-    return DB_FindXAssetHeader(ASSET_TYPE_IMPACT_FX, &toastPopupTitle, 1, -1).impactFx;
+    return DB_FindXAssetHeader(ASSET_TYPE_IMPACT_FX, "", 1, -1).impactFx;
 }
 

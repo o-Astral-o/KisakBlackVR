@@ -411,7 +411,7 @@ void __cdecl Demo_SaveScreenshotSuccessful(int controllerIndex, unsigned __int64
         bdTag::bdTag(j);
     metaDataSize = 0;
     LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-    Demo_Error(LocalClientNum, &toastPopupTitle, "MENU_DEMO_SCREENSHOT_UPLOAD_SUCCESS");
+    Demo_Error(LocalClientNum, "", "MENU_DEMO_SCREENSHOT_UPLOAD_SUCCESS");
     v3 = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
     UI_CloseMenu(v3, "fileshare_slotselection_scr");
     ClientName = Live_ControllerIndex_GetClientName(controllerIndex);
@@ -1527,7 +1527,7 @@ void __cdecl Demo_ProcessPlayback()
     {
         MSG_GotoBookmark(&demo.msg, &bookmark);
         Demo_SeekFile(demo.demoFileHandle, bookmarkOffset, 2);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         dword_FB2C3C[4 * localClientNum] = 6;
         v0 = Cmd_Argv(1);
         I_strncpyz(cls.servername, v0, 256);
@@ -1837,7 +1837,7 @@ void __cdecl Demo_RunFirstFrameEvents(int localClientNum)
             Dvar_SetInt((dvar_s *)r_clipSize, 0);
             Dvar_SetInt((dvar_s *)r_clipCodec, 0);
             Dvar_SetInt((dvar_s *)r_clipFPS, 24);
-            FS_BuildOSPath((char *)fs_homepath->current.integer, "movies", (char *)&toastPopupTitle, ospath);
+            FS_BuildOSPath((char *)fs_homepath->current.integer, "movies", (char *)"", ospath);
             FS_CreatePath(ospath);
             v1 = va("movie_start \"%s%s.avi\"\n", ospath, demo.demoName);
             Cbuf_AddText(localClientNum, v1);
@@ -3244,7 +3244,7 @@ void __cdecl Demo_WriteConfigStrings(int localClientNum, msg_t *msg)
                         {
                             MSG_WriteBit0(msg);
                             MSG_WriteBits(msg, ia, 0xCu);
-                            MSG_WriteBigString(msg, (char *)&toastPopupTitle);
+                            MSG_WriteBigString(msg, (char *)"");
                             lastStringIndex = ia;
                             ++numConfigStringsWritten;
                         }
@@ -4477,7 +4477,7 @@ void __cdecl Demo_UploadClipSuccess(int controllerIndex, unsigned __int64 fileID
     Demo_SetClipState(3);
     Demo_SetClipModified(0);
     LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-    Demo_Error(LocalClientNum, &toastPopupTitle, "MENU_DEMO_CLIP_UPLOAD_SUCCESS");
+    Demo_Error(LocalClientNum, "", "MENU_DEMO_CLIP_UPLOAD_SUCCESS");
     v3 = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
     UI_CloseMenu(v3, "fileshare_slotselection_clip");
     v4 = va("Clip: Clip upload success.\n");
@@ -4536,7 +4536,7 @@ void __cdecl Demo_UploadClipFailure(int controllerIndex)
 
     Demo_SetClipState(3);
     LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-    Demo_Error(LocalClientNum, &toastPopupTitle, "MENU_DEMO_CLIP_UPLOAD_FAILURE");
+    Demo_Error(LocalClientNum, "", "MENU_DEMO_CLIP_UPLOAD_FAILURE");
     v2 = va("Clip: Clip upload failed.\n");
     Demo_Printf(1024, v2);
     Demo_SetCmdCompleted();

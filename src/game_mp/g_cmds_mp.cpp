@@ -681,7 +681,7 @@ void __cdecl G_Say(gentity_s *ent, gentity_s *target, int mode, const char *chat
     int color; // [esp+5Ch] [ebp-A4h]
     char text[156]; // [esp+60h] [ebp-A0h] BYREF
 
-    pszTeamString = &toastPopupTitle;
+    pszTeamString = "";
     if ( mode == 1 && ent->client->sess.cs.team != TEAM_AXIS )
         mode = ent->client->sess.cs.team == TEAM_ALLIES;
     v4 = CS_DisplayName(&ent->client->sess.cs, 3);
@@ -761,7 +761,7 @@ void __cdecl G_SayTo(
         team = ent->client->sess.cs.team;
         if ( team <= TEAM_FREE || team > TEAM_ALLIES )
         {
-            team_color = &toastPopupTitle;
+            team_color = "";
         }
         else if ( ent->client->sess.cs.team == other->client->sess.cs.team )
         {
@@ -939,7 +939,7 @@ LABEL_37:
             SV_GameSendServerCommand(ent - g_entities, SV_CMD_CAN_IGNORE, v14);
             return;
         }
-        mapname = _Dvar_RegisterString("mapname", (char *)&toastPopupTitle, 0x44u, "Current map name");
+        mapname = _Dvar_RegisterString("mapname", (char *)"", 0x44u, "Current map name");
         if ( !I_stricmp(arg3, mapname->current.string) )
             arg3[0] = 0;
         if ( !arg2[0] && !arg3[0] )
@@ -1472,7 +1472,7 @@ const char *__cdecl SV_Cmd_Argv(int argIndex)
         __debugbreak();
     }
     if ( argIndex >= sv_cmd_args.argc[sv_cmd_args.nesting] )
-        return &toastPopupTitle;
+        return "";
     else
         return sv_cmd_args.argv[sv_cmd_args.nesting][argIndex];
 }

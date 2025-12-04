@@ -48,14 +48,14 @@ const dvar_s *CL_RegisterDevGuiDvars()
 {
     const dvar_s *result; // eax
 
-    clGuiGlob.mapEnumDvar[0] = _Dvar_RegisterEnum("mapEnum0", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    clGuiGlob.mapEnumDvar[1] = _Dvar_RegisterEnum("mapEnum1", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    clGuiGlob.mapEnumDvar[2] = _Dvar_RegisterEnum("mapEnum2", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    clGuiGlob.mapEnumDvar[3] = _Dvar_RegisterEnum("mapEnum3", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    clGuiGlob.mapEnumDvar[4] = _Dvar_RegisterEnum("mapEnum4", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    clGuiGlob.mapEnumDvar[5] = _Dvar_RegisterEnum("mapEnum5", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    clGuiGlob.mapEnumDvar[6] = _Dvar_RegisterEnum("mapEnum6", emptyEnumList, 0, 0x840u, &toastPopupTitle);
-    result = _Dvar_RegisterEnum("mapEnum7", emptyEnumList, 0, 0x840u, &toastPopupTitle);
+    clGuiGlob.mapEnumDvar[0] = _Dvar_RegisterEnum("mapEnum0", emptyEnumList, 0, 0x840u, "");
+    clGuiGlob.mapEnumDvar[1] = _Dvar_RegisterEnum("mapEnum1", emptyEnumList, 0, 0x840u, "");
+    clGuiGlob.mapEnumDvar[2] = _Dvar_RegisterEnum("mapEnum2", emptyEnumList, 0, 0x840u, "");
+    clGuiGlob.mapEnumDvar[3] = _Dvar_RegisterEnum("mapEnum3", emptyEnumList, 0, 0x840u, "");
+    clGuiGlob.mapEnumDvar[4] = _Dvar_RegisterEnum("mapEnum4", emptyEnumList, 0, 0x840u, "");
+    clGuiGlob.mapEnumDvar[5] = _Dvar_RegisterEnum("mapEnum5", emptyEnumList, 0, 0x840u, "");
+    clGuiGlob.mapEnumDvar[6] = _Dvar_RegisterEnum("mapEnum6", emptyEnumList, 0, 0x840u, "");
+    result = _Dvar_RegisterEnum("mapEnum7", emptyEnumList, 0, 0x840u, "");
     clGuiGlob.mapEnumDvar[7] = result;
     return result;
 }
@@ -79,7 +79,7 @@ void __cdecl CL_CreateMapMenuEntriesForLocation(int locationFlags, const char *l
     const char **dirList; // [esp+4h] [ebp-8h]
     int dirIndex; // [esp+8h] [ebp-4h]
 
-    CL_AddMapDirSlider(&toastPopupTitle, locationFlags, locationName);
+    CL_AddMapDirSlider("", locationFlags, locationName);
     dirList = FS_ListFiles("maps", "/", FS_LIST_PURE_ONLY, &dirCount);
     for ( dirIndex = 0; dirIndex != dirCount; ++dirIndex )
         CL_AddMapDirSlider(dirList[dirIndex], locationFlags, locationName);

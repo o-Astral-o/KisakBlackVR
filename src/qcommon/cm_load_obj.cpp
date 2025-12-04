@@ -110,7 +110,7 @@ MapEnts *__cdecl MapEnts_GetFromString(char *name, const char *entityString, int
         begin = G_GetEntityParsePoint();
         if ( !G_ParseSpawnVars(&spawnVar) )
             break;
-        G_SpawnString(&spawnVar, "classname", &toastPopupTitle, &classname);
+        G_SpawnString(&spawnVar, "classname", "", &classname);
         if ( !MapEnts_CanPurgeEntity(classname, &spawnVar, (bool (__cdecl *)(void *, const char *))CMod_HasSpawnString) )
         {
             end = G_GetEntityParsePoint();
@@ -147,7 +147,7 @@ bool __cdecl CMod_HasSpawnString(const SpawnVar *userData, const char *key)
 {
     const char *value; // [esp+4h] [ebp-4h] BYREF
 
-    return G_SpawnString(userData, key, &toastPopupTitle, &value) != 0;
+    return G_SpawnString(userData, key, "", &value) != 0;
 }
 
 void __cdecl CM_LoadMapFromBsp(const char *name, bool usePvs)

@@ -1,7 +1,5 @@
 #pragma once
 
-phys_vec3 *__thiscall phys_vec3::operator*=(phys_vec3 *this, float d);
-phys_vec3 *__thiscall phys_vec3::operator/=(phys_vec3 *this, const float d);
 phys_mat44 *__thiscall phys_mat44::phys_mat44(
                 phys_mat44 *this,
                 const phys_vec3 *x_,

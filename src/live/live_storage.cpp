@@ -297,7 +297,7 @@ void __cdecl LiveStorage_ResetFileInfo(dwFileOperationInfo *fileInfo)
     fileInfo->fileTask.m_fileInfo.m_ownerID = 0;
     fileInfo->fileTask.m_fileInfo.m_fileSize = 0;
     if ( fileInfo->menuDef && *fileInfo->menuDef )
-        fileInfo->menuDef = &toastPopupTitle;
+        fileInfo->menuDef = "";
     fileInfo->fileOperationFailureFunction = 0;
     fileInfo->ownerID = 0;
 }
@@ -2178,7 +2178,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_PerformSearch(int controllerIndex, fil
     TaskRecord *nestedTask; // [esp+0h] [ebp-Ch]
     dwFileShareSearchTask *fileShareSearchTask; // [esp+8h] [ebp-4h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareSearch, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -2288,7 +2288,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_ReadFile(int controllerIndex, fileShar
         downloadInterceptor.__vftable = (fileShareDownloadInterceptor_vtbl *)&fileShareDownloadInterceptor::`vftable';
         atexit(LiveStorage_FileShare_ReadFile_::_2_::_dynamic_atexit_destructor_for__downloadInterceptor__);
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareWriteFile, controllerIndex)
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\live\\live_storage.cpp",
@@ -2684,7 +2684,7 @@ void __cdecl LiveStorage_FileShare_WriteSummarySuccess(TaskRecord *task)
     {
         v2 = UI_SafeTranslateString("MENU_FILESHARE_UPDATED_CAPS");
         LocalClientNum = Com_ControllerIndex_GetLocalClientNum(task->controllerIndex);
-        UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", &toastPopupTitle, v2, 2700);
+        UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", "", v2, 2700);
     }
 }
 
@@ -2698,7 +2698,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_ReadSummary(
     TaskRecord *task; // [esp+4h] [ebp-8h]
     dwFileShareSummaryTask *summaryTask; // [esp+8h] [ebp-4h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareGetSummary, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -2764,7 +2764,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_ReadMetaDataByID(
     TaskRecord *nestedTask; // [esp+0h] [ebp-Ch]
     dwFileShareDescriptorsTask *fsTask; // [esp+8h] [ebp-4h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareGetMetaByID, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -2813,7 +2813,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_RemoveFile(int controllerIndex, unsign
     TaskRecord *nestedTask; // [esp+4h] [ebp-8h]
     TaskRecord *task; // [esp+8h] [ebp-4h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareRemoveFile, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -2858,7 +2858,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_TransferLastUploaded(int controllerInd
     TaskRecord *nestedTask; // [esp+18h] [ebp-Ch]
     fileShareLastPlayedGame_t *lastPlayed; // [esp+20h] [ebp-4h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareTransfer, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -3077,7 +3077,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_TransferFile(
                 fileShareLocation location,
                 bool isCommunityFile)
 {
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareTransfer, controllerIndex) )
         return 0;
     if ( location == FILESHARE_LOCATION_USERSTORAGE )
@@ -3120,7 +3120,7 @@ void __cdecl LiveStorage_FileShare_TransferFileSuccess(TaskRecord *task)
         LiveCounter_IncrementCounterValueByName("global_fileshare_shared", 1u);
         v3 = UI_SafeTranslateString("MENU_FILESHARE_TRANSFERCOMPLETE_CAPS");
         LocalClientNum = Com_ControllerIndex_GetLocalClientNum(task->controllerIndex);
-        UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", &toastPopupTitle, v3, 2700);
+        UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", "", v3, 2700);
         LiveStorage_FileShare_GetFileShareData(FILESHARE_BUFFER_PRIMARY)->valid = 0;
         LODWORD(v2) = Live_GetXuid(task->controllerIndex);
         LiveStorage_FileShare_ReadListing(task->controllerIndex, v2, FILESHARE_BUFFER_PRIMARY);
@@ -3140,7 +3140,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_WriteRating(
     dwFileShareSubmitRatingTask *ratingTask; // [esp+0h] [ebp-Ch]
     TaskRecord *nestedTask; // [esp+4h] [ebp-8h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareSubmitRating, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -3192,7 +3192,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_ReadTopRated(
     dwFileShareGetTopRatedTask *ratingTask; // [esp+0h] [ebp-Ch]
     TaskRecord *nestedTask; // [esp+4h] [ebp-8h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(task_LiveFileShareGetTopRating, controllerIndex) )
         return 0;
     if ( !controllerNetworkData[controllerIndex].fileOps
@@ -3363,7 +3363,7 @@ TaskRecord *__cdecl LiveStorage_FileShare_ReadRating(
 {
     TaskRecord *nestedTask; // [esp+0h] [ebp-8h]
 
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( TaskManager2_TaskIsInProgressForController(sym, controllerIndex) )
         return 0;
     nestedTask = dwFileShareGetRating(controllerIndex, ratingTask);

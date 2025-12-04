@@ -51,3 +51,73 @@ struct pmove_t // sizeof=0x910
                                                                                 // XREF: PlayerCmd_Revive(scr_entref_t)+25C/w
                                                                                 // G_ShutdownGame(int)+18/o ...
 };
+
+struct pmoveHandler_t // sizeof=0x20
+{                                       // XREF: .data:pmoveHandler_t * pmoveHandlers/r
+    void (__cdecl *trace)(struct trace_t *, const float *, const float *, const float *, const float *, int, int, struct col_context_t *);
+    void (__cdecl *playerEvent)(int, int);
+    bool (__cdecl *getEntityOriginAngles)(int, int, float *, float *);
+    unsigned __int16 (__cdecl *getVehicleTypeString)(int, int);
+    void (__cdecl *entityLinkFromPMove)(unsigned int, int, int);
+    int (__cdecl *getPlayerWeapon)(const struct playerState_s *, const int);
+    void (__cdecl *setVehDriverInputs)(const int, const int, struct usercmd_s *);
+    bool (__cdecl *isEntWalkable)(int, int);
+};
+
+
+// duplicate prototypes
+void __cdecl CG_TraceCapsule(
+    struct trace_t *results,
+    const float *start,
+    const float *mins,
+    const float *maxs,
+    const float *end,
+    int passEntityNum,
+    int contentMask,
+    struct col_context_t *context);
+bool __cdecl CG_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles);
+unsigned __int16 __cdecl CG_GetVehicleTypeString(int clientNum, int entityNum);
+int __cdecl CG_GetPlayerWeapon(const struct playerState_s *ps, int localClientNum);
+void __cdecl CG_SetVehDriverInputs(int localClientNum, int vehEntNum, struct usercmd_s *cmd);
+bool __cdecl CG_IsEntWalkable(int localClientNum, int entityNum);
+
+void __cdecl G_TraceCapsule(
+    struct trace_t *results,
+    const float *start,
+    const float *mins,
+    const float *maxs,
+    const float *end,
+    int passEntityNum,
+    int contentmask,
+    struct col_context_t *context);
+void __cdecl G_PlayerEvent(int clientNum, int event);
+bool __cdecl G_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles);
+unsigned __int16 __cdecl G_GetVehicleTypeString(int clientNum, int entityNum);
+void __cdecl G_EntityLinkFromPMove(unsigned int entityNum, int parentEntityNum, int tagName);
+int __cdecl G_GetPlayerWeapon(const struct playerState_s *ps, int localClientNum);
+void __cdecl G_SetVehDriverInputs(int localClientNum, int vehEntNum, usercmd_s *cmd);
+bool __cdecl G_IsEntWalkable(int localClientNum, int entityNum);
+
+static const pmoveHandler_t pmoveHandlers[2] =
+{
+  {
+    CG_TraceCapsule,
+    NULL,
+    CG_GetEntityOriginAngles,
+    CG_GetVehicleTypeString,
+    NULL,
+    CG_GetPlayerWeapon,
+    CG_SetVehDriverInputs,
+    CG_IsEntWalkable
+  },
+  {
+    G_TraceCapsule,
+    G_PlayerEvent,
+    G_GetEntityOriginAngles,
+    G_GetVehicleTypeString,
+    G_EntityLinkFromPMove,
+    G_GetPlayerWeapon,
+    G_SetVehDriverInputs,
+    G_IsEntWalkable
+  }
+};

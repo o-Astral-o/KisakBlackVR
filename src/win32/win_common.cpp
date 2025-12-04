@@ -14,7 +14,7 @@ char *__cdecl Sys_Cwd()
 
 const char *__cdecl Sys_DefaultCDPath()
 {
-    return &toastPopupTitle;
+    return "";
 }
 
 char *__cdecl Sys_DefaultInstallPath()
@@ -61,7 +61,7 @@ HunkUser **__cdecl Sys_ListFiles(char *directory, char *extension, char *filter,
     {
         user = Hunk_UserCreate(0x20000, HU_SCHEME_DEFAULT, 0, 0, "Sys_ListFiles", 3);
         numfilesa = 0;
-        Sys_ListFilteredFiles(user, directory, &toastPopupTitle, filter, list, &numfilesa);
+        Sys_ListFilteredFiles(user, directory, "", filter, list, &numfilesa);
         list[numfilesa] = 0;
         *numfiles = numfilesa;
         if ( numfilesa )
@@ -82,14 +82,14 @@ HunkUser **__cdecl Sys_ListFiles(char *directory, char *extension, char *filter,
     else
     {
         if ( !extension )
-            extension = (char *)&toastPopupTitle;
+            extension = (char *)"";
         if ( *extension != 47 || extension[1] )
         {
             v8 = 16;
         }
         else
         {
-            extension = (char *)&toastPopupTitle;
+            extension = (char *)"";
             v8 = 0;
         }
         if ( *extension )

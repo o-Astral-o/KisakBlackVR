@@ -7,13 +7,13 @@ void __cdecl G_track_init()
     g_mem_track_filename = "g_main";
     TRACK_g_main();
     g_mem_track_filename = "g_svcmds";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "g_utils";
     TRACK_g_utils();
     g_mem_track_filename = "bg_misctables";
     TRACK_bg_misctables();
     g_mem_track_filename = "bg_weapons";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "bg_weapons_ammo";
     TRACK_bg_weapons_ammo();
     g_mem_track_filename = "bg_weapons_load_obj";
@@ -43,7 +43,7 @@ void __cdecl G_track_init()
     g_mem_track_filename = "enthandle";
     TRACK_enthandle();
     g_mem_track_filename = "actor_aim";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "aim_target";
     TRACK_aim_target();
 }

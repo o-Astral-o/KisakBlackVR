@@ -156,7 +156,7 @@ LABEL_21:
     if ( tokenType != 2 )
         goto LABEL_21;
     token = LiveContracts_GetContractName(value);
-    if ( I_strcmp(token, &toastPopupTitle) )
+    if ( I_strcmp(token, "") )
     {
         convArgs.args[convArgs.argCount++] = token;
         isValidToken = 1;
@@ -236,7 +236,7 @@ void __cdecl LiveNews_GetFriendsXuids(int controllerIndex)
             HIDWORD(friendXuid[k]) = HIDWORD(allFriendsXuids[k]);
         }
     }
-    LiveTicker_ReplaceMessages(&toastPopupTitle, TICKER_STREAM_FRIENDS, 0);
+    LiveTicker_ReplaceMessages("", TICKER_STREAM_FRIENDS, 0);
 }
 
 char __cdecl LiveNews_GetFriendsPublicProfile(int controllerIndex, unsigned __int64 xuid)
@@ -384,7 +384,7 @@ void __cdecl LiveNews_GetOwnNews(int controllerIndex)
                     if ( tokenType == 2 )
                     {
                         contractName = LiveContracts_GetContractName(value);
-                        if ( I_strcmp(contractName, &toastPopupTitle) )
+                        if ( I_strcmp(contractName, "") )
                         {
                             convArgs.args[convArgs.argCount++] = contractName;
                             isValidToken = 1;

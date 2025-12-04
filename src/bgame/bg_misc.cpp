@@ -1155,7 +1155,7 @@ void __cdecl BG_RegisterDvars()
                                                  "Play the 3rd person animation during shellshock");
     bg_shock_visionset_name = _Dvar_RegisterString(
                                                             "bg_shock_visionset_name",
-                                                            (char *)&toastPopupTitle,
+                                                            (char *)"",
                                                             0x80u,
                                                             "Vision set that will be transitioned to when this shellshock plays");
     bg_shock_visionset_inTime = _Dvar_RegisterFloat(

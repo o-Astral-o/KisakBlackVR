@@ -1,4 +1,9 @@
 #include "cg_weapons.h"
+#include <bgame/bg_local.h>
+#include <cgame_mp/cg_local_mp.h>
+#include <bgame/bg_weapons.h>
+#include <bgame/bg_weapons_def.h>
+#include "cg_camera.h"
 
 bool __cdecl CG_JavelinADS(int localClientNum)
 {
@@ -4955,7 +4960,7 @@ void __cdecl CG_FireWeapon(
             BG_WeaponFireRecoil(&cgameGlob->predictedPlayerState, cgameGlob->recoilSpeed, cgameGlob->kickAVel);
         }
         CG_FireWeapon_VehicleFire((int)localClientNum, cent, ps, event, tagName);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         if ( ent->eType == 11 || weaponDef->fireType == WEAPON_FIRETYPE_MINIGUN && cent->pose.eType == 12 )
         {
             firstPersonFlash = localPlayerUsingVehicleWeapon || playerUsingTurret;
@@ -4982,7 +4987,7 @@ void __cdecl CG_FireWeapon(
             if ( v8 )
             {
                 CG_CompassAddWeaponPingInfo((int)localClientNum, cent, origin, 200);
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             }
         }
         if ( !BG_GetWeaponDef(weapon)->bBoltAction )
@@ -7422,7 +7427,7 @@ void __cdecl CG_DisplayViewmodelAnim(int localClientNum)
     if ( (int)BG_GetViewmodelWeaponIndex(&cgameGlob->predictedPlayerState) > 0 )
     {
         viewModelInfo = CG_GetLocalClientViewModelInfo(localClientNum);
-        DObjDisplayAnim(viewModelInfo->viewModelDObj, &toastPopupTitle);
+        DObjDisplayAnim(viewModelInfo->viewModelDObj, "");
     }
 }
 
@@ -7469,7 +7474,7 @@ unsigned int __cdecl CG_GetPlayerMeleeWeapon(const playerState_s *ps)
         return ps->meleeWeapon;
 }
 
-unsigned int __cdecl CG_GetPlayerWeapon(const playerState_s *ps, int localClientNum)
+int __cdecl CG_GetPlayerWeapon(const playerState_s *ps, int localClientNum)
 {
     unsigned int weapon; // [esp+0h] [ebp-4h]
 

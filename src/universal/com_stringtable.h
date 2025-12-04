@@ -1,5 +1,22 @@
 #pragma once
 
+struct StringTableCell // sizeof=0x8
+{
+    const char *string;
+    int hash;
+};
+
+struct StringTable // sizeof=0x14
+{                                       // XREF: XAssetPoolEntry<StringTable>/r
+    const char *name;
+    int columnCount;
+    int rowCount;
+    StringTableCell *values;
+    __int16 *cellIndex;
+};
+
+struct XAssetHeader;
+
 int __cdecl StringTable_LookupRowNumForValue(const StringTable *table, int comparisonColumn, const char *value);
 int __cdecl StringTable_FirstHashIndex(const StringTable *table, int hash);
 int __cdecl StringTable_LookupColumnNumForValue(const StringTable *table, int comparisonRow, const char *value);

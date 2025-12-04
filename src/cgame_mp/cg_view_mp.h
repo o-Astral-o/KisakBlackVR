@@ -1,5 +1,47 @@
 #pragma once
 
+enum ClientViewViewportSize : __int32
+{                                       // XREF: ClientViewParams/r
+    VIEWPORT_LARGE = 0x0,               // XREF: .data:clientViewParamsArray/s
+    VIEWPORT_SMALL = 0x1,
+};
+
+enum KillCamEntityType : __int32
+{                                       // XREF: cg_s/r
+                                        // CG_UpdateKillCamEntity/r ...
+    KC_NO_ENTITY      = 0x0,
+    KC_HELICOPTER     = 0x1,
+    KC_DESTRUCTIBLE   = 0x2,
+    KC_SCRIPTED       = 0x3,
+    KC_EXPLOSIVE      = 0x4,
+    KC_FAST_EXPLOSIVE = 0x5,
+    KC_ROCKET         = 0x6,
+    KC_DOG            = 0x7,
+    KC_ARTILLERY      = 0x8,
+    KC_VEHICLE        = 0x9,
+    KC_TURRET         = 0xA,
+};
+
+enum KillCamEntityRestState : __int32
+{                                       // XREF: cg_s/r
+                                        // CG_KillcamCameraTrace/r
+    KC_ENT_MOVING       = 0x0,
+    KC_ENT_AT_REST      = 0x1,
+    KC_ENT_STUCK_GROUND = 0x2,
+    KC_ENT_STUCK_WALL   = 0x3,
+};
+
+struct ClientViewParams // sizeof=0x14
+{                                       // XREF: .data:clientViewParamsArray/r
+    float x;
+    float y;
+    float width;
+    float height;
+    ClientViewViewportSize viewportSize;
+};
+
+struct vehicle_info_t;
+
 void __cdecl CG_DrawWaterTrail(int localClientNum, const float *pos, float waterHeight);
 int __cdecl CG_GetNextRippleTime(centity_s *cent);
 void __cdecl CG_SetNextRippleTime(centity_s *cent, int time, float speed, bool in_water);
@@ -35,9 +77,9 @@ void __cdecl CG_InitView(int localClientNum);
 void __cdecl LerpKillCamView(int localClientNum);
 void __cdecl CG_CalcViewValues(int localClientNum);
 void __cdecl CG_DevSaveCamera(float *angles, float *origin);
-void    CG_OffsetChaseCamView(clientActive_t *a1@<ebp>, int localClientNum, CameraMode camMode);
+void    CG_OffsetChaseCamView(int localClientNum, CameraMode camMode);
 // local variable allocation has failed, the output may be wrong!
-void    CG_OffsetThirdPersonView(DObj *a1@<ebp>, int localClientNum);
+void    CG_OffsetThirdPersonView(int localClientNum);
 void __cdecl CG_CalcVrect(int localClientNum);
 void __cdecl CG_SmoothCameraZ(cg_s *cgameGlob);
 void __cdecl CG_OffsetFirstPersonView(cg_s *cgameGlob);
@@ -72,8 +114,7 @@ void __cdecl CG_SetupFlameFX(int localClientNum, int enable);
 void __cdecl CG_SetupElectrifiedFX(int localClientNum, int enable);
 bool __cdecl CG_IsInfrared(int localClientNum);
 bool __cdecl CG_IsTvguided(int localClientNum, bool onlyADS);
-int    CG_DrawActiveFrame@<eax>(
-                int a1@<esi>,
+int    CG_DrawActiveFrame(
                 int localClientNum,
                 int serverTime,
                 DemoType demoType,

@@ -1,4 +1,62 @@
 #pragma once
+#include <gfx_d3d/r_gfx.h>
+
+enum DynEntityCollType : __int32
+{                                       // XREF: Flame_Server_Trace/r
+                                        // Flame_Client_Trace/r ...
+    DYNENT_COLL_CLIENT_FIRST = 0x0,
+    DYNENT_COLL_CLIENT_MODEL = 0x0,
+    DYNENT_COLL_CLIENT_BRUSH = 0x1,
+    DYNENT_COLL_SERVER_FIRST = 0x2,
+    DYNENT_COLL_SERVER_MODEL = 0x2,
+    DYNENT_COLL_SERVER_BRUSH = 0x3,
+    DYNENT_COLL_COUNT        = 0x4,
+};
+
+struct DynEntityColl // sizeof=0x20
+{
+    unsigned __int16 sector;
+    unsigned __int16 nextEntInSector;
+    float linkMins[3];
+    float linkMaxs[3];
+    int contents;
+};
+
+struct DynEntityCollTree // sizeof=0xC
+{                                       // XREF: DynEntityCollSector/r
+    float dist;
+    unsigned __int16 axis;
+    //DynEntityCollTree::<unnamed_type_u> u;
+    union //DynEntityCollTree::<unnamed_type_u> // sizeof=0x2
+    {                                       // XREF: DynEntityCollTree/r
+        unsigned __int16 parent;
+        unsigned __int16 nextFree;
+    } u;
+    unsigned __int16 child[2];
+};
+
+struct __declspec(align(4)) DynEntityCollSector // sizeof=0x14
+{                                       // XREF: DynEntityCollWorld/r
+    DynEntityCollTree tree;
+    int contents;
+    unsigned __int16 entListHead;
+    // padding byte
+    // padding byte
+};
+
+struct DynEntityCollWorld // sizeof=0x501C
+{                                       // XREF: .data:dynEntCollWorlds/r
+    float mins[3];
+    float maxs[3];
+    unsigned __int16 freeHead;
+    // padding byte
+    // padding byte
+    DynEntityCollSector sectors[1024];
+};
+
+struct DynEntityDef;
+struct pointtrace_t;
+struct trace_t;
 
 DynEntityCollSector *__cdecl DynEnt_GetCollSector(DynEntityCollType collType, unsigned int sectorIndex);
 DynEntityCollWorld *__cdecl DynEnt_GetCollWorld(DynEntityCollType collType);

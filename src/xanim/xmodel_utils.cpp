@@ -385,7 +385,7 @@ int __cdecl XModelGetLodForDist_Internal(const XModel *model, float dist)
             if ( model->name )
                 v2 = va("'%s' nan lod dist. %d/%d", model->name, lodIndex, lodCount);
             else
-                v2 = va("'%s' nan lod dist. %d/%d", &toastPopupTitle, lodIndex, lodCount);
+                v2 = va("'%s' nan lod dist. %d/%d", "", lodIndex, lodCount);
             if ( !Assert_MyHandler(
                             "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\xmodel_utils.cpp",
                             501,

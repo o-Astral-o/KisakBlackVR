@@ -6689,7 +6689,7 @@ void __cdecl PlayerCmd_SetActionSlot(scr_entref_t entref)
             {
                 if ( I_stricmp(str, "nightvision") )
                 {
-                    if ( I_stricmp(str, &toastPopupTitle) )
+                    if ( I_stricmp(str, "") )
                         Scr_Error("Invalid option: expected \"weapon\", \"altweapon\", or \"nightvision\".\n", 0);
                     else
                         pSelf->client->ps.actionSlotType[slota] = ACTIONSLOTTYPE_DONOTHING;

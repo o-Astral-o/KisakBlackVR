@@ -715,7 +715,7 @@ char *__cdecl DDL_GetString(const ddlState_t *searchState, char *buffer)
     if ( DDL_IsStateReadyForIO(searchState) )
         return DDL_ReadStringValueInternal(searchState->member, searchState->absoluteOffset, buffer);
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 int __cdecl DDL_GetValue(const ddlState_t *searchState, ddlResult_t *result, char *buffer)

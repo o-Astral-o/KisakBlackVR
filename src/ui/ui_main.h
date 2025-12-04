@@ -240,7 +240,7 @@ struct uiInfo_s // sizeof=0x2764
         int previousTimes[4];
         uiMenuCommand_t currentMenuType;
         bool allowScriptMenuResponse;
-        char toastPopupTitle[256];
+        char GLOBAL_EMPTY_STRING[256];
         char toastPopupDesc[256];
         char toastPopupIconName[256];
         // padding byte
@@ -616,7 +616,7 @@ void __cdecl UI_UIContext_CloseMenuImmediate(int localClientNum, int contextInde
 void __cdecl UI_UIContext_OpenToastPopup(
                 int contextIndex,
                 const char *toastPopupIconName,
-                const char *toastPopupTitle,
+                const char *GLOBAL_EMPTY_STRING,
                 const char *toastPopupDesc,
                 int toastPopupDuration);
 void __cdecl UI_OpenMenu(int localClientNum, const char *menuName);
@@ -625,7 +625,7 @@ void __cdecl UI_CloseMenuImmediate(int localClientNum, const char *menuName);
 void __cdecl UI_OpenToastPopup(
                 int localClientNum,
                 const char *toastPopupIconName,
-                const char *toastPopupTitle,
+                const char *GLOBAL_EMPTY_STRING,
                 const char *toastPopupDesc,
                 int toastPopupDuration);
 void __cdecl UI_DrawMapLevelshot(int localClientNum);

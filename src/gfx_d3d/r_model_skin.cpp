@@ -88,7 +88,7 @@ void __cdecl R_SkinXSurfaceWeight(
         {
             if ( tensionBufferStage != -1 )
             {
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 Sys_EnterCriticalSection(CRITSECT_TENSION);
                 TensionUsage[tensionBufferStage] = 0;
                 Sys_LeaveCriticalSection(CRITSECT_TENSION);

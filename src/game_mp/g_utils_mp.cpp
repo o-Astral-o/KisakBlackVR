@@ -1590,7 +1590,7 @@ void __cdecl G_PrintEntities()
         if ( g_entities[entityIndex].classname )
             v0 = SL_ConvertToString(g_entities[entityIndex].classname, SCRIPTINSTANCE_SERVER);
         else
-            v0 = (char *)&toastPopupTitle;
+            v0 = (char *)"";
         Com_Printf(
             15,
             "%4i: '%s', origin: %f %f %f\n",

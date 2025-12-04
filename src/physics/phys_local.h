@@ -1,4 +1,5 @@
 #pragma once
+#include <universal/assertive.h>
 
 struct phys_vec2 // sizeof=0x8
 {                                                                             // XREF: contact_manifold_mesh_point/r
@@ -15,6 +16,62 @@ struct phys_vec3 // sizeof=0x10
         float y;                                                        // XREF: gjkcc_info::update_cg(float const * const,float const * const,bool)+209/r
         float z;                                                        // XREF: gjkcc_info::update_cg(float const * const,float const * const,bool)+221/r
         float w;                                                        // XREF: standard_query::query(broad_phase_environment_query_input const &,broad_phase_environement_query_results *)+440/r
+
+        inline phys_vec3& operator*=(float d)
+        {
+            this->x = this->x * d;
+            this->y = this->y * d;
+            this->z = d * this->z;
+
+            return *this;
+        }
+
+        inline phys_vec3& operator+=(const phys_vec3 *v)
+        {
+            this->x = this->x + v->x;
+            this->y = this->y + v->y;
+            this->z = this->z + v->z;
+            return *this;
+        }
+
+        inline phys_vec3& operator-=(const phys_vec3 *v)
+        {
+            this->x = this->x - v->x;
+            this->y = this->y - v->y;
+            this->z = this->z - v->z;
+            return *this;
+        }
+
+        inline phys_vec3& operator/=(const float d)
+        {
+            float d_inv; // [esp+8h] [ebp+8h]
+
+            d_inv = 1.0 / d;
+            this->x = this->x * d_inv;
+            this->y = this->y * d_inv;
+            this->z = d_inv * this->z;
+            return *this;
+        }
+
+        inline phys_vec3 & operator=(const phys_vec3 *v)
+        {
+            this->x = v->x;
+            this->y = v->y;
+            this->z = v->z;
+            return *this;
+        }
+
+        inline float * operator[](unsigned int i)
+        {
+            iassert(i >= 0 && i < 3);
+            return (float *)this + i;
+        }
+
+        //inline const float * operator[](unsigned int i)
+        //{
+        //    iassert(i >= 0 && i < 3);
+        //    return (const float *)this + i;
+        //}
 };
 
 struct phys_mat44 // sizeof=0x40
@@ -125,6 +182,70 @@ struct phys_memory_heap // sizeof=0x10
 
         //char *phys_memory_heap::fast_allocate(phys_memory_heap *this, int size, const char *error_msg);
         char *fast_allocate(int size, const char *error_msg);
+};
+
+template <typename T, int SIZE>
+struct __declspec(align(16)) phys_static_array
+{
+    char m_buffer[sizeof(T) * SIZE];
+    T *const m_slot_array;
+    int m_alloc_count;
+
+private:
+    bool is_member(T *data)
+    {
+        return (data >= this->m_slot_array && data < &this->m_slot_array[this->m_alloc_count]);
+    }
+public:
+
+    phys_static_array()
+    {
+        m_slot_array = &m_buffer;
+        m_alloc_count = 0;
+    }
+
+    T *operator[](int i)
+    {
+        iassert(i >= 0 && i < m_alloc_count);
+        return &this->m_slot_array[i];
+    }
+
+    T *add(int no_error, const char *error_msg)
+    {
+        if (m_alloc_count < 512)
+        {
+            return &this->m_slot_array[m_alloc_count++];
+        }
+        else
+        {
+            if (!no_error)
+            {
+                tlFatal(error_msg);
+            }
+            return NULL;
+        }
+    }
+
+    T *back()
+    {
+        iassert(m_alloc_count > 0);
+
+        return &this->m_slot_array[m_alloc_count - 1];
+    }
+
+    T *get_list_head()
+    {
+        iassert(m_alloc_count > 0);
+
+        return this->m_slot_array;
+    }
+
+    void remove_slow(T *data)
+    {
+        iassert(is_member(data));
+
+        *data = &this->m_slot_array[--this->m_alloc_count];
+    }
 };
 
 

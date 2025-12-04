@@ -19,11 +19,11 @@ void __thiscall rigid_body::set_inertia(rigid_body *this, const phys_vec3 *inert
     float v4; // [esp-Ch] [ebp-18h]
     float v5; // [esp-8h] [ebp-14h]
 
-    if ( inertia->x <= 0.000001 && _tlAssert("source/rigid_body.cpp", 8, "inertia.GetX() > 0.000001f", &toastPopupTitle) )
+    if ( inertia->x <= 0.000001 && _tlAssert("source/rigid_body.cpp", 8, "inertia.GetX() > 0.000001f", "") )
         __debugbreak();
-    if ( inertia->y <= 0.000001 && _tlAssert("source/rigid_body.cpp", 9, "inertia.GetY() > 0.000001f", &toastPopupTitle) )
+    if ( inertia->y <= 0.000001 && _tlAssert("source/rigid_body.cpp", 9, "inertia.GetY() > 0.000001f", "") )
         __debugbreak();
-    if ( inertia->z <= 0.000001 && _tlAssert("source/rigid_body.cpp", 10, "inertia.GetZ() > 0.000001f", &toastPopupTitle) )
+    if ( inertia->z <= 0.000001 && _tlAssert("source/rigid_body.cpp", 10, "inertia.GetZ() > 0.000001f", "") )
         __debugbreak();
     v3 = 1.0 / inertia->x;
     v4 = 1.0 / inertia->y;
@@ -35,7 +35,7 @@ void __thiscall rigid_body::set_inertia(rigid_body *this, const phys_vec3 *inert
 
 void __thiscall rigid_body::set_mass(rigid_body *this, float mass)
 {
-    if ( mass <= 0.000001 && _tlAssert("source/rigid_body.cpp", 17, "mass > 0.000001f", &toastPopupTitle) )
+    if ( mass <= 0.000001 && _tlAssert("source/rigid_body.cpp", 17, "mass > 0.000001f", "") )
         __debugbreak();
     this->m_inv_mass = 1.0 / mass;
 }

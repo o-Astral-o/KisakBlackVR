@@ -400,14 +400,6 @@ double __userpurge NitrousVehicle::debug_render_wheel_effects@<st0>(
     return v12;
 }
 
-phys_vec3 *__thiscall phys_vec3::operator-=(phys_vec3 *this, const phys_vec3 *v)
-{
-    this->x = this->x - v->x;
-    this->y = this->y - v->y;
-    this->z = this->z - v->z;
-    return this;
-}
-
 phys_vec3 *__cdecl operator/(phys_vec3 *result, const phys_vec3 *a, float d)
 {
     float v4; // [esp+4h] [ebp-Ch]

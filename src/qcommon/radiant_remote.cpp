@@ -547,7 +547,7 @@ unsigned int __cdecl G_FindStruct(SpawnVar *spawnVar, int gameId)
     {
         __debugbreak();
     }
-    G_SpawnString(spawnVar, "script_label", &toastPopupTitle, &scriptLabel);
+    G_SpawnString(spawnVar, "script_label", "", &scriptLabel);
     if ( !I_stricmp(scriptLabel, "random") || !I_stricmp(scriptLabel, "looper") || !I_stricmp(scriptLabel, "line_emitter") )
         return 0;
     memset(origin, 0, sizeof(origin));

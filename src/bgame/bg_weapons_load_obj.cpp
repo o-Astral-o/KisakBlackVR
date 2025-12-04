@@ -170,7 +170,7 @@ void __cdecl SetConfigString(char **ppszConfigString, const char *pszKeyValue)
     }
     else
     {
-        *ppszConfigString = (char *)&toastPopupTitle;
+        *ppszConfigString = (char *)"";
     }
 }
 
@@ -278,7 +278,7 @@ void __cdecl InitFlameTable(flameTable *fTable)
     while ( iField < 119 )
     {
         if ( !pField->iFieldType )
-            *(unsigned int *)((char *)&fTable->flameVar_streamChunkGravityStart + pField->iOffset) = &toastPopupTitle;
+            *(unsigned int *)((char *)&fTable->flameVar_streamChunkGravityStart + pField->iOffset) = "";
         ++iField;
         ++pField;
     }
@@ -1215,10 +1215,10 @@ WeaponVariantDef *__cdecl BG_LoadWeaponVariantDefInternal(const char *folder, ch
     }
     else
     {
-        *((unsigned int *)weapFullDef + 16) = &toastPopupTitle;
-        *((unsigned int *)weapFullDef + 18) = &toastPopupTitle;
+        *((unsigned int *)weapFullDef + 16) = "";
+        *((unsigned int *)weapFullDef + 18) = "";
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     return (WeaponVariantDef *)weapFullDef;
 }
 
@@ -1280,7 +1280,7 @@ void __cdecl InitWeaponDef(WeaponFullDef *weapFullDef)
     int iField; // [esp+Ch] [ebp-8h]
 
     weapFullDef->weapVariantDef.weapDef = &weapFullDef->weapDef;
-    weapFullDef->weapVariantDef.szInternalName = &toastPopupTitle;
+    weapFullDef->weapVariantDef.szInternalName = "";
     weapFullDef->weapVariantDef.szXAnims = weapFullDef->szXAnims;
     weapFullDef->weapVariantDef.hideTags = weapFullDef->hideTags;
     weapFullDef->weapDef.gunXModel = weapFullDef->gunXModel;
@@ -1295,7 +1295,7 @@ void __cdecl InitWeaponDef(WeaponFullDef *weapFullDef)
     while ( iField < 748 )
     {
         if ( !pField->iFieldType )
-            *(const char **)((char *)&weapFullDef->weapVariantDef.szInternalName + pField->iOffset) = &toastPopupTitle;
+            *(const char **)((char *)&weapFullDef->weapVariantDef.szInternalName + pField->iOffset) = "";
         ++iField;
         ++pField;
     }

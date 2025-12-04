@@ -1,11 +1,39 @@
 #pragma once
 
+struct cbrush_t;
+struct menuDef_t;
+struct XAsset;
+
+struct PackIndexEntry // sizeof=0xC
+{
+    unsigned int hash;
+    unsigned int offset;
+    unsigned int size;
+};
+
+struct PackIndexHeader // sizeof=0x14
+{                                       // XREF: PackIndex/r
+    unsigned int magic;
+    unsigned int timestamp;
+    unsigned int count;
+    unsigned int alignment;
+    unsigned int data_start;
+};
+
+struct PackIndex // sizeof=0x1C
+{                                       // XREF: snd_pack_file/r
+                                        // XAssetPoolEntry<PackIndex>/r
+    const char *name;
+    PackIndexHeader header;
+    PackIndexEntry *entries;
+};
+
 void __cdecl Load_byteArray(bool atStreamStart, int count);
 void __cdecl Load_charArray(bool atStreamStart, int count);
 void __cdecl Load_int(bool atStreamStart);
 void __cdecl Load_intArray(bool atStreamStart, int count);
 void __cdecl Load_unsignedArray(bool atStreamStart, int count);
-void __cdecl Loadunsigned intArray(bool atStreamStart, int count);
+void __cdecl Load_DWORDArray(bool atStreamStart, int count);
 void __cdecl Load_uint(bool atStreamStart);
 void __cdecl Load_uintArray(bool atStreamStart, int count);
 void __cdecl Load_float(bool atStreamStart);
@@ -30,7 +58,7 @@ unsigned __int8 *__cdecl AllocLoad_XBlendInfo();
 void __cdecl Load_UnsignedShortArray(bool atStreamStart, int count);
 void __cdecl Load_ScriptString(bool atStreamStart);
 void __cdecl Load_ScriptStringArray(bool atStreamStart, int count);
-ComBurnableSample *__cdecl AllocLoad_raw_byte();
+unsigned char *__cdecl AllocLoad_raw_byte();
 void __cdecl Load_ConstCharArray(bool atStreamStart, int count);
 void __cdecl Load_TempString(bool atStreamStart);
 void __cdecl Load_TempStringArray(bool atStreamStart, int count);

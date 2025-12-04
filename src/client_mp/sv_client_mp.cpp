@@ -364,7 +364,7 @@ char *__cdecl SV_GetClientDStringStat(unsigned int clientNum, ddlState_t *search
         if ( !DDL_AssociateBuffer(buffer, 40168, StatsDDL) )
         {
             DDL_PrintError("DDL: Could not get stat. Buffer error.");
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         }
         svs.clients[clientNum].statsValidated = 1;
     }
@@ -664,11 +664,11 @@ void __cdecl SV_FreeClient(client_t *cl)
     {
         __debugbreak();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     SV_CloseDownload(cl);
     if ( SV_Loaded() )
         ClientDisconnect(cl - svs.clients);
-    SV_SetUserinfo(cl - svs.clients, (char *)&toastPopupTitle);
+    SV_SetUserinfo(cl - svs.clients, (char *)"");
     SV_FreeClientScriptId(cl);
 }
 
@@ -1270,7 +1270,7 @@ void __cdecl SV_DropClient(client_t *drop, const char *reason, bool tellThem, bo
                 if ( translationForReason )
                     SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, &unk_CEA724, reason);
                 else
-                    SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, &toastPopupTitle, reason);
+                    SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, "", reason);
             }
             else if ( translationForReason )
             {
@@ -1278,7 +1278,7 @@ void __cdecl SV_DropClient(client_t *drop, const char *reason, bool tellThem, bo
             }
             else
             {
-                SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, &toastPopupTitle, "EXE_PLAYERKICKED");
+                SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, "", "EXE_PLAYERKICKED");
             }
         }
         else if ( translationForReason )
@@ -1287,7 +1287,7 @@ void __cdecl SV_DropClient(client_t *drop, const char *reason, bool tellThem, bo
         }
         else
         {
-            SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, &toastPopupTitle, "EXE_LEFTGAME");
+            SV_SendServerCommand(0, SV_CMD_CAN_IGNORE, aC_2, 101, droppedClientName, "", "EXE_LEFTGAME");
         }
         Com_Printf(15, "%i:%s %s\n", clientNum, droppedClientName, reason);
         SV_SendServerCommand(0, SV_CMD_RELIABLE, "%c %d", 75, clientNum);
@@ -1675,7 +1675,7 @@ process_configString:
                 MSG_WriteBit0(&msg);
                 MSG_WriteBits(&msg, configStringNumb, 0xCu);
                 lastStringIndex = configStringNumb;
-                MSG_WriteBigString(&msg, (char *)&toastPopupTitle);
+                MSG_WriteBigString(&msg, (char *)"");
                 if ( sv_debugConstantConfigStrings->current.enabled )
                     Com_Printf(
                         15,

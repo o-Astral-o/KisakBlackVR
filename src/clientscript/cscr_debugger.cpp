@@ -1645,9 +1645,9 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
             for ( nameIndex = 0; nameIndex < count; ++nameIndex )
             {
                 newElement = &newElements[newIndex];
-                v4 = CopyString((char *)&toastPopupTitle, "EvaluateWatchChildren", 0, inst);
+                v4 = CopyString((char *)"", "EvaluateWatchChildren", 0, inst);
                 newElement->valueText = v4;
-                v5 = CopyString((char *)&toastPopupTitle, "EvaluateWatchChildren", 0, inst);
+                v5 = CopyString((char *)"", "EvaluateWatchChildren", 0, inst);
                 newElement->refText = v5;
                 hardcodedField = newIndex < hardcodedCount;
                 if ( Scr_ScriptWatch::EvaluateWatchChildElement(
@@ -1837,7 +1837,7 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                         if ( oldElement )
                             Scr_DeltaElementRefText(newElement, oldElement->refText, fieldText);
                         else
-                            Scr_DeltaElementRefText(newElement, &toastPopupTitle, fieldText);
+                            Scr_DeltaElementRefText(newElement, "", fieldText);
                     }
                 }
                 else
@@ -1854,7 +1854,7 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                 if ( oldElement )
                     Scr_DeltaElementValueText(newElement, oldElement->valueText);
                 else
-                    Scr_DeltaElementValueText(newElement, &toastPopupTitle);
+                    Scr_DeltaElementValueText(newElement, "");
                 if ( oldElement )
                     Scr_FreeWatchElementText(inst, oldElement);
             }
@@ -2121,7 +2121,7 @@ void __cdecl Scr_PostSetText(scriptInstance_t inst, Scr_WatchElement_s *element)
             v3 = strcmp(element->refText, element->valueText);
             directObject = v3 == 0;
             if ( !v3 )
-                ReplaceString(&element->valueText, (char *)&toastPopupTitle, "Scr_PostSetText", 0, inst);
+                ReplaceString(&element->valueText, (char *)"", "Scr_PostSetText", 0, inst);
             break;
         case 0x11u:
         case 0x12u:
@@ -2588,7 +2588,7 @@ Scr_WatchElement_s *__cdecl Scr_CreateWatchElement(
 
     element = (Scr_WatchElement_s *)Scr_AllocDebugMem(inst, 100, name);
     memset((unsigned __int8 *)&element->expr.parseData, 0, sizeof(Scr_WatchElement_s));
-    element->valueText = CopyString((char *)&toastPopupTitle, "Scr_CreateWatchElement", 0, inst);
+    element->valueText = CopyString((char *)"", "Scr_CreateWatchElement", 0, inst);
     element->refText = CopyString(text, "Scr_CreateWatchElement", 0, inst);
     element->next = *prevElem;
     *prevElem = element;
@@ -4570,7 +4570,7 @@ void __cdecl Scr_InsertElementRemote(scriptInstance_t inst)
         &gScrDebuggerGlob[inst].scriptWatch,
         inst,
         element,
-        (char *)&toastPopupTitle,
+        (char *)"",
         1);
 }
 
@@ -4720,7 +4720,7 @@ int __cdecl Scr_UpdateDebugSocket(scriptInstance_t inst)
             case 36:
             case 37:
             case 40:
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 goto LABEL_20;
             case 21:
                 Scr_ToggleBreakpointRemote(inst);
@@ -4732,7 +4732,7 @@ int __cdecl Scr_UpdateDebugSocket(scriptInstance_t inst)
                 Scr_KeepAliveRemote(inst);
                 goto LABEL_20;
             case 41:
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 if ( !dirty || gScrDebuggerGlob[inst].scriptWatch.dirty )
                     goto LABEL_20;
                 newEvent = 1;

@@ -102,14 +102,14 @@ void __cdecl G_RegisterMissileDvars()
                                                                     3.4028235e38,
                                                                     0x80u,
                                                                     "Rocket's speed limit when descending towards target.");
-    missileJavTurnDecel = _Dvar_RegisterFloat("missileJavTurnDecel", 0.050000001, 0.0, 1.0, 0x80u, &toastPopupTitle);
+    missileJavTurnDecel = _Dvar_RegisterFloat("missileJavTurnDecel", 0.050000001, 0.0, 1.0, 0x80u, "");
     missileJavClimbToOwner = _Dvar_RegisterFloat(
                                                          "missileJavClimbToOwner",
                                                          700.0,
                                                          0.0,
                                                          3.4028235e38,
                                                          0x80u,
-                                                         &toastPopupTitle);
+                                                         "");
     missileWaterMaxDepth = _Dvar_RegisterFloat(
                                                      "missileWaterMaxDepth",
                                                      60.0,
@@ -3038,7 +3038,7 @@ void __cdecl createRetrieveableProjectile(
     if ( boneName )
         Scr_AddConstString(boneName, SCRIPTINSTANCE_SERVER);
     else
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     if ( target_ent && target_ent->r.inuse )
         Scr_AddEntity(target_ent, SCRIPTINSTANCE_SERVER);
     else

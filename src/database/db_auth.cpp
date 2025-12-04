@@ -1,4 +1,6 @@
 #include "db_auth.h"
+#include <universal/assertive.h>
+#include <qcommon/common.h>
 
 int __cdecl DB_AuthLoad_InflateInit(z_stream_s *stream, bool isSecure)
 {

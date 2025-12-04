@@ -49,7 +49,7 @@ char *__cdecl CG_GetMedalLocalizedXP(float xpScale, int medalIndex, bool teamBas
     xpAmount = (int)(float)((float)atoi(MedalData) * xpScale);
     localizedPopUpXP = UI_SafeTranslateString("MEDAL_XP_POPUP");
     if ( xpAmount <= 0 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     else
         return UI_ReplaceConversionInt(localizedPopUpXP, xpAmount);
 }

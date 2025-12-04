@@ -1,5 +1,16 @@
 #include "bg_animconditions.h"
 
+#include "bg_weapons.h"
+#include "bg_animation.h"
+#include "bg_weapons_def.h"
+#include "bg_local.h"
+#include "bg_public.h"
+#include "bg_weapons_load_obj.h"
+#include "bg_misc.h"
+
+#include <cmath>
+#include "bg_pmove.h"
+
 void __cdecl BG_LocalEvalPlayerAnimType(pmove_t *pm)
 {
     int typeIndex; // [esp+0h] [ebp-10h]
@@ -21,7 +32,7 @@ void __cdecl BG_LocalEvalPlayerAnimType(pmove_t *pm)
         BG_SetConditionBit(ps->clientNum, 0, typeIndex);
 }
 
-void __cdecl BG_EvalPlayerAnimType(const entityState_s *es)
+void __cdecl BG_EvalPlayerAnimType(const entityState_s *es, const clientInfo_t *)
 {
     const WeaponDef *weaponDef; // [esp+0h] [ebp-4h]
 
@@ -59,7 +70,7 @@ void __cdecl BG_LocalEvalWeaponClass(pmove_t *pm)
     BG_SetConditionBit(ps->clientNum, 1, weaponDef->weapClass);
 }
 
-void __cdecl BG_EvalWeaponClass(const entityState_s *es)
+void __cdecl BG_EvalWeaponClass(const entityState_s *es, const clientInfo_t *)
 {
     const WeaponDef *weaponDef; // [esp+0h] [ebp-4h]
 
@@ -91,7 +102,7 @@ void __cdecl BG_LocalEvalMounted(pmove_t *pm)
         BG_SetConditionValue(ps->clientNum, 4u, 0);
 }
 
-void __cdecl BG_EvalMounted(const entityState_s *es)
+void __cdecl BG_EvalMounted(const entityState_s *es, const clientInfo_t *)
 {
     if ( (es->lerp.eFlags & 0x300) != 0
         || (es->lerp.eFlags & 0x4000) != 0 && es->lerp.u.player.vehicleSeat && es->lerp.u.player.vehicleSeat <= 4u )
@@ -128,18 +139,13 @@ void __cdecl BG_EvalMoveStatus(const entityState_s *es)
 {
     unsigned int legsAnim; // [esp+0h] [ebp-4h]
 
-    legsAnim = es->un2.animState.state & 0xFFFFFBFF;
-    if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * legsAnim
-                                    + 92)
-            & 0x4000000) != 0 )
+    legsAnim = es->animState.state & 0xFFFFFBFF;
+   
+    if ((bgs->animData->animScriptData.animations[legsAnim].flags & 0x4000000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 5u, 2u);
     }
-    else if ( ((unsigned int)&cls.wagerServers[5331].basictraining
-                     & *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags & 0x2000000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 5u, 1u);
     }
@@ -165,16 +171,17 @@ void __cdecl BG_LocalEvalDirection(pmove_t *pm)
     {
         t = moveVec[0];
         moveVec[0] = moveVec[1];
-        LODWORD(moveVec[1]) = LODWORD(t) ^ _mask__NegFloat_;
+        moveVec[1] = fabs(t);
         yaw = vectoyaw(moveVec);
         deltaYaw = AngleDelta(yaw, pm->ps->viewangles[1]);
         YawVectors(deltaYaw, temp, 0);
-        LODWORD(moveVec[0]) = LODWORD(temp[1]) ^ _mask__NegFloat_;
+        moveVec[0] = fabs(temp[1]);
         moveVec[1] = temp[0];
     }
     if ( moveVec[1] <= player_strafeAnimCosAngle->current.value )
     {
-        if ( COERCE_FLOAT(player_strafeAnimCosAngle->current.integer ^ _mask__NegFloat_) <= moveVec[1] )
+        //if ( COERCE_FLOAT(player_strafeAnimCosAngle->current.integer ^ _mask__NegFloat_) <= moveVec[1] )
+        if ( fabs(player_strafeAnimCosAngle->current.value) <= moveVec[1] )
         {
             if ( moveVec[0] <= 0.0 )
                 directionState = ANIM_DIRECTION_LEFT;
@@ -193,36 +200,28 @@ void __cdecl BG_LocalEvalDirection(pmove_t *pm)
     BG_SetConditionValue(pm->ps->clientNum, 6u, directionState);
 }
 
-void __cdecl BG_EvalDirection(const entityState_s *es)
+void __cdecl BG_EvalDirection(const entityState_s *es, const clientInfo_t *)
 {
     unsigned int legsAnim; // [esp+0h] [ebp-4h]
 
-    legsAnim = es->un2.animState.state & 0xFFFFFBFF;
-    if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * legsAnim
-                                    + 92)
-            & 0x10) != 0 )
+    legsAnim = es->animState.state & 0xFFFFFBFF;
+    if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x10) != 0)
     {
         BG_SetConditionValue(es->clientNum, 6u, 3u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x20) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x20) != 0)
     {
         BG_SetConditionValue(es->clientNum, 6u, 4u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x40) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x40) != 0)
     {
         BG_SetConditionValue(es->clientNum, 6u, 2u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x80) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x80) != 0)
     {
         BG_SetConditionValue(es->clientNum, 6u, 1u);
     }
@@ -261,36 +260,28 @@ void __cdecl BG_LocalEvalDmgDirection(pmove_t *pm)
     }
 }
 
-void __cdecl BG_EvalDmgDirection(const entityState_s *es)
+void __cdecl BG_EvalDmgDirection(const entityState_s *es, const clientInfo_t *)
 {
     unsigned int legsAnim; // [esp+0h] [ebp-4h]
 
-    legsAnim = es->un2.animState.state & 0xFFFFFBFF;
-    if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * legsAnim
-                                    + 92)
-            & 0x80000) != 0 )
+    legsAnim = es->animState.state & 0xFFFFFBFF;
+    if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x80000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 7u, 3u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x100000) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x100000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 7u, 4u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x200000) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x200000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 7u, 2u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x400000) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x400000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 7u, 1u);
     }
@@ -351,22 +342,18 @@ void __cdecl BG_LocalEvalStance(pmove_t *pm)
     }
 }
 
-void __cdecl BG_EvalStance(const entityState_s *es)
+void __cdecl BG_EvalStance(const entityState_s *es, const clientInfo_t *)
 {
     unsigned int legsAnim; // [esp+0h] [ebp-4h]
 
-    legsAnim = es->un2.animState.state & 0xFFFFFBFF;
-    if ( ((unsigned int)&cls.rankedServers[711].game[35]
-            & *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * legsAnim
-                                    + 92)) != 0 )
+    legsAnim = es->animState.state & 0xFFFFFBFF;
+    if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x1000000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 9u, 2u);
     }
-    else if ( ((unsigned int)&loc_800000
-                     & *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags
+        & 0x800000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 9u, 1u);
     }
@@ -388,13 +375,14 @@ void __cdecl BG_EvalUnderhand(const entityState_s *es, const clientInfo_t *ci)
 
 void __cdecl BG_LocalEvalFiring(pmove_t *pm)
 {
-    if ( bitarray<51>::testBit(&pm->cmd.button_bits, 0) )
+    //if ( bitarray<51>::testBit(&pm->cmd.button_bits, 0) )
+    if ( pm->cmd.button_bits.testBit(0) )
         BG_SetConditionValue(pm->ps->clientNum, 0xBu, 1u);
     else
         BG_SetConditionValue(pm->ps->clientNum, 0xBu, 0);
 }
 
-void __cdecl BG_EvalFiring(const entityState_s *es)
+void __cdecl BG_EvalFiring(const entityState_s *es, const clientInfo_t *)
 {
     if ( (es->lerp.eFlags & 0x40) != 0 )
         BG_SetConditionValue(es->clientNum, 0xBu, 1u);
@@ -410,7 +398,7 @@ void __cdecl BG_LocalEvalWeaponPosition(pmove_t *pm)
         BG_SetConditionValue(pm->ps->clientNum, 0xCu, 0);
 }
 
-void __cdecl BG_EvalWeaponPosition(const entityState_s *es)
+void __cdecl BG_EvalWeaponPosition(const entityState_s *es, const clientInfo_t *)
 {
     if ( (es->lerp.eFlags & 0x80000) != 0 )
         BG_SetConditionValue(es->clientNum, 0xCu, 1u);
@@ -426,7 +414,7 @@ void __cdecl BG_LocalEvalSlope(pmove_t *pm)
     {
         if ( pm->averagePitch <= player_slopeAnimAngle->current.value )
         {
-            if ( COERCE_FLOAT(player_slopeAnimAngle->current.integer ^ _mask__NegFloat_) <= pm->averagePitch )
+            if ( fabs(player_slopeAnimAngle->current.value) <= pm->averagePitch )
                 slopeState = ANIM_SLOPE_NONE;
             else
                 slopeState = ANIM_SLOPE_DOWN;
@@ -443,22 +431,16 @@ void __cdecl BG_LocalEvalSlope(pmove_t *pm)
     BG_SetConditionValue(pm->ps->clientNum, 0xDu, slopeState);
 }
 
-void __cdecl BG_EvalSlope(const entityState_s *es)
+void __cdecl BG_EvalSlope(const entityState_s *es, const clientInfo_t *)
 {
     unsigned int legsAnim; // [esp+0h] [ebp-4h]
 
-    legsAnim = es->un2.animState.state & 0xFFFFFBFF;
-    if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * legsAnim
-                                    + 92)
-            & 0x20000) != 0 )
+    legsAnim = es->animState.state & 0xFFFFFBFF;
+    if ((bgs->animData->animScriptData.animations[legsAnim].flags & 0x20000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 0xDu, 1u);
     }
-    else if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * legsAnim
-                                             + 92)
-                     & 0x40000) != 0 )
+    else if ((bgs->animData->animScriptData.animations[legsAnim].flags & 0x40000) != 0)
     {
         BG_SetConditionValue(es->clientNum, 0xDu, 2u);
     }
@@ -520,7 +502,7 @@ void __cdecl BG_LocalEvalVehicleName(pmove_t *pm)
     if ( (pm->ps->eFlags & 0x4000) == 0
         || (ps->eFlags & 0x10000) != 0
         || (ps->eFlags2 & 0x10000000) != 0
-        || (animSetStr = (*(&off_DFF51C + 8 * pm->handler))(ps->clientNum, ps->viewlocked_entNum)) == 0 )
+        || (animSetStr = pmoveHandlers[pm->handler].getVehicleTypeString(ps->clientNum, ps->viewlocked_entNum)) == 0)
     {
         BG_SetConditionValue(ps->clientNum, 0x10u, 0xFFu);
     }

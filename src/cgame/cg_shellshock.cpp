@@ -1,5 +1,15 @@
 #include "cg_shellshock.h"
 
+#include <cgame_mp/cg_local_mp.h>
+#include <bgame/bg_pmove.h>
+#include <cgame_mp/cg_view_mp.h>
+#include <client/splitscreen.h>
+#include <cmath>
+#include <sound/snd_public_async.h>
+#include "cg_sound.h"
+#include <client_mp/cl_cgame_mp.h>
+#include <sound/snd.h>
+
 void __cdecl CG_PerturbCamera(cg_s *cgameGlob)
 {
     float rot[3][3]; // [esp+18h] [ebp-48h] BYREF
@@ -7,10 +17,12 @@ void __cdecl CG_PerturbCamera(cg_s *cgameGlob)
 
     if ( cgameGlob->shellshock.viewDelta[0] != 0.0 || cgameGlob->shellshock.viewDelta[1] != 0.0 )
     {
-        rot[0][0] = 1.0f;
-        *(_QWORD *)&rot[0][1] = *(_QWORD *)cgameGlob->shellshock.viewDelta;
-        rot[2][0] = 0.0f;
-        *(_QWORD *)&rot[2][1] = __PAIR64__(LODWORD(1.0f), 0);
+        rot[0][0] = 1.0;
+        rot[0][1] = cgameGlob->shellshock.viewDelta[0];
+        rot[0][2] = cgameGlob->shellshock.viewDelta[1];
+        rot[2][0] = 0.0;
+        rot[2][1] = 0.0;
+        rot[2][2] = 1.0;
         Vec3Normalize(rot[0]);
         Vec3Cross(rot[2], rot[0], rot[1]);
         Vec3Normalize(rot[1]);
@@ -147,10 +159,10 @@ int __cdecl CG_DrawShellShockSavedScreenBlendFlashed(
 
 double __cdecl BlendSmooth(float percent)
 {
-    float sin; // [esp+10h] [ebp-4h]
+    float sinval; // [esp+10h] [ebp-4h]
 
-    sin = sin((float)((float)(percent - 0.5) * 3.1415927));
-    return (sin + 1.0) * 0.5;
+    sinval = sin((float)((float)(percent - 0.5) * 3.1415927));
+    return (sinval + 1.0f) * 0.5f;
 }
 
 void __cdecl EndShellShock(int localClientNum)

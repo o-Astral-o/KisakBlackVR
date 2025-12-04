@@ -433,7 +433,7 @@ void __cdecl RB_FilterImage(GfxImageFilter *filter)
             GFX_PRIM_STATS_CODE);
         RB_EndTessSurface();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl RB_SetupFilterPass(const GfxImageFilterPass *filterPass)

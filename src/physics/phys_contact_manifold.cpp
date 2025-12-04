@@ -486,7 +486,7 @@ void __thiscall phys_contact_manifold::generate_convex_poly_internal(phys_contac
                      "source/phys_contact_manifold.cpp",
                      232,
                      "m_list_contact_point_count <= m_list_mesh_point_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -599,13 +599,13 @@ void __thiscall phys_contact_manifold_process::intersect_poly_segment(
         }
     }
     if ( t_exit < (double)t_enter
-        && _tlAssert("source/phys_contact_manifold.cpp", 294, "t_enter <= t_exit", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 294, "t_enter <= t_exit", "") )
     {
         __debugbreak();
     }
     if ( cman->m_list_contact_point_count < 2 )
     {
-        if ( _tlAssert("source/phys_contact_manifold.cpp", 295, "cman->m_list_contact_point_count >= 2", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_contact_manifold.cpp", 295, "cman->m_list_contact_point_count >= 2", "") )
             __debugbreak();
     }
     v20 = cman->m_list_contact_point;
@@ -873,12 +873,12 @@ void __thiscall phys_contact_manifold::comp_feature_normal(phys_contact_manifold
     float v101; // [esp+30h] [ebp-10h]
 
     if ( !this->m_list_mesh_point
-        && _tlAssert("source/phys_contact_manifold.cpp", 49, "m_list_mesh_point != NULL", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 49, "m_list_mesh_point != NULL", "") )
     {
         __debugbreak();
     }
     if ( this->m_list_sorted_mesh_point
-        && _tlAssert("source/phys_contact_manifold.cpp", 50, "m_list_sorted_mesh_point == NULL", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 50, "m_list_sorted_mesh_point == NULL", "") )
     {
         __debugbreak();
     }
@@ -916,7 +916,7 @@ void __thiscall phys_contact_manifold::comp_feature_normal(phys_contact_manifold
         *m_list_sorted_mesh_point++ = m_list_mesh_point;
     v11 = this->m_list_mesh_point_count < 2;
     this->m_list_mesh_point = 0;
-    if ( v11 && _tlAssert("source/phys_contact_manifold.cpp", 61, "m_list_mesh_point_count >= 2", &toastPopupTitle) )
+    if ( v11 && _tlAssert("source/phys_contact_manifold.cpp", 61, "m_list_mesh_point_count >= 2", "") )
         __debugbreak();
     v12 = 0.0;
     if ( this->m_list_mesh_point_count == 2 )
@@ -1150,7 +1150,7 @@ LABEL_79:
         v38 = v78;
         if ( v78 <= 0.0 )
         {
-            if ( _tlAssert("source/phys_contact_manifold.cpp", 132, "nfeature_normal_sq > 0.0f", &toastPopupTitle) )
+            if ( _tlAssert("source/phys_contact_manifold.cpp", 132, "nfeature_normal_sq > 0.0f", "") )
                 __debugbreak();
             v12 = 0.0;
             v38 = v78;
@@ -1196,7 +1196,7 @@ LABEL_79:
             + this->m_feature_normal.z * this->m_feature_normal.z;
     if ( v12 >= v69 )
     {
-        if ( _tlAssert("source/phys_contact_manifold.cpp", 149, "AbsSquared(m_feature_normal) > 0.0f", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_contact_manifold.cpp", 149, "AbsSquared(m_feature_normal) > 0.0f", "") )
             __debugbreak();
     }
 }
@@ -1228,17 +1228,17 @@ void __thiscall phys_contact_manifold::generate_convex_poly(phys_contact_manifol
     float contact_mata; // [esp+18h] [ebp+8h]
 
     if ( !this->m_list_sorted_mesh_point
-        && _tlAssert("source/phys_contact_manifold.cpp", 237, "m_list_sorted_mesh_point != NULL", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 237, "m_list_sorted_mesh_point != NULL", "") )
     {
         __debugbreak();
     }
     if ( this->m_list_contact_point
-        && _tlAssert("source/phys_contact_manifold.cpp", 238, "m_list_contact_point == NULL", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 238, "m_list_contact_point == NULL", "") )
     {
         __debugbreak();
     }
     if ( this->m_list_mesh_point_count <= 1
-        && _tlAssert("source/phys_contact_manifold.cpp", 239, "m_list_mesh_point_count > 1", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 239, "m_list_mesh_point_count > 1", "") )
     {
         __debugbreak();
     }
@@ -1292,7 +1292,7 @@ void __thiscall phys_contact_manifold::generate_convex_poly(phys_contact_manifol
             this->m_list_contact_point_count = 1;
     }
     if ( this->m_list_contact_point_count <= 0
-        && _tlAssert("source/phys_contact_manifold.cpp", 254, "m_list_contact_point_count > 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_contact_manifold.cpp", 254, "m_list_contact_point_count > 0", "") )
     {
         __debugbreak();
     }
@@ -1312,7 +1312,7 @@ void __thiscall phys_contact_manifold::generate_convex_poly(phys_contact_manifol
     }
     if ( this->m_list_contact_point != v18 )
     {
-        if ( _tlAssert("source/phys_contact_manifold.cpp", 259, "m_list_contact_point == temp", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_contact_manifold.cpp", 259, "m_list_contact_point == temp", "") )
             __debugbreak();
     }
 }
@@ -1391,7 +1391,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                  "source/phys_contact_manifold.cpp",
                  367,
                  "cman1.get_poly_vert_count() >= 2 && cman2.get_poly_vert_count() >= 2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1401,7 +1401,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                  "source/phys_contact_manifold.cpp",
                  368,
                  "cman1.get_poly_vert_count() > 2 || cman2.get_poly_vert_count() > 2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1414,7 +1414,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      256,
                      "i >= 0 && i < m_list_contact_point_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1425,7 +1425,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                          256,
                          "i >= 0 && i < m_list_contact_point_count",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1443,7 +1443,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      256,
                      "i >= 0 && i < m_list_contact_point_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1453,7 +1453,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      256,
                      "i >= 0 && i < m_list_contact_point_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1523,7 +1523,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                         cr = sqrt(cr);
                         nvdisplace = cr;
                         if ( cr <= 0.00009999999747378752
-                            && _tlAssert("source/phys_contact_manifold.cpp", 431, "nvdisplace > 0.0001f", &toastPopupTitle) )
+                            && _tlAssert("source/phys_contact_manifold.cpp", 431, "nvdisplace > 0.0001f", "") )
                         {
                             __debugbreak();
                         }
@@ -1590,7 +1590,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                 __debugbreak();
             }
             if ( m_buffer_cur != (char *)list_bridge
-                && _tlAssert("source/phys_contact_manifold.cpp", 454, "temp_ptr == list_bridge", &toastPopupTitle) )
+                && _tlAssert("source/phys_contact_manifold.cpp", 454, "temp_ptr == list_bridge", "") )
             {
                 __debugbreak();
             }
@@ -1698,7 +1698,7 @@ void __thiscall phys_contact_manifold_process::intersect_poly_poly(phys_contact_
                     __debugbreak();
                 }
                 if ( v45 != v64->m_list_isect_point
-                    && _tlAssert("source/phys_contact_manifold.cpp", 494, "temp_ptr == m_list_isect_point", &toastPopupTitle) )
+                    && _tlAssert("source/phys_contact_manifold.cpp", 494, "temp_ptr == m_list_isect_point", "") )
                 {
                     __debugbreak();
                 }

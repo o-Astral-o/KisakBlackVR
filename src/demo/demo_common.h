@@ -37,7 +37,7 @@ struct bdDownloadInterceptor // sizeof=0x4
         //bdDownloadInterceptor_vtbl *__vftable;
                                                                                 // XREF: LiveStorage_FileShare_ReadFile(int,fileShareReadFileInfo *)+29/w
         virtual ~bdDownloadInterceptor();
-        unsigned int handleDownload(void *, unsigned int);
+        virtual unsigned int handleDownload(void *, unsigned int);
 };
 
 struct bdTaskResult // sizeof=0x4

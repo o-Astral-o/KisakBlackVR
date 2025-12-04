@@ -11,6 +11,7 @@
 #define	QDECL
 
 #include <universal/dvar.h>
+#include <universal/com_math.h>
 
 //======================= WIN32 DEFINES =================================
 #ifdef WIN32
@@ -276,69 +277,7 @@ inline void BLOPS_NULLSUB(void *fakearg = nullptr)
 
 //=============================================
 
-enum TraceHitType : __int32
-{                                                                             // XREF: vehicle_cache_t/r
-                                                                                // trace_t/r ...
-        TRACE_HITTYPE_NONE                 = 0x0,
-        TRACE_HITTYPE_ENTITY             = 0x1,
-        TRACE_HITTYPE_DYNENT_MODEL = 0x2,
-        TRACE_HITTYPE_DYNENT_BRUSH = 0x3,
-        TRACE_HITTYPE_GLASS                = 0x4,
-};
 
-struct TraceCheckCount // sizeof=0x8
-{                                                                             // XREF: TraceThreadInfo/r
-        int global;
-        int *partitions;
-};
-
-struct TraceThreadInfo // sizeof=0x14
-{                                                                             // XREF: .data:TraceThreadInfo * g_traceThreadInfo/r
-                                                                                // traceWork_t/r
-        TraceCheckCount checkcount;
-        struct cbrush_t *box_brush;                                // XREF: CM_Trace(trace_t *,float const * const,float const * const,float const * const,float const * const,uint,int,col_context_t &)+66E/r
-                                                                                // CM_Trace(trace_t *,float const * const,float const * const,float const * const,float const * const,uint,int,col_context_t &)+94C/r ...
-        struct cmodel_t *box_model;
-        struct PhysGeomList **geoms;
-};
-
-struct trace_t // sizeof=0x38
-{                                                                             // XREF: actor_physics_local_t/r
-                                                                                // pml_t/r ...
-        hybrid_vector normal;                             // XREF: AimTarget_IsTargetVisible+1B/w
-                                                                                // AimTarget_IsTargetVisible+28/w ...
-        float fraction;                                         // XREF: AimTarget_IsTargetVisible+12B/r
-                                                                                // AimTarget_IsTargetVisible+16B/r ...
-        int sflags;                                                 // XREF: Mantle_Check(pmove_t *,pml_t *)+1EF/r
-                                                                                // Mantle_Check(pmove_t *,pml_t *):loc_41E705/r ...
-        int cflags;                                                 // XREF: CG_Laser_Add_Core+4C8/r
-                                                                                // FireBulletPenetrate+113F/r ...
-        TraceHitType hitType;                             // XREF: Mantle_CheckLedge+4AE/r
-                                                                                // Weapon_Melee_internal:loc_6955C4/r ...
-        unsigned __int16 hitId;                         // XREF: Bullet_FirePenetrate+541/r
-                                                                                // Weapon_Melee_internal+139/r ...
-        unsigned __int16 modelIndex;                // XREF: Weapon_Melee_internal+43F/r
-                                                                                // Flame_Phys_Update_Items_PerStream(bool,int,flameGeneric_s * *,int)+A27/w ...
-        unsigned __int16 partName;                    // XREF: Weapon_Melee_internal+43A/r
-                                                                                // Flame_Phys_Update_Items_PerStream(bool,int,flameGeneric_s * *,int)+A30/w ...
-        unsigned __int16 boneIndex;                 // XREF: FireBulletPenetrate+1133/r
-                                                                                // Weapon_Melee_internal+400/r ...
-        unsigned __int16 partGroup;                 // XREF: Weapon_Melee_internal+444/r
-                                                                                // Flame_Phys_Update_Items_PerStream(bool,int,flameGeneric_s * *,int)+A39/w ...
-        bool allsolid;                                            // XREF: is_not_penetrating+9B/r
-                                                                                // PM_GroundTrace:loc_432679/r ...
-        bool startsolid;                                        // XREF: Mantle_CheckLedge+1C8/r
-                                                                                // Mantle_CheckLedge+254/r ...
-        bool walkable;                                            // XREF: Mantle_CheckLedge:loc_41EFB2/r
-                                                                                // PM_GroundTrace+3FD/r ...
-        // padding byte
-        // padding byte
-        // padding byte
-        struct cStaticModel_s *staticModel;                // XREF: Phys_FindAndRenderBulletMesh(float const * const,float const * const,int,bool)+47/w
-                                                                                // Phys_FindAndRenderBulletMesh(float const * const,float const * const,int,bool)+334/r ...
-        int hitPartition;                                     // XREF: Mount_CheckLedge+10/w
-                                                                                // BG_CheckProne(playerState_s const *,int,float const * const,float,float,float,float *,float *,bool,bool,bool,uchar,proneCheckType_t,float)+10/w ...
-};
 
 union FloatWriteSwap_union // sizeof=0x4
 {                                                                             // ...
@@ -501,3 +440,13 @@ void __cdecl OrientationConcatenate(const orientation_t *orFirst, const orientat
 void __cdecl OrientationInvert(const orientation_t *orient, orientation_t *out);
 bool __cdecl Com_IsLegacyXModelName(const char *name);
 double __cdecl CMD_GetAnalogButtonValue(usercmd_s *cmd, unsigned int whichBit);
+
+extern const dvar_s *useFastFile;
+extern const dvar_s *sys_smp_allowed;
+
+template <typename T>
+inline void AssignToSmallerType(T *dest, int src)
+{
+    *dest = src;
+    iassert((int)*dest == src);
+}

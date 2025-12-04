@@ -3087,7 +3087,7 @@ void __cdecl Bot_DrawDebug(const ScreenPlacement *scrPlace)
                 name = SL_ConvertToString(botInfo->threat.enemy->classname, SCRIPTINSTANCE_SERVER);
             }
             Bot_DrawString(scrPlace, v50->name, *(float *)&x, &y, colorMdCyan);
-            Bot_DrawString(scrPlace, (char *)&toastPopupTitle, *(float *)&x, &y, colorWhite);
+            Bot_DrawString(scrPlace, (char *)"", *(float *)&x, &y, colorWhite);
             Bot_DrawString(scrPlace, "MOVEMENT", *(float *)&x, &y, colorMdCyan);
             if ( dead )
             {
@@ -3152,9 +3152,9 @@ void __cdecl Bot_DrawDebug(const ScreenPlacement *scrPlace)
             v5 = va("ADS TIME LEFT: %d", v41);
             Bot_DrawString(scrPlace, v5, *(float *)&x, &y, v42);
             if ( dead )
-                Bot_DrawString(scrPlace, (char *)&toastPopupTitle, *(float *)&x, &y, colorWhiteFaded);
+                Bot_DrawString(scrPlace, (char *)"", *(float *)&x, &y, colorWhiteFaded);
             else
-                Bot_DrawString(scrPlace, (char *)&toastPopupTitle, *(float *)&x, &y, colorWhite);
+                Bot_DrawString(scrPlace, (char *)"", *(float *)&x, &y, colorWhite);
             Bot_DrawString(scrPlace, "GOAL", *(float *)&x, &y, colorMdCyan);
             if ( (botInfo->flags & 4) != 0 )
             {
@@ -3204,7 +3204,7 @@ void __cdecl Bot_DrawDebug(const ScreenPlacement *scrPlace)
                 fLookaheadDist = 0.0f;
             v8 = va("LOOK AHEAD DIST: %.1f", fLookaheadDist);
             Bot_DrawString(scrPlace, v8, *(float *)&x, &y, v37);
-            Bot_DrawString(scrPlace, (char *)&toastPopupTitle, *(float *)&x, &y, colorWhite);
+            Bot_DrawString(scrPlace, (char *)"", *(float *)&x, &y, colorWhite);
             Bot_DrawString(scrPlace, "THREAT", *(float *)&x, &y, colorMdCyan);
             if ( dead )
                 v35 = (float *)colorWhiteFaded;
@@ -3279,9 +3279,9 @@ void __cdecl Bot_DrawDebug(const ScreenPlacement *scrPlace)
             v15 = va("HEALTH: %d", health);
             Bot_DrawString(scrPlace, v15, *(float *)&x, &y, v25);
             if ( dead )
-                Bot_DrawString(scrPlace, (char *)&toastPopupTitle, *(float *)&x, &y, colorWhiteFaded);
+                Bot_DrawString(scrPlace, (char *)"", *(float *)&x, &y, colorWhiteFaded);
             else
-                Bot_DrawString(scrPlace, (char *)&toastPopupTitle, *(float *)&x, &y, colorWhite);
+                Bot_DrawString(scrPlace, (char *)"", *(float *)&x, &y, colorWhite);
             Bot_DrawString(scrPlace, "COMBAT", *(float *)&x, &y, colorMdCyan);
             if ( dead )
                 v23 = (float *)colorWhiteFaded;

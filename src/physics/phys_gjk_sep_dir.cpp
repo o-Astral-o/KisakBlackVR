@@ -258,7 +258,7 @@ const phys_vec3 * gjk_sep_dir::comp_sep_dir@<eax>(
                          "source/phys_gjk_sep_dir.cpp",
                          258,
                          "AbsSquared(*best_normal) >= phys_sqr(GJK_MIN_SUPPORT_DIR_LENGTH)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }

@@ -385,7 +385,7 @@ void __cdecl CG_InitTriggerWait(int localClientNum, centity_s *ent, int *spawnfl
 {
     float wait; // [esp+0h] [ebp-4h] BYREF
 
-    if ( cg_level.spawnVar.spawnVarsValid && CG_SpawnFloat("wait", &toastPopupTitle, &wait) && wait <= 0.0 )
+    if ( cg_level.spawnVar.spawnVarsValid && CG_SpawnFloat("wait", "", &wait) && wait <= 0.0 )
     {
         if ( (waitSpawnFlag & 0x40) != 0 )
             *((unsigned int *)ent + 201) |= 0x20000u;
@@ -410,7 +410,7 @@ void __cdecl CG_SP_trigger_radius(int localClientNum, centity_s *ent, char spawn
     float height; // [esp+18h] [ebp-8h] BYREF
     float radius; // [esp+1Ch] [ebp-4h] BYREF
 
-    if ( !CG_SpawnFloat("radius", &toastPopupTitle, &radius) )
+    if ( !CG_SpawnFloat("radius", "", &radius) )
     {
         v3 = va(
                      "radius not specified for trigger_radius at (%g %g %g)",
@@ -419,7 +419,7 @@ void __cdecl CG_SP_trigger_radius(int localClientNum, centity_s *ent, char spawn
                      ent->currentState.pos.trBase[2]);
         Com_Error(ERR_DROP, v3);
     }
-    if ( !CG_SpawnFloat("height", &toastPopupTitle, &height) )
+    if ( !CG_SpawnFloat("height", "", &height) )
     {
         v4 = va(
                      "height not specified for trigger_radius at (%g %g %g)",
@@ -483,13 +483,13 @@ void __cdecl CG_CallSpawn(int localClientNum, SpawnVar *spawnVar)
     {
         __debugbreak();
     }
-    G_SpawnString(spawnVar, "classname", &toastPopupTitle, &classname);
+    G_SpawnString(spawnVar, "classname", "", &classname);
     if ( !classname )
     {
         Com_Printf(15, "CG_CallSpawn: NULL classname\n");
         return;
     }
-    G_SpawnString(spawnVar, "spawnflags", &toastPopupTitle, &spawnFlags);
+    G_SpawnString(spawnVar, "spawnflags", "", &spawnFlags);
     flags = atoi(spawnFlags);
     bClientSide = (flags & 2) != 0;
     if ( !strcmp("script_model", classname) || !strcmp("script_origin", classname) )

@@ -524,7 +524,7 @@ bool __cdecl NET_GetDvars()
     net_socksEnabled = _Dvar_RegisterBool("net_socksEnabled", 0, 0x21u, "Enable network sockets");
     if ( net_socksServer && net_socksServer->modified )
         modified = 1;
-    net_socksServer = _Dvar_RegisterString("net_socksServer", (char *)&toastPopupTitle, 0x21u, "Network socket server");
+    net_socksServer = _Dvar_RegisterString("net_socksServer", (char *)"", 0x21u, "Network socket server");
     if ( net_socksPort && net_socksPort->modified )
         modified = 1;
     net_socksPort = _Dvar_RegisterInt("net_socksPort", 1080, 0, 0xFFFF, 0x21u, "Network socket port");
@@ -532,14 +532,14 @@ bool __cdecl NET_GetDvars()
         modified = 1;
     net_socksUsername = _Dvar_RegisterString(
                                                 "net_socksUsername",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0x21u,
                                                 "Network socket username");
     if ( net_socksPassword && net_socksPassword->modified )
         modified = 1;
     net_socksPassword = _Dvar_RegisterString(
                                                 "net_socksPassword",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0x21u,
                                                 "Network socket password");
     return modified;
@@ -832,7 +832,7 @@ void __cdecl NET_ShutdownDebug()
         }
     }
     if ( Sys_IsRemoteDebugClient() )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
 }
 
 void __cdecl NET_RestartDebug()

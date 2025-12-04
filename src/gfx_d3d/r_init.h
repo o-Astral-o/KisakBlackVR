@@ -1,4 +1,41 @@
 #pragma once
+#include <Windows.h>
+#include <d3d9.h>
+
+struct GfxGlobals // sizeof=0x24
+{                                       // XREF: .data:GfxGlobals r_glob/r
+    bool startedRenderThread;           // XREF: R_ShutdownInternal(int)+32/w
+                                        // R_BeginRegistration(vidConfig_t *)+5A/r ...
+    bool isMultiplayer;                 // XREF: R_SetIsMultiplayer(bool)+6/w
+                                        // R_RegisterDvars(void)+4A5D/r ...
+    // padding byte
+    // padding byte
+    volatile int endFrameFence;
+    bool isRenderingRemoteUpdate;       // XREF: R_InitThreads(void)+3/r
+                                        // R_ReleaseLostDeviceAssets2(void)+6C/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    volatile int screenUpdateNotify;    // XREF: R_BeginRemoteScreenUpdate(void):loc_A7D848/r
+                                        // R_EndRemoteScreenUpdate(void (*)(void)):loc_A7D9E8/r ...
+    volatile int remoteScreenUpdateNesting; // XREF: DB_Sleep:loc_58F143/r
+                                        // R_SyncRenderThread(void):loc_A7A1B6/r ...
+    volatile int remoteScreenUpdateInGame;
+                                        // XREF: R_BeginRemoteScreenUpdate(void)+85/r
+                                        // R_EndRemoteScreenUpdate(void (*)(void))+B9/r
+    unsigned __int8 remoteScreenLastSceneResolveTarget;
+                                        // XREF: R_Init(void)+13/w
+                                        // R_PerMap_Init(void)+8/w
+    // padding byte
+    // padding byte
+    // padding byte
+    int backEndFrameCount;              // XREF: RB_DrawCoronaQuerySprite+53/r
+                                        // RB_BeginFrame(void const *)+2D/r ...
+    unsigned __int8 frameBuffer;
+    unsigned __int8 displayBuffer;
+    unsigned __int8 ui3dUseFrameBuffer;
+    unsigned __int8 ui3dRenderTarget;
+};
 
 void __cdecl    R_FatalInitError(const char *msg);
 void __cdecl    R_FatalLockError(HRESULT hr);

@@ -64,7 +64,7 @@ void __thiscall pulse_sum_normal::set_object_vel(pulse_sum_normal *this, const p
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal.h",
                  69,
                  "m_b2 == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -80,7 +80,7 @@ void __thiscall pulse_sum_normal::set_object_col_pt(pulse_sum_normal *this, cons
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal.h",
                  72,
                  "m_b2 == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -96,7 +96,7 @@ void __thiscall pulse_sum_point::set_object_vel(pulse_sum_point *this, const phy
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point.h",
                  46,
                  "m_b2 == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -112,7 +112,7 @@ void __thiscall pulse_sum_angular::set_object_vel(pulse_sum_angular *this, const
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular.h",
                  45,
                  "m_b2 == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -128,7 +128,7 @@ void __thiscall pulse_sum_angular::set_object_col_pt(pulse_sum_angular *this, co
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular.h",
                  47,
                  "m_b2 == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -495,7 +495,7 @@ void __userpurge pulse_sum_normal::calc_abs(pulse_sum_normal *this@<ecx>, int a2
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                      11,
                      "m_denom > 0.00001f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -673,7 +673,7 @@ void __userpurge pulse_sum_normal::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                  117,
                  "ps_cache",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -682,7 +682,7 @@ void __userpurge pulse_sum_normal::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                  118,
                  "b1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -691,7 +691,7 @@ void __userpurge pulse_sum_normal::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                  119,
                  "b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -700,7 +700,7 @@ void __userpurge pulse_sum_normal::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                  120,
                  "b1 != b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -714,7 +714,7 @@ void __userpurge pulse_sum_normal::set(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                      122,
                      "rbint::get_pulse_sum_node(b1) || rbint::get_pulse_sum_node(b2)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -731,7 +731,7 @@ LABEL_19:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                      123,
                      "rbint::verify_pulse_sum_node(b1) && rbint::verify_pulse_sum_node(b2)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -784,7 +784,7 @@ LABEL_19:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal.h",
                      72,
                      "m_b2 == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1106,7 +1106,7 @@ void __userpurge pulse_sum_angular::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                  86,
                  "ps_cache",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1115,7 +1115,7 @@ void __userpurge pulse_sum_angular::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                  87,
                  "b1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1124,7 +1124,7 @@ void __userpurge pulse_sum_angular::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                  88,
                  "b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1133,7 +1133,7 @@ void __userpurge pulse_sum_angular::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                  89,
                  "b1 != b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1147,7 +1147,7 @@ void __userpurge pulse_sum_angular::set(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                      91,
                      "rbint::get_pulse_sum_node(b1) || rbint::get_pulse_sum_node(b2)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1164,7 +1164,7 @@ LABEL_19:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                      92,
                      "rbint::verify_pulse_sum_node(b1) && rbint::verify_pulse_sum_node(b2)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1360,7 +1360,7 @@ void __userpurge pulse_sum_point::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                  167,
                  "ps_cache",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1369,7 +1369,7 @@ void __userpurge pulse_sum_point::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                  168,
                  "b1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1378,7 +1378,7 @@ void __userpurge pulse_sum_point::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                  169,
                  "b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1387,7 +1387,7 @@ void __userpurge pulse_sum_point::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                  170,
                  "b1 != b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1397,7 +1397,7 @@ void __userpurge pulse_sum_point::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                  171,
                  "rbint::get_pulse_sum_node(b1) || rbint::get_pulse_sum_node(b2)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1411,7 +1411,7 @@ void __userpurge pulse_sum_point::set(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                      172,
                      "rbint::verify_pulse_sum_node(b1) && rbint::verify_pulse_sum_node(b2)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1421,7 +1421,7 @@ void __userpurge pulse_sum_point::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point_inline.h",
                  174,
                  "rbint::get_pulse_sum_node(b1) != NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1451,7 +1451,7 @@ void __userpurge pulse_sum_point::set(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_point.h",
                      47,
                      "m_b2 == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1602,7 +1602,7 @@ void __userpurge pulse_sum_contact::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                  236,
                  "b1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1611,7 +1611,7 @@ void __userpurge pulse_sum_contact::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                  237,
                  "b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1620,7 +1620,7 @@ void __userpurge pulse_sum_contact::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                  238,
                  "b1 != b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1631,7 +1631,7 @@ void __userpurge pulse_sum_contact::set(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                  239,
                  "rbint::get_pulse_sum_node(b1) || rbint::get_pulse_sum_node(b2)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1646,7 +1646,7 @@ LABEL_15:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                      240,
                      "rbint::verify_pulse_sum_node(b1) && rbint::verify_pulse_sum_node(b2)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1683,7 +1683,7 @@ LABEL_15:
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                  251,
                  "m_list_pscp_count == cpi->m_point_pair_count",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1741,7 +1741,7 @@ LABEL_15:
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                                  209,
                                  "psc->m_b2 == NULL",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1937,7 +1937,7 @@ int __cdecl phys_jq_constraint_solver_batch_function(jqBatch *pBatch)
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                  69,
                  "m_first_block == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2055,7 +2055,7 @@ double __thiscall pulse_sum_normal::clamp_pulse_sum(pulse_sum_normal *this, floa
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                      56,
                      "m_pulse_parent",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2064,7 +2064,7 @@ double __thiscall pulse_sum_normal::clamp_pulse_sum(pulse_sum_normal *this, floa
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                      57,
                      "m_pulse_limit_ratio >= 0.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2078,7 +2078,7 @@ double __thiscall pulse_sum_normal::clamp_pulse_sum(pulse_sum_normal *this, floa
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                  61,
                  "m_pulse_sum_min <= m_pulse_sum_max",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2125,7 +2125,7 @@ void __thiscall pulse_sum_normal::SOLVER_apply_relaxation(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",
                  90,
                  "m_pulse_sum >= (m_pulse_sum_min - .0001f) && m_pulse_sum <= (m_pulse_sum_max + .0001f)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2470,7 +2470,7 @@ void    pulse_sum_angular::calc_abs(pulse_sum_angular *this@<ecx>, int a2@<ebp>)
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                      10,
                      "m_denom > 0.00001f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2543,7 +2543,7 @@ double __thiscall pulse_sum_angular::clamp_pulse_sum(pulse_sum_angular *this, fl
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                  40,
                  "m_pulse_sum_min <= m_pulse_sum_max",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2572,7 +2572,7 @@ void __thiscall pulse_sum_angular::SOLVER_apply_relaxation(pulse_sum_angular *th
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                  61,
                  "m_pulse_sum >= (m_pulse_sum_min - .0001f) && m_pulse_sum <= (m_pulse_sum_max + .0001f)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2747,7 +2747,7 @@ void __userpurge pulse_sum_contact_point::calc_abs(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                  38,
                  "det > 0.0f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2968,7 +2968,7 @@ void __cdecl rbint::setup_constraint(rigid_body *rb, pulse_sum_node *psn)
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_constraint_solver_inline.h",
                  123,
                  "rb",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2977,7 +2977,7 @@ void __cdecl rbint::setup_constraint(rigid_body *rb, pulse_sum_node *psn)
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_constraint_solver_inline.h",
                  124,
                  "rb->get_inv_mass() > 0.00001f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2995,7 +2995,7 @@ void __thiscall pulse_sum_constraint_solver::~pulse_sum_constraint_solver(pulse_
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                      69,
                      "m_first_block == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3200,7 +3200,7 @@ void    rbint::euler_integrate_velocity(float a1@<ebp>, rigid_body *const rb, fl
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                      124,
                      "navel_sq > phys_sqr(0.00001f)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3350,7 +3350,7 @@ void __thiscall rigid_body_constraint_contact::update_smallest_lambda(rigid_body
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  414,
                  "b1->is_environment_rigid_body() == false",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3734,7 +3734,7 @@ void __thiscall pulse_sum_wheel::addp_pulse_chain(pulse_sum_wheel *this)
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_wheel_inline.h",
                      67,
                      "pulse_chain_within_limits()",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3836,7 +3836,7 @@ void __thiscall pulse_sum_contact_point::clamp_f(pulse_sum_contact_point *this, 
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                      100,
                      "pulse_sum_fric > 0.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3846,7 +3846,7 @@ void __thiscall pulse_sum_contact_point::clamp_f(pulse_sum_contact_point *this, 
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
                          101,
                          "m_pulse_sum_fric_limit >= 0.0f",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -4189,7 +4189,7 @@ void __thiscall pulse_sum_constraint_solver::solve_constraints(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_angular_inline.h",
                      40,
                      "m_pulse_sum_min <= m_pulse_sum_max",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -4410,7 +4410,7 @@ void __thiscall pulse_sum_constraint_solver::execute_constraint_solver(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_constraint_solver_inline.h",
                  153,
                  "head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4434,7 +4434,7 @@ void __thiscall pulse_sum_constraint_solver::execute_constraint_solver(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_constraint_solver_inline.h",
                  162,
                  "m_outside_delta_t <= max_delta_t * sub_steps",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4448,7 +4448,7 @@ void __thiscall pulse_sum_constraint_solver::execute_constraint_solver(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_constraint_solver_inline.h",
                  171,
                  "m_solver_memory_allocator.is_empty()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4546,7 +4546,7 @@ void __thiscall pulse_sum_constraint_solver::execute_constraint_solver(
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                              230,
                              "m_last_next_ptr",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }

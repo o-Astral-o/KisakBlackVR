@@ -649,7 +649,7 @@ void __userpurge GlassPhysics::IntegrateVelocity(GlassPhysics *this@<ecx>, int a
                      "C:\\projects_pc\\cod\\codsrc\\src\\glass\\glass_shard.cpp",
                      183,
                      "navel_sq > phys_sqr(0.00001f)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -675,14 +675,6 @@ void __userpurge GlassPhysics::IntegrateVelocity(GlassPhysics *this@<ecx>, int a
     v75->m_a_vel.x = v75->m_a_vel.x * (float)(1.0 - v5);
     v6->y = v6->y * (float)(1.0 - v5);
     v6->z = v6->z * (float)(1.0 - v5);
-}
-
-phys_vec3 *__thiscall phys_vec3::operator+=(phys_vec3 *this, const phys_vec3 *v)
-{
-    this->x = this->x + v->x;
-    this->y = this->y + v->y;
-    this->z = this->z + v->z;
-    return this;
 }
 
 void __userpurge GlassPhysics::IntegratePos(GlassPhysics *this@<ecx>, int a2@<ebp>, float deltaTime)

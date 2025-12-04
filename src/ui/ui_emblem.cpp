@@ -643,7 +643,7 @@ const char *__cdecl UI_EmblemGetLayerName(unsigned int layer)
     const char *IconDesc; // eax
 
     if ( layer >= 0xC || s_emblem[layer].icon == -1 )
-        return &toastPopupTitle;
+        return "";
     IconDesc = BG_EmblemsGetIconDesc(-1, s_emblem[layer].icon);
     return va("@%s", IconDesc);
 }

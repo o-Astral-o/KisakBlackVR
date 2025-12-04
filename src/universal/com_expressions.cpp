@@ -400,7 +400,7 @@ const char *__cdecl GetOperandAsString(Operand operand)
         case VAL_FLOAT:
             return va("%f", operand.internals.floatVal);
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 expressionEntry *__cdecl Expression_Alloc(ExpressionAllocState *allocState, int size)

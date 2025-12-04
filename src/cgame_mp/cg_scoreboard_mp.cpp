@@ -15,7 +15,7 @@ const char *__cdecl CG_GetNameForScoreboardColumn(int localClientNum, unsigned i
     if ( columnNumber < 4 )
         return sbColumnNames[dword_F55AE8[964 * localClientNum + columnNumber]];
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 void __cdecl CG_UpdateMatchScoreboard(int localClientNum)
@@ -70,22 +70,22 @@ void __cdecl CG_UpdateMatchScoreboard(int localClientNum)
             localClientNum,
             LCT_RANK_ICON,
             COERCE_INT(0.07),
-            &toastPopupTitle,
+            "",
             1,
             SB_TYPE_INVALID);
         CG_AddSBColumnToMatchScoreBoard(
             localClientNum,
             LCT_STATUS_ICON,
             COERCE_INT(0.050000001),
-            &toastPopupTitle,
+            "",
             1,
             SB_TYPE_INVALID);
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_NAME, COERCE_INT(0.2), &toastPopupTitle, 0, SB_TYPE_INVALID);
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_NAME, COERCE_INT(0.2), "", 0, SB_TYPE_INVALID);
         CG_AddSBColumnToMatchScoreBoard(
             localClientNum,
             LCT_TALKING_ICON,
             COERCE_INT(0.050000001),
-            &toastPopupTitle,
+            "",
             0,
             SB_TYPE_INVALID);
         currentScoreboardWidthUsed = (float)((float)((float)(0.0 + 0.07) + 0.050000001) + 0.2) + 0.050000001;
@@ -96,7 +96,7 @@ void __cdecl CG_UpdateMatchScoreboard(int localClientNum)
             localClientNum,
             LCT_NAME,
             COERCE_INT(0.44999999),
-            &toastPopupTitle,
+            "",
             0,
             SB_TYPE_INVALID);
         currentScoreboardWidthUsed = 0.0 + 0.44999999;
@@ -247,7 +247,7 @@ char *__cdecl CG_GetMatchScoreboardInfo(int localClientNum, int column, int inde
     int currClient; // [esp+4h] [ebp-4h]
 
     if ( index < 0 || index >= dword_F55BE8[964 * localClientNum] )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     currClient = CG_GetMatchScoreboardIndexForTeam(localClientNum, index, team);
     switch ( column )
     {
@@ -298,7 +298,7 @@ char *__cdecl CG_GetMatchScoreboardInfo(int localClientNum, int column, int inde
                                  (scoreboardColumnType_t)dword_F55AF4[964 * localClientNum]);
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -367,7 +367,7 @@ const char *__cdecl CG_GetMatchInGamePlayerListInfo(
     int indexa; // [esp+18h] [ebp+10h]
 
     if ( index < 0 || index >= dword_F55BE8[964 * localClientNum] )
-        return &toastPopupTitle;
+        return "";
     indexa = index + 1;
     for ( currClient = 0; currClient < dword_F55BE8[964 * localClientNum]; ++currClient )
     {
@@ -402,7 +402,7 @@ const char *__cdecl CG_GetMatchInGamePlayerListInfo(
             result = va("%d", dword_F54D34[964 * localClientNum + 28 * currClient]);
             break;
         default:
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -422,7 +422,7 @@ const char *__cdecl CG_IsInGamePlayerListPlayerTalking(int localClientNum, unsig
     {
         *handle = 0;
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 char *__cdecl CG_GetMatchInGamePlayersInfo(
@@ -440,7 +440,7 @@ char *__cdecl CG_GetMatchInGamePlayersInfo(
 
     cgameGlob = CG_GetLocalClientGlobals(localClientNum);
     if ( !cgameGlob || index >= 0x20 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     indexa = index + 1;
     switch ( feederType )
     {
@@ -473,7 +473,7 @@ char *__cdecl CG_GetMatchInGamePlayersInfo(
             break;
     }
     if ( clientIndex >= 32 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     switch ( column )
     {
         case 3:
@@ -481,7 +481,7 @@ char *__cdecl CG_GetMatchInGamePlayersInfo(
             break;
         case 4:
             *handle = cgameGlob->bgs.clientinfo[clientIndex].hRankIcon;
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 5:
             if ( cgameGlob->bgs.clientinfo[clientIndex].clanAbbrev[0] )
@@ -496,10 +496,10 @@ char *__cdecl CG_GetMatchInGamePlayersInfo(
             result = (char *)CG_IsInGamePlayerListPlayerTalking(localClientNum, clientIndex, handle);
             break;
         case 7:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -512,7 +512,7 @@ const char *__cdecl CG_GetMatchInGamePlayerXuid(int localClientNum, int index, t
     int indexa; // [esp+10h] [ebp+Ch]
 
     if ( index < 0 || index >= dword_F55BE8[964 * localClientNum] )
-        return &toastPopupTitle;
+        return "";
     indexa = index + 1;
     for ( currClient = 0; currClient < dword_F55BE8[964 * localClientNum]; ++currClient )
     {
@@ -822,7 +822,7 @@ void __cdecl CG_DrawBackdropServerInfo(int localClientNum, float alpha)
     UI_UseAltColorPalette(serverName);
     serverIP = CL_GetServerIPAddress();
     if ( !I_stricmp(serverIP, "0.0.0.0:0") )
-        serverIP = &toastPopupTitle;
+        serverIP = "";
     fontScale = 0.2f;
     scrPlace = &scrPlaceView[localClientNum];
     do
@@ -1193,7 +1193,7 @@ double __cdecl CG_DrawScoreboard_ListBanner(
     {
         shaderName = (char *)Dvar_GetString("g_TeamIcon_Free");
         Com_sprintf(teamScore, 0xCu, "%i", cgameGlob->teamScores[0]);
-        displayString = (char *)&toastPopupTitle;
+        displayString = (char *)"";
     }
     x = CG_BackdropLeft(localClientNum) + 3.0 + 2.0 + 4.0;
     material = Material_RegisterHandle(shaderName, 7);

@@ -109,7 +109,7 @@ void __cdecl InitTriggerWait(gentity_s *ent, int spawnflag, SpawnVar *spawnVar)
 {
     float wait; // [esp+0h] [ebp-4h] BYREF
 
-    if ( spawnVar && G_SpawnFloat(spawnVar, "wait", &toastPopupTitle, &wait) && wait <= 0.0 )
+    if ( spawnVar && G_SpawnFloat(spawnVar, "wait", "", &wait) && wait <= 0.0 )
         ent->spawnflags |= spawnflag;
 }
 
@@ -123,7 +123,7 @@ void __cdecl SP_trigger_radius(gentity_s *ent, SpawnVar *spawnVar)
 
     if ( spawnVar )
     {
-        if ( !G_SpawnFloat(spawnVar, "radius", &toastPopupTitle, &radius) )
+        if ( !G_SpawnFloat(spawnVar, "radius", "", &radius) )
         {
             v2 = va(
                          "radius not specified for trigger_radius at (%g %g %g)",
@@ -132,7 +132,7 @@ void __cdecl SP_trigger_radius(gentity_s *ent, SpawnVar *spawnVar)
                          ent->r.currentOrigin[2]);
             Com_Error(ERR_DROP, v2);
         }
-        if ( !G_SpawnFloat(spawnVar, "height", &toastPopupTitle, &height) )
+        if ( !G_SpawnFloat(spawnVar, "height", "", &height) )
         {
             v3 = va(
                          "height not specified for trigger_radius at (%g %g %g)",
@@ -188,7 +188,7 @@ void __cdecl SP_trigger_disk(gentity_s *ent, SpawnVar *spawnVar)
     float radius; // [esp+18h] [ebp-4h] BYREF
     int savedregs; // [esp+1Ch] [ebp+0h] BYREF
 
-    if ( !G_SpawnFloat(spawnVar, "radius", &toastPopupTitle, &radius) )
+    if ( !G_SpawnFloat(spawnVar, "radius", "", &radius) )
     {
         v2 = va(
                      "radius not specified for trigger_radius at (%g %g %g)",

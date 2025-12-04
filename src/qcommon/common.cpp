@@ -1,5 +1,10 @@
 #include "common.h"
 
+#include <string.h>
+
+const dvar_s *useFastFile;
+const dvar_s *sys_smp_allowed;
+
 void *__cdecl Com_LiveAllocate(unsigned int size)
 {
     if ( !liveMemHunk )
@@ -316,14 +321,14 @@ void __cdecl Com_InitDynamicMemorySystems()
     IsMenuLevel = Com_IsMenuLevel(0);
     Demo_AllocatePlaybackMemory(IsMenuLevel);
     Com_IsMenuLevel(0);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( useFastFile->current.enabled )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
 }
 
 void __cdecl Com_ShutdownDynamicMemorySystems()
 {
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Demo_DeallocatePlaybackMemory();
     GlassCl_FreeMemory();
     R_UI3D_Shutdown();
@@ -347,19 +352,19 @@ void __cdecl Com_SetLocalizedErrorMessage(const char *localizedErrorMessage, con
 
     ui_errorMessage = _Dvar_RegisterString(
                                             "com_errorMessage",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0x40u,
                                             "Most recent error message");
     ui_errorTitle = _Dvar_RegisterString(
                                         "com_errorTitle",
-                                        (char *)&toastPopupTitle,
+                                        (char *)"",
                                         0x40u,
                                         "Title of the most recent error message");
     translation = SEH_LocalizeTextMessage(titleToken, "error message", LOCMSG_NOERR);
     if ( translation )
         Dvar_SetString((dvar_s *)ui_errorTitle, translation);
     else
-        Dvar_SetString((dvar_s *)ui_errorTitle, &toastPopupTitle);
+        Dvar_SetString((dvar_s *)ui_errorTitle, "");
     Dvar_SetString((dvar_s *)ui_errorMessage, localizedErrorMessage);
     I_strncpyz(com_errorMessage, localizedErrorMessage, 4096);
 }
@@ -534,7 +539,7 @@ void __cdecl    Com_Quit_f()
         FS_ShutdownServerIwdNames();
         FS_ShutdownServerReferencedIwds();
         FS_ShutdownServerReferencedFFs();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
     Sys_Quit();
 }
@@ -1288,7 +1293,7 @@ void __cdecl Com_Init(char *commandLine)
     v3 = Sys_GetValue(2);
     if ( !_setjmp3(v3, 0) )
         Com_AddStartupCommands();
-    if ( !I_strcmp(sv_mapname->current.string, &toastPopupTitle) )
+    if ( !I_strcmp(sv_mapname->current.string, "") )
         Com_InitUIAndCommonXAssets();
     if ( com_errorEntered )
         Com_ErrorCleanup();
@@ -1296,7 +1301,7 @@ void __cdecl Com_Init(char *commandLine)
     {
         if ( *Dvar_GetString("com_errorMessage") )
             Com_LoadUiFastFile();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         Com_LoadFrontEnd();
     }
     UI_LoadArenas();
@@ -1333,7 +1338,7 @@ void Com_ErrorCleanup()
     Dvar_SetBoolByName("long_blocking_call", 0);
     Dvar_SetBoolByName("sv_network_warning", 0);
     Dvar_SetBoolByName("cl_network_warning", 0);
-    FS_PureServerSetLoadedIwds((char *)&toastPopupTitle, (char *)&toastPopupTitle);
+    FS_PureServerSetLoadedIwds((char *)"", (char *)"");
     SEH_UpdateLanguageInfo();
     v4 = com_errorMessage;
     v3 = finalmsg;
@@ -1365,7 +1370,7 @@ void Com_ErrorCleanup()
     if ( fs_debug && fs_debug->current.integer == 2 )
         Dvar_SetInt((dvar_s *)fs_debug, 0);
     Com_CleanupBsp();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Com_ResetParseSessions();
     CL_FlushDebugServerData();
     CL_UpdateDebugServerData();
@@ -1484,7 +1489,7 @@ void __cdecl Com_Init_Try_Block_Function(char *commandLine)
         PMem_BeginAlloc("$init", 1u, TRACK_MISC);
     }
     Stream_Init();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( useFastFile->current.enabled )
         Com_InitCodeXAssets();
     CL_InitKeyCommands();
@@ -1527,14 +1532,14 @@ void __cdecl Com_Init_Try_Block_Function(char *commandLine)
                                                     7,
                                                     0x40u,
                                                     "Primary Weapon Offset for CE and Presell");
-    scr_xpcollectorsscale = _Dvar_RegisterInt("scr_xpcollectorsscale", 1, 0, 9, 0x40u, &toastPopupTitle);
-    scr_xpscale = _Dvar_RegisterInt("scr_xpscale", 1, 0, 9, 0x40u, &toastPopupTitle);
-    scr_xpzmscale = _Dvar_RegisterInt("scr_xpzmscale", 1, 0, 9, 0x40u, &toastPopupTitle);
-    scr_codpointsxpscale = _Dvar_RegisterFloat("scr_codpointsxpscale", 0.1, 0.1, 0.1, 0x40u, &toastPopupTitle);
-    scr_codpointsmatchscale = _Dvar_RegisterFloat("scr_codpointsmatchscale", 0.1, 0.1, 0.1, 0x40u, &toastPopupTitle);
-    scr_codpointsperchallenge = _Dvar_RegisterFloat("scr_codpointsperchallenge", 0.1, 0.1, 0.1, 0x40u, &toastPopupTitle);
-    scr_rankXpCap = _Dvar_RegisterInt("scr_rankXpCap", 0, 0, 0, 0x40u, &toastPopupTitle);
-    scr_codPointsCap = _Dvar_RegisterInt("scr_codPointsCap", 0, 0, 0, 0x40u, &toastPopupTitle);
+    scr_xpcollectorsscale = _Dvar_RegisterInt("scr_xpcollectorsscale", 1, 0, 9, 0x40u, "");
+    scr_xpscale = _Dvar_RegisterInt("scr_xpscale", 1, 0, 9, 0x40u, "");
+    scr_xpzmscale = _Dvar_RegisterInt("scr_xpzmscale", 1, 0, 9, 0x40u, "");
+    scr_codpointsxpscale = _Dvar_RegisterFloat("scr_codpointsxpscale", 0.1, 0.1, 0.1, 0x40u, "");
+    scr_codpointsmatchscale = _Dvar_RegisterFloat("scr_codpointsmatchscale", 0.1, 0.1, 0.1, 0x40u, "");
+    scr_codpointsperchallenge = _Dvar_RegisterFloat("scr_codpointsperchallenge", 0.1, 0.1, 0.1, 0x40u, "");
+    scr_rankXpCap = _Dvar_RegisterInt("scr_rankXpCap", 0, 0, 0, 0x40u, "");
+    scr_codPointsCap = _Dvar_RegisterInt("scr_codPointsCap", 0, 0, 0, 0x40u, "");
     ProfLoad_Init();
     if ( com_developer->current.integer )
     {
@@ -1553,7 +1558,7 @@ void __cdecl Com_Init_Try_Block_Function(char *commandLine)
     maxa = Com_GetBuildName();
     BuildDisplayName = Com_GetBuildDisplayName();
     s = va("%s %s build %s %s", BuildDisplayName, maxa, v9, "win-x86");
-    version = _Dvar_RegisterString("version", (char *)&toastPopupTitle, 0x40u, "Game version");
+    version = _Dvar_RegisterString("version", (char *)"", 0x40u, "Game version");
     Dvar_SetString((dvar_s *)version, s);
     shortversion = _Dvar_RegisterString("shortversion", "7", 0x44u, "Short game version");
     Sys_Init();
@@ -1669,7 +1674,7 @@ void Com_InitDvars()
                                                 "Scale how fast you move in com_freemove mode");
     disconnected_ctrls = _Dvar_RegisterString(
                                                  "disconnected_ctrls",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "String representing the disconnected controllers");
     com_first_time = _Dvar_RegisterInt(
@@ -2087,7 +2092,7 @@ char *__cdecl Com_GetLevelSharedFastFile(char *mapName)
     if ( !gLevelDependenciesInited )
     {
         gLevelDependenciesInited = 1;
-        data_p = Com_LoadInfoString("level_dependencies.csv", "level_dependency_info", &toastPopupTitle, loadBuffer);
+        data_p = Com_LoadInfoString("level_dependencies.csv", "level_dependency_info", "", loadBuffer);
         Com_BeginParseSession("level_dependencies.csv");
         Com_SetCSV(1);
         while ( 1 )
@@ -2203,7 +2208,7 @@ void __cdecl Com_AssetLoadUI()
         Com_LoadCommonFastFile();
         Com_LoadUiFastFile();
     }
-    UI_SetMap((char *)&toastPopupTitle, &toastPopupTitle);
+    UI_SetMap((char *)"", "");
     R_BeginRemoteScreenUpdate();
     CL_StartHunkUsers();
     R_EndRemoteScreenUpdate(0);
@@ -2323,7 +2328,7 @@ unsigned intCom_Frame_Try_Block_Function()
     if ( GetCurrentThreadId() == g_DXDeviceThread )
         D3DPERF_EndEvent();
     Monkey_Frame();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Phys_RunToTime(svsHeader.time);
     DWDedicatedLobbyPump();
     result = GetCurrentThreadId();
@@ -2343,7 +2348,7 @@ void __cdecl Com_WriteConfiguration(int localClientNum)
             dvar_modifiedFlags &= ~1u;
             I_strncpyz(configFile, "config_mp.cfg", 128);
             Com_WriteConfigToFile(localClientNum, configFile);
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         }
     }
 }
@@ -2544,7 +2549,7 @@ void __cdecl Com_Restart()
     Com_ShutdownDObj();
     DObjShutdown();
     XAnimShutdown();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Com_ShutdownDynamicMemorySystems();
     if ( useFastFile->current.enabled )
     {
@@ -2683,7 +2688,7 @@ const char *__cdecl Com_DisplayName(const char *name, const char *clanAbbrev, in
         case 2:
             return va("%c%s%c", asc_CD51B0[0], clanAbbrev, asc_CD51B0[1]);
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 const char *__cdecl CS_DisplayName(const clientState_s *cs, int type)

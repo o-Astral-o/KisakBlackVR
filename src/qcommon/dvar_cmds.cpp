@@ -688,7 +688,7 @@ char *__cdecl Dvar_InfoString(int localClientNum, char bit)
         }
         else
         {
-            Info_SetValueForKey(info1, "clanAbbrev", &toastPopupTitle);
+            Info_SetValueForKey(info1, "clanAbbrev", "");
         }
         if ( Live_IsSignedInToLive() )
         {

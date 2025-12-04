@@ -104,19 +104,3 @@ void __cdecl CG_UpdateBolt(int localClientNum)
         }
     }
 }
-
-void __cdecl AssignToSmallerType<int>(int *dest, int src)
-{
-    *dest = src;
-    if ( *dest != src
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\cgame\\../universal/q_shared.h",
-                    285,
-                    0,
-                    "%s",
-                    "(int) dest == src") )
-    {
-        __debugbreak();
-    }
-}
-

@@ -76,7 +76,7 @@ void __cdecl FX_DrawProfile(int clientIndex, void (__cdecl *drawFunc)(char *), f
                      (float)((float)system->gfxCloudCount * 0.390625),
                      256 - system->gfxCloudCount);
         drawFunc(v8);
-        ((void (__cdecl *)(const char *, float *))drawFunc)(&toastPopupTitle, profilePos);
+        ((void (__cdecl *)(const char *, float *))drawFunc)("", profilePos);
         ((void (__cdecl *)(const char *, float *))drawFunc)(
             "Effects are sorted by percent of available resources used",
             profilePos);
@@ -288,7 +288,7 @@ void __cdecl FX_DrawPriorityDebug(int clientIndex, void (__cdecl *drawFunc)(char
                  clientIndex,
                  system->system.uniqueHandleDb->numNodesInUse);
     drawFunc(v5);
-    ((void (__cdecl *)(const char *, float *))drawFunc)(&toastPopupTitle, profilePos);
+    ((void (__cdecl *)(const char *, float *))drawFunc)("", profilePos);
     v6 = va("%4s     %4s     %s", "prio", "count", "effectname");
     drawFunc(v6);
     ((void (__cdecl *)(const char *, float *))drawFunc)(

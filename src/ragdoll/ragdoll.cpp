@@ -8,7 +8,7 @@ void __thiscall phys_free_list<RagdollBody>::remove(
     phys_free_list<RagdollBody>::T_internal_base *prev; // [esp+18h] [ebp-4h]
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -42,7 +42,7 @@ void __cdecl Ragdoll_DebugDraw()
                          "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll.cpp",
                          96,
                          "Ragdoll_BodyInUse( body )",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -184,7 +184,7 @@ int __cdecl Ragdoll_CountPhysicsBodies()
                      "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll.cpp",
                      347,
                      "Ragdoll_BodyInUse( body )",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -273,7 +273,7 @@ RagdollBody *__cdecl Ragdoll_GetUnusedBody()
                      "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll.cpp",
                      125,
                      "body->references == 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -304,7 +304,7 @@ phys_free_list<RagdollBody>::T_internal_base *__cdecl Ragdoll_ReferenceDObjBody(
                          "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll.cpp",
                          141,
                          "Ragdoll_BodyInUse( body )",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -433,7 +433,7 @@ void __cdecl Ragdoll_FreeBody(const cpose_t *ragdollBody)
                  "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll.cpp",
                  158,
                  "body->references == 1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

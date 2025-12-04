@@ -322,7 +322,7 @@ void __cdecl GetStatForFriendOrSelf(int localClientNum, itemDef_s *item, Operand
 void __cdecl GetSortedStatsForFriendOrSelf(int localClientNum, itemDef_s *item, OperandStack *dataStack);
 void __cdecl GetToastPopupWidth(int localClientNum, itemDef_s *item, OperandStack *dataStack);
 void __cdecl GetToastPopupIcon(int localClientNum, itemDef_s *item, OperandStack *dataStack);
-void __cdecl GetToastPopupTitle(int localClientNum, itemDef_s *item, OperandStack *dataStack);
+void __cdecl GetGLOBAL_EMPTY_STRING(int localClientNum, itemDef_s *item, OperandStack *dataStack);
 void __cdecl GetToastPopupDescription(int localClientNum, itemDef_s *item, OperandStack *dataStack);
 void __cdecl GetFloatAsFormattedString(int localClientNum, itemDef_s *item, OperandStack *dataStack);
 void __cdecl ChangeSortedStatsPivot(int localClientNum, itemDef_s *item, OperandStack *dataStack);

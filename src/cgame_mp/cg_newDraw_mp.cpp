@@ -4622,7 +4622,7 @@ void __cdecl CG_DrawStanceIcon(
     }
     width = rect->w;
     height = rect->h;
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     cgameGlob = CG_GetLocalClientGlobals(localClientNum);
     if ( (cgameGlob->lastStance & 1) != 0 )
     {

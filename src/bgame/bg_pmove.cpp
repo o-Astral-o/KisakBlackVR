@@ -2296,23 +2296,6 @@ void __cdecl PM_FlyMove(pmove_t *pm, pml_t *pml)
     PM_StepSlideMove(pm, pml, 0);
 }
 
-void __cdecl Vec3Cross(const float *v0, const float *v1, float *cross)
-{
-    if ( v0 == cross
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\universal\\com_vector.h", 450, 0, "%s", "v0 != cross") )
-    {
-        __debugbreak();
-    }
-    if ( v1 == cross
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\universal\\com_vector.h", 451, 0, "%s", "v1 != cross") )
-    {
-        __debugbreak();
-    }
-    *cross = (float)(v0[1] * v1[2]) - (float)(v0[2] * v1[1]);
-    cross[1] = (float)(v0[2] * *v1) - (float)(*v0 * v1[2]);
-    cross[2] = (float)(*v0 * v1[1]) - (float)(v0[1] * *v1);
-}
-
 void __cdecl PM_Friction(playerState_s *ps, pml_t *pml, pmove_t *pm)
 {
     float value; // [esp+0h] [ebp-44h]

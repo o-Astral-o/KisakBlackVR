@@ -5,7 +5,7 @@ void __cdecl CG_Player_PreControllers(DObj *obj, centity_s *cent);
 void __cdecl CG_mg42_OverheatUpdate(int localClientNum, const DObj *obj, centity_s *cent);
 void __cdecl CG_mg42_PreControllers(DObj *obj, centity_s *cent);
 // local variable allocation has failed, the output may be wrong!
-void    CG_UpdateBModelWorldBounds(int a1@<ebp>, int localClientNum, centity_s *cent, int forceFilter);
+void    CG_UpdateBModelWorldBounds(int localClientNum, centity_s *cent, int forceFilter);
 bool __cdecl VecLessThan(float *a, float *b);
 double __cdecl CG_ScriptMover_GetBurnFraction(int localClientNum, centity_s *cent);
 DObj *__cdecl CG_ScriptMover_GetDObj(int localClientNum, centity_s *cent);

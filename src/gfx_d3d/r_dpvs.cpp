@@ -3765,7 +3765,7 @@ void __cdecl R_ShowCull(const float *viewOrigin)
                         sceneEntIndex,
                         sceneEnt->entnum,
                         sceneEnt->obj->numModels,
-                        &toastPopupTitle);
+                        "");
                 R_AddDebugString(&frontEndDataOut->debugGlobals, sceneEnt->placement.base.origin, textColor, 0.25, text);
             }
         }
@@ -3788,7 +3788,7 @@ void __cdecl R_ShowCull(const float *viewOrigin)
                 if ( v9->model && v9->model->name )
                     _snprintf(string, 0x200u, "%d:%d:%s", sceneEntIndex, v9->entnum, v9->model->name);
                 else
-                    _snprintf(string, 0x200u, "%d:%d:%s", sceneEntIndex, v9->entnum, &toastPopupTitle);
+                    _snprintf(string, 0x200u, "%d:%d:%s", sceneEntIndex, v9->entnum, "");
                 R_AddDebugString(&frontEndDataOut->debugGlobals, v9->placement.base.origin, color, 0.25, string);
             }
         }

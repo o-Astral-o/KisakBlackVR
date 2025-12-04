@@ -1384,6 +1384,7 @@
     <ClInclude Include="src\game_mp\player_use_mp.h" />
     <ClInclude Include="src\game_mp\pregame.h" />
     <ClInclude Include="src\game_mp\ui_gameinfo_mp.h" />
+    <ClInclude Include="src\gfx_d3d\fxprimitives.h" />
     <ClInclude Include="src\gfx_d3d\rb_backend.h" />
     <ClInclude Include="src\gfx_d3d\rb_compositing.h" />
     <ClInclude Include="src\gfx_d3d\rb_corona.h" />

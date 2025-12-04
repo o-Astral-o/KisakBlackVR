@@ -309,7 +309,7 @@ void __cdecl Snd_StreamOpen(
         LODWORD(p_mutex->ThreadId) = 0;
         HIDWORD(p_mutex->ThreadId) = 0;
     }
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
 }
 
 void __thiscall scoped_performance_error::test(scoped_performance_error *this, const char *__formal)
@@ -399,7 +399,7 @@ void __cdecl Snd_StreamClose(unsigned int index)
         LODWORD(p_mutex->ThreadId) = 0;
         HIDWORD(p_mutex->ThreadId) = 0;
     }
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
 }
 
 snd_stream_status __cdecl Snd_StreamStatus(unsigned int index)
@@ -456,7 +456,7 @@ snd_stream_status __cdecl Snd_StreamStatus(unsigned int index)
         HIDWORD(p_mutex->ThreadId) = 0;
     }
     v4 = status;
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
     return v4;
 }
 
@@ -535,7 +535,7 @@ unsigned int __cdecl Snd_StreamGetFreeWindows(unsigned int index)
         HIDWORD(p_mutex->ThreadId) = 0;
     }
     v4 = count;
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
     return v4;
 }
 
@@ -840,7 +840,7 @@ snd_stream_status __cdecl Snd_StreamAcquireWindow(
     }
     scoped_performance_error::test(&pe, "unlock");
     v9 = status;
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
     return v9;
 }
 
@@ -1351,7 +1351,7 @@ void __cdecl Snd_StreamGetRequest(snd_stream *s, snd_stream_request *r)
             r->need = b1need;
         if ( !s->buffers[0] && !s->buffers[1] && s->prime_data )
             r->need = 1073152;
-        scoped_performance_error::test(&pe, &toastPopupTitle);
+        scoped_performance_error::test(&pe, "");
     }
     if ( !--s->mutex.LockCount )
     {
@@ -1417,7 +1417,7 @@ bool __cdecl Snd_StreamSetRequest(snd_stream *s, snd_stream_request *r)
         s->read = r->buffer->data_size + r->buffer->offset_in_file;
         if ( !s->have_header && !s->prime_size )
             Snd_StreamLoadHeader(s, r->buffer->data, r->buffer->filename, r->buffer->file_size);
-        scoped_performance_error::test(&v6, &toastPopupTitle);
+        scoped_performance_error::test(&v6, "");
     }
     if ( !--s->mutex.LockCount )
     {
@@ -1426,7 +1426,7 @@ bool __cdecl Snd_StreamSetRequest(snd_stream *s, snd_stream_request *r)
         s->mutex.ThreadId = 0;
     }
     v5 = used_buffer;
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
     return v5;
 }
 
@@ -1443,7 +1443,7 @@ snd_buffer *__cdecl Snd_FindBuffer(const char *filename, unsigned int offset)
     {
         if ( i >= 0x14 )
         {
-            scoped_performance_error::test(&pe, &toastPopupTitle);
+            scoped_performance_error::test(&pe, "");
             return 0;
         }
         buffer = &g_snd_buffers[i];
@@ -1472,7 +1472,7 @@ snd_buffer *__cdecl Snd_FindBuffer(const char *filename, unsigned int offset)
     {
         __debugbreak();
     }
-    scoped_performance_error::test(&pe, &toastPopupTitle);
+    scoped_performance_error::test(&pe, "");
     return buffer;
 }
 

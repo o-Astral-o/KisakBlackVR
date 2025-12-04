@@ -48,7 +48,7 @@ void __cdecl ClientScr_SetSessionTeam(gclient_s *pSelf)
     }
     if ( pSelf - level.clients >= level.maxclients )
         Scr_Error("client is not pointing to the level.clients array", 0);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     ClientUserinfoChanged(pSelf - level.clients);
     CalculateRanks();
 }
@@ -532,7 +532,7 @@ void __cdecl ClientScr_GetStatusIcon(gclient_s *pSelf)
     }
     else
     {
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -594,7 +594,7 @@ void __cdecl ClientScr_GetHeadIcon(gclient_s *pSelf)
     }
     else
     {
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 

@@ -2155,7 +2155,7 @@ char __cdecl LiveStats_UpdatePersonalBestHighest(
             personalBest->value = currentValue;
             personalBest->delta = currentValue - lastValue;
             personalBest->name = searchStateStats->ddl->enumList[searchStateStats->member->enumIndex].members[searchStateStats->arrayIndex];
-            personalBest->prefix = &toastPopupTitle;
+            personalBest->prefix = "";
             ++s_currentPersonalBest[controllerIndex];
             return 1;
         }
@@ -3815,7 +3815,7 @@ void __cdecl LiveStats_ValidateStats(int controllerIndex)
     int statsBackupVersion; // [esp+64h] [ebp-4h] BYREF
 
     if ( !LiveStorage_GetStatsChecksumValid(controllerIndex, STATS_LOCATION_NORMAL) )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     statsKeys[0] = MP_PLAYERSTATSKEY_SCORE;
     statsKeys[1] = MP_PLAYERSTATSKEY_PLEVEL;
     statsKeys[2] = MP_PLAYERSTATSKEY_TIMEPLAYEDTOTAL;
@@ -3852,7 +3852,7 @@ void __cdecl LiveStats_ValidateStats(int controllerIndex)
                      statsKeys[currentStatsKey]) )
         {
             if ( currentStatsValue < backupStatsValue )
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
         }
         else
         {
@@ -3873,7 +3873,7 @@ void __cdecl LiveStats_ValidateStats(int controllerIndex)
         STATS_LOCATION_FORCE_NORMAL,
         MP_PLAYERSTATSKEY_STATS_VERSION);
     if ( statsBackupVersion != statsInitialVersion )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
 }
 
 char __cdecl LiveStats_GetIntPlayerStatByKey(
@@ -4694,7 +4694,7 @@ void __cdecl LiveStats_Init()
         recordPointsSpent = _Dvar_RegisterBool("recordPointsSpent", 1, 0, "Record spending through eventRecordBin");
         ui_challengeGameMode = _Dvar_RegisterString(
                                                          "ui_challengeGameMode",
-                                                         (char *)&toastPopupTitle,
+                                                         (char *)"",
                                                          0,
                                                          "Game mode type for the challenge you are viewing");
         DDL_Cmd_Init();

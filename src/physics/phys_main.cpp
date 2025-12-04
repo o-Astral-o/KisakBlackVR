@@ -316,7 +316,7 @@ void __cdecl Phys_Init()
                      "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp",
                      341,
                      "G_PHYSICS_TOTAL_MEMORY_BUFFER == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -379,7 +379,7 @@ void __cdecl surface_type_info_database_set(int surface_type_1, int surface_type
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                  351,
                  "G_BPM->g_surface_type_info_database",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -407,7 +407,7 @@ void __cdecl create_broad_phase_info(rigid_body *body)
                      "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp",
                      429,
                      "userData->m_gjk_geom_list.get_geom_count() == 1",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -417,13 +417,13 @@ void __cdecl create_broad_phase_info(rigid_body *body)
                      "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                      1035,
                      "m_geom_count >= 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
         gjk_geom = *p_m_first_geom;
         if ( !*p_m_first_geom
-            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 431, "gjk_geom", &toastPopupTitle) )
+            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 431, "gjk_geom", "") )
         {
             __debugbreak();
         }
@@ -455,12 +455,12 @@ void __cdecl create_broad_phase_info(rigid_body *body)
                      "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                      1035,
                      "m_geom_count >= 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
         geom = *v4;
-        if ( !*v4 && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 417, "geom", &toastPopupTitle) )
+        if ( !*v4 && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 417, "geom", "") )
             __debugbreak();
         while ( geom )
         {
@@ -512,7 +512,7 @@ void __thiscall broad_phase_group::add_bpi(broad_phase_group *this, broad_phase_
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase.h",
                  92,
                  "!bpi->get_flag(broad_phase_info::FLAG_ON_BPG_LIST)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -535,7 +535,7 @@ void __cdecl environment_collision_list_add(broad_phase_base *bpb)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                  235,
                  "bpb->is_bpi() || bpb->is_bpg()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -544,7 +544,7 @@ void __cdecl environment_collision_list_add(broad_phase_base *bpb)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                  236,
                  "!bpb->get_flag(broad_phase_base::FLAG_ON_BPG_LIST)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -556,7 +556,7 @@ void __cdecl environment_collision_list_add(broad_phase_base *bpb)
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                          239,
                          "bpb->m_list_bpb_next == NULL",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -577,7 +577,7 @@ void __cdecl environment_collision_list_remove(broad_phase_base *bpb)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                  247,
                  "bpb->is_bpi() || bpb->is_bpg()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -586,7 +586,7 @@ void __cdecl environment_collision_list_remove(broad_phase_base *bpb)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                  248,
                  "!bpb->get_flag(broad_phase_base::FLAG_ON_BPG_LIST)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -612,7 +612,7 @@ void __thiscall broad_phase_memory::list_bpb_remove(broad_phase_memory *this, br
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                          105,
                          "bpb",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -630,7 +630,7 @@ int __thiscall gjk_geom_list_t::get_geom_count(gjk_geom_list_t *this)
                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                  1036,
                  "m_geom_count >= 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -662,7 +662,7 @@ void __cdecl destroy_broad_phase_info(rigid_body *body)
                              "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp",
                              458,
                              "userData->m_bpb->is_bpg()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -879,7 +879,7 @@ PhysObjUserData * Phys_CreateUserBody@<eax>(
                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                          83,
                          "get_flag(FLAG_AABB_LOC_VALID)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -891,7 +891,7 @@ PhysObjUserData * Phys_CreateUserBody@<eax>(
                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                          82,
                          "get_flag(FLAG_AABB_LOC_VALID)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -907,7 +907,7 @@ PhysObjUserData * Phys_CreateUserBody@<eax>(
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp",
                          595,
                          "userData->m_gjk_geom_list.get_geom_count() == 0",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1372,7 +1372,7 @@ PhysObjUserData * Phys_CreateBodyFromState@<eax>(
             rigid_body::set_inertia(v16, &v8);
             create_broad_phase_info(v102->body);
             if ( do_collision_test )
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             Sys_LeaveCriticalSection(CRITSECT_PHYSICS);
             return v101;
         }
@@ -1442,7 +1442,7 @@ void __cdecl destroy_gjk_geom(gjk_geom_list_t *gjk_geom_list)
                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                  1035,
                  "m_geom_count >= 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2462,7 +2462,7 @@ void __cdecl Phys_FindAndRenderBulletMesh(const float *start, const float *end)
     {
         dynEntityHitId = 0;
         drawType = DYNENT_DRAW_MODEL;
-        dynEntTypeStr = &toastPopupTitle;
+        dynEntTypeStr = "";
     }
     if ( bHitDynEnt )
     {
@@ -2719,7 +2719,7 @@ void __userpurge phys_convex_hull::compute_convex_hull(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  331,
                  "max_verts >= 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2783,7 +2783,7 @@ void __userpurge phys_convex_hull::compute_convex_hull(
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                      373,
                      "best_vert",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2792,7 +2792,7 @@ void __userpurge phys_convex_hull::compute_convex_hull(
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                      374,
                      "best_volume > 0.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2804,7 +2804,7 @@ void __userpurge phys_convex_hull::compute_convex_hull(
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                      375,
                      "best_tri->get_dist(**best_vert) > CONVEX_HULL_VERT_ADD_DIST_THRESH",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2850,7 +2850,7 @@ void __thiscall phys_convex_hull::add_convex_hull_vert(phys_convex_hull *this, p
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  52,
                  "vert",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2923,7 +2923,7 @@ void __userpurge phys_convex_hull::create_intermediate_triangle(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  95,
                  "nnormal > 0.00001f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2959,7 +2959,7 @@ phys_vec3 **__thiscall phys_convex_hull::support_intermediate_verts(phys_convex_
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  118,
                  "best_vert",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3018,7 +3018,7 @@ void __thiscall phys_convex_hull::init_convex_hull(phys_convex_hull *this)
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  256,
                  "m_convex_hull_vert_list.get_count() == 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3145,7 +3145,7 @@ void    phys_convex_hull::calculate_initial_triangle_vertices(phys_convex_hull *
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  210,
                  "largest_twice_area_sq>0.0f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3241,7 +3241,7 @@ double __thiscall phys_convex_hull::calc_expansion_volume(phys_convex_hull *this
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  277,
                  "volume > 0.0f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3340,7 +3340,7 @@ void __thiscall phys_convex_hull::create_edge_list(phys_convex_hull *this, const
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  301,
                  "m_intermediate_edge_list.get_count() >= 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3364,7 +3364,7 @@ void __thiscall phys_convex_hull::add_intermediate_edge(phys_convex_hull *this, 
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
                  59,
                  "v0 && v1 && v0 != v1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4215,7 +4215,7 @@ void __cdecl print_smodel(cStaticModel_s *smodel, int refcount, const float *dim
     int ntris; // [esp+2Ch] [ebp-4h]
 
     model = smodel->xmodel;
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Com_Printf(
         20,
         "%-42s\t refs( %4d ) lods( %d ) ncol_tris( %4d )     avr dims( %5.0f, %5.0f, %5.0f )\n",
@@ -4410,7 +4410,7 @@ void    UpdateRigidBody(float a1@<ebp>, float delta_t)
     gravity_dir.y = a1;
     gravity_dir.z = retaddr;
     //PIXBeginNamedEvent(-1, "update 1");
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     debug_loop();
     free_chull_lists();
     Sys_EnterCriticalSection(CRITSECT_PHYSICS_UPDATE);
@@ -4538,7 +4538,7 @@ void    Phys_CollisionCallback(int a1@<ebp>)
                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                          82,
                          "get_flag(FLAG_AABB_LOC_VALID)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -4548,7 +4548,7 @@ void    Phys_CollisionCallback(int a1@<ebp>)
                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                          83,
                          "get_flag(FLAG_AABB_LOC_VALID)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -5319,7 +5319,7 @@ void __thiscall phys_link_list1<PhysObjUserData>::add(phys_link_list1<PhysObjUse
     {
         if ( i == p )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_local.h", 135, "i != p", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_local.h", 135, "i != p", "") )
                 __debugbreak();
         }
     }
@@ -5359,7 +5359,7 @@ void __thiscall phys_link_list1<PhysObjUserData>::remove(phys_link_list1<PhysObj
                                      "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_local.h",
                                      160,
                                      "!last_i || last_i->get_next_link() == NULL",
-                                     &toastPopupTitle) )
+                                     "") )
                         {
                             __debugbreak();
                         }
@@ -5371,7 +5371,7 @@ void __thiscall phys_link_list1<PhysObjUserData>::remove(phys_link_list1<PhysObj
         last_i = i;
         i = i->m_next_link;
     }
-    if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_local.h", 165, "0", &toastPopupTitle) )
+    if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_local.h", 165, "0", "") )
         __debugbreak();
 }
 
@@ -5400,7 +5400,7 @@ phys_vec3 *__thiscall phys_static_array<phys_vec3,6144>::operator[](phys_static_
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                      118,
                      "i >= 0 && i < m_alloc_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -5440,7 +5440,7 @@ void __thiscall phys_static_array<phys_convex_hull::ch_triangle,256>::remove_slo
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                  73,
                  "is_member(data)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5455,7 +5455,7 @@ phys_convex_hull::ch_triangle *__thiscall phys_static_array<phys_convex_hull::ch
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                  131,
                  "m_alloc_count > 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5481,7 +5481,7 @@ void __thiscall phys_static_array<phys_convex_hull::ch_edge,128>::remove_slow(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                  73,
                  "is_member(data)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5540,7 +5540,7 @@ void __thiscall phys_free_list<PhysObjUserData>::remove(
     phys_free_list<PhysObjUserData>::T_internal_base *prev; // [esp+18h] [ebp-4h]
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -5564,7 +5564,7 @@ void __thiscall phys_free_list<PhysObjUserData>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -5574,7 +5574,7 @@ void __thiscall phys_free_list<PhysObjUserData>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -5649,7 +5649,7 @@ void __thiscall phys_free_list<PhysObjUserData>::~phys_free_list<PhysObjUserData
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5658,7 +5658,7 @@ void __thiscall phys_free_list<PhysObjUserData>::~phys_free_list<PhysObjUserData
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5667,7 +5667,7 @@ void __thiscall phys_free_list<PhysObjUserData>::~phys_free_list<PhysObjUserData
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5687,7 +5687,7 @@ void __thiscall phys_free_list<VehicleParameter>::~phys_free_list<VehicleParamet
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5696,7 +5696,7 @@ void __thiscall phys_free_list<VehicleParameter>::~phys_free_list<VehicleParamet
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5705,7 +5705,7 @@ void __thiscall phys_free_list<VehicleParameter>::~phys_free_list<VehicleParamet
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5721,7 +5721,7 @@ void __thiscall phys_free_list<VehicleParameter>::remove(
     phys_free_list<VehicleParameter>::T_internal_base *prev; // [esp+18h] [ebp-4h]
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -5745,7 +5745,7 @@ void __thiscall phys_free_list<VehicleParameter>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -5755,7 +5755,7 @@ void __thiscall phys_free_list<VehicleParameter>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -5776,7 +5776,7 @@ void __thiscall phys_free_list<NitrousVehicle>::~phys_free_list<NitrousVehicle>(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5785,7 +5785,7 @@ void __thiscall phys_free_list<NitrousVehicle>::~phys_free_list<NitrousVehicle>(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5794,7 +5794,7 @@ void __thiscall phys_free_list<NitrousVehicle>::~phys_free_list<NitrousVehicle>(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5813,7 +5813,7 @@ void __thiscall phys_free_list<RagdollBody>::~phys_free_list<RagdollBody>(phys_f
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5822,7 +5822,7 @@ void __thiscall phys_free_list<RagdollBody>::~phys_free_list<RagdollBody>(phys_f
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5831,7 +5831,7 @@ void __thiscall phys_free_list<RagdollBody>::~phys_free_list<RagdollBody>(phys_f
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -5847,7 +5847,7 @@ void __thiscall phys_free_list<RagdollBody>::remove(
     phys_free_list<RagdollBody>::T_internal_base *prev; // [esp+18h] [ebp-4h]
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -5871,7 +5871,7 @@ void __thiscall phys_free_list<RagdollBody>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -5881,7 +5881,7 @@ void __thiscall phys_free_list<RagdollBody>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }

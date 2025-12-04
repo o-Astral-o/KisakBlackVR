@@ -50,7 +50,7 @@ TaskRecord *__cdecl LiveStorage_FetchOnlineWAD(int controllerIndex)
                 {
                     memcpy(s_onlineWADBuffer, (unsigned __int8 *)fileBuffer, fileLen);
                     FS_FreeFile(fileBuffer);
-                    BLOPS_NULLSUB();
+                    //BLOPS_NULLSUB();
                     return 0;
                 }
             }
@@ -224,7 +224,7 @@ void LiveStorage_ProcessOnlineWAD()
         }
         SV_SetPlaylistFetchedTime();
         s_completedOnlineWAD = 1;
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         LargeLocal::~LargeLocal(&uncompressedFileBuffer_large_local);
     }
 }

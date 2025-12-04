@@ -298,7 +298,7 @@ char *__cdecl UI_FeederItemText_Maps(int controllerIndex, itemDef_s *item, int i
         {
             if ( index < 0 || index >= sharedUiInfo.joinGameTypes[31].basictraining )
             {
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             }
             else
             {
@@ -309,25 +309,25 @@ char *__cdecl UI_FeederItemText_Maps(int controllerIndex, itemDef_s *item, int i
         else if ( column == 2 )
         {
             if ( listboxPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window) )
-                BLOPS_NULLSUB();
-            return (char *)&toastPopupTitle;
+                //BLOPS_NULLSUB();
+            return (char *)"";
         }
         else
         {
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         }
     }
     else
     {
         *handle = sharedUiInfo.assets.whiteMaterial;
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
 char *__cdecl UI_FeederItemText_CustomGametypes(int index)
 {
     if ( index < 0 || index >= sharedUiInfo.customGameTypes[31].splitscreen )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     else
         return UI_SafeTranslateString((const char *)&sharedUiInfo.gameTypeMapCount[29 * index - 926]);
 }
@@ -352,7 +352,7 @@ const char *__cdecl UI_FeederItemText_GametypesBase(
     {
         case 0:
             *handle = sharedUiInfo.assets.whiteMaterial;
-            result = &toastPopupTitle;
+            result = "";
             break;
         case 1:
             if ( xblive_basictraining->current.enabled )
@@ -361,16 +361,16 @@ const char *__cdecl UI_FeederItemText_GametypesBase(
                 if ( indexa >= 0 && indexa < sharedUiInfo.customGameTypes[31].splitscreen )
                     result = UI_SafeTranslateString((const char *)&sharedUiInfo.gameTypeMapCount[29 * indexa - 926]);
                 else
-                    result = &toastPopupTitle;
+                    result = "";
             }
             else
             {
                 if ( index < 0 )
-                    return &toastPopupTitle;
+                    return "";
                 feederID = listPtr->special;
                 LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
                 if ( index >= (int)UI_FeederCount(LocalClientNum, contextIndex, feederID, listPtr) )
-                    return &toastPopupTitle;
+                    return "";
                 if ( Com_GameMode_IsGameMode(GAMEMODE_FIRST_PRIVATE_ONLINE_GAMEMODE) )
                 {
                     if ( !index )
@@ -382,8 +382,8 @@ const char *__cdecl UI_FeederItemText_GametypesBase(
             break;
         case 2:
             if ( listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window) )
-                BLOPS_NULLSUB();
-            result = &toastPopupTitle;
+                //BLOPS_NULLSUB();
+            result = "";
             break;
         case 3:
             if ( Com_GameMode_IsGameMode(GAMEMODE_FIRST_PRIVATE_ONLINE_GAMEMODE) )
@@ -393,10 +393,10 @@ const char *__cdecl UI_FeederItemText_GametypesBase(
             {
                 *handle = Material_RegisterHandle("ui_host", 3);
             }
-            result = &toastPopupTitle;
+            result = "";
             break;
         default:
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -435,22 +435,22 @@ char *__cdecl UI_FeederItemText_GametypesInGame(
     {
         index = UI_GetBasicTrainingGametypeIdForNum(index);
         if ( index < 0 || index >= sharedUiInfo.customGameTypes[31].splitscreen )
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         if ( column )
         {
             if ( column == 1 )
                 return UI_SafeTranslateString((const char *)&sharedUiInfo.gameTypeMapCount[29 * index - 926]);
             else
-                return (char *)&toastPopupTitle;
+                return (char *)"";
         }
         *handle = sharedUiInfo.assets.whiteMaterial;
     }
     if ( index < 0 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     feederID = listPtr->special;
     LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
     if ( index >= (int)UI_FeederCount(LocalClientNum, contextIndex, feederID, listPtr) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
     {
         if ( column == 1 )
@@ -460,7 +460,7 @@ char *__cdecl UI_FeederItemText_GametypesInGame(
     {
         *handle = sharedUiInfo.assets.whiteMaterial;
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_SystemLinkLobbyMembers(int localClientNum)
@@ -471,7 +471,7 @@ char *__cdecl UI_FeederItemText_SystemLinkLobbyMembers(int localClientNum)
     if ( ci->infoValid )
         return ci->name;
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_WeaponOptions(
@@ -542,34 +542,34 @@ char *__cdecl UI_Feeder_HandleItemList(
     char *v9; // eax
 
     if ( itemIndex == -1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     switch ( column )
     {
         case 0:
             *handle = sharedUiInfo.assets.whiteMaterial;
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 1:
             result = UI_SafeTranslateString(itemName);
             break;
         case 3:
             if ( !cost )
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             v9 = UI_SafeTranslateString("MENU_POINTS");
             result = UI_ReplaceConversionInt(v9, cost);
             break;
         case 4:
             if ( itemLocked )
                 *handle = Material_RegisterHandle("menu_mp_lobby_locked", 3);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 6:
             if ( isSelectedItem )
-                BLOPS_NULLSUB();
-            result = (char *)&toastPopupTitle;
+                //BLOPS_NULLSUB();
+            result = (char *)"";
             break;
         default:
-            return (char *)&toastPopupTitle;
+            return (char *)"";
     }
     return result;
 }
@@ -727,7 +727,7 @@ char *__cdecl UI_FeederItemText_Attachments(
     }
     UI_FeederItemText_CommonListColorHandler(controllerIndex, isSelectedItem, isItemGreyedOut, cost);
     if ( itemIndex == -1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     switch ( column )
     {
         case 0:
@@ -735,21 +735,21 @@ char *__cdecl UI_FeederItemText_Attachments(
             break;
         case 1:
             if ( !isCurrentItemEquipped || attachment == ATTACHMENT_NONE )
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             *handle = Material_RegisterHandle("menu_mp_killstreak_select", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 2:
             if ( !cost )
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             v12 = UI_SafeTranslateString("MENU_POINTS");
             result = UI_ReplaceConversionInt(v12, cost);
             break;
         case 3:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         default:
-            return (char *)&toastPopupTitle;
+            return (char *)"";
     }
     return result;
 }
@@ -761,14 +761,14 @@ char *__cdecl UI_ChallengeCompletionStatus(int column, int currentValue, int tar
         if ( currentValue != targetValue )
         {
             *useOwnerDraw = 1;
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         }
     }
     else if ( column == 2 && currentValue == targetValue )
     {
         return UI_SafeTranslateString("STATS_CHALLENGE_COMPLETED");
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_PrepareStatsMilestoneName(
@@ -788,7 +788,7 @@ char *__cdecl UI_PrepareStatsMilestoneName(
     memset(&convArgs, 0, sizeof(convArgs));
     CL_MilestoneTier_DecToRoman(milestone, milestoneTierRoman, 5);
     if ( !itemName || !statName )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     v4 = UI_SafeTranslateString(itemName);
     convArgs.args[convArgs.argCount++] = v4;
     v5 = UI_SafeTranslateString(statName);
@@ -865,16 +865,16 @@ _CustomClassDescription *__cdecl UI_Project_FeederItemText(
                                                                                     item,
                                                                                     handle);
         case '3':
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case '7':
             if ( !Friends_GetByIndex(controllerIndex, 0, index, &friendInfo_0) )
-                return (_CustomClassDescription *)&toastPopupTitle;
+                return (_CustomClassDescription *)"";
             if ( column )
             {
                 if ( column == 1 )
                     return (_CustomClassDescription *)friendInfo_0.name;
                 else
-                    return (_CustomClassDescription *)&toastPopupTitle;
+                    return (_CustomClassDescription *)"";
             }
             else
             {
@@ -882,10 +882,10 @@ _CustomClassDescription *__cdecl UI_Project_FeederItemText(
                 v10 = Com_LocalClient_GetControllerIndex(contextIndex);
                 if ( PCache_GetRank(v10, dwid, &rank, &prestige) )
                     CL_GetRankIcon(rank, prestige, handle);
-                return (_CustomClassDescription *)&toastPopupTitle;
+                return (_CustomClassDescription *)"";
             }
         case '8':
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case '9':
             return (_CustomClassDescription *)UI_FeederItemText_Attachments(
                                                                                     contextIndex,
@@ -925,7 +925,7 @@ _CustomClassDescription *__cdecl UI_Project_FeederItemText(
                                                                                     column,
                                                                                     listPtr);
         case '?':
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case 'A':
         case 'B':
         case 'C':
@@ -1008,7 +1008,7 @@ _CustomClassDescription *__cdecl UI_Project_FeederItemText(
         case 'c':
             milestoneType = UI_GetMilestoneType(feederID);
             if ( milestoneType == -1 )
-                return (_CustomClassDescription *)&toastPopupTitle;
+                return (_CustomClassDescription *)"";
             else
                 return (_CustomClassDescription *)UI_FeederItemText_StatsMilestones(
                                                                                         contextIndex,
@@ -1100,7 +1100,7 @@ _CustomClassDescription *__cdecl UI_Project_FeederItemText(
         case 'm':
             return UI_FeederItemText_CustomGametypeClasses(controllerIndex, contextIndex, item, index);
         default:
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
     }
 }
 
@@ -1122,7 +1122,7 @@ char *__cdecl UI_FeederItemText_WeaponGroups(
 
     v10 = Item_GetListBoxDef(item)->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window);
     loadoutName = Dvar_GetString("selected_loadout_slot");
-    itemName = &toastPopupTitle;
+    itemName = "";
     arrayOffset = ITEMGROUP_SMG;
     if ( !I_stricmp(loadoutName, "primary") )
     {
@@ -1218,7 +1218,7 @@ const char *__cdecl UI_FeederItemText_ClanTagFeatures(
             goto LABEL_18;
         default:
 LABEL_18:
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -1290,14 +1290,14 @@ char *__cdecl UI_FeederItemText_ChallengesPerks(
     itemName = BG_UnlockablesGetItemName(itemIndex);
     itemPurchased = BG_UnlockablesIsItemPurchased(controllerIndex, itemIndex);
     if ( itemIndex == -1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !column )
         return UI_SafeTranslateString(itemName);
     if ( column != 1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !itemPurchased )
         *handle = Material_RegisterHandle("menu_mp_lobby_locked", 3);
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_ItemInSlot(
@@ -1392,7 +1392,7 @@ char *__cdecl UI_FeederItemText_CustomPerksInSlot(
     if ( isSelectedItem && !column )
     {
         if ( isTweakable )
-            Dvar_SetStringByName("ui_hint_desc", (char *)&toastPopupTitle);
+            Dvar_SetStringByName("ui_hint_desc", (char *)"");
         else
             Dvar_SetStringByName("ui_hint_desc", "@CUSTOM_PERK_NO_EDIT_DESC");
     }
@@ -1405,7 +1405,7 @@ char *__cdecl UI_FeederItemText_CustomPerksInSlot(
         Dvar_SetStringByName("ui_custom_perk_has_changed", "1");
         *handle = Material_RegisterHandle("ui_host", 3);
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_ChallengesKillstreaks(
@@ -1436,7 +1436,7 @@ char *__cdecl UI_FeederItemText_ChallengesKillstreaks(
     if ( listPtr->cursorPos[contextIndex] == index )
         sharedUiInfo.modIndex = itemIndex;
     if ( itemIndex == -1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !column )
     {
         ItemName = BG_UnlockablesGetItemName(itemIndex);
@@ -1444,9 +1444,9 @@ char *__cdecl UI_FeederItemText_ChallengesKillstreaks(
         return UI_ToUpper(v10);
     }
     if ( column != 1 || BG_UnlockablesIsItemPurchased(controllerIndex, itemIndex) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     *handle = Material_RegisterHandle("menu_mp_lobby_locked", 7);
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_SortedItems(
@@ -1524,7 +1524,7 @@ char *__cdecl UI_FeederItemText_SortedItems(
             __debugbreak();
         }
         if ( Int > 256 )
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         for ( i = 0; i < Int; ++i )
         {
             v10 = va("%s%d", String, i + 1);
@@ -1544,7 +1544,7 @@ char *__cdecl UI_FeederItemText_SortedItems(
                     __debugbreak();
             }
             if ( v29[i + 256] == -1 )
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             v14 = va("%s%d", String, i + 1);
             EquippedItemInSlot = BG_UnlockablesGetEquippedItemInSlot(controllerIndex, 0, v14);
             v29[i] = EquippedItemInSlot;
@@ -1572,7 +1572,7 @@ char *__cdecl UI_FeederItemText_SortedItems(
         v36 = 1;
     UI_FeederItemText_CommonListColorHandler(controllerIndex, v36, v27, cost);
     if ( itemIndex == -1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     switch ( column )
     {
         case 0:
@@ -1583,14 +1583,14 @@ char *__cdecl UI_FeederItemText_SortedItems(
         case 1:
             if ( v34 )
                 *handle = Material_RegisterHandle("menu_mp_killstreak_select", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 2:
             if ( cost )
             {
                 if ( Dvar_GetInt(ui_items_no_cost) )
                 {
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                 }
                 else
                 {
@@ -1601,21 +1601,21 @@ char *__cdecl UI_FeederItemText_SortedItems(
             }
             else
             {
-                result = (char *)&toastPopupTitle;
+                result = (char *)"";
             }
             break;
         case 3:
             if ( !BG_UnlockablesIsItemLocked(controllerIndex, itemIndex) )
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             *handle = Material_RegisterHandle("menu_mp_lobby_locked", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 4:
             v22 = BG_UnlockablesGetItemCount(itemIndex);
             result = va("%d", v22);
             break;
         default:
-            return (char *)&toastPopupTitle;
+            return (char *)"";
     }
     return result;
 }
@@ -1657,7 +1657,7 @@ const char *__cdecl UI_FeederItemText_CustomKillstreaks(
     }
     UI_FeederItemText_CommonListColorHandler(controllerIndex, isSelectedItem, isGrey, 0);
     if ( itemIndex == -1 || column )
-        return &toastPopupTitle;
+        return "";
     if ( !index )
         return UI_SafeTranslateString("CUSTOM_NO_KILLSTREAK");
     ItemName = BG_UnlockablesGetItemName(itemIndex);
@@ -1697,7 +1697,7 @@ const char *__cdecl UI_FeederItemText_AARScoreboard(
             {
                 if ( !(index % 2) )
                     *handle = sharedUiInfo.assets.whiteMaterial;
-                return &toastPopupTitle;
+                return "";
             }
             else
             {
@@ -1707,7 +1707,7 @@ const char *__cdecl UI_FeederItemText_AARScoreboard(
                 if ( nemesisXuid && nemesisXuid == currClientXuid )
                 {
                     *handle = Material_RegisterHandle("menu_mp_lobby_bar_nem", 7);
-                    return &toastPopupTitle;
+                    return "";
                 }
                 else
                 {
@@ -1716,15 +1716,15 @@ const char *__cdecl UI_FeederItemText_AARScoreboard(
                         *handle = Material_RegisterHandle("menu_mp_lobby_bar_party", 7);
                     else
                         *handle = sharedUiInfo.assets.whiteMaterial;
-                    return &toastPopupTitle;
+                    return "";
                 }
             }
         case 1:
             if ( feederID == 83.0 )
-                return &toastPopupTitle;
+                return "";
             if ( !listPtr || listPtr->cursorPos[contextIndex] != index )
                 *handle = sharedUiInfo.assets.whiteMaterial;
-            return &toastPopupTitle;
+            return "";
         case 2:
             if ( feederID != 83.0 )
                 goto LABEL_33;
@@ -1734,7 +1734,7 @@ const char *__cdecl UI_FeederItemText_AARScoreboard(
         case 3:
             if ( feederID != 83.0 )
                 CG_GetMatchScoreboardRankIcon(localClientNum, index, TEAM_NUM_TEAMS, handle);
-            return &toastPopupTitle;
+            return "";
         case 4:
             goto LABEL_33;
         case 5:
@@ -1754,12 +1754,12 @@ const char *__cdecl UI_FeederItemText_AARScoreboard(
             if ( Dvar_GetBool("ui_ingamePlayersOpen") && (column == 8 || column == 9) )
             {
                 CG_GetInGamePlayerListIcon(localClientNum, column, index, TEAM_NUM_TEAMS, handle);
-                result = &toastPopupTitle;
+                result = "";
             }
             else if ( feederID == 83.0 )
             {
 LABEL_34:
-                result = &toastPopupTitle;
+                result = "";
             }
             else
             {
@@ -1795,23 +1795,23 @@ const char *__cdecl UI_FeederItemText_InGamePlayerList(
             break;
         case 1:
             *handle = Material_RegisterHandle("menu_mp_lobby_bar_name", 7);
-            result = &toastPopupTitle;
+            result = "";
             break;
         case 2:
             if ( !(index % 2) )
                 *handle = Material_RegisterHandle("white", 7);
-            result = &toastPopupTitle;
+            result = "";
             break;
         case 3:
             *handle = Material_RegisterHandle("white", 7);
-            result = &toastPopupTitle;
+            result = "";
             break;
         case 5:
             CG_GetMatchScoreboardRankIcon(localClientNum, index, team, handle);
-            result = &toastPopupTitle;
+            result = "";
             break;
         default:
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -1843,16 +1843,16 @@ char *__cdecl UI_FeederItemText_InGamePlayers(
     {
         case 0:
             *handle = Material_RegisterHandle("menu_mp_lobby_bar_name", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 1:
             if ( !(index % 2) || isRowHighlighted )
                 *handle = Material_RegisterHandle("white", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 2:
             *handle = Material_RegisterHandle("white", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 3:
         case 4:
@@ -1862,7 +1862,7 @@ char *__cdecl UI_FeederItemText_InGamePlayers(
             result = CG_GetMatchInGamePlayersInfo(localClientNum, column, index, feederID, handle);
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -1887,7 +1887,7 @@ char *__cdecl UI_FeederItemText_Contracts(
     {
         case 0:
             *handle = sharedUiInfo.assets.whiteMaterial;
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 1:
             result = LiveContracts_GetContractName(contractIndex);
@@ -1895,7 +1895,7 @@ char *__cdecl UI_FeederItemText_Contracts(
         case 2:
             if ( LiveContracts_IsContractLocked(controllerIndex, contractIndex) )
             {
-                result = (char *)&toastPopupTitle;
+                result = (char *)"";
             }
             else
             {
@@ -1907,15 +1907,15 @@ char *__cdecl UI_FeederItemText_Contracts(
         case 3:
             if ( LiveContracts_IsContractLocked(controllerIndex, contractIndex) )
                 *handle = Material_RegisterHandle("menu_mp_lobby_locked", 3);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 4:
             if ( listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window) )
-                BLOPS_NULLSUB();
-            result = (char *)&toastPopupTitle;
+                //BLOPS_NULLSUB();
+            result = (char *)"";
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -1929,7 +1929,7 @@ char *__cdecl UI_FeederItemText_PersonalBests(int contextIndex, int controllerIn
     int PersonalBestDelta; // eax
 
     if ( !LiveStats_GetPersonalBestRating(controllerIndex, index) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !column )
     {
         PersonalBestName = LiveStats_GetPersonalBestName(controllerIndex, index);
@@ -1942,7 +1942,7 @@ char *__cdecl UI_FeederItemText_PersonalBests(int contextIndex, int controllerIn
         return va("%d", PersonalBestValue);
     }
     if ( column != 2 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     PersonalBestDelta = LiveStats_GetPersonalBestDelta(controllerIndex, index);
     return va("%d", PersonalBestDelta);
 }
@@ -1970,13 +1970,13 @@ char *__cdecl UI_FeederItemText_WeaponGroupMilestones(
     statName = 0;
     memset(&convArgs, 0, sizeof(convArgs));
     if ( !LiveStats_GetChallengeInfo(&challenge, index, 4) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
     {
         if ( column > 0 && column <= 2 )
             return UI_ChallengeCompletionStatus(column, challenge->currentValue, challenge->targetValue, useOwnerDraw);
         else
-            return (char *)&toastPopupTitle;
+            return (char *)"";
     }
     else if ( challenge->type == MILESTONE_GROUP
                  && (statName = va("STATS_MILESTONE_STATNAME_%s", challenge->name),
@@ -1996,7 +1996,7 @@ char *__cdecl UI_FeederItemText_WeaponGroupMilestones(
     }
     else
     {
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -2017,7 +2017,7 @@ char *__cdecl UI_FeederItemText_StatsMilestones(
 
     memset((unsigned __int8 *)outputString, 0, 0x100u);
     if ( !LiveStats_GetChallengeInfo(&challenge, index, milestoneType) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     isItemPurchased = (challenge->flags & 1) == 0;
     switch ( column )
     {
@@ -2028,17 +2028,17 @@ char *__cdecl UI_FeederItemText_StatsMilestones(
         case 1:
         case 2:
             if ( !isItemPurchased || (challenge->flags & 4) != 0 )
-                result = (char *)&toastPopupTitle;
+                result = (char *)"";
             else
                 result = UI_ChallengeCompletionStatus(column, challenge->currentValue, challenge->targetValue, useOwnerDraw);
             break;
         case 3:
             if ( !isItemPurchased || (challenge->flags & 4) != 0 )
                 *handle = Material_RegisterHandle("menu_mp_lobby_locked", 3);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -2059,13 +2059,13 @@ char *__cdecl UI_FeederItemText_GlobalChallenges(
 
     memset((unsigned __int8 *)outputString, 0, sizeof(outputString));
     if ( !LiveStats_GetChallengeInfo(&challenge, index, 0) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
     {
         if ( column > 0 && column <= 2 )
             return UI_ChallengeCompletionStatus(column, challenge->currentValue, challenge->targetValue, useOwnerDraw);
         else
-            return (char *)&toastPopupTitle;
+            return (char *)"";
     }
     else
     {
@@ -2093,14 +2093,14 @@ char *__cdecl UI_FeederItemText_ChallengesAttachments(
     statName = 0;
     challenge = 0;
     if ( !LiveStats_GetChallengeInfo(&challenge, index, 5) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !challenge
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2274, 0, "%s", "challenge") )
     {
         __debugbreak();
     }
     if ( !challenge )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     attachmentPurchased = (challenge->flags & 1) == 0;
     switch ( column )
     {
@@ -2127,11 +2127,11 @@ char *__cdecl UI_FeederItemText_ChallengesAttachments(
         case 3:
             if ( !attachmentPurchased )
                 *handle = Material_RegisterHandle("menu_mp_lobby_locked", 3);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         default:
 LABEL_24:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -2171,7 +2171,7 @@ const char *__cdecl UI_FeederItemText_KillstreakNumKills(
     {
         case 0:
             *handle = sharedUiInfo.assets.whiteMaterial;
-            result = &toastPopupTitle;
+            result = "";
             break;
         case 1:
             if ( CustomKillstreakNums[index] == 1 )
@@ -2188,15 +2188,15 @@ const char *__cdecl UI_FeederItemText_KillstreakNumKills(
         case 2:
             if ( isCurrentSelectedKillstreakNum )
                 *handle = Material_RegisterHandle("menu_mp_killstreak_select", 7);
-            result = &toastPopupTitle;
+            result = "";
             break;
         case 6:
             if ( listPtr->cursorPos[contextIndex] == index && !hasKillNumBeenSelected )
-                BLOPS_NULLSUB();
-            result = &toastPopupTitle;
+                //BLOPS_NULLSUB();
+            result = "";
             break;
         default:
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -3322,7 +3322,7 @@ void __cdecl UI_OverrideCursorPos_Maps(int contextIndex, listBoxDef_s *listPtr)
     else
     {
         listPtr->cursorPos[contextIndex] = 0;
-        Dvar_SetStringByName("ui_preview", (char *)&toastPopupTitle);
+        Dvar_SetStringByName("ui_preview", (char *)"");
     }
 }
 
@@ -3355,8 +3355,8 @@ void __cdecl UI_OverrideCursorPos_CustomGametypes(int contextIndex, listBoxDef_s
     else
     {
         listPtr->cursorPos[contextIndex] = 0;
-        Dvar_SetString((dvar_s *)ui_gametype, &toastPopupTitle);
-        Dvar_SetString((dvar_s *)ui_customModeName, &toastPopupTitle);
+        Dvar_SetString((dvar_s *)ui_gametype, "");
+        Dvar_SetString((dvar_s *)ui_customModeName, "");
         Dvar_SetInt((dvar_s *)ui_customModeIndex, -1);
     }
 }

@@ -182,7 +182,7 @@ unsigned int __cdecl G_SpawnStruct(SpawnVar *spawnVar)
     {
         __debugbreak();
     }
-    G_SpawnString(spawnVar, "script_label", &toastPopupTitle, &scriptLabel);
+    G_SpawnString(spawnVar, "script_label", "", &scriptLabel);
     if ( !I_stricmp(scriptLabel, "random") || !I_stricmp(scriptLabel, "looper") || !I_stricmp(scriptLabel, "line_emitter") )
         return 0;
     if ( !g_scr_data.createstruct
@@ -282,8 +282,8 @@ bool __cdecl IsClientOnlyEntity(const SpawnVar *spawnVar)
     unsigned int flags; // [esp+44h] [ebp-8h]
     const char *spawnFlags; // [esp+48h] [ebp-4h] BYREF
 
-    G_SpawnString(spawnVar, "classname", &toastPopupTitle, &classname);
-    G_SpawnString(spawnVar, "spawnflags", &toastPopupTitle, &spawnFlags);
+    G_SpawnString(spawnVar, "classname", "", &classname);
+    G_SpawnString(spawnVar, "spawnflags", "", &spawnFlags);
     flags = atoi(spawnFlags);
     bClientSide = (flags & 2) != 0;
     if ( strcmp("script_model", classname) )
@@ -377,7 +377,7 @@ void __cdecl G_CallSpawn(SpawnVar *spawnVar)
         __debugbreak();
     }
     radiantLiveUpdate = !level.spawnVar.spawnVarsValid;
-    G_SpawnString(spawnVar, "classname", &toastPopupTitle, &classname);
+    G_SpawnString(spawnVar, "classname", "", &classname);
     if ( classname )
     {
         if ( strncmp(classname, "dyn_", 4u) )
@@ -1248,11 +1248,11 @@ void __cdecl SP_worldspawn(SpawnVar *spawnVar)
     float v4; // [esp+10h] [ebp-8h]
     const char *s; // [esp+14h] [ebp-4h] BYREF
 
-    G_SpawnString(spawnVar, "classname", &toastPopupTitle, &s);
+    G_SpawnString(spawnVar, "classname", "", &s);
     if ( I_stricmp(s, "worldspawn") )
         Com_Error(ERR_DROP, &byte_CCB794);
     SV_SetConfigstring(2, "cod");
-    G_SpawnString(spawnVar, "ambienttrack", &toastPopupTitle, &s);
+    G_SpawnString(spawnVar, "ambienttrack", "", &s);
     if ( *s )
     {
         v1 = va("n\\%s", s);
@@ -1260,9 +1260,9 @@ void __cdecl SP_worldspawn(SpawnVar *spawnVar)
     }
     else
     {
-        SV_SetConfigstring(1547, (char *)&toastPopupTitle);
+        SV_SetConfigstring(1547, (char *)"");
     }
-    G_SpawnString(spawnVar, "message", &toastPopupTitle, &s);
+    G_SpawnString(spawnVar, "message", "", &s);
     SV_SetConfigstring(4, (char *)s);
     SV_SetConfigstring(11, (char *)g_motd->current.integer);
     G_SpawnString(spawnVar, "gravity", "800", &s);
@@ -1273,7 +1273,7 @@ void __cdecl SP_worldspawn(SpawnVar *spawnVar)
     }
     value = atof(s);
     Dvar_SetFloat((dvar_s *)bg_gravity, value);
-    G_SpawnString(spawnVar, "northyaw", &toastPopupTitle, &s);
+    G_SpawnString(spawnVar, "northyaw", "", &s);
     if ( *s )
     {
         SV_SetConfigstring(1548, (char *)s);
@@ -1334,7 +1334,7 @@ void __cdecl G_LoadStructs()
     Scr_FreeThread(hThread, SCRIPTINSTANCE_SERVER);
     while ( G_ParseSpawnVars(&level.spawnVar) )
     {
-        G_SpawnString(&level.spawnVar, "classname", &toastPopupTitle, &classname);
+        G_SpawnString(&level.spawnVar, "classname", "", &classname);
         if ( !strcmp("script_struct", classname) )
             G_SpawnStruct(&level.spawnVar);
     }

@@ -21,7 +21,7 @@ void __cdecl create_broad_phase_info(rigid_body *body)
                      "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp",
                      429,
                      "userData->m_gjk_geom_list.get_geom_count() == 1",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -31,13 +31,13 @@ void __cdecl create_broad_phase_info(rigid_body *body)
                      "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                      1035,
                      "m_geom_count >= 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
         gjk_geom = *p_m_first_geom;
         if ( !*p_m_first_geom
-            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 431, "gjk_geom", &toastPopupTitle) )
+            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 431, "gjk_geom", "") )
         {
             __debugbreak();
         }
@@ -69,12 +69,12 @@ void __cdecl create_broad_phase_info(rigid_body *body)
                      "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                      1035,
                      "m_geom_count >= 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
         geom = *v4;
-        if ( !*v4 && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 417, "geom", &toastPopupTitle) )
+        if ( !*v4 && _tlAssert("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp", 417, "geom", "") )
             __debugbreak();
         while ( geom )
         {
@@ -115,7 +115,7 @@ void __cdecl destroy_broad_phase_info(rigid_body *body)
                              "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_main.cpp",
                              458,
                              "userData->m_bpb->is_bpg()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -270,7 +270,7 @@ void __cdecl setup_gjk_input_from_pcp(phys_gjk_input *pgi, phys_collision_pair *
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_collision.h",
                      11,
                      "pcp->m_hit_time >= 0.0f && pcp->m_hit_time <= 1.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -348,7 +348,7 @@ void __userpurge phys_wheel_collide_info::collision_process(
     {
         if ( this->m_hit_t < (double)v14 )
         {
-            if ( _tlAssert("source/phys_broad_phase.cpp", 41, "hit_t <= m_hit_t", &toastPopupTitle) )
+            if ( _tlAssert("source/phys_broad_phase.cpp", 41, "hit_t <= m_hit_t", "") )
                 __debugbreak();
         }
         this->m_hit_t = v14;
@@ -494,7 +494,7 @@ void __thiscall axis_aligned_sweep_and_prune::remove(
     if ( v5 != 2 )
     {
 LABEL_12:
-        if ( _tlAssert("source/phys_broad_phase.cpp", 515, "count == 2", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_broad_phase.cpp", 515, "count == 2", "") )
             __debugbreak();
     }
 }
@@ -599,7 +599,7 @@ void    calc_largest_vel_sq(int a1@<ebp>, broad_phase_info *bpi)
 
     v29 = a1;
     lvs = retaddr;
-    if ( (bpi->m_flags & 4) != 0 && _tlAssert("source/phys_broad_phase.cpp", 692, "!bpi->is_bpi_env()", &toastPopupTitle) )
+    if ( (bpi->m_flags & 4) != 0 && _tlAssert("source/phys_broad_phase.cpp", 692, "!bpi->is_bpi_env()", "") )
         __debugbreak();
     m_rb = bpi->m_rb;
     if ( (m_rb->m_flags & 0x30) != 0
@@ -607,7 +607,7 @@ void    calc_largest_vel_sq(int a1@<ebp>, broad_phase_info *bpi)
                  "source/phys_broad_phase.cpp",
                  694,
                  "!rb->get_flag(rigid_body::FLAG_ENVIRONMENT_RIGID_BODY|rigid_body::FLAG_USER_RIGID_BODY)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -974,7 +974,7 @@ void    broad_phase_process_object_environment_collision(int a1@<ebp>, bpi_envir
     ExceptionList = NtCurrentTeb()->NtTib.ExceptionList;
     v97 = &v102;
     v2 = eci;
-    if ( eci->m_bpb_count <= 0 && _tlAssert("source/phys_broad_phase.cpp", 1005, "eci.m_bpb_count > 0", &toastPopupTitle) )
+    if ( eci->m_bpb_count <= 0 && _tlAssert("source/phys_broad_phase.cpp", 1005, "eci.m_bpb_count > 0", "") )
         __debugbreak();
     aabb2_min.w = 0.0;
     v79 = 0;
@@ -1006,7 +1006,7 @@ void    broad_phase_process_object_environment_collision(int a1@<ebp>, bpi_envir
                              "source/phys_broad_phase.cpp",
                              1020,
                              "bpb_ptr_cur - bpb_ptr_list < eci.m_bpb_count",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1022,7 +1022,7 @@ void    broad_phase_process_object_environment_collision(int a1@<ebp>, bpi_envir
         v5 = v88;
     }
     if ( (LODWORD(v3) - LODWORD(v5)) >> 2 != eci->m_bpb_count
-        && _tlAssert("source/phys_broad_phase.cpp", 1027, "bpb_ptr_cur - bpb_ptr_list == eci.m_bpb_count", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 1027, "bpb_ptr_cur - bpb_ptr_list == eci.m_bpb_count", "") )
     {
         __debugbreak();
     }
@@ -1083,7 +1083,7 @@ LABEL_73:
             }
         }
         if ( v12->m_list_bpb_cluster_next
-            && _tlAssert("source/phys_broad_phase.cpp", 1093, "bpb_i->get_bpb_cluster_next() == NULL", &toastPopupTitle) )
+            && _tlAssert("source/phys_broad_phase.cpp", 1093, "bpb_i->get_bpb_cluster_next() == NULL", "") )
         {
             __debugbreak();
         }
@@ -1130,7 +1130,7 @@ LABEL_73:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1144,7 +1144,7 @@ LABEL_73:
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                          32,
                          "i >= 0 && i < 3",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1154,7 +1154,7 @@ LABEL_73:
             if ( (m_list_bpb_next->m_flags & 0x10) == 0 )
             {
                 if ( m_list_bpb_next->m_list_bpb_cluster_next
-                    && _tlAssert("source/phys_broad_phase.cpp", 1108, "bpb_j->get_bpb_cluster_next() == NULL", &toastPopupTitle) )
+                    && _tlAssert("source/phys_broad_phase.cpp", 1108, "bpb_j->get_bpb_cluster_next() == NULL", "") )
                 {
                     __debugbreak();
                 }
@@ -1354,7 +1354,7 @@ LABEL_75:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                      69,
                      "m_first_block == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1395,12 +1395,12 @@ void __thiscall axis_aligned_sweep_and_prune::swap(
     v3 = *a1_ptr;
     v4 = *a2_ptr;
     if ( (*a1_ptr)->m_node == (*a2_ptr)->m_node
-        && _tlAssert("source/phys_broad_phase.cpp", 570, "a1->m_node != a2->m_node", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 570, "a1->m_node != a2->m_node", "") )
     {
         __debugbreak();
     }
     if ( v3->m_ae_list_index + 1 != v4->m_ae_list_index
-        && _tlAssert("source/phys_broad_phase.cpp", 571, "a1->m_ae_list_index + 1 == a2->m_ae_list_index", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 571, "a1->m_ae_list_index + 1 == a2->m_ae_list_index", "") )
     {
         __debugbreak();
     }
@@ -1506,7 +1506,7 @@ void    do_initial_tunnel_test(
                  "source/phys_broad_phase.cpp",
                  753,
                  "bpg->get_flag(broad_phase_group::FLAG_DO_INITIAL_TUNNEL_TEST)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1641,11 +1641,11 @@ void __cdecl destroy_broad_phase_info_list(broad_phase_info *list_bpi)
                          "source/phys_broad_phase.cpp",
                          130,
                          "!bpi->get_flag(broad_phase_base::FLAG_ON_ENV_LIST)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
-            if ( v1->m_sap_node && _tlAssert("source/phys_broad_phase.cpp", 131, "bpi->m_sap_node == NULL", &toastPopupTitle) )
+            if ( v1->m_sap_node && _tlAssert("source/phys_broad_phase.cpp", 131, "bpi->m_sap_node == NULL", "") )
                 __debugbreak();
             m_list_bpb_next = (broad_phase_info *)v1->m_list_bpb_next;
             p_m_gjk_geom = (char *)&v1[-1].m_gjk_geom;
@@ -1653,7 +1653,7 @@ void __cdecl destroy_broad_phase_info_list(broad_phase_info *list_bpi)
             PMM_VALIDATE(p_m_gjk_geom, 0x90u, 0x10u);
             if ( !p_m_gjk_geom )
             {
-                if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                     __debugbreak();
             }
             --p_g_list_broad_phase_info->m_list_count;
@@ -1738,7 +1738,7 @@ void __cdecl destroy_broad_phase_collision_pair_list(broad_phase_collision_pair 
             PMM_VALIDATE((char *)&v1[-1].m_bpi2, 0x18u, 4u);
             if ( !p_m_bpi2 )
             {
-                if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                     __debugbreak();
             }
             --p_g_list_broad_phase_collision_pair->m_list_count;
@@ -1821,17 +1821,17 @@ char    bpi_do_gjk_intersect@<al>(
     pcp.m_gjk_ci = a1;
     id1 = retaddr;
     if ( (*(float *)&hit_time < 0.0 || *(float *)&hit_time > 1.0)
-        && _tlAssert("source/phys_broad_phase.cpp", 81, "hit_time >= 0.0f && hit_time <= 1.0f", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 81, "hit_time >= 0.0f && hit_time <= 1.0f", "") )
     {
         __debugbreak();
     }
     v4 = *(float *)&p2->m_gjk_geom_id;
     pcp.m_bpi2 = (broad_phase_info *)p1->m_gjk_geom_id;
     pcp.m_hit_time = v4;
-    if ( p1 == p2 && _tlAssert("source/phys_broad_phase.cpp", 86, "p1 && p2 && p1 != p2", &toastPopupTitle) )
+    if ( p1 == p2 && _tlAssert("source/phys_broad_phase.cpp", 86, "p1 && p2 && p1 != p2", "") )
         __debugbreak();
     if ( pcp.m_bpi2 == (broad_phase_info *)LODWORD(pcp.m_hit_time)
-        && _tlAssert("source/phys_broad_phase.cpp", 87, "id1 != id2", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 87, "id1 != id2", "") )
     {
         __debugbreak();
     }
@@ -1978,7 +1978,7 @@ void    collide_bpg_environment(
                     if ( bpg->m_cg_to_world_xform )
                     {
                         if ( !bpg->m_cg_to_rb_xform
-                            && _tlAssert("source/phys_broad_phase.cpp", 835, "bpg->m_list_wci", &toastPopupTitle) )
+                            && _tlAssert("source/phys_broad_phase.cpp", 835, "bpg->m_list_wci", "") )
                         {
                             __debugbreak();
                         }
@@ -2132,7 +2132,7 @@ void    broad_phase_process(float a1@<ebp>)
     }
     tlScratchpadLocked = 1;
     if ( G_BPM->g_collision_memory_buffer.m_cur
-        && _tlAssert("source/phys_broad_phase.cpp", 1220, "G_BPM->g_collision_memory_buffer.is_empty()", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 1220, "G_BPM->g_collision_memory_buffer.is_empty()", "") )
     {
         __debugbreak();
     }
@@ -2241,7 +2241,7 @@ void __thiscall phys_free_list<broad_phase_info>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2251,7 +2251,7 @@ void __thiscall phys_free_list<broad_phase_info>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2275,7 +2275,7 @@ void __thiscall phys_free_list<broad_phase_group>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2285,7 +2285,7 @@ void __thiscall phys_free_list<broad_phase_group>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2309,7 +2309,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2319,7 +2319,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2476,7 +2476,7 @@ void    broad_phase_group::collision_prolog(broad_phase_group *this@<ecx>, int a
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
                  184,
                  "m_list_bpi_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2600,7 +2600,7 @@ void    broad_phase_group::collision_prolog(broad_phase_group *this@<ecx>, int a
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                      118,
                      "i >= 0 && i < m_alloc_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2620,7 +2620,7 @@ void    broad_phase_group::collision_prolog(broad_phase_group *this@<ecx>, int a
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                              118,
                              "i >= 0 && i < m_alloc_count",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -2767,7 +2767,7 @@ void __thiscall broad_phase_group::collision_epilog(broad_phase_group *this)
     v2 = 0;
     if ( this->m_rbvm )
     {
-        if ( !this->m_list_wci && _tlAssert("source/phys_broad_phase.cpp", 69, "m_list_wci", &toastPopupTitle) )
+        if ( !this->m_list_wci && _tlAssert("source/phys_broad_phase.cpp", 69, "m_list_wci", "") )
             __debugbreak();
         wheel_count = v1->m_rbvm->m_wheels.m_alloc_count;
         if ( wheel_count > 0 )
@@ -2783,7 +2783,7 @@ void __thiscall broad_phase_group::collision_epilog(broad_phase_group *this)
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                                  118,
                                  "i >= 0 && i < m_alloc_count",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -2812,7 +2812,7 @@ void    axis_aligned_sweep_and_prune::sap_node::update_ae_val(
 
     aabb[1].y = a2;
     aabb[1].z = retaddr;
-    if ( this->m_updated && _tlAssert("source/phys_broad_phase.cpp", 225, "m_updated == 0", &toastPopupTitle) )
+    if ( this->m_updated && _tlAssert("source/phys_broad_phase.cpp", 225, "m_updated == 0", "") )
         __debugbreak();
     m_bpb = this->m_bpb;
     this->m_updated = 1;
@@ -2828,12 +2828,12 @@ void    axis_aligned_sweep_and_prune::sap_node::update_ae_val(
 void __thiscall axis_aligned_sweep_and_prune::init_system(axis_aligned_sweep_and_prune *this, int max_num_active_pairs)
 {
     if ( this->m_active_pair_allocator.m_count
-        && _tlAssert("source/phys_broad_phase.cpp", 347, "m_active_pair_allocator.get_count() == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 347, "m_active_pair_allocator.get_count() == 0", "") )
     {
         __debugbreak();
     }
     if ( this->m_sap_node_allocator.m_count
-        && _tlAssert("source/phys_broad_phase.cpp", 348, "m_sap_node_allocator.get_count() == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 348, "m_sap_node_allocator.get_count() == 0", "") )
     {
         __debugbreak();
     }
@@ -2872,7 +2872,7 @@ void    process_cluster_environment_collision_prolog(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                      100,
                      "is_bpg()",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2906,7 +2906,7 @@ bool __cdecl compare_bpb(broad_phase_base *bpb1, broad_phase_base *bpb2)
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2919,7 +2919,7 @@ bool __cdecl compare_bpb(broad_phase_base *bpb1, broad_phase_base *bpb2)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  32,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2940,7 +2940,7 @@ void __thiscall phys_link_list<phys_collision_pair>::add_mt(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  239,
                  "m_last_next_ptr",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2983,7 +2983,7 @@ void __thiscall phys_free_list<broad_phase_info>::remove(
     phys_free_list<broad_phase_info>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -3027,7 +3027,7 @@ void __thiscall phys_free_list<broad_phase_group>::remove(
     phys_free_list<broad_phase_group>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -3071,7 +3071,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::remove(
     phys_free_list<broad_phase_collision_pair>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -3120,7 +3120,7 @@ void __cdecl add_collision_pair(
     phys_collision_pair **m_last_next_ptr; // eax
 
     if ( (hit_time < 0.0 || hit_time > 1.0)
-        && _tlAssert("source/phys_broad_phase.cpp", 11, "hit_time >= 0.0f && hit_time <= 1.0f", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 11, "hit_time >= 0.0f && hit_time <= 1.0f", "") )
     {
         __debugbreak();
     }
@@ -3149,7 +3149,7 @@ void __cdecl add_collision_pair(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  230,
                  "m_last_next_ptr",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3169,7 +3169,7 @@ void __cdecl add_collision_pair_mutex(
     phys_collision_pair *v4; // eax
 
     if ( (hit_time < 0.0 || hit_time > 1.0)
-        && _tlAssert("source/phys_broad_phase.cpp", 23, "hit_time >= 0.0f && hit_time <= 1.0f", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 23, "hit_time >= 0.0f && hit_time <= 1.0f", "") )
     {
         __debugbreak();
     }
@@ -3287,7 +3287,7 @@ void __thiscall axis_aligned_sweep_and_prune::create_sap_node(
     char *v3; // eax
     axis_aligned_sweep_and_prune::sap_node *v4; // edi
 
-    if ( bpb->m_sap_node && _tlAssert("source/phys_broad_phase.cpp", 496, "bpb->m_sap_node == NULL", &toastPopupTitle) )
+    if ( bpb->m_sap_node && _tlAssert("source/phys_broad_phase.cpp", 496, "bpb->m_sap_node == NULL", "") )
         __debugbreak();
     v3 = PMM_ALLOC(0x80u, 4u);
     if ( v3 )
@@ -3405,7 +3405,7 @@ void __thiscall phys_free_list<broad_phase_info>::remove_all(phys_free_list<broa
         m_next_T_internal = (phys_free_list<broad_phase_info>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3430,7 +3430,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::remove_all(
         m_next_T_internal = (phys_free_list<broad_phase_collision_pair>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3465,7 +3465,7 @@ void __thiscall phys_free_list<broad_phase_info>::~phys_free_list<broad_phase_in
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3474,7 +3474,7 @@ void __thiscall phys_free_list<broad_phase_info>::~phys_free_list<broad_phase_in
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3483,7 +3483,7 @@ void __thiscall phys_free_list<broad_phase_info>::~phys_free_list<broad_phase_in
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3500,7 +3500,7 @@ void __thiscall phys_free_list<broad_phase_group>::~phys_free_list<broad_phase_g
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3509,7 +3509,7 @@ void __thiscall phys_free_list<broad_phase_group>::~phys_free_list<broad_phase_g
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3518,7 +3518,7 @@ void __thiscall phys_free_list<broad_phase_group>::~phys_free_list<broad_phase_g
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3535,7 +3535,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::~phys_free_list<broa
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3544,7 +3544,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::~phys_free_list<broa
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3553,7 +3553,7 @@ void __thiscall phys_free_list<broad_phase_collision_pair>::~phys_free_list<broa
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3588,7 +3588,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
                      347,
                      "id1 != id2",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3609,7 +3609,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
                  24,
                  "id1 < id2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3662,7 +3662,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
                  372,
                  "m_search_tree.find(key) == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3845,7 +3845,7 @@ void    axis_aligned_sweep_and_prune::process_active_pair_list(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              99,
                              "is_bpi()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -3858,7 +3858,7 @@ void    axis_aligned_sweep_and_prune::process_active_pair_list(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              99,
                              "is_bpi()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -3940,7 +3940,7 @@ void    axis_aligned_sweep_and_prune::process_active_pair_list(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              99,
                              "is_bpi()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -3951,7 +3951,7 @@ void    axis_aligned_sweep_and_prune::process_active_pair_list(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              100,
                              "is_bpg()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -4032,7 +4032,7 @@ void    axis_aligned_sweep_and_prune::process_active_pair_list(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              100,
                              "is_bpg()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -4045,7 +4045,7 @@ void    axis_aligned_sweep_and_prune::process_active_pair_list(
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              100,
                              "is_bpg()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -4178,17 +4178,17 @@ void __thiscall axis_aligned_sweep_and_prune::process(axis_aligned_sweep_and_pru
             do
             {
                 if ( m_x_list->m_node->m_updated != 1
-                    && _tlAssert("source/phys_broad_phase.cpp", 451, "xcur->m_node->m_updated == 1", &toastPopupTitle) )
+                    && _tlAssert("source/phys_broad_phase.cpp", 451, "xcur->m_node->m_updated == 1", "") )
                 {
                     __debugbreak();
                 }
                 if ( ycur->m_node->m_updated != 1
-                    && _tlAssert("source/phys_broad_phase.cpp", 452, "ycur->m_node->m_updated == 1", &toastPopupTitle) )
+                    && _tlAssert("source/phys_broad_phase.cpp", 452, "ycur->m_node->m_updated == 1", "") )
                 {
                     __debugbreak();
                 }
                 if ( zcur->m_node->m_updated != 1
-                    && _tlAssert("source/phys_broad_phase.cpp", 453, "zcur->m_node->m_updated == 1", &toastPopupTitle) )
+                    && _tlAssert("source/phys_broad_phase.cpp", 453, "zcur->m_node->m_updated == 1", "") )
                 {
                     __debugbreak();
                 }
@@ -4216,7 +4216,7 @@ void __thiscall axis_aligned_sweep_and_prune::process(axis_aligned_sweep_and_pru
             while ( v10 + 1 != xl_i_last );
         }
         if ( (m_x_list || ycur || zcur)
-            && _tlAssert("source/phys_broad_phase.cpp", 459, "xcur == NULL && ycur == NULL && zcur == NULL", &toastPopupTitle) )
+            && _tlAssert("source/phys_broad_phase.cpp", 459, "xcur == NULL && ycur == NULL && zcur == NULL", "") )
         {
             __debugbreak();
         }
@@ -4255,7 +4255,7 @@ void __thiscall axis_aligned_sweep_and_prune::process(axis_aligned_sweep_and_pru
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                      69,
                      "m_first_block == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -4270,7 +4270,7 @@ void __cdecl process_cluster_environment_collision(broad_phase_base *bpb, broad_
     int savedregs; // [esp+4h] [ebp+0h] BYREF
 
     if ( (!bpb || !bpb->m_list_bpb_cluster_next)
-        && _tlAssert("source/phys_broad_phase.cpp", 888, "bpb && bpb->get_bpb_cluster_next()", &toastPopupTitle) )
+        && _tlAssert("source/phys_broad_phase.cpp", 888, "bpb && bpb->get_bpb_cluster_next()", "") )
     {
         __debugbreak();
     }
@@ -4281,7 +4281,7 @@ void __cdecl process_cluster_environment_collision(broad_phase_base *bpb, broad_
                      "source/phys_broad_phase.cpp",
                      891,
                      "bpb->get_flag(broad_phase_base::FLAG_IS_IN_CLUSTER)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -4298,7 +4298,7 @@ void __cdecl process_cluster_environment_collision(broad_phase_base *bpb, broad_
                              "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                              100,
                              "is_bpg()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -4318,7 +4318,7 @@ void __thiscall broad_phase_memory::~broad_phase_memory(broad_phase_memory *this
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                  69,
                  "m_first_block == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

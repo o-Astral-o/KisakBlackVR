@@ -797,7 +797,7 @@ void __thiscall GlassRenderer::GenerateVerts(
         v14 = v10;
     }
     if ( !threadId )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     this->rendererLock.lock = 0;
     GlassRenderer::StartMaintenance(this);
     if ( g_DXDeviceThread == GetCurrentThreadId() )

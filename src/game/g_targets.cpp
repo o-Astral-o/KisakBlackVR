@@ -247,7 +247,7 @@ char __cdecl Targ_Remove(gentity_s *ent)
     {
         __debugbreak();
     }
-    SV_SetConfigstring(targetIndex + 387, (char *)&toastPopupTitle);
+    SV_SetConfigstring(targetIndex + 387, (char *)"");
     return 1;
 }
 
@@ -271,7 +271,7 @@ void __cdecl Targ_RemoveAll()
             {
                 __debugbreak();
             }
-            SV_SetConfigstring(targetIndex + 387, (char *)&toastPopupTitle);
+            SV_SetConfigstring(targetIndex + 387, (char *)"");
         }
     }
 }

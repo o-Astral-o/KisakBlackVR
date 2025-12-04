@@ -82,12 +82,12 @@ const dvar_s *SpawnSystem_RegisterDvars()
                                                                                  "Render spawn influencer information");
     spawnsystem_debug_player = _Dvar_RegisterString(
                                                              "spawnsystem_debug_player",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              0x80u,
                                                              "Name of player to show debug info for");
     spawnsystem_debug_team = _Dvar_RegisterString(
                                                          "spawnsystem_debug_team",
-                                                         (char *)&toastPopupTitle,
+                                                         (char *)"",
                                                          0x80u,
                                                          "Team to show debug info for");
     spawnsystem_debug_sideswitched = _Dvar_RegisterBool(
@@ -2048,11 +2048,11 @@ void SpawnSystem_DebugRender()
                     if ( influencerList[j].preset->shape )
                     {
                         if ( influencerList[j].preset->shape == INFLUENCER_SHAPE_CYLINDER )
-                            BLOPS_NULLSUB();
+                            //BLOPS_NULLSUB();
                     }
                     else
                     {
-                        BLOPS_NULLSUB();
+                        //BLOPS_NULLSUB();
                     }
                 }
             }
@@ -2064,14 +2064,14 @@ void SpawnSystem_DebugRender()
         if ( spawnsystem_debug_best_points->current.enabled )
         {
             if ( (point_team & 1) != 0 )
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             if ( (point_team & 2) != 0 )
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             if ( (point_team & 4) != 0 )
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
         }
         if ( spawnsystem_debug_showclients->current.enabled )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
     }
 }
 

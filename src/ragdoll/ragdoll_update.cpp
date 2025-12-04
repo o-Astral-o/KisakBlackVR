@@ -282,7 +282,7 @@ void __cdecl Ragdoll_ExplosionEvent(
                              "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                              978,
                              "Ragdoll_BodyInUse( body )",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -304,7 +304,7 @@ void __cdecl Ragdoll_ExplosionEvent(
                          "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                          994,
                          "Ragdoll_BodyInUse( body )",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -997,7 +997,7 @@ char __cdecl Ragdoll_CreatePhysObjs(RagdollBody *body)
                          "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                          667,
                          "userData0->m_bpb && userData0->m_bpb->is_bpi()",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1007,7 +1007,7 @@ char __cdecl Ragdoll_CreatePhysObjs(RagdollBody *body)
                              "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                              668,
                              "userData1->m_bpb && userData1->m_bpb->is_bpi()",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1035,7 +1035,7 @@ char __cdecl Ragdoll_CreatePhysObjs(RagdollBody *body)
                          "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                          685,
                          "userData->m_bpb && userData->m_bpb->is_bpi()",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1574,7 +1574,7 @@ char    Ragdoll_TunnelTest@<al>(cStaticModel_s *a1@<ebp>, RagdollBody *body)
             {
                 phys_exec_debug_callback(*(void **)LODWORD(last_position.w));
             }
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         }
         ++LODWORD(orientation[3]);
         boneOrientations = (BoneOrientation *)((char *)boneOrientations + 28);
@@ -2300,7 +2300,7 @@ void __cdecl Ragdoll_Update(int msec)
                              "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                              2214,
                              "Ragdoll_BodyInUse( body )",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -2323,7 +2323,7 @@ void __cdecl Ragdoll_RemoveConstraintsForRope(phys_free_list<RagdollBody>::T_int
                      "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                      2226,
                      "Ragdoll_BodyInUse( body )",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2365,7 +2365,7 @@ int __cdecl Ragdoll_GetRBForBone(phys_free_list<RagdollBody>::T_internal_base *e
                          "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
                          2244,
                          "Ragdoll_BodyInUse( body )",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }

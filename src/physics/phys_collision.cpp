@@ -141,7 +141,7 @@ double __cdecl phys_contact_manifold::get_STD_COMP_FEATURE_NORMAL_DISTANCE_EPS(f
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      270,
                      "penetration_t >= 0.0f && penetration_t <= 1.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -157,7 +157,7 @@ double __cdecl phys_contact_manifold::get_STD_COMP_FEATURE_NORMAL_SIN_ANGULAR_EP
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      278,
                      "penetration_t >= 0.0f && penetration_t <= 1.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -173,7 +173,7 @@ double __cdecl phys_contact_manifold::get_STD_GET_FEATURE_DISTANCE_EPS(float pen
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      288,
                      "penetration_t >= 0.0f && penetration_t <= 1.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -189,7 +189,7 @@ double __cdecl phys_contact_manifold::get_STD_GET_FEATURE_SIN_ANGULAR_EPS_SQ(flo
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                      296,
                      "penetration_t >= 0.0f && penetration_t <= 1.0f",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -252,7 +252,7 @@ void __thiscall phys_contact_manifold_process::comp_contact_mat(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_contact_manifold.h",
                  397,
                  "nyrow > 0.1f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -315,7 +315,7 @@ contact_point_info *__cdecl contact_point_info::create_cpi(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  159,
                  "point_pair_count > 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -820,11 +820,11 @@ LABEL_17:
         goto LABEL_69;
     }
     if ( m_contact_point_count <= 0
-        && _tlAssert("source/phys_collision.cpp", 83, "m_contact_point_count > 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_collision.cpp", 83, "m_contact_point_count > 0", "") )
     {
         __debugbreak();
     }
-    if ( !v6->m_list_isect_point && _tlAssert("source/phys_collision.cpp", 84, "m_list_isect_point", &toastPopupTitle) )
+    if ( !v6->m_list_isect_point && _tlAssert("source/phys_collision.cpp", 84, "m_list_isect_point", "") )
         __debugbreak();
     v44 = rb1;
     v45 = d1;
@@ -837,7 +837,7 @@ LABEL_17:
     *(float *)&smallest_area_mp_i = fabs(feature_distance_eps);
     if ( *(float *)&smallest_area_mp_i <= 0.0000001000000011686097 )
     {
-        if ( _tlAssert("source/phys_collision.cpp", 88, "fabsf(d1) > 0.0000001f", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_collision.cpp", 88, "fabsf(d1) > 0.0000001f", "") )
             __debugbreak();
         v45 = d1;
         v44 = rb1;
@@ -845,7 +845,7 @@ LABEL_17:
     *(float *)&smallest_area_mp_i = fabs(*(float *)&cur_mp_i);
     if ( *(float *)&smallest_area_mp_i <= 0.0000001000000011686097 )
     {
-        if ( _tlAssert("source/phys_collision.cpp", 89, "fabsf(d2) > 0.0000001f", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_collision.cpp", 89, "fabsf(d2) > 0.0000001f", "") )
             __debugbreak();
         v45 = d1;
         v44 = rb1;
@@ -915,7 +915,7 @@ LABEL_17:
         if ( !v144 )
         {
 LABEL_89:
-            if ( _tlAssert("source/phys_collision.cpp", 115, "closest_mp", &toastPopupTitle) )
+            if ( _tlAssert("source/phys_collision.cpp", 115, "closest_mp", "") )
                 __debugbreak();
             v48 = v137;
         }
@@ -1076,7 +1076,7 @@ LABEL_89:
             }
         }
 LABEL_69:
-        if ( !v6->m_cpi && _tlAssert("source/phys_collision.cpp", 155, "m_cpi", &toastPopupTitle) )
+        if ( !v6->m_cpi && _tlAssert("source/phys_collision.cpp", 155, "m_cpi", "") )
             __debugbreak();
         v120 = -p_m_n->x;
         sin_feautre_angular_eps_sq = COERCE_FLOAT(&v120);
@@ -1124,7 +1124,7 @@ LABEL_69:
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      230,
                      "m_last_next_ptr",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }

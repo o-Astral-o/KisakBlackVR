@@ -62,7 +62,7 @@ void __cdecl CG_DrawInformation(int localClientNum)
                 dots = "...";
                 break;
             default:
-                dots = &toastPopupTitle;
+                dots = "";
                 break;
         }
         s = UI_SafeTranslateString("CGAME_WAITINGFORSERVERLOAD");

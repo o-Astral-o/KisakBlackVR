@@ -59,5 +59,5 @@ int __cdecl G_GetWeaponIndexForName(char *name);
 void __cdecl G_SelectWeaponIndex(int clientNum, int iWeaponIndex);
 void __cdecl G_SetEquippedOffHand(int clientNum, unsigned int offHandIndex);
 unsigned int __cdecl G_PlayerTurretWeaponIdx(const playerState_s *ps);
-unsigned int __cdecl G_GetPlayerWeapon(const playerState_s *ps);
+int __cdecl G_GetPlayerWeapon(const playerState_s *ps, int localClientNum);
 int __cdecl G_GetPlayerVehicleWeapon(const playerState_s *ps);

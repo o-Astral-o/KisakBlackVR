@@ -18,7 +18,7 @@ LRESULT __stdcall InputLineWndProc(HWND__ *hWnd, UINT uMsg, HWND__ *wParam, LPAR
         GetWindowTextA(s_wcd.hwndInputLine, inputBuffer, 1024);
         strncat(s_wcd.consoleText, inputBuffer, 512 - strlen(s_wcd.consoleText) - 5);
         strcat(s_wcd.consoleText, "\n");
-        SetWindowTextA(s_wcd.hwndInputLine, &toastPopupTitle);
+        SetWindowTextA(s_wcd.hwndInputLine, "");
         Com_sprintf(displayBuffer, 0x400u, "]%s\n", inputBuffer);
         Sys_Print(displayBuffer);
         return 0;

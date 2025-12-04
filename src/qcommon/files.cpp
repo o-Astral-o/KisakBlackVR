@@ -222,8 +222,8 @@ void __cdecl FS_Dir_f()
         if ( Cmd_Argc() == 2 )
         {
             path = Cmd_Argv(1);
-            extension = (char *)&toastPopupTitle;
-            Com_Printf(0, "Directory of %s %s\n", path, &toastPopupTitle);
+            extension = (char *)"";
+            Com_Printf(0, "Directory of %s %s\n", path, "");
         }
         else
         {
@@ -256,8 +256,8 @@ void __cdecl FS_NewDir_f()
         Com_Printf(0, "---------------\n");
         dirnames = FS_ListFilteredFiles(
                                  fs_searchpaths,
-                                 &toastPopupTitle,
-                                 (char *)&toastPopupTitle,
+                                 "",
+                                 (char *)"",
                                  (char *)filter,
                                  FS_LIST_PURE_ONLY,
                                  &ndirs);
@@ -491,7 +491,7 @@ int __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
                     I_strncat(needediwds, len, fs_serverReferencedIwdNames[i]);
                     I_strncat(needediwds, len, ".iwd");
                     v6 = va("%s.iwd", fs_serverReferencedIwdNames[i]);
-                    if ( FS_SV_FileExists(v6, (char *)&toastPopupTitle) )
+                    if ( FS_SV_FileExists(v6, (char *)"") )
                         I_strncat(needediwds, len, " (local file exists with wrong checksum)");
                     I_strncat(needediwds, len, "\n");
                 }

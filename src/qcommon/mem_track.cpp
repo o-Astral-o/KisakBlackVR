@@ -189,7 +189,7 @@ TempMemInfo *__cdecl GetTempMemInfo(
     size = tempMemInfo->data.size;
     tempMemInfo->data.size[0] = 0;
     size[1] = 0;
-    tempMemInfo->data.filename = &toastPopupTitle;
+    tempMemInfo->data.filename = "";
     tempMemInfo->data.count = 0;
     tempMemInfo->high = 0;
     tempMemInfo->low = 0;
@@ -244,7 +244,7 @@ void __cdecl track_z_alloc(int size, const char *name, int type, char *pos, int 
         *v7++ = *v8++;
     }
     while ( v6 );
-    node->data.filename = &toastPopupTitle;
+    node->data.filename = "";
     node->data.size[0] = size;
     node->data.size[1] = 0;
     node->data.type = type;
@@ -537,7 +537,7 @@ void __cdecl track_userhunk_alloc(int size, int pos, const char *name, int type)
     while ( v4 );
     mem_track->type = type;
     mem_track->usageType = 8;
-    mem_track->filename = &toastPopupTitle;
+    mem_track->filename = "";
     mem_track->pos = pos;
     track_addbasicinfo(&g_info, type, 0, size);
     ++g_userhunk_track_count;
@@ -579,7 +579,7 @@ void __cdecl track_hunk_alloc(int size, int pos, const char *name, int type)
     while ( v4 );
     mem_track->type = type;
     mem_track->usageType = 3;
-    mem_track->filename = &toastPopupTitle;
+    mem_track->filename = "";
     mem_track->pos = pos;
     track_addbasicinfo(&g_info, type, 0, size);
     ++g_hunk_track_count;
@@ -631,7 +631,7 @@ void __cdecl track_hunk_allocLow(int size, int pos, const char *name, int type)
     while ( v4 );
     mem_track->type = type;
     mem_track->usageType = 3;
-    mem_track->filename = &toastPopupTitle;
+    mem_track->filename = "";
     mem_track->pos = pos;
     track_addbasicinfo(&g_info, type, 0, size);
     ++g_hunklow_track_count;
@@ -726,7 +726,7 @@ void __cdecl track_init()
             strcpy(mem_track->name, "internal");
             mem_track->type = g_staticsMemTrackCount;
             mem_track->usageType = 4;
-            mem_track->filename = &toastPopupTitle;
+            mem_track->filename = "";
         }
         strcpy(g_staticsMemTrack[1].name, "(hunk memory)");
         strcpy(g_staticsMemTrack[23].name, "(agp memory)");
@@ -770,7 +770,7 @@ void __cdecl track_init()
         g_mem_track_filename = "com_math";
         TRACK_com_math();
         g_mem_track_filename = "fx_draw";
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         g_mem_track_filename = "fx_random";
         TRACK_fx_random();
         g_mem_track_filename = "fx_marks";
@@ -810,11 +810,11 @@ void __cdecl track_init()
         g_mem_track_filename = "com_memory";
         TRACK_com_memory();
         g_mem_track_filename = "sv_init";
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         g_mem_track_filename = "zutil";
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         g_mem_track_filename = "memfile";
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         g_mem_track_filename = "cl_main";
         TRACK_cl_main();
         g_mem_track_filename = "cl_console";
@@ -828,7 +828,7 @@ void __cdecl track_init()
         g_mem_track_filename = "win_input";
         TRACK_win_input();
         g_mem_track_filename = "cl_srcn";
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         g_mem_track_filename = "cl_cgame";
         TRACK_cl_cgame();
         g_mem_track_filename = "statmonitor";
@@ -836,7 +836,7 @@ void __cdecl track_init()
         g_mem_track_filename = "snd";
         TRACK_snd();
         g_mem_track_filename = "snd_driver";
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         g_mem_track_filename = "stringed_hooks";
         TRACK_stringed_hooks();
         g_mem_track_filename = "devgui";
@@ -863,7 +863,7 @@ void __cdecl track_init()
         G_track_init();
         UI_track_init();
         R_Track_Init();
-        g_mem_track_filename = &toastPopupTitle;
+        g_mem_track_filename = "";
         Sys_LeaveCriticalSection(CRITSECT_MEMTRACK);
     }
 }
@@ -1215,8 +1215,8 @@ void __cdecl track_PrintAllInfo()
     if ( Sys_IsMainThread() )
     {
         track_PrintInfo();
-        BLOPS_NULLSUB();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
 }
 

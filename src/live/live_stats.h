@@ -1,5 +1,110 @@
 #pragma once
 
+enum pointsSpent_t : __int32
+{                                       // XREF: ?LiveStats_SpendCurrency@@YA_NHHW4pointsSpent_t@@H@Z/r
+                                        // ?MatchRecordPointsSpent@@YAXHHW4pointsSpent_t@@H@Z/r
+    POINTSSPENT_IGNORE             = 0x0,
+    POINTSSPENT_EMBLEM_LAYER       = 0x1,
+    POINTSSPENT_EMBLEM_ICON        = 0x2,
+    POINTSSPENT_CONTRACT           = 0x3,
+    POINTSSPENT_UNLOCKABLE_CLANTAG = 0x4,
+    POINTSSPENT_UNLOCKABLE_ITEM    = 0x5,
+    POINTSSPENT_UNLOCKABLE_SELL    = 0x6,
+    POINTSSPENT_UNLOCKABLE_ATTACHMENT = 0x7,
+    POINTSSPENT_UNLOCKABLE_ATTACHMENT_POINT = 0x8,
+    POINTSSPENT_UNLOCKABLE_ATTACHMENT_OPTION = 0x9,
+    POINTSSPENT_ESCROW             = 0xA,
+    POINTSSPENT_GUEST_SIGNIN       = 0xB,
+};
+
+enum playerStatsKeyIndex_t : __int32
+{                                       // XREF: ?LiveStats_GetIntPlayerStatByKey@@YA_NHPAHW4playerStatsKeyIndex_t@@@Z/r
+                                        // ?LiveStats_GetIntOtherPlayerStatByKey@@YA_NHPAHW4playerStatsKeyIndex_t@@@Z/r ...
+    MP_PLAYERSTATSKEY_RANKXP         = 0x0,
+    MP_PLAYERSTATSKEY_PLEVEL         = 0x1,
+    MP_PLAYERSTATSKEY_SCORE          = 0x2,
+    MP_PLAYERSTATSKEY_TIMEPLAYEDTOTAL = 0x3,
+    MP_PLAYERSTATSKEY_GAMETYPEBAN    = 0x4,
+    MP_PLAYERSTATSKEY_TIMEWHENNEXTHOST = 0x5,
+    MP_PLAYERSTATSKEY_BADHOSTCOUNT   = 0x6,
+    MP_PLAYERSTATSKEY_LEADERBOARDFAILURES = 0x7,
+    MP_PLAYERSTATSKEY_LASTSTATSBACKUP = 0x8,
+    MP_PLAYERSTATSKEY_MAPPACKMASK    = 0x9,
+    MP_PLAYERSTATSKEY_STATSBACKUPVERSION = 0xA,
+    MP_PLAYERSTATSKEY_MP_MAP_SKIPPED = 0xB,
+    MP_PLAYERSTATSKEY_COOP_MAP_SKIPPED = 0xC,
+    MP_PLAYERSTATSKEY_CODPOINTS      = 0xD,
+    MP_PLAYERSTATSKEY_CURRENCYSPENT  = 0xE,
+    MP_PLAYERSTATSKEY_STATS_VERSION  = 0xF,
+    MP_PLAYERSTATSKEY_KILLS          = 0x10,
+    MP_PLAYERSTATSKEY_DEATHS         = 0x11,
+    MP_PLAYERSTATSKEY_DEATHSDURINGUSE = 0x12,
+    MP_PLAYERSTATSKEY_HEADSHOTS      = 0x13,
+    MP_PLAYERSTATSKEY_KDRATIO        = 0x14,
+    MP_PLAYERSTATSKEY_HIGHEST_KDRATIO = 0x15,
+    MP_PLAYERSTATSKEY_ACCURACY       = 0x16,
+    MP_PLAYERSTATSKEY_HIGHEST_ACCURACY = 0x17,
+    MP_PLAYERSTATSKEY_SHOTS          = 0x18,
+    MP_PLAYERSTATSKEY_HITS           = 0x19,
+    MP_PLAYERSTATSKEY_TIMEUSED       = 0x1A,
+    MP_PLAYERSTATSKEY_USED           = 0x1B,
+    MP_PLAYERSTATSKEY_DESTROYED      = 0x1C,
+    MP_PLAYERSTATSKEY_GAMETYPE       = 0x1D,
+    MP_PLAYERSTATSKEY_WINS           = 0x1E,
+    MP_PLAYERSTATSKEY_LOSSES         = 0x1F,
+    MP_PLAYERSTATSKEY_TIES           = 0x20,
+    MP_PLAYERSTATSKEY_LIFETIME_EARNINGS = 0x21,
+    MP_PLAYERSTATSKEY_LIFETIME_BUYIN = 0x22,
+    MP_PLAYERSTATSKEY_CONTRACTS_PURCHASED = 0x23,
+    MP_PLAYERSTATSKEY_CONTRACTS_COMPLETED = 0x24,
+    MP_PLAYERSTATSKEY_LASTESCROW     = 0x25,
+    MP_PLAYERSTATSKEY_WEEKLYTIMESTAMP = 0x26,
+    MP_PLAYERSTATSKEY_MONTHLYTIMESTAMP = 0x27,
+    MP_PLAYERSTATSKEY_COUNT          = 0x28,
+};
+
+enum statsMilestoneTypes_t : __int32
+{                                       // XREF: statsMilestone_t/r
+                                        // challengeInfo_t/r ...
+    MILESTONE_GLOBAL      = 0x0,
+    MILESTONE_WEAPON      = 0x1,
+    MILESTONE_MAP         = 0x2,
+    MILESTONE_GAMEMODE    = 0x3,
+    MILESTONE_GROUP       = 0x4,
+    MILESTONE_ATTACHMENTS = 0x5,
+    MILESTONE_KILLSTREAKS = 0x6,
+    MILESTONE_GRENADES    = 0x7,
+    MILESTONE_COUNT       = 0x8,
+    MILESTONE_INVALID     = 0xFFFFFFFF,
+};
+
+struct statsMilestone_t // sizeof=0xC
+{                                       // XREF: .data:s_statsMilestonesCompleted/r
+    statsMilestoneTypes_t type;         // XREF: LiveStats_PublishNews(int)+1DF/r
+    unsigned __int8 milestone;          // XREF: LiveStats_PublishNews(int)+24C/r
+    unsigned __int8 index;              // XREF: LiveStats_PublishNews(int)+1FC/r
+                                        // LiveStats_PublishNews(int)+21F/r
+    // padding byte
+    // padding byte
+    const char *name;                   // XREF: LiveStats_PublishNews(int)+2AF/r
+};
+
+struct challengeInfo_t // sizeof=0x24
+{                                       // XREF: .data:s_sortedWeaponGroupList/r
+                                        // .data:s_sortedAttachmentsList/r ...
+    unsigned __int8 milestone;
+    unsigned __int8 index;
+    unsigned __int16 flags;
+    statsMilestoneTypes_t type;
+    int numToTargetValue;
+    int xpReward;
+    int cpReward;
+    int targetValue;
+    int currentValue;
+    int prevTarget;
+    const char *name;
+};
+
 int __cdecl LiveStats_GetDDLHeaderVersion(unsigned __int8 *statsBuffer);
 int __cdecl LiveStats_ValidateGlobalWithDDL(int controllerIndex);
 int __cdecl LiveStats_CanPerformStatOperation(int controllerIndex);

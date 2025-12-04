@@ -1299,7 +1299,7 @@ broad_phase_info *__thiscall broad_phase_base::get_bpi(broad_phase_base *this)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                  99,
                  "is_bpi()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1313,7 +1313,7 @@ broad_phase_group *__thiscall broad_phase_base::get_bpg(broad_phase_base *this)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
                  100,
                  "is_bpg()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 ParseThreadInfo g_parse[4];
-const char toastPopupTitle = 0;
+const char GLOBAL_EMPTY_STRING = 0;
 
 static const char *punctuation[17] =
 {
@@ -48,8 +48,8 @@ void __cdecl Com_InitParseInfo(parseInfo_t *pi)
     pi->keepStringQuotes = 0;
     pi->csv = 0;
     pi->negativeNumbers = 0;
-    pi->errorPrefix = &toastPopupTitle;
-    pi->warningPrefix = &toastPopupTitle;
+    pi->errorPrefix = "";
+    pi->warningPrefix = "";
     pi->backup_lines = 0;
     pi->backup_text = 0;
 }

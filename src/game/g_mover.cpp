@@ -902,7 +902,7 @@ void __cdecl trigger_use_shared(gentity_s *self, SpawnVar *spawnVar)
             self->s.lerp.eFlags |= 0x20u;
         self->handler = 22;
         self->s.un3.item = 3;
-        if ( G_SpawnString(spawnVar, "cursorhint", &toastPopupTitle, &cursorhint) )
+        if ( G_SpawnString(spawnVar, "cursorhint", "", &cursorhint) )
         {
             if ( I_stricmp(cursorhint, "HINT_INHERIT") )
             {
@@ -921,7 +921,7 @@ void __cdecl trigger_use_shared(gentity_s *self, SpawnVar *spawnVar)
             }
         }
         self->s.un1.scale = -1;
-        if ( G_SpawnString(spawnVar, "hintstring", &toastPopupTitle, &cursorhint) )
+        if ( G_SpawnString(spawnVar, "hintstring", "", &cursorhint) )
         {
             v4 = cursorhint;
             v3 = cursorHintStr;

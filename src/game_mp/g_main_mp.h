@@ -75,7 +75,7 @@ void __cdecl G_RunFrameForEntity(gentity_s *ent);
 void    G_UpdateWeapons(__m128 a1@<xmm0>, gentity_s *ent);
 int G_PopulateMatchState();
 bool __cdecl G_IsEntWalkable(int localClientNum, int entityNum);
-char __cdecl G_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles);
+bool __cdecl G_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles);
 void __cdecl G_EntityLinkFromPMove(unsigned int entityNum, int parentEntityNum, int tagName);
 void __cdecl G_AddDebugString(const float *xyz, const float *color, float scale, char *pszText, int duration);
 gclient_s *__thiscall gclient_s::gclient_s(gclient_s *this);

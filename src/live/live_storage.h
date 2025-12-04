@@ -1,4 +1,1030 @@
 #pragma once
+#include <demo/demo_common.h>
+
+enum statsLocation : __int32
+{                                       // XREF: ?LiveStorage_GetStatsBuffer@@YAPAEHW4statsLocation@@_N@Z/r
+                                        // LiveStorage_GetPersStatsBuffer/r ...
+    STATS_LOCATION_NORMAL        = 0x0,
+    STATS_LOCATION_FORCE_NORMAL  = 0x1,
+    STATS_LOCATION_BACKUP        = 0x2,
+    STATS_LOCATION_STABLE        = 0x3,
+    STATS_LOCATION_OTHERPLAYER   = 0x4,
+    STATS_LOCATION_BASICTRAINING = 0x5,
+    STATS_LOCATION_GLOBAL        = 0x6,
+    STATS_LOCATION_GLOBALSTABLE  = 0x7,
+    STATS_LOCATION_COUNT         = 0x8,
+};
+
+enum TaskState : __int32
+{                                       // XREF: TaskRecord/r
+                                        // TaskManager2_StateToString/r
+    TASK_STATE_INVALID       = 0x0,
+    TASK_STATE_INIT          = 0x1,
+    TASK_STATE_INPROGRESS    = 0x2,
+    TASK_STATE_CHILDCOMPLETE = 0x3,
+    TASK_STATE_CHILDFAILED   = 0x4,
+    TASK_STATE_COMPLETED     = 0x5,
+    TASK_STATE_FAILED        = 0x6,
+};
+
+enum fileShareBufferLocation : __int32
+{                                       // XREF: ?LiveStorage_FileShare_GetFileShareData@@YAPAUfileSharePrivateData@@W4fileShareBufferLocation@@@Z/r
+                                        // ?LiveStorage_FileShare_ReadListing@@YAPAUTaskRecord@@H_KW4fileShareBufferLocation@@@Z/r ...
+    FILESHARE_BUFFER_PRIMARY   = 0x0,
+    FILESHARE_BUFFER_SECONDARY = 0x1,
+};
+
+namespace bdStats
+{
+    enum bdWriteType : __int32
+    {                                       // XREF: bdStatsInfo/r
+        STAT_WRITE_REPLACE = 0x0,
+        STAT_WRITE_ADD     = 0x1,
+        STAT_WRITE_MAX     = 0x2,
+        STAT_WRITE_MIN     = 0x3,
+        STAT_WRITE_REPLACE_WHEN_RATING_INCREASE = 0x4,
+        STAT_WRITE_ADD_WHEN_RATING_INCREASE = 0x5,
+        STAT_WRITE_MAX_WHEN_RATING_INCREASE = 0x6,
+        STAT_WRITE_MIN_WHEN_RATING_INCREASE = 0x7,
+    };
+}
+
+enum bdLobbyErrorCode : __int32
+{                                       // XREF: bdLobbyConnection::Status/r
+                                        // bdConnection::Status/r ...
+    BD_NO_ERROR                      = 0x0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TOO_MANY_TASKS                = 0x1,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NOT_CONNECTED                 = 0x2,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_SEND_FAILED                   = 0x3,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_HANDLE_TASK_FAILED            = 0x4,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_START_TASK_FAILED             = 0x5,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_RESULT_EXCEEDS_BUFFER_SIZE    = 0x64,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_ACCESS_DENIED                 = 0x65,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_EXCEPTION_IN_DB               = 0x66,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MALFORMED_TASK_HEADER         = 0x67,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_ROW                   = 0x68,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_EMPTY_ARG_LIST                = 0x69,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_PARAM_PARSE_ERROR             = 0x6A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_PARAM_MISMATCHED_TYPE         = 0x6B,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_SERVICE_NOT_AVAILABLE         = 0x6C,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONNECTION_RESET              = 0x6D,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_USER_ID               = 0x6E,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_LOBBY_PROTOCOL_VERSION_FAILURE = 0x6F,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_LOBBY_INTERNAL_FAILURE        = 0x70,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_LOBBY_PROTOCOL_ERROR          = 0x71,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_ASYNCHRONOUS_ERROR            = 0xC8,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MEMBER_NO_PROPOSAL            = 0x12C,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TEAMNAME_ALREADY_EXISTS       = 0x12D,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MAX_TEAM_MEMBERSHIPS_LIMITED  = 0x12E,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MAX_TEAM_OWNERSHIPS_LIMITED   = 0x12F,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NOT_A_TEAM_MEMBER             = 0x130,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_TEAM_ID               = 0x131,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_TEAM_NAME             = 0x132,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NOT_A_TEAM_OWNER              = 0x133,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NOT_AN_ADMIN_OR_OWNER         = 0x134,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MEMBER_PROPOSAL_EXISTS        = 0x135,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MEMBER_EXISTS                 = 0x136,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TEAM_FULL                     = 0x137,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_VULGAR_TEAM_NAME              = 0x138,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TEAM_USERID_BANNED            = 0x139,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TEAM_EMPTY                    = 0x13A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_TEAM_PROFILE_QUERY_ID = 0x13B,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_LEADERBOARD_ID        = 0x190,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_STATS_SET             = 0x191,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_EMPTY_STATS_SET_IGNORED       = 0x193,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NO_DIRECT_ACCESS_TO_ARBITRATED_LBS = 0x194,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_STATS_WRITE_PERMISSION_DENIED = 0x195,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_STATS_WRITE_TYPE_DATA_TYPE_MISMATCH = 0x196,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NO_STATS_FOR_USER             = 0x197,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_ACCESS_TO_UNRANKED_LB = 0x198,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_TITLE_ID              = 0x1F4,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MESSAGING_INVALID_MAIL_ID     = 0x258,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_SELF_BLOCK_NOT_ALLOWED        = 0x259,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_GLOBAL_MESSAGE_ACCESS_DENIED  = 0x25A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_NO_ERROR                 = 0x2BC,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_BAD_REQUEST              = 0x2BD,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_SERVER_CONFIG_ERROR      = 0x2BE,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_BAD_TITLE_ID             = 0x2BF,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_BAD_ACCOUNT              = 0x2C0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_ILLEGAL_OPERATION        = 0x2C1,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_INCORRECT_LICENSE_CODE   = 0x2C2,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_CREATE_USERNAME_EXISTS   = 0x2C3,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_CREATE_USERNAME_ILLEGAL  = 0x2C4,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_CREATE_USERNAME_VULGAR   = 0x2C5,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_CREATE_MAX_ACC_EXCEEDED  = 0x2C6,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_MIGRATE_NOT_SUPPORTED    = 0x2C7,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_TITLE_DISABLED           = 0x2C8,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_ACCOUNT_EXPIRED          = 0x2C9,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_ACCOUNT_LOCKED           = 0x2CA,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_UNKNOWN_ERROR            = 0x2CB,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_INCORRECT_PASSWORD       = 0x2CC,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_IP_NOT_IN_ALLOWED_RANGE  = 0x2CD,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_WII_TOKEN_VERIFICATION_FAILED = 0x2CE,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_WII_AUTHENTICATION_FAILED = 0x2CF,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_AUTH_IP_KEY_LIMIT_REACHED     = 0x2D0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NO_PROFILE_INFO_EXISTS        = 0x320,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FRIENDSHIP_NOT_REQUSTED       = 0x384,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NOT_A_FRIEND                  = 0x385,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_SELF_FRIENDSHIP_NOT_ALLOWED   = 0x387,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FRIENDSHIP_EXISTS             = 0x388,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_PENDING_FRIENDSHIP_EXISTS     = 0x389,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_USERID_BANNED                 = 0x38A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FRIENDS_FULL                  = 0x38C,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FRIENDS_NO_RICH_PRESENCE      = 0x38D,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_RICH_PRESENCE_TOO_LARGE       = 0x38E,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NO_FILE                       = 0x3E8,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_PERMISSION_DENIED             = 0x3E9,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FILESIZE_LIMIT_EXCEEDED       = 0x3EA,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FILENAME_MAX_LENGTH_EXCEEDED  = 0x3EB,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CHANNEL_DOES_NOT_EXIST        = 0x44D,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CHANNEL_ALREADY_SUBSCRIBED    = 0x44E,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CHANNEL_NOT_SUBSCRIBED        = 0x44F,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CHANNEL_FULL                  = 0x450,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CHANNEL_SUBSCRIPTIONS_FULL    = 0x451,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CHANNEL_NO_SELF_WHISPERING    = 0x452,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_EVENT_DESC_TRUNCATED          = 0x4B0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENT_UNLOCK_UNKNOWN_ERROR  = 0x514,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_UNLOCK_KEY_INVALID            = 0x515,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_UNLOCK_KEY_ALREADY_USED_UP    = 0x516,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_KEY_ARCHIVE_INVALID_WRITE_TYPE = 0x5DC,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_BANDWIDTH_TEST_TRY_AGAIN      = 0x712,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_BANDWIDTH_TEST_STILL_IN_PROGRESS = 0x713,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_BANDWIDTH_TEST_NOT_PROGRESS   = 0x714,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_BANDWIDTH_TEST_SOCKET_ERROR   = 0x715,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_SESSION_NONCE         = 0x76D,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_ARBITRATION_FAILURE           = 0x76F,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_ARBITRATION_USER_NOT_REGISTERED = 0x771,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_ARBITRATION_NOT_CONFIGURED    = 0x772,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_FILE_NOT_AVAILABLE = 0x7D0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_STORAGE_SPACE_EXCEEDED = 0x7D1,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_NUM_FILES_EXCEEDED = 0x7D2,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_UPLOAD_BANDWIDTH_EXCEEDED = 0x7D3,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_FILENAME_MAX_LENGTH_EXCEEDED = 0x7D4,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_MAX_THUMB_DATA_SIZE_EXCEEDED = 0x7D5,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_DOWNLOAD_BANDWIDTH_EXCEEDED = 0x7D6,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_NOT_ENOUGH_DOWNLOAD_BUFFER_SPACE = 0x7D7,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_SERVER_NOT_CONFIGURED = 0x7D8,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_INVALID_APPLE_RECEIPT = 0x7DA,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_APPLE_STORE_NOT_AVAILABLE = 0x7DB,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_APPLE_RECEIPT_FILENAME_MISMATCH = 0x7DC,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_HTTP_ERROR   = 0x7E4,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CONTENTSTREAMING_FAILED_TO_START_HTTP = 0x7E5,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_VOTERANK_ERROR_EMPTY_RATING_SUBMISSION = 0x7EE,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_VOTERANK_ERROR_MAX_VOTES_EXCEEDED = 0x7EF,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_VOTERANK_ERROR_INVALID_RATING = 0x7F0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MAX_NUM_TAGS_EXCEEDED         = 0x82A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TAGGED_COLLECTION_DOES_NOT_EXIST = 0x82B,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_QUERY_ID              = 0x834,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_NO_ENTRY_TO_UPDATE            = 0x835,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_SESSION_INVITE_EXISTS         = 0x836,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_SESSION_ID            = 0x837,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_ATTACHMENT_TOO_LARGE          = 0x838,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_INVALID_GROUP_ID              = 0xAF0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_AUTH_ATTEMPT_FAILED   = 0xDAD,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_AUTH_TOKEN_INVALID    = 0xDAE,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_UPDATE_LIMIT_REACHED  = 0xDAF,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_UNAVAILABLE           = 0xDB0,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_ERROR                 = 0xDB1,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_TIMED_OUT             = 0xDB2,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_DISABLED_FOR_USER     = 0xDB3,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_ACCOUNT_AMBIGUOUS     = 0xDB4,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_TWITTER_MAXIMUM_ACCOUNTS_REACHED = 0xDB5,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_AUTH_ATTEMPT_FAILED  = 0xE11,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_AUTH_TOKEN_INVALID   = 0xE12,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_PHOTO_DOES_NOT_EXIST = 0xE13,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_PHOTO_INVALID        = 0xE14,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_PHOTO_ALBUM_FULL     = 0xE15,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_UNAVAILABLE          = 0xE16,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_ERROR                = 0xE17,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_TIMED_OUT            = 0xE18,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_DISABLED_FOR_USER    = 0xE19,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_ACCOUNT_AMBIGUOUS    = 0xE1A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_FACEBOOK_MAXIMUM_ACCOUNTS_REACHED = 0xE1B,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_APNS_USER_NOT_REGISTERED      = 0xE74,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_APNS_INVALID_PAYLOAD          = 0xE75,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_ERROR                    = 0xF3D,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_EMAIL_PASSWORD_INVALID   = 0xF3E,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_EMAIL_INVALID            = 0xF3F,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_BIRTH_DATE_INVALID       = 0xF40,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_BIRTH_DATE_NOT_ALLOWED   = 0xF41,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_PASSWORD_INVALID         = 0xF42,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_PLATFORM_ID_INVALID      = 0xF43,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_PLATFORM_UID_EXISTS      = 0xF44,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_COMMUNITY_ID_INVALID     = 0xF45,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_COMMUNITY_USERNAME_INVALID = 0xF46,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_COMMUNITY_USERNAME_EXISTS = 0xF47,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_TITLE_ID_INVALID         = 0xF48,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_CRUX_TITLE_UID_EXISTS         = 0xF49,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+    BD_MAX_ERROR_CODE                = 0xF4A,
+                                        // XREF: .rdata:lobbyErrorCodeLookup/s
+};
+
+struct bdStopwatch // sizeof=0x8
+{                                       // XREF: bdRemoteTask/r
+                                        // bdNATTravClientData/r ...
+    unsigned __int64 m_start;
+};
+
+struct bdTaskResultProcessor // sizeof=0x4
+{                                       // XREF: bdPagingToken/r
+    //bdTaskResultProcessor_vtbl *__vftable;
+    virtual ~bdTaskResultProcessor() = default;
+    virtual bool processResult(bdTaskResult *, unsigned int);
+};
+
+struct bdRemoteTask : bdReferencable // sizeof=0x40
+{                                       // XREF: ?resolveHostIP@bdHTTPClient@@IAE_NAAVbdAddr@@@Z/r
+    enum bdStatus : __int32
+    {                                       // XREF: bdHTTPWrapperBase::bdStatus/r
+                                            // bdRemoteTask/r ...
+        BD_EMPTY      = 0x0,
+        BD_PENDING    = 0x1,
+        BD_DONE       = 0x2,
+        BD_FAILED     = 0x3,
+        BD_TIMED_OUT  = 0x4,
+        BD_CANCELLED  = 0x5,
+        BD_MAX_STATUS = 0x6,
+    };
+    bdStopwatch m_timer;
+    float m_timeout;
+    bdRemoteTask::bdStatus m_status;
+    bdReference<bdByteBuffer> m_byteResults;
+    bdTaskResult *m_taskResult;
+    bdTaskResult **m_taskResultList;
+    unsigned int m_numResults;
+    unsigned int m_maxNumResults;
+    unsigned int m_totalNumResults;
+    unsigned __int64 m_transactionID;
+    bdLobbyErrorCode m_errorCode;
+    bdTaskResultProcessor *m_taskResultProcessor;
+                                        // XREF: bdHTTPClient::resolveHostIP(bdAddr &)+72/o
+                                        // bdHTTPClient::resolveHostIP(bdAddr &)+80/w ...
+};
+
+struct TaskRecord // sizeof=0x34
+{                                       // XREF: .data:s_taskActiveHead/r
+                                        // .data:s_taskRecords/r ...
+    TaskRecord *next;                   // XREF: TaskManager2_Init(void)+4/w
+                                        // TaskManager2_Init(void)+E/w ...
+    const struct TaskDefinition *definition;   // XREF: TaskManager2_PickUpDeferredTasks(void)+101/r
+                                        // TaskManager2_PickUpDeferredTasks(void)+120/r ...
+    TaskState state;
+    int controllerIndex;
+    unsigned int lastPoll;
+    unsigned int lastPollMS;
+    int startMS;
+    int timeOut;
+    bdReference<bdRemoteTask> remoteTask;
+                                        // XREF: TaskManager2_PickUpDeferredTasks(void)+69/r
+                                        // TaskManager2_PickUpDeferredTasks(void)+E5/r ...
+    TaskRecord *nestedTask;
+    void *payload;                      // XREF: TaskManager2_ProcessDemonwareTask(TaskRecord *)+205/w
+                                        // TaskManager2_ProcessDemonwareTask(TaskRecord *)+386/w ...
+    bool isChildTask;
+    // padding byte
+    // padding byte
+    // padding byte
+    int ownerThread;                    // XREF: TaskManager2_PickUpDeferredTasks(void)+AB/r
+                                        // TaskManager2_ProcessDemonwareTask(TaskRecord *)+21A/w ...
+};
+
+const struct __declspec(align(8)) TaskDefinition // sizeof=0x20
+{                                       // XREF: .rdata:task_RequestCACValidate/r
+                                        // .rdata:task_QuickMatchFindSessions/r ...
+    unsigned __int64 category;
+    const char *name;
+    int payloadSize;
+    void (__cdecl *completed_callback)(TaskRecord *);
+    void (__cdecl *failure_callback)(TaskRecord *);
+    TaskRecord *nestedTask;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct persistentStats // sizeof=0x996C
+{                                       // XREF: .data:s_otherPlayerStats/r
+    unsigned __int8 statsBuffer[39272];
+    bool isChecksumValid;
+    bool statsWriteNeeded;
+    bool statsValidatedWithDDL;
+    bool statsFetched;
+};
+
+struct bdStatsInfo : bdTaskResult // sizeof=0x70
+{                                       // XREF: bdVoteRankStatsInfo/r
+                                        // LeaderBoardRow<10>/r ...
+    unsigned int m_leaderboardID;       // XREF: LB_IncrementEscrow(void)+F4/w
+                                        // LB_IncrementEscrow(void)+14A/w ...
+    unsigned __int64 m_entityID;        // XREF: LB_IncrementEscrow(void)+E2/w
+                                        // LB_IncrementEscrow(void)+EE/w ...
+    bdStats::bdWriteType m_writeType;   // XREF: LB_IncrementEscrow(void)+FE/w
+                                        // LB_IncrementEscrow(void)+154/w ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    __int64 m_rating;                   // XREF: LB_IncrementEscrow(void)+108/w
+                                        // LB_IncrementEscrow(void)+112/w ...
+    unsigned __int64 m_rank;
+    char m_entityName[65];              // XREF: LB_ReadHiddenLeaderboardComplete(int)+572/o
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned int m_secondsSinceUpdate;
+};
+
+struct __declspec(align(8)) bdVoteRankStatsInfo : bdStatsInfo // sizeof=0xC8
+{                                       // XREF: fileSharePrivateData/r
+                                        // fileShareSearchResults/r ...
+    unsigned __int64 m_fileOwnerID;
+    char m_fileOwnerName[65];
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned int m_totalVotes;
+    unsigned int m_avgVoteValue;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(8)) fileSharePrivateData // sizeof=0xB418
+{                                       // XREF: .data:s_fileSharePrimary/r
+                                        // .data:s_fileShareSecondary/r
+    ~fileSharePrivateData();
+    fileSharePrivateData();
+
+    bool valid;
+    // padding byte
+    // padding byte
+    // padding byte
+    int lastRead;
+    unsigned __int64 playerXuid;
+    bdFileMetaData descriptors[20];
+    bdVoteRankStatsInfo fileRatings[20];
+    int descriptorCount;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct bdFileData : bdTaskResult // sizeof=0xC
+{                                       // XREF: dwFileTask/r
+    void *m_fileData;
+    unsigned int m_fileSize;
+};
+
+struct __declspec(align(8)) bdFileInfo : bdTaskResult // sizeof=0xB0
+{                                       // XREF: dwFileTask/r
+    enum bdVisibility : __int32
+    {                                       // XREF: bdFileInfo::bdVisibility/r
+        BD_VISIBLE_PUBLIC      = 0x0,
+        BD_VISIBLE_PRIVATE     = 0x1,
+        BD_MAX_VISIBILITY_TYPE = 0x2,
+    };
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 m_fileID;
+    unsigned int m_createTime;
+    unsigned int m_modifedTime;
+    bdFileInfo::bdVisibility m_visibility;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 m_ownerID;
+    char m_fileName[128];
+    unsigned int m_fileSize;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(4)) dwFileTask // sizeof=0xE0
+{                                       // XREF: .data:s_fetchPlaylistsFileTask/r
+                                        // dwFileOperationInfo/r
+    char *m_filename;                   // XREF: SV_AP_GetControlFile(void)+31/w
+                                        // LiveStorage_FetchOnlineWAD(int)+16A/w
+    bdFileData m_fileData;              // XREF: _dynamic_atexit_destructor_for__s_finfo__+D/o
+                                        // _dynamic_atexit_destructor_for__s_onlineWADFileInfo__+D/o ...
+    bdLobbyErrorCode m_error;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 m_fileID;
+    unsigned int m_fileSize;
+    unsigned int m_bufferSize;
+    bdFileInfo m_fileInfo;              // XREF: _dynamic_atexit_destructor_for__s_finfo__+3/o
+                                        // _dynamic_atexit_destructor_for__s_onlineWADFileInfo__+3/o ...
+    void *m_buffer;
+    bool m_optional;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct fileRetryInfo // sizeof=0xC
+{                                       // XREF: .data:s_UTCRetryInfo/r
+                                        // dwFileOperationInfo/r
+    int lastAttemptTime;
+    int lastAttemptInterval;
+    int retryCount;
+};
+
+enum taskCompleteResults : __int32
+{                                       // XREF: Live_SetPlayerTeamRanksComplete/r
+                                        // Live_QoSProbeComplete/r ...
+    TASK_NOTCOMPLETE = 0x0,
+    TASK_COMPLETE    = 0x1,
+    TASK_ERROR       = 0x2,
+};
+
+struct __declspec(align(8)) dwFileOperationInfo // sizeof=0x120
+{                                       // XREF: .data:s_finfo/r
+                                        // .data:s_onlineWADFileInfo/r ...
+    dwFileTask fileTask;                // XREF: SV_AP_GetControlFile(void)+31/w
+                                        // LiveStorage_FetchOnlineWAD(int)+16A/w ...
+    fileRetryInfo retryInfo;
+    int taskType;
+    bool fetchCompleted;                // XREF: LiveStorage_FetchOnlineWAD(int)+55/r
+                                        // LiveStorage_FetchOnlineWAD(int)+98/w ...
+    bool writeCompleted;
+    bool isUserFile;                    // XREF: SV_AP_GetControlFile(void)+23/w
+                                        // LiveStorage_FetchOnlineWAD(int)+15C/w
+    bool isCompressedFile;              // XREF: SV_AP_GetControlFile(void)+2A/w
+                                        // LiveStorage_FetchOnlineWAD(int)+163/w
+    const char *menuDef;
+    unsigned __int8 *fileBuffer;        // XREF: SV_AP_GetControlFile(void)+3B/w
+                                        // LiveStorage_FetchOnlineWAD(int)+174/w ...
+    int bufferSize;                     // XREF: SV_AP_GetControlFile(void)+45/w
+                                        // LiveStorage_FetchOnlineWAD(int)+17E/w
+    void (__cdecl *fileOperationSucessFunction)(const int, void *);
+                                        // XREF: SV_AP_GetControlFile(void)+4F/w
+                                        // LiveStorage_FetchOnlineWAD(int)+188/w
+    taskCompleteResults (__cdecl *fileNotFoundFunction)(const int, void *);
+                                        // XREF: SV_AP_GetControlFile(void)+59/w
+                                        // LiveStorage_FetchOnlineWAD(int)+192/w
+    void (__cdecl *fileOperationFailureFunction)(const int, void *);
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 ownerID;
+    bool *alreadyUploaded;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+
+struct dwFileShareGetRatingTask // sizeof=0x24
+{                                       // XREF: playerFileOperations/r
+    fileShareLocation location;
+    unsigned __int64 *fileIDs;
+    int maxFilesToFetch;
+    int leaderboardID;
+    bdVoteRankStatsInfo *outStatsInfo;
+    int *outNumRatingsReceived;
+    int cacheLoadedFileCount;
+    void (__cdecl *successCallback)();
+    void (__cdecl *failureCallback)();
+};
+
+struct bdFileID : bdTaskResult // sizeof=0x10
+{                                       // XREF: .data:searchFileIDs/r
+                                        // fileShareSearchResults/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 m_fileID;          // XREF: Live_FileShare_GetLastPlayedGameDetails(int)+34/w
+                                        // Live_FileShare_GetLastPlayedGameDetails(int)+39/w ...
+};
+
+struct dwFileShareDescriptorsTask // sizeof=0x24
+{                                       // XREF: playerFileOperations/r
+    fileShareLocation location;
+    unsigned int numFiles;
+    bdFileID *fileIDs;
+    int cacheLoadedFileCount;
+    bdFileMetaData *descriptors;
+    int *descriptorCount;
+    bool getFirstSummary;
+    bool getLastSummary;
+    // padding byte
+    // padding byte
+    void (__cdecl *successCallback)();
+    void (__cdecl *failureCallback)();
+};
+
+struct fileShareSearchInfo_t // sizeof=0x30
+{                                       // XREF: Live_FileShareSearch_LoadBook/r
+    bdTag *tags;                        // XREF: Live_FileShareSearch_LoadBook:loc_964DD6/w
+    int numTags;                        // XREF: Live_FileShareSearch_LoadBook+F2/w
+    fileShareLocation location;         // XREF: Live_FileShareSearch_LoadBook+FB/w
+    int startIndex;                     // XREF: Live_FileShareSearch_LoadBook+104/w
+    int maxFileIDs;                     // XREF: Live_FileShareSearch_LoadBook+107/w
+    bdFileID *outFileIDs;               // XREF: Live_FileShareSearch_LoadBook+10E/w
+    int *outFileCount;                  // XREF: Live_FileShareSearch_LoadBook+115/w
+    bdVoteRankStatsInfo *outRatings;    // XREF: Live_FileShareSearch_LoadBook+11C/w
+    int *outRatingCount;                // XREF: Live_FileShareSearch_LoadBook+123/w
+    int *outTotalFileCount;             // XREF: Live_FileShareSearch_LoadBook+12A/w
+    void (__cdecl *successCallback)();  // XREF: Live_FileShareSearch_LoadBook+131/w
+    void (__cdecl *failureCallback)();  // XREF: Live_FileShareSearch_LoadBook+138/w
+};
+
+struct __declspec(align(8)) fileShareReadFileInfo // sizeof=0x30
+{                                       // XREF: ?Demo_DownloadFile@@YAXHPAD_KH_N2@Z/r
+                                        // ?UI_ScreenshotDownload@@YAXHH_KI@Z/r ...
+    unsigned __int64 fileID;            // XREF: UI_Gametype_DownloadFromFileShare_f(void)+56/w
+                                        // UI_Gametype_DownloadFromFileShare_f(void)+5C/w ...
+    unsigned int fileSize;              // XREF: UI_Gametype_DownloadFromFileShare_f(void)+62/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+10D/w ...
+    fileShareLocation location;         // XREF: UI_Gametype_DownloadFromFileShare_f(void)+65/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+110/w ...
+    char *buffer;                       // XREF: UI_Gametype_DownloadFromFileShare_f(void)+80/w
+                                        // UI_Gametype_DownloadFromFileShare_f(void)+8E/r ...
+    unsigned int bufferSize;            // XREF: UI_Gametype_DownloadFromFileShare_f(void)+83/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+12E/w ...
+    bool isStreamed;                    // XREF: UI_Gametype_DownloadFromFileShare_f(void)+8A/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+135/w ...
+    // padding byte
+    // padding byte
+    // padding byte
+    void *cacheBuffer;                  // XREF: UI_Gametype_DownloadFromFileShare_f(void)+91/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+13C/w ...
+    void (__cdecl *dataCallback)(void *, unsigned int, unsigned int, unsigned int);
+                                        // XREF: Demo_DownloadFile(int,char *,unsigned __int64,int,bool,bool)+A6/w
+    void (__cdecl *successCallback)(dwFileShareReadFileTask *);
+                                        // XREF: UI_Gametype_DownloadFromFileShare_f(void)+94/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+13F/w ...
+    void (__cdecl *failureCallback)(dwFileShareReadFileTask *);
+                                        // XREF: UI_Gametype_DownloadFromFileShare_f(void)+9B/w
+                                        // SV_GameType_DownloadFromFileshare_f(void)+146/w ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct fileShareDownloadInterceptor : bdDownloadInterceptor // sizeof=0xC
+{                                       // XREF: .data:downloadInterceptor/r
+    dwFileShareReadFileTask *task;      // XREF: LiveStorage_FileShare_ReadFile(int,fileShareReadFileInfo *)+1BF/w
+    unsigned int (__cdecl *callback)(void *, unsigned int, dwFileShareReadFileTask *);
+                                        // XREF: LiveStorage_FileShare_ReadFile(int,fileShareReadFileInfo *)+1B2/w
+
+    unsigned int handleDownload(void *data, unsigned int dataSize);
+};
+
+struct bdUploadInterceptor // sizeof=0x4
+{                                       // XREF: fileShareUploadInterceptor/r
+    //bdUploadInterceptor_vtbl *__vftable;
+                                        // XREF: LiveStorage_FileShare_WriteFile(int,fileShareWriteFileInfo *)+29/w
+
+    virtual ~bdUploadInterceptor() = default;
+    virtual unsigned int handleUpload(void *, unsigned int, unsigned int);
+};
+
+struct __declspec(align(8)) dwFileShareWriteFileTask // sizeof=0x50
+{                                       // XREF: playerFileOperations/r
+    fileShareLocation location;
+    unsigned __int16 fileSlot;
+    // padding byte
+    // padding byte
+    const char *menuDef;
+    void *fileData;
+    bdUploadInterceptor *uploadHandler;
+    unsigned int fileSize;
+    const char *fileName;
+    unsigned __int16 category;
+    // padding byte
+    // padding byte
+    const void *thumbData;
+    unsigned int thumbDataSize;
+    unsigned int numTags;
+    bdTag *tags;
+    bdFileID outFileID;
+    unsigned int (__cdecl *dataCallback)(void *, unsigned int, unsigned int);
+    void (__cdecl *successCallback)(int, unsigned __int64);
+    void (__cdecl *failureCallback)(int);
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(8)) dwFileShareListTask // sizeof=0x28
+{                                       // XREF: playerFileOperations/r
+    unsigned __int64 ownerID;
+    int startDate;
+    int bufferLocation;
+    unsigned __int16 category;
+    unsigned __int16 maxNumResults;
+    unsigned __int16 offset;
+    // padding byte
+    // padding byte
+    char *fileName;
+    bdFileMetaData *descriptors;
+    const char *menuDef;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct dwFileShareSearchTask // sizeof=0x38
+{                                       // XREF: playerFileOperations/r
+    fileShareLocation location;
+    unsigned int startIndex;
+    unsigned int maxNumResults;
+    unsigned int numTags;
+    unsigned int sortOrder;
+    bool orderNewestFirst;
+    // padding byte
+    // padding byte
+    // padding byte
+    bdTag *tags;
+    int *resultFileCount;
+    bdFileID *resultFileIDs;
+    int *resultRatingCount;
+    bdVoteRankStatsInfo *resultRatings;
+    int *resultTotalFileCount;
+    void (__cdecl *successCallback)();
+    void (__cdecl *failureCallback)();
+};
+
+struct dwFileShareTagTask // sizeof=0x18
+{                                       // XREF: playerFileOperations/r
+    fileShareLocation location;
+    bdTag *tags;
+    unsigned int numTags;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 entityID;
+};
+
+struct dwFileShareTransferTask // sizeof=0x138
+{                                       // XREF: playerFileOperations/r
+    unsigned __int64 fileID;
+    fileShareLocation location;
+    unsigned __int16 fileSlot;
+    // padding byte
+    // padding byte
+    char *fileName;
+    unsigned __int16 category;
+    char metaData[255];
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned int metaDataSize;
+    unsigned int numTags;
+    bdTag *tags;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    bdFileID outFileID;
+};
+
+struct dwFileShareRemoveTask // sizeof=0x4
+{                                       // XREF: playerFileOperations/r
+    unsigned int fileSlot;
+};
+
+struct dwFileShareSummaryTask // sizeof=0x30
+{                                       // XREF: playerFileOperations/r
+    unsigned __int64 fileID;
+    void *summaryData;
+    unsigned int summaryDataSize;
+    const void *metaData;
+    unsigned int metaDataSize;
+    unsigned int numTags;
+    bdTag *tags;
+    fileShareLocation location;
+    bool showSuccess;
+    // padding byte
+    // padding byte
+    // padding byte
+    void (__cdecl *successCallback)();
+    void (__cdecl *failureCallback)();
+};
+
+struct __declspec(align(8)) bdRatingInfo : bdTaskResult // sizeof=0x18
+{                                       // XREF: dwFileShareSubmitRatingTask/r
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 m_entityID;
+    unsigned __int8 m_rating;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(8)) dwFileShareSubmitRatingTask // sizeof=0x20
+{                                       // XREF: playerFileOperations/r
+    bdRatingInfo rating[1];
+    unsigned int numRatings;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(8)) dwFileShareGetTopRatedTask // sizeof=0x4E48
+{                                       // XREF: playerFileOperations/r
+    unsigned __int64 startRank;
+    int maxFiles;
+    unsigned int leaderboardID;
+    bdVoteRankStatsInfo statsInfo[100];
+    int *outNumFiles;
+    int *outTotalNumFiles;
+    bdFileID *outFileIDs;
+    void (__cdecl *successCallback)();
+    void (__cdecl *failureCallback)();
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct playerFileOperations // sizeof=0x6F58
+{                                       // XREF: .data:controllerFileOps/r
+    ~playerFileOperations();
+    playerFileOperations();
+
+    dwFileOperationInfo statsBackupFileInfo;
+    dwFileOperationInfo readDWEmailFileInfo;
+    dwFileOperationInfo saveDWEmailFileInfo;
+    dwFileOperationInfo squadMessagesFileInfo;
+    dwFileOperationInfo codMessagesFileInfo;
+    dwFileOperationInfo eventMessagesFileInfo;
+    dwFileOperationInfo hiddenOfferIdsFileInfo;
+    dwFileOperationInfo fbStatusFileInfo;
+    dwFileOperationInfo clanMOTDInfo;
+    dwFileOperationInfo corruptedStatsBackupFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+29/o
+    dwFileOperationInfo fetchMetPlayerListFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+41/o
+    dwFileOperationInfo saveMetPlayerListFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+A0/o
+    dwFileOperationInfo getOtherPlayerStatsFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+59/o
+    dwFileOperationInfo getPlayerStatsFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+70/o
+    dwFileOperationInfo getBasicTrainingStatsFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+88/o
+    dwFileOperationInfo saveStatsFileInfo;
+                                        // XREF: LiveStorage_ResetAllFileOps+B7/o
+    dwFileOperationInfo saveBasicTrainingStatsFileInfo;
+    dwFileOperationInfo contractsFileInfo;
+    dwFileOperationInfo demoFileInfo;
+    dwFileShareListTask fileShareListTask;
+    dwFileShareSearchTask fileShareSearchTask;
+    dwFileShareDescriptorsTask fileShareDescriptorsTask;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    dwFileShareReadFileTask fileShareReadFileTask;
+    dwFileShareWriteFileTask fileShareWriteFileTask;
+    dwFileShareTagTask fileShareTagTask;
+    dwFileShareTransferTask fileShareTransferTask;
+    dwFileShareRemoveTask fileShareRemoveTask;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    dwFileShareSummaryTask fileShareSummaryTask;
+    dwFileShareSubmitRatingTask fileShareSubmitRatingTask;
+    dwFileShareGetRatingTask fileShareGetRatingTask;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    dwFileShareGetTopRatedTask fileShareGetTopRatedTask;
+    dwFileShareGetRatingTask fileShareFilmRatingTask;
+    dwFileShareGetRatingTask fileShareClipRatingTask;
+    dwFileShareGetRatingTask fileShareScreenshotRatingTask;
+    dwFileShareGetRatingTask fileShareCustomGameRatingTask;
+};
+
+struct fileShareWriteFileInfo // sizeof=0x34
+{                                       // XREF: ?Demo_SaveScreenshot@@YAXHI@Z/r
+                                        // ?Demo_WriteRecordedClip@@YAXHH_N@Z/r ...
+    unsigned __int16 fileSlot;          // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+39/w
+                                        // Demo_StartRecord_f(void)+16E/w ...
+    // padding byte
+    // padding byte
+    void *fileData;                     // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+22/w
+                                        // UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+3D/r ...
+    unsigned int fileSize;              // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+2B/w
+                                        // Demo_StartRecord_f(void)+180/w ...
+    const char *fileName;               // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+57/w
+                                        // Demo_StartRecord_f(void)+151/w ...
+    unsigned __int16 category;          // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+19/w
+                                        // Demo_StartRecord_f(void)+13B/w ...
+    // padding byte
+    // padding byte
+    const void *thumbData;              // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+5A/w
+                                        // Demo_StartRecord_f(void)+172/w ...
+    unsigned int thumbDataSize;         // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+61/w
+                                        // Demo_StartRecord_f(void)+179/w ...
+    unsigned int numTags;               // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+46/w
+                                        // Demo_StartRecord_f(void)+154/w ...
+    fileShareLocation location;         // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+2E/w
+                                        // Demo_StartRecord_f(void)+162/w ...
+    bdTag *tags;                        // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+4D/w
+                                        // Demo_StartRecord_f(void)+15B/w ...
+    unsigned int (__cdecl *dataCallback)(void *, unsigned int, unsigned int);
+                                        // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+68/w
+                                        // Demo_StartRecord_f(void)+187/w ...
+    void (__cdecl *successCallback)(int, unsigned __int64);
+                                        // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+6F/w
+                                        // Demo_StartRecord_f(void)+18E/w ...
+    void (__cdecl *failureCallback)(int);
+                                        // XREF: UI_Gametype_Custom_UploadToFileShare(int,uint,char const *,MemoryFile &)+76/w
+                                        // Demo_StartRecord_f(void)+195/w ...
+};
 
 persistentStats *__cdecl LiveStorage_GetStatsBuffer(
                 int controllerIndex,
@@ -155,10 +1181,6 @@ unsigned int __cdecl LiveStorage_FileShare_ReadFileData(
 unsigned int __cdecl LiveStorage_FileShare_GetDownloadingFileTotalSize(int controllerIndex);
 unsigned int __cdecl LiveStorage_FileShare_GetUploadingFileTotalSize(int controllerIndex);
 TaskRecord *__cdecl LiveStorage_FileShare_ReadFile(int controllerIndex, fileShareReadFileInfo *fileInfo);
-unsigned int __thiscall fileShareDownloadInterceptor::handleDownload(
-                fileShareDownloadInterceptor *this,
-                void *data,
-                unsigned int dataSize);
 void __cdecl LiveStorage_FileShare_ReadFileFailure(TaskRecord *task);
 void __cdecl LiveStorage_FileShare_ReadFileSuccess(TaskRecord *task);
 char *__cdecl LiveStorage_GetMatchRecordBuffer();
@@ -169,11 +1191,7 @@ unsigned int __cdecl LiveStorage_FileShare_WriteFileData(
                 unsigned int bytesUploaded,
                 dwFileShareWriteFileTask *fileTask);
 TaskRecord *__cdecl LiveStorage_FileShare_WriteFile(int controllerIndex, fileShareWriteFileInfo *writeFileInfo);
-unsigned int __thiscall fileShareUploadInterceptor::handleUpload(
-                fileShareUploadInterceptor *this,
-                void *data,
-                unsigned int dataSize,
-                unsigned int bytesUploaded);
+
 void __cdecl LiveStorage_FileShare_WriteFileFailure(TaskRecord *task);
 void __cdecl LiveStorage_FileShare_WriteFileSuccess(TaskRecord *task);
 void __cdecl LiveStorage_FileShare_GenerateHeatmap(
@@ -281,7 +1299,3 @@ void __cdecl LiveStorage_GetFriendStatsCmd();
 void __cdecl LiveStorage_RestoreStatsFromBackupCmd();
 void __cdecl LiveStorage_FakeComErrorCmd();
 void __cdecl LiveStorage_CheckOngoingSessionTasks();
-fileSharePrivateData *__thiscall fileSharePrivateData::fileSharePrivateData(fileSharePrivateData *this);
-playerFileOperations *__thiscall playerFileOperations::playerFileOperations(playerFileOperations *this);
-void __thiscall fileSharePrivateData::~fileSharePrivateData(fileSharePrivateData *this);
-void __thiscall playerFileOperations::~playerFileOperations(playerFileOperations *this);

@@ -104,6 +104,7 @@ struct __declspec(align(8)) dvar_s // sizeof=0x70
         // padding byte
         // padding byte
 };
+using dvar_t = dvar_s;
 
 struct FastCriticalSection;
 
@@ -318,7 +319,7 @@ const dvar_s *__cdecl _Dvar_RegisterLinearRGB(
                 unsigned __int16 flags,
                 const char *description);
 const dvar_s *__cdecl _Dvar_RegisterColorXYZ(
-                char *dvarName,
+                const char *dvarName,
                 unsigned int x,
                 unsigned int y,
                 unsigned int z,

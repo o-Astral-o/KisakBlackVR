@@ -19,10 +19,10 @@ void __cdecl UI_FriendsRegisterDvars()
                                                                              0,
                                                                              0,
                                                                              "Whether the leaderboard has any entry");
-    ui_clanName = _Dvar_RegisterString("ui_clanName", (char *)&toastPopupTitle, 0, "Name of player's clan.");
+    ui_clanName = _Dvar_RegisterString("ui_clanName", (char *)"", 0, "Name of player's clan.");
     ui_clanDescription = _Dvar_RegisterString(
                                                  "ui_clanDescription",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "Description of player's clan.");
     ui_onlineClanCount = _Dvar_RegisterInt(

@@ -2,9 +2,9 @@
 
 unsigned int __cdecl phys_slot_pool::encode_size_alignment(unsigned int size, unsigned int alignment)
 {
-    if ( size > 0xFFFF && _tlAssert("source/phys_mem_new.cpp", 38, "size <= 0xFFFF", &toastPopupTitle) )
+    if ( size > 0xFFFF && _tlAssert("source/phys_mem_new.cpp", 38, "size <= 0xFFFF", "") )
         __debugbreak();
-    if ( alignment > 0xFFFF && _tlAssert("source/phys_mem_new.cpp", 39, "alignment <= 0xFFFF", &toastPopupTitle) )
+    if ( alignment > 0xFFFF && _tlAssert("source/phys_mem_new.cpp", 39, "alignment <= 0xFFFF", "") )
         __debugbreak();
     return size | (alignment << 16);
 }
@@ -117,10 +117,10 @@ phys_slot_pool *__thiscall phys_memory_manager::get_slot_pool(
     minspec_read_write_mutex *p_m_slot_pool_map_mutex; // [esp+10h] [ebp-4h]
     unsigned int slot_sizea; // [esp+1Ch] [ebp+8h]
 
-    if ( slot_alignment < 4 && _tlAssert("source/phys_mem_new.cpp", 204, "slot_alignment >= 4", &toastPopupTitle) )
+    if ( slot_alignment < 4 && _tlAssert("source/phys_mem_new.cpp", 204, "slot_alignment >= 4", "") )
         __debugbreak();
     if ( slot_size % slot_alignment
-        && _tlAssert("source/phys_mem_new.cpp", 205, "slot_size % slot_alignment == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_mem_new.cpp", 205, "slot_size % slot_alignment == 0", "") )
     {
         __debugbreak();
     }
@@ -129,7 +129,7 @@ phys_slot_pool *__thiscall phys_memory_manager::get_slot_pool(
                  "source/phys_mem_new.cpp",
                  208,
                  "slot_alignment % PHYS_ALIGNOF(phys_slot_pool::extra_info) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -188,7 +188,7 @@ char *__cdecl PMM_ALLOC(unsigned int size, unsigned int alignment)
     phys_slot_pool *slot_pool; // eax
     int savedregs; // [esp+4h] [ebp+0h] BYREF
 
-    if ( !size && _tlAssert("source/phys_mem_new.cpp", 465, "size > 0", &toastPopupTitle) )
+    if ( !size && _tlAssert("source/phys_mem_new.cpp", 465, "size > 0", "") )
         __debugbreak();
     slot_pool = phys_memory_manager::get_slot_pool(g_phys_memory_manager, size, alignment);
     return phys_slot_pool::allocate_slot(slot_pool, (unsigned int)&savedregs);
@@ -213,7 +213,7 @@ char *__cdecl PSP_ALLOC(phys_slot_pool *slot_pool)
 
 phys_slot_pool *__cdecl GET_PHYS_SLOT_POOL(unsigned int size, unsigned int alignment)
 {
-    if ( !size && _tlAssert("source/phys_mem_new.cpp", 489, "size > 0", &toastPopupTitle) )
+    if ( !size && _tlAssert("source/phys_mem_new.cpp", 489, "size > 0", "") )
         __debugbreak();
     return phys_memory_manager::get_slot_pool(g_phys_memory_manager, size, alignment);
 }
@@ -254,17 +254,17 @@ void __cdecl phys_memory_manager_init(void *const memory_buffer, int memory_buff
     unsigned int v2; // ecx
 
     if ( g_phys_memory_buffer
-        && _tlAssert("source/phys_mem_new.cpp", 237, "g_phys_memory_buffer == NULL", &toastPopupTitle) )
+        && _tlAssert("source/phys_mem_new.cpp", 237, "g_phys_memory_buffer == NULL", "") )
     {
         __debugbreak();
     }
     if ( g_phys_memory_buffer_size
-        && _tlAssert("source/phys_mem_new.cpp", 238, "g_phys_memory_buffer_size == 0", &toastPopupTitle) )
+        && _tlAssert("source/phys_mem_new.cpp", 238, "g_phys_memory_buffer_size == 0", "") )
     {
         __debugbreak();
     }
     if ( g_phys_memory_manager
-        && _tlAssert("source/phys_mem_new.cpp", 239, "g_phys_memory_manager == NULL", &toastPopupTitle) )
+        && _tlAssert("source/phys_mem_new.cpp", 239, "g_phys_memory_manager == NULL", "") )
     {
         __debugbreak();
     }
@@ -318,7 +318,7 @@ void __thiscall phys_slot_pool::extra_info_allocate(phys_slot_pool *this, char *
     InterlockedExchange(&Target, 0);
     v3 = slot;
     m_map_key = this->m_map_key;
-    if ( !slot && _tlAssert("source/phys_mem_new.cpp", 306, "slot", &toastPopupTitle) )
+    if ( !slot && _tlAssert("source/phys_mem_new.cpp", 306, "slot", "") )
         __debugbreak();
     v5 = *(unsigned int *)&v3[(unsigned __int16)m_map_key - 8] == (unsigned int)this;
     v6 = (int)&v3[(unsigned __int16)m_map_key - 8];
@@ -359,7 +359,7 @@ void __thiscall phys_slot_pool::extra_info_free(phys_slot_pool *this, unsigned _
     InterlockedExchange(&Target, 0);
     v3 = slot;
     m_map_key = this->m_map_key;
-    if ( !slot && _tlAssert("source/phys_mem_new.cpp", 323, "slot", &toastPopupTitle) )
+    if ( !slot && _tlAssert("source/phys_mem_new.cpp", 323, "slot", "") )
         __debugbreak();
     memset(v3, 0xFFu, (unsigned __int16)m_map_key - 8);
     if ( *(phys_slot_pool **)&v3[(unsigned __int16)m_map_key - 8] != this
@@ -498,7 +498,7 @@ void __thiscall minspec_hash_table<phys_slot_pool,64>::add(
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_hash_table.h",
                      38,
                      "find(key) == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -556,7 +556,7 @@ LABEL_7:
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_hash_table.h",
                  83,
                  "m_mod > 0 && m_mod < TABLE_SIZE",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

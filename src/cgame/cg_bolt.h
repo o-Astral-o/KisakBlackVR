@@ -10,4 +10,3 @@ unsigned int __cdecl CG_AddBolt(
                 unsigned __int8 tagIndex,
                 int physUserBody);
 void __cdecl CG_UpdateBolt(int localClientNum);
-void __cdecl AssignToSmallerType<int>(int *dest, int src);

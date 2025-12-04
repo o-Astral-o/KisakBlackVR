@@ -148,7 +148,7 @@ const char *__cdecl CCS_GetConfigStringValue(int rowNum)
     if ( configStringTable )
         return StringTable_GetColumnValueForRow(configStringTable, rowNum, 1);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 int __cdecl CCS_GetConfigStringNum(int rowNum)

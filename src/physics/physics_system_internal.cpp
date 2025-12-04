@@ -8,7 +8,7 @@ void __thiscall phys_transient_allocator::~phys_transient_allocator(phys_transie
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                      69,
                      "m_first_block == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -24,7 +24,7 @@ void __cdecl rbint::take_last_step(user_rigid_body *rb)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  75,
                  "rb->is_user_rigid_body()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -33,7 +33,7 @@ void __cdecl rbint::take_last_step(user_rigid_body *rb)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  76,
                  "rb->m_dictator",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -57,7 +57,7 @@ void __cdecl IPN_merge(rigid_body *dest, rigid_body *source)
     rigid_body *m_next_node; // eax
 
     if ( dest->m_partition_node.m_partition_head != dest
-        && _tlAssert("source/physics_system_internal.cpp", 186, "GIPN(dest)->m_partition_head == dest", &toastPopupTitle) )
+        && _tlAssert("source/physics_system_internal.cpp", 186, "GIPN(dest)->m_partition_head == dest", "") )
     {
         __debugbreak();
     }
@@ -66,11 +66,11 @@ void __cdecl IPN_merge(rigid_body *dest, rigid_body *source)
                  "source/physics_system_internal.cpp",
                  187,
                  "GIPN(source)->m_partition_head == source",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
-    if ( dest == source && _tlAssert("source/physics_system_internal.cpp", 188, "dest != source", &toastPopupTitle) )
+    if ( dest == source && _tlAssert("source/physics_system_internal.cpp", 188, "dest != source", "") )
         __debugbreak();
     dest->m_partition_node.m_partition_tail->m_partition_node.m_next_node = source;
     dest->m_partition_node.m_partition_tail = source->m_partition_node.m_partition_tail;
@@ -274,7 +274,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                  "source/physics_system_internal.cpp",
                  174,
                  "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -296,7 +296,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -321,7 +321,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -349,7 +349,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -374,7 +374,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -402,7 +402,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -427,7 +427,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -455,7 +455,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -480,7 +480,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -510,7 +510,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -535,7 +535,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -563,7 +563,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -588,7 +588,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -618,7 +618,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -643,7 +643,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -673,7 +673,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -698,7 +698,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -726,7 +726,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -752,7 +752,7 @@ void __cdecl IPN_verify_rigid_bodies(rigid_body *rb_partition_head)
                                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                                  73,
                                  "rb == &m_environment_rigid_body",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1047,7 +1047,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          141,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1076,7 +1076,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          229,
                          "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1091,7 +1091,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                      "source/physics_system_internal.cpp",
                      163,
                      "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1112,7 +1112,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          229,
                          "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1127,7 +1127,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                      "source/physics_system_internal.cpp",
                      163,
                      "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1149,7 +1149,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1164,7 +1164,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1193,7 +1193,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1204,7 +1204,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1229,7 +1229,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1244,7 +1244,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1269,7 +1269,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1284,7 +1284,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1309,7 +1309,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1324,7 +1324,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1353,7 +1353,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1364,7 +1364,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1389,7 +1389,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1404,7 +1404,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1433,7 +1433,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              229,
                              "rbc.get_b2() && GIPN(rbc.get_b2())->m_partition_head",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1444,7 +1444,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          163,
                          "GIPN(rb_partition_head)->m_partition_head == rb_partition_head",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1455,7 +1455,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
         while ( &v100->m_list_rbc_contact != v91 );
     }
     if ( transient_buffer->m_cur
-        && _tlAssert("source/physics_system_internal.cpp", 300, "transient_buffer->is_empty()", &toastPopupTitle) )
+        && _tlAssert("source/physics_system_internal.cpp", 300, "transient_buffer->is_empty()", "") )
     {
         __debugbreak();
     }
@@ -1485,7 +1485,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                              "source/physics_system_internal.cpp",
                              314,
                              "list_island_cur < m_list_island_count",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -1500,7 +1500,7 @@ void __thiscall physics_system::generate_partitions_and_stuff(
                          "source/physics_system_internal.cpp",
                          319,
                          "list_island_cur == m_list_island_count",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1580,7 +1580,7 @@ LABEL_11:
             v12 = (phys_free_list<rigid_body_constraint_contact>::T_internal *)&v10[-1];
             PMM_VALIDATE((char *)&v10[-1], 0x38u, 4u);
             if ( !v12
-                && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
             {
                 __debugbreak();
             }
@@ -1665,7 +1665,7 @@ LABEL_11:
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                  69,
                  "m_first_block == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1676,7 +1676,7 @@ LABEL_11:
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                      69,
                      "m_first_block == NULL",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1724,7 +1724,7 @@ void __thiscall physics_system::frame_advance(physics_system *this, float delta_
     v30 = (float)sub_count;
     sub_delta_t = v30 * this->m_max_delta_t;
     if ( sub_delta_t < (double)delta_t
-        && _tlAssert("source/physics_system_internal.cpp", 367, "delta_t <= m_max_delta_t * sub_count", &toastPopupTitle) )
+        && _tlAssert("source/physics_system_internal.cpp", 367, "delta_t <= m_max_delta_t * sub_count", "") )
     {
         __debugbreak();
     }
@@ -2017,7 +2017,7 @@ void __cdecl IPN_partition_process(const rigid_body_constraint *rbc, int *island
                 if ( v4 && m_partition_head != v4 )
                 {
                     if ( --*island_count <= 0
-                        && _tlAssert("source/physics_system_internal.cpp", 215, "*island_count > 0", &toastPopupTitle) )
+                        && _tlAssert("source/physics_system_internal.cpp", 215, "*island_count > 0", "") )
                     {
                         __debugbreak();
                     }
@@ -2043,7 +2043,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::ptr_array_read(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  516,
                  "ptr_array_size == m_list_count",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2070,7 +2070,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2080,7 +2080,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2104,7 +2104,7 @@ void __thiscall phys_free_list<user_rigid_body>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2114,7 +2114,7 @@ void __thiscall phys_free_list<user_rigid_body>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2138,7 +2138,7 @@ void __thiscall phys_free_list<rigid_body>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2148,7 +2148,7 @@ void __thiscall phys_free_list<rigid_body>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2228,7 +2228,7 @@ void __cdecl rbint::prolog_frame_advance(user_rigid_body *rb, float delta_t)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  37,
                  "rb->is_user_rigid_body()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2237,7 +2237,7 @@ void __cdecl rbint::prolog_frame_advance(user_rigid_body *rb, float delta_t)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  38,
                  "rb->m_dictator",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2268,7 +2268,7 @@ void __cdecl rbint::collision_prolog(user_rigid_body *rb, float delta_t)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  46,
                  "rb->is_user_rigid_body()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2277,7 +2277,7 @@ void __cdecl rbint::collision_prolog(user_rigid_body *rb, float delta_t)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  47,
                  "rb->m_dictator",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2307,7 +2307,7 @@ void    rbint::take_next_step(int a1@<ebp>, user_rigid_body *rb, float delta_t)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  65,
                  "rb->is_user_rigid_body()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2316,7 +2316,7 @@ void    rbint::take_next_step(int a1@<ebp>, user_rigid_body *rb, float delta_t)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                  66,
                  "rb->m_dictator",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2384,7 +2384,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::ptr_array_write(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  523,
                  "ptr_array_size == m_list_count",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2420,7 +2420,7 @@ void __thiscall phys_free_list<user_rigid_body>::remove(
     phys_free_list<user_rigid_body>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2441,7 +2441,7 @@ void __thiscall phys_free_list<rigid_body>::remove(
     phys_free_list<rigid_body>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2468,7 +2468,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2478,7 +2478,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2502,7 +2502,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2512,7 +2512,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2536,7 +2536,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2546,7 +2546,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2570,7 +2570,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::debug_
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2580,7 +2580,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::debug_
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2604,7 +2604,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2614,7 +2614,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2638,7 +2638,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::debug_re
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2648,7 +2648,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::debug_re
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2672,7 +2672,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2682,7 +2682,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2708,7 +2708,7 @@ void __thiscall physics_system::validate_member(physics_system *this, environmen
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
                              73,
                              "rb == &m_environment_rigid_body",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -2733,7 +2733,7 @@ void __thiscall physics_system::solver_priority_sort(physics_system *this, phys_
     {
         if ( transient_buffer->m_cur )
         {
-            if ( _tlAssert("source/physics_system_internal.cpp", 351, "transient_buffer->is_empty()", &toastPopupTitle) )
+            if ( _tlAssert("source/physics_system_internal.cpp", 351, "transient_buffer->is_empty()", "") )
                 __debugbreak();
         }
         v3 = (rigid_body_constraint_contact **)phys_transient_allocator::allocate(
@@ -2766,7 +2766,7 @@ void __thiscall phys_free_list<user_rigid_body>::remove_all(phys_free_list<user_
         m_next_T_internal = (phys_free_list<user_rigid_body>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -2790,7 +2790,7 @@ void __thiscall phys_free_list<rigid_body>::remove_all(phys_free_list<rigid_body
         m_next_T_internal = (phys_free_list<rigid_body>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -2811,7 +2811,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::remove(
     phys_free_list<rigid_body_constraint_contact>::T_internal_base *m_next_T_internal; // eax
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2837,7 +2837,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::remove_all(
         m_next_T_internal = (phys_free_list<rigid_body_constraint_contact>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -2859,7 +2859,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::remove(
     phys_free_list<rigid_body_constraint_point>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2880,7 +2880,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::remove(
     phys_free_list<rigid_body_constraint_wheel>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2901,7 +2901,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::remove(
     phys_free_list<rigid_body_constraint_ragdoll>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2922,7 +2922,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::remove
     phys_free_list<rigid_body_constraint_custom_orientation>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2943,7 +2943,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::remove(
     phys_free_list<rigid_body_constraint_custom_path>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2964,7 +2964,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::remove(
     phys_free_list<rigid_body_constraint_angular_actuator>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -2985,7 +2985,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::remove(
     phys_free_list<rigid_body_constraint_upright>::T_internal_base *m_prev_T_internal; // ecx
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -3007,7 +3007,7 @@ void __thiscall phys_free_list<user_rigid_body>::~phys_free_list<user_rigid_body
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3016,7 +3016,7 @@ void __thiscall phys_free_list<user_rigid_body>::~phys_free_list<user_rigid_body
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3025,7 +3025,7 @@ void __thiscall phys_free_list<user_rigid_body>::~phys_free_list<user_rigid_body
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3041,7 +3041,7 @@ void __thiscall phys_free_list<rigid_body>::~phys_free_list<rigid_body>(phys_fre
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3050,7 +3050,7 @@ void __thiscall phys_free_list<rigid_body>::~phys_free_list<rigid_body>(phys_fre
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3059,7 +3059,7 @@ void __thiscall phys_free_list<rigid_body>::~phys_free_list<rigid_body>(phys_fre
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3076,7 +3076,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3085,7 +3085,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3094,7 +3094,7 @@ void __thiscall phys_free_list<rigid_body_constraint_contact>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3114,7 +3114,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::remove_all(
         m_next_T_internal = (phys_free_list<rigid_body_constraint_point>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3139,7 +3139,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::remove_all(
         m_next_T_internal = (phys_free_list<rigid_body_constraint_ragdoll>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3164,7 +3164,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::remove_all(
         m_next_T_internal = (phys_free_list<rigid_body_constraint_wheel>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3189,7 +3189,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::remove
         m_next_T_internal = (phys_free_list<rigid_body_constraint_custom_orientation>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3214,7 +3214,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::remove_all(
         m_next_T_internal = (phys_free_list<rigid_body_constraint_custom_path>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3239,7 +3239,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::remove_a
         m_next_T_internal = (phys_free_list<rigid_body_constraint_angular_actuator>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3264,7 +3264,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::remove_all(
         m_next_T_internal = (phys_free_list<rigid_body_constraint_upright>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;
@@ -3286,7 +3286,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::~phys_free_list<rig
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3295,7 +3295,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::~phys_free_list<rig
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3304,7 +3304,7 @@ void __thiscall phys_free_list<rigid_body_constraint_point>::~phys_free_list<rig
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3321,7 +3321,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::~phys_free_list<rig
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3330,7 +3330,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::~phys_free_list<rig
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3339,7 +3339,7 @@ void __thiscall phys_free_list<rigid_body_constraint_wheel>::~phys_free_list<rig
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3356,7 +3356,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3365,7 +3365,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3374,7 +3374,7 @@ void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3391,7 +3391,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::~phys_
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3400,7 +3400,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::~phys_
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3409,7 +3409,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::~phys_
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3426,7 +3426,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::~phys_free_li
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3435,7 +3435,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::~phys_free_li
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3444,7 +3444,7 @@ void __thiscall phys_free_list<rigid_body_constraint_custom_path>::~phys_free_li
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3461,7 +3461,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::~phys_fr
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3470,7 +3470,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::~phys_fr
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3479,7 +3479,7 @@ void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::~phys_fr
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3496,7 +3496,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  448,
                  "m_list_count == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3505,7 +3505,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  449,
                  "m_dummy_head.m_next_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3514,7 +3514,7 @@ void __thiscall phys_free_list<rigid_body_constraint_upright>::~phys_free_list<r
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  450,
                  "m_dummy_head.m_prev_T_internal == &m_dummy_head",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3529,7 +3529,7 @@ void __thiscall physics_system::~physics_system(physics_system *this)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                  69,
                  "m_first_block == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3538,7 +3538,7 @@ void __thiscall physics_system::~physics_system(physics_system *this)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                  69,
                  "m_first_block == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3567,7 +3567,7 @@ void __thiscall phys_free_list<rigid_body_constraint_distance>::remove_all(phys_
         m_next_T_internal = (phys_free_list<broad_phase_group>::T_internal *)this->m_dummy_head.m_next_T_internal;
         if ( !m_next_T_internal )
         {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 __debugbreak();
         }
         --this->m_list_count;

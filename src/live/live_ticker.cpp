@@ -25,7 +25,7 @@ char *__cdecl LiveTicker_GetStreamNameTextInternal(streamName_t streamName)
             result = UI_SafeTranslateString("TICKER_MESSAGE_CATEGORY_NONE_CAPS");
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -291,7 +291,7 @@ char *__cdecl LiveTicker_GetCurrentMessage(
             *xCoord = baseX;
             *yCoord = baseY;
             *alpha = baseAlpha;
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         }
         else
         {
@@ -393,7 +393,7 @@ $LN16_68:
             if ( currMessage->state )
                 return (char *)currMessage;
             else
-                return (char *)&toastPopupTitle;
+                return (char *)"";
         }
     }
     else

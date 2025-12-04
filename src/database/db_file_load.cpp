@@ -1,4 +1,28 @@
 #include "db_file_load.h"
+#include <universal/assertive.h>
+#include "db_auth.h"
+#include "db_registry.h"
+
+#include <Windows.h>
+#include <win32/win_shared.h>
+#include <qcommon/common.h>
+#include <qcommon/threads.h>
+#include "db_memory.h"
+#include "db_stream.h"
+#include "db_stream_load.h"
+#include "db_load.h"
+
+volatile int g_totalSize;
+volatile unsigned int g_loadedSize;
+volatile unsigned int g_loadingAssets;
+volatile int g_totalExternalBytes;
+volatile unsigned int g_loadedExternalBytes;
+volatile int g_totalStreamBytes;
+int g_trackLoadProgress;
+bool g_minimumFastFileLoaded;
+int g_totalWait;
+
+DB_LoadData g_load;
 
 double __cdecl DB_GetLoadedFraction()
 {
@@ -80,20 +104,20 @@ void __cdecl DB_CancelLoadXFile()
 signed __int32 DB_WaitXFileStage()
 {
     signed __int32 result; // eax
-    unsigned intwaitStart; // [esp+0h] [ebp-8h]
+    DWORD waitStart; // [esp+0h] [ebp-8h]
 
-    if ( !g_load.f
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\database\\db_file_load.cpp", 1327, 0, "%s", "g_load.f") )
+    if (!g_load.f
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\database\\db_file_load.cpp", 1327, 0, "%s", "g_load.f"))
     {
         __debugbreak();
     }
-    if ( g_load.outstandingReads <= 0
+    if (g_load.outstandingReads <= 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\database\\db_file_load.cpp",
-                    1329,
-                    0,
-                    "%s",
-                    "g_load.outstandingReads > 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\database\\db_file_load.cpp",
+            1329,
+            0,
+            "%s",
+            "g_load.outstandingReads > 0"))
     {
         __debugbreak();
     }
@@ -216,7 +240,7 @@ LABEL_10:
                     err = DB_AuthLoad_Inflate(&g_load.stream, 2);
                     if ( err >= 2 )
                     {
-                        BLOPS_NULLSUB();
+                        //BLOPS_NULLSUB();
                         DB_CancelLoadXFile();
                         Com_Error(
                             ERR_DROP,
@@ -304,6 +328,14 @@ void DB_ReadXFileStage()
     }
 }
 
+VOID WINAPI DB_FileReadCompletionDummyCallback(
+    DWORD dwErrorCode,
+    DWORD dwNumberOfBytesTransfered,
+    LPOVERLAPPED lpOverlapped)
+{
+    ;
+}
+
 int __cdecl DB_ReadData()
 {
     unsigned __int8 *fileBuffer; // [esp+0h] [ebp-8h]
@@ -332,14 +364,6 @@ int __cdecl DB_ReadData()
     ++g_load.outstandingReads;
     g_load.overlapped.Offset += 0x40000;
     return 1;
-}
-
-void __stdcall DB_FileReadCompletionDummyCallback(
-                unsigned int dwErrorCode,
-                unsigned int dwNumberOfBytesTransfered,
-                _OVERLAPPED *lpOverlapped)
-{
-    ;
 }
 
 void __cdecl DB_LoadXFileInternal()
@@ -381,7 +405,7 @@ void __cdecl DB_LoadXFileInternal()
     g_load.stream.avail_in -= 8;
     if ( memcmp(magic, "IWff0100", 8u) && memcmp(magic, "IWffu100", 8u) )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         Com_Error(ERR_DROP, "Fastfile for zone '%s' is corrupt or unreadable.", g_load.filename);
     }
     if ( g_load.stream.avail_in < 4
@@ -423,7 +447,7 @@ void __cdecl DB_LoadXFileInternal()
         failureReason = "init failed";
     if ( failureReason )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         DB_CancelLoadXFile();
         Com_Error(ERR_DROP, "Fastfile for zone '%s' could not be loaded (%s)", g_load.filename, failureReason);
     }
@@ -479,8 +503,7 @@ void __cdecl DB_LoadXFileInternal()
         __debugbreak();
     }
     v1 = g_totalWait;
-    v0 = Sys_Milliseconds();
-    Com_Printf(10, "Loaded fastfile '%s' in %ims (%dms waiting)\n", g_load.filename, v0 - g_load.startTime, v1);
+    Com_Printf(10, "Loaded fastfile '%s' in %ims (%dms waiting)\n", g_load.filename, Sys_Milliseconds() - g_load.startTime, v1);
     if ( (g_load.flags & 1) != 0 )
         g_minimumFastFileLoaded = 1;
     DB_CancelLoadXFile();

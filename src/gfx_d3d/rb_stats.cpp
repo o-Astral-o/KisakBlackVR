@@ -261,7 +261,7 @@ void __cdecl RB_Stats_SummarizePrimStats(const char *label, const GfxPrimStats *
     }
     else
     {
-        Com_Printf(8, "|%5s", &toastPopupTitle);
+        Com_Printf(8, "|%5s", "");
     }
     if ( primStats->triCount )
     {
@@ -270,7 +270,7 @@ void __cdecl RB_Stats_SummarizePrimStats(const char *label, const GfxPrimStats *
     }
     else
     {
-        Com_Printf(8, "|%7s", &toastPopupTitle);
+        Com_Printf(8, "|%7s", "");
     }
     if ( primStats->staticIndexCount )
     {
@@ -279,7 +279,7 @@ void __cdecl RB_Stats_SummarizePrimStats(const char *label, const GfxPrimStats *
     }
     else
     {
-        Com_Printf(8, "|%7s", &toastPopupTitle);
+        Com_Printf(8, "|%7s", "");
     }
     if ( primStats->staticVertexCount )
     {
@@ -288,7 +288,7 @@ void __cdecl RB_Stats_SummarizePrimStats(const char *label, const GfxPrimStats *
     }
     else
     {
-        Com_Printf(8, "|%7s", &toastPopupTitle);
+        Com_Printf(8, "|%7s", "");
     }
     if ( primStats->dynamicIndexCount )
     {
@@ -297,7 +297,7 @@ void __cdecl RB_Stats_SummarizePrimStats(const char *label, const GfxPrimStats *
     }
     else
     {
-        Com_Printf(8, "|%7s", &toastPopupTitle);
+        Com_Printf(8, "|%7s", "");
     }
     if ( primStats->dynamicVertexCount )
     {
@@ -306,7 +306,7 @@ void __cdecl RB_Stats_SummarizePrimStats(const char *label, const GfxPrimStats *
     }
     else
     {
-        Com_Printf(8, "|%7s|\n", &toastPopupTitle);
+        Com_Printf(8, "|%7s|\n", "");
     }
 }
 

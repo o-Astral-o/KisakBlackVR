@@ -1,4 +1,100 @@
 #pragma once
+#include <sound/snd.h>
+
+struct ViewModelInfo;
+struct gentity_s;
+struct localEntity_s;
+struct FxEffectDef;
+struct DObj;
+struct XAnim_s;
+struct GfxScaledPlacement;
+struct refdef_s;
+struct localEntity_s;
+
+enum itemType_t : __int32
+{                                       // XREF: gitem_s/r
+    IT_BAD    = 0x0,
+    IT_WEAPON = 0x1,
+};
+
+struct gitem_s // sizeof=0x4
+{                                       // XREF: gitem_t/r
+    itemType_t giType;
+};
+
+struct weaponInfo_s // sizeof=0x24
+{                                       // XREF: weaponInfo_t/r
+    XModel *handModel;
+    XModel *gogglesModel;
+    XModel *rocketModel;
+    unsigned __int8 weapModelIdx;
+    // padding byte
+    // padding byte
+    // padding byte
+    int registered;
+    const gitem_s *item;
+    const char *translatedDisplayName;
+    const char *translatedModename;
+    const char *translatedAIOverlayDescription;
+};
+
+struct weaponState_t // sizeof=0x90
+{                                       // XREF: ?ClientThink_real@@YAXPAUgentity_s@@PAUusercmd_s@@@Z/r
+                                        // ?CG_AddViewWeapon@@YAXH@Z/r
+    const playerState_s *ps;            // XREF: ClientThink_real(gentity_s *,usercmd_s *):loc_5FA486/r
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+B20/r
+    float xyspeed;
+    float frametime;
+    float fLastIdleFactor;
+    int time;
+    int damageTime;
+    float v_dmg_pitch;
+    float v_dmg_roll;
+    int *weapIdleTime;
+    float baseAngles[3];
+    float baseOrigin[3];
+    float recoilAngles[3];
+    float recoilSpeed[3];
+    float swayAngles[3];
+    float swayOrigin[3];
+    float swayViewAngles[3];
+    float bobAngles[3];
+    int shellShockStart;
+    int shellShockDuration;
+    int shellShockFadeTime;
+};
+
+struct __declspec(align(4)) snd_weapon_shot // sizeof=0x34
+{                                       // XREF: snd_autosim_play/r
+                                        // snd_autosim/r ...
+    int localClientNum;                 // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+182/w
+                                        // CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+13A/w
+    SndEntHandle shooter;               // XREF: CG_SndKillAutoSimEnt(SndEntHandle)+22/r
+                                        // CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+188/w ...
+    unsigned int weapon;                // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+18E/w
+                                        // CG_SndPingAutoSim+80/r ...
+    float origin[3];                    // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1BF/w
+                                        // CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1CC/w ...
+    float direction[3];                 // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1E5/w
+                                        // CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1F2/w ...
+    unsigned int tagName;               // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+207/w
+                                        // CG_SndPingAutoSim+94/r ...
+    unsigned int burstCount;            // XREF: CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+1C2/w
+    bool shooterIsPlayer;               // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+194/w
+                                        // CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+149/w
+    bool shooterIsLocalPlayer;          // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+19A/w
+                                        // CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+14D/w
+    bool isLastShotInClip;              // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1A0/w
+                                        // CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+151/w
+    bool isTurret;                      // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1AF/w
+                                        // CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool):loc_535D96/r ...
+    bool doubleTap;                     // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+1B5/w
+                                        // CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+164/w
+    bool fakeFire;                      // XREF: CG_WeaponFireSingle(int,SndEntHandle,uint,bool,bool,bool,float const * const,float const * const,uint,bool)+20A/w
+                                        // CG_WeaponFireFake(int,SndEntHandle,uint,float const * const,float const * const,int)+1BB/w
+    // padding byte
+    // padding byte
+};
 
 bool __cdecl CG_JavelinADS(int localClientNum);
 bool __cdecl CG_UICheckWeapLockBlink(int localClientNum, float blinkPerSec);
@@ -227,7 +323,7 @@ void __cdecl CG_FireWeapon_OriginAndDirection(
                 float *origin,
                 float *direction);
 void __cdecl CG_FireWeapon(
-                jpeg_decompress_struct *localClientNum,
+                int localClientNum,
                 centity_s *cent,
                 int event,
                 unsigned __int16 tagName,
@@ -390,7 +486,7 @@ void __cdecl CG_DisplayViewmodelAnim(int localClientNum);
 bool __cdecl CG_ScopeIsOverlayed(int localClientNum);
 unsigned int __cdecl CG_PlayerTurretWeaponIdx(int localClientNum);
 unsigned int __cdecl CG_GetPlayerMeleeWeapon(const playerState_s *ps);
-unsigned int __cdecl CG_GetPlayerWeapon(const playerState_s *ps, int localClientNum);
+int __cdecl CG_GetPlayerWeapon(const playerState_s *ps, int localClientNum);
 int __cdecl CG_GetPlayerVehicleWeapon(const playerState_s *ps, int localClientNum);
 unsigned int __cdecl CG_GetClientWeapon(unsigned int clientNum, int localClientNum);
 bool __cdecl CG_PlayerUsingScopedTurret(int localClientNum);

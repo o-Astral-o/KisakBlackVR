@@ -13,7 +13,7 @@ void __cdecl R_Track_Init()
     g_mem_track_filename = "r_dpvs";
     TRACK_r_dpvs();
     g_mem_track_filename = "r_fog";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "r_font";
     TRACK_r_font();
     g_mem_track_filename = "r_image";
@@ -23,7 +23,7 @@ void __cdecl R_Track_Init()
     g_mem_track_filename = "r_init";
     TRACK_r_init();
     g_mem_track_filename = "r_marks";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "r_material";
     TRACK_r_material();
     g_mem_track_filename = "r_model";
@@ -33,23 +33,23 @@ void __cdecl R_Track_Init()
     g_mem_track_filename = "r_screenshot";
     TRACK_r_screenshot();
     g_mem_track_filename = "r_staticmodel";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "r_staticmodelcache";
     TRACK_r_staticmodelcache();
     g_mem_track_filename = "r_utils";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "r_xsurface";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "r_water";
     TRACK_r_water();
     g_mem_track_filename = "r_light";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "rb_debug";
     TRACK_rb_debug();
     g_mem_track_filename = "rb_backend";
     TRACK_rb_backend();
     g_mem_track_filename = "rb_shade";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     g_mem_track_filename = "rb_showcollision";
     TRACK_rb_showcollision();
     g_mem_track_filename = "rb_state";
@@ -59,6 +59,6 @@ void __cdecl R_Track_Init()
     g_mem_track_filename = "rb_sunshadow";
     TRACK_rb_sunshadow();
     g_mem_track_filename = "rb_tess";
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 

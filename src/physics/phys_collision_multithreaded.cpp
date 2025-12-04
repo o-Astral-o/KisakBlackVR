@@ -7,7 +7,7 @@ void __thiscall phys_memory_heap::set_buffer(phys_memory_heap *this, char *start
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  33,
                  "m_buffer_start == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -16,7 +16,7 @@ void __thiscall phys_memory_heap::set_buffer(phys_memory_heap *this, char *start
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  34,
                  "m_buffer_end == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -25,12 +25,12 @@ void __thiscall phys_memory_heap::set_buffer(phys_memory_heap *this, char *start
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  35,
                  "m_buffer_cur == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
     if ( size <= 0
-        && _tlAssert("C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 36, "size > 0", &toastPopupTitle) )
+        && _tlAssert("C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 36, "size > 0", "") )
     {
         __debugbreak();
     }
@@ -39,7 +39,7 @@ void __thiscall phys_memory_heap::set_buffer(phys_memory_heap *this, char *start
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  37,
                  "((size_t)start) % alignment == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -60,7 +60,7 @@ void __thiscall rigid_body_constraint_contact::add_cpi_simple(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  364,
                  "cpi",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -69,7 +69,7 @@ void __thiscall rigid_body_constraint_contact::add_cpi_simple(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  365,
                  "cpi->m_list_b1_r_loc",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -78,7 +78,7 @@ void __thiscall rigid_body_constraint_contact::add_cpi_simple(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  366,
                  "cpi->m_list_b2_r_loc",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -87,7 +87,7 @@ void __thiscall rigid_body_constraint_contact::add_cpi_simple(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  367,
                  "cpi->m_list_pulse_sum_cache_info",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -96,7 +96,7 @@ void __thiscall rigid_body_constraint_contact::add_cpi_simple(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  368,
                  "cpi->m_point_pair_count > 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -144,7 +144,7 @@ void    phys_collide_do_gjk_collide_and_contact_manifold(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_collision.h",
                  29,
                  "pcp->m_hit_time >= 0.0f && pcp->m_hit_time <= 1.0f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -178,7 +178,7 @@ void __cdecl process_cpi(contact_point_info *cpi)
         do
         {
             next_cpi = v1->m_next_link;
-            if ( !v1->m_pcp && _tlAssert("source/phys_collision_multithreaded.cpp", 78, "cpi->m_pcp", &toastPopupTitle) )
+            if ( !v1->m_pcp && _tlAssert("source/phys_collision_multithreaded.cpp", 78, "cpi->m_pcp", "") )
                 __debugbreak();
             m_pcp = v1->m_pcp;
             m_bpi1 = m_pcp->m_bpi1;
@@ -259,7 +259,7 @@ int    phys_gjk_collide_jq_batch_function@<eax>(int a1@<ebp>, jqBatch *pBatch)
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      263,
                      "m_last_next_ptr",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }

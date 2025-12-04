@@ -12,7 +12,7 @@ phys_vec3 *__cdecl phys_Unitize(phys_vec3 *result, const phys_vec3 *a)
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  80,
                  "na > 0.0f",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -27,7 +27,7 @@ phys_vec3 *__cdecl phys_Unitize(phys_vec3 *result, const phys_vec3 *a)
 void __cdecl gjk_collision_epilog(bool is_server_thread)
 {
     if ( is_server_thread )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
 }
 
 phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__cdecl get_gjk_cache_info(
@@ -64,7 +64,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
                  309,
                  "id1 != id2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -84,7 +84,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
                  24,
                  "id1 < id2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -518,7 +518,7 @@ broad_phase_environment_info *__thiscall bpei_database_t::get_bpei(bpei_database
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase.h",
                  257,
                  "bpei",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1718,7 +1718,7 @@ int __thiscall gjk_base_t::get_contents(gjk_base_t *this)
                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                  90,
                  "get_flag(FLAG_CONTENTS_VALID)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1942,7 +1942,7 @@ char __cdecl gjk_trace_aabb(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1951,7 +1951,7 @@ char __cdecl gjk_trace_aabb(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1961,7 +1961,7 @@ char __cdecl gjk_trace_aabb(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1972,7 +1972,7 @@ char __cdecl gjk_trace_aabb(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1981,7 +1981,7 @@ char __cdecl gjk_trace_aabb(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1992,7 +1992,7 @@ char __cdecl gjk_trace_aabb(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                          32,
                          "i >= 0 && i < 3",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2279,7 +2279,7 @@ bool __userpurge gjk_aabb_t::is_walkable@<al>(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2288,7 +2288,7 @@ bool __userpurge gjk_aabb_t::is_walkable@<al>(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2297,7 +2297,7 @@ bool __userpurge gjk_aabb_t::is_walkable@<al>(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2325,7 +2325,7 @@ bool __userpurge gjk_aabb_t::is_walkable@<al>(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2334,7 +2334,7 @@ bool __userpurge gjk_aabb_t::is_walkable@<al>(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2343,7 +2343,7 @@ bool __userpurge gjk_aabb_t::is_walkable@<al>(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3303,7 +3303,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                      103,
                      "cur_item + 1 - the_stack < 32",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3329,7 +3329,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                              112,
                              "key > accessor::get_avl_key(root)",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -3362,7 +3362,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                          130,
                          "accessor::get_avl_node(accessor::get_avl_node(root)->m_left)->m_balance == -1 || accessor::get_avl_node(acc"
                          "essor::get_avl_node(root)->m_left)->m_balance == 1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -3378,7 +3378,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          134,
                          "accessor::get_avl_node(root)->m_balance == 0",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -3392,7 +3392,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                          138,
                          "accessor::get_avl_node(accessor::get_avl_node(root)->m_right)->m_balance == -1 || accessor::get_avl_node(ac"
                          "cessor::get_avl_node(root)->m_right)->m_balance == 1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -3408,7 +3408,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          142,
                          "accessor::get_avl_node(root)->m_balance == 0",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }

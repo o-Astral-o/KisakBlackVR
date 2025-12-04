@@ -52,7 +52,7 @@ void __cdecl dw_disconnect(int controllerIndex)
     DWDisconnectLobby(lobby);
     Dvar_SetBoolByName("dw_active", 0);
     Dvar_SetBoolByName("dw_loggedin", 0);
-    for ( i = 5; i--; Dvar_SetString((dvar_s *)dw_usernames[i], &toastPopupTitle) )
+    for ( i = 5; i--; Dvar_SetString((dvar_s *)dw_usernames[i], "") )
         ;
     Dvar_SetInt((dvar_s *)dw_numaccounts, -1);
 }

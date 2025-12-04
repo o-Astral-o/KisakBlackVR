@@ -949,10 +949,10 @@ LABEL_49:
                                         foundLocalizedName = 0;
                                         foundLocalizedDesc = 0;
                                         playlists[playlistNum].rules = Playlist_BeginRules();
-                                        playlists[playlistNum].name = &toastPopupTitle;
-                                        playlists[playlistNum].description = &toastPopupTitle;
-                                        playlists[playlistNum].lockdescription = &toastPopupTitle;
-                                        playlists[playlistNum].iconName = &toastPopupTitle;
+                                        playlists[playlistNum].name = "";
+                                        playlists[playlistNum].description = "";
+                                        playlists[playlistNum].lockdescription = "";
+                                        playlists[playlistNum].iconName = "";
                                         playlists[playlistNum].baseEntry = totalEntries;
                                         playlists[playlistNum].numEntries = 0;
                                         playlists[playlistNum].ranked = 0;
@@ -965,7 +965,7 @@ LABEL_49:
                                         playlists[playlistNum].maxLocalPlayers = 1;
                                         playlists[playlistNum].disableGuests = 0;
                                         for ( index = 0; index < 16; ++index )
-                                            playlists[playlistNum].category[index] = &toastPopupTitle;
+                                            playlists[playlistNum].category[index] = "";
                                         goto LABEL_127;
                                     }
                                     v72 = playlistNum;
@@ -1008,11 +1008,11 @@ LABEL_35:
                             currentParseBlockType = 3;
                             categories[categoryCount].internalName = Playlist_Strdup(token);
                             categories[categoryCount].rules = Playlist_BeginRules();
-                            categories[categoryCount].filter = &toastPopupTitle;
-                            categories[categoryCount].localizedName = &toastPopupTitle;
-                            categories[categoryCount].description = &toastPopupTitle;
-                            categories[categoryCount].lockdescription = &toastPopupTitle;
-                            categories[categoryCount].iconName = &toastPopupTitle;
+                            categories[categoryCount].filter = "";
+                            categories[categoryCount].localizedName = "";
+                            categories[categoryCount].description = "";
+                            categories[categoryCount].lockdescription = "";
+                            categories[categoryCount].iconName = "";
                             categories[categoryCount].playlistCount = 0;
                             Com_SkipRestOfLine(&p);
                         }
@@ -1058,8 +1058,8 @@ LABEL_35:
                                 foundLocalizedName = 0;
                                 gametypes[numGametypes].internalName = Playlist_Strdup(token);
                                 gametypes[numGametypes].rules = Playlist_BeginRules();
-                                gametypes[numGametypes].scriptName = &toastPopupTitle;
-                                gametypes[numGametypes].localizedName = &toastPopupTitle;
+                                gametypes[numGametypes].scriptName = "";
+                                gametypes[numGametypes].localizedName = "";
                                 gametypes[numGametypes].teamBased = 0;
                                 Com_SkipRestOfLine(&p);
                             }
@@ -1145,7 +1145,7 @@ char *__cdecl Playlist_Strdup(const char *src)
     else
     {
         Com_PrintError(16, "ERROR: Playlist string '%s' overflows playlist string buffer\n", src);
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -1190,7 +1190,7 @@ char *__cdecl Playlist_Strdup_Newline(const char *src)
     else
     {
         Com_PrintError(16, "ERROR: Playlist string '%s' overflows playlist string buffer\n", src);
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -1205,7 +1205,7 @@ char *__cdecl Playlist_BeginRules()
     else
     {
         Com_PrintError(16, "ERROR: New playlist rule string overflows playlist rule string buffer\n");
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -1708,7 +1708,7 @@ const char *__cdecl Playlist_GetPlaylistDescription(int controllerIndex, unsigne
     else
     {
         UI_OpenMenu(0, "popup_gettingdata");
-        return &toastPopupTitle;
+        return "";
     }
 }
 
@@ -1728,7 +1728,7 @@ const char *__cdecl Playlist_GetPlaylistIconName(int controllerIndex, unsigned i
     if ( LiveStorage_DoWeHavePlaylists() )
         return playlists[playlistId].iconName;
     UI_OpenMenu(0, "popup_gettingdata");
-    return &toastPopupTitle;
+    return "";
 }
 
 const char *__cdecl Playlist_GetCategoryIconName(int controllerIndex, unsigned int categoryId)
@@ -1747,7 +1747,7 @@ const char *__cdecl Playlist_GetCategoryIconName(int controllerIndex, unsigned i
     if ( LiveStorage_DoWeHavePlaylists() )
         return categories[categoryId].iconName;
     UI_OpenMenu(0, "popup_gettingdata");
-    return &toastPopupTitle;
+    return "";
 }
 
 int __cdecl Playlist_IsLocked(
@@ -2584,8 +2584,8 @@ void __cdecl Playlist_SetSVMapRotation()
     playlistId = Playlist_GetPlaylistIdForNum(0, playlist->current.integer);
     if ( Playlist_GetNumEntries(playlistId) )
     {
-        Dvar_SetStringByName("sv_maprotationcurrent", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("sv_maprotation", (char *)&toastPopupTitle);
+        Dvar_SetStringByName("sv_maprotationcurrent", (char *)"");
+        Dvar_SetStringByName("sv_maprotation", (char *)"");
         total_len = 0;
         for ( i = 0; i < Playlist_GetNumEntries(playlistId); ++i )
         {
@@ -2726,17 +2726,17 @@ const dvar_s *Playlist_RegisterDvars()
     _Dvar_RegisterInt("party_maxplayers", 18, 1, 32, 0, "Maximum number of players");
     playlist_excludeMap = _Dvar_RegisterString(
                                                     "playlist_excludeMap",
-                                                    (char *)&toastPopupTitle,
+                                                    (char *)"",
                                                     1u,
                                                     "Map,Map to exclude from rotation.");
     playlist_excludeGametype = _Dvar_RegisterString(
                                                              "playlist_excludeGametype",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              1u,
                                                              "Gametype,Gametype to exclude from rotation.");
     playlist_excludeGametypeMap = _Dvar_RegisterString(
                                                                     "playlist_excludeGametypeMap",
-                                                                    (char *)&toastPopupTitle,
+                                                                    (char *)"",
                                                                     1u,
                                                                     "Gametype Map, Gametype Map pairs to exclude from rotation.");
     LicenseType = SV_GetLicenseType();

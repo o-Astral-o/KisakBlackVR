@@ -246,6 +246,13 @@ struct visionSetLerpData_t // sizeof=0xC
         visionSetLerpStyle_t style;
 };
 
+struct visField_t // sizeof=0xC
+{                                       // XREF: .data:visionDefFields/r
+    const char *name;                   // XREF: LoadVisionSettingsFromBuffer+A6/r
+    int offset;
+    int fieldType;
+};
+
 void __cdecl CG_RegisterVisionSetsDvars();
 void __cdecl CG_InitVisionSetsMenu();
 void __cdecl CG_AddVisionSetMenuItem(XAssetHeader header);

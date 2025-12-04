@@ -2731,13 +2731,13 @@ void __cdecl G_SpawnTurret(gentity_s *self, const char *weaponinfoname, SpawnVar
     else
         turretInfo->stopSndPlayer = 0;
 
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "rightarc", &toastPopupTitle, &turretInfo->arcmin[1]) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "rightarc", "", &turretInfo->arcmin[1]) )
         turretInfo->arcmin[1] = weapDef->rightArc;
     turretInfo->arcmin[1] = turretInfo->arcmin[1] * -1.0;
     if ( turretInfo->arcmin[1] > 0.0 )
         turretInfo->arcmin[1] = 0.0f;
     turretInfo->initialYawmin = turretInfo->arcmin[1];
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "leftarc", &toastPopupTitle, &turretInfo->arcmax[1]) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "leftarc", "", &turretInfo->arcmax[1]) )
         turretInfo->arcmax[1] = weapDef->leftArc;
     if ( turretInfo->arcmax[1] < 0.0 )
         turretInfo->arcmax[1] = 0.0f;
@@ -2757,34 +2757,34 @@ void __cdecl G_SpawnTurret(gentity_s *self, const char *weaponinfoname, SpawnVar
     __libm_sse2_cos(v8);
     *(float *)&v7 = v7;
     turretInfo->forwardAngleDot = *(float *)&v7;
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "toparc", &toastPopupTitle, turretInfo->arcmin) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "toparc", "", turretInfo->arcmin) )
         turretInfo->arcmin[0] = weapDef->topArc;
     turretInfo->arcmin[0] = turretInfo->arcmin[0] * -1.0;
     if ( turretInfo->arcmin[0] > 0.0 )
         turretInfo->arcmin[0] = 0.0f;
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "bottomarc", &toastPopupTitle, turretInfo->arcmax) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "bottomarc", "", turretInfo->arcmax) )
         turretInfo->arcmax[0] = weapDef->bottomArc;
     if ( turretInfo->arcmax[0] < 0.0 )
         turretInfo->arcmax[0] = 0.0f;
-    if ( (!spawnVar || !G_SpawnFloat(spawnVar, "yawconvergencetime", &toastPopupTitle, &convergenceTime))
-        && (!spawnVar || !G_SpawnFloat(spawnVar, "convergencetime", &toastPopupTitle, &convergenceTime)) )
+    if ( (!spawnVar || !G_SpawnFloat(spawnVar, "yawconvergencetime", "", &convergenceTime))
+        && (!spawnVar || !G_SpawnFloat(spawnVar, "convergencetime", "", &convergenceTime)) )
     {
         convergenceTime = weapDef->yawConvergenceTime;
     }
     if ( convergenceTime < 0.0 )
         convergenceTime = 0.0f;
     turretInfo->convergenceTime[1] = (int)(float)((float)(convergenceTime * 1000.0) + 0.5);
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "pitchconvergencetime", &toastPopupTitle, &convergenceTime) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "pitchconvergencetime", "", &convergenceTime) )
         convergenceTime = weapDef->pitchConvergenceTime;
     if ( convergenceTime < 0.0 )
         convergenceTime = 0.0f;
     turretInfo->convergenceTime[0] = (int)(float)((float)(convergenceTime * 1000.0) + 0.5);
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "suppressionTime", &toastPopupTitle, &suppressTime) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "suppressionTime", "", &suppressTime) )
         suppressTime = weapDef->suppressTime;
     if ( suppressTime < 0.0 )
         suppressTime = 0.0f;
     turretInfo->suppressTime = (int)(float)((float)(suppressTime * 1000.0) + 0.5);
-    if ( !spawnVar || !G_SpawnFloat(spawnVar, "maxrange", &toastPopupTitle, &maxRange) )
+    if ( !spawnVar || !G_SpawnFloat(spawnVar, "maxrange", "", &maxRange) )
         maxRange = weapDef->maxRange;
     if ( maxRange <= 0.0 )
         v9 = FLT_MAX;
@@ -2861,7 +2861,7 @@ void __cdecl SP_turret(gentity_s *self, SpawnVar *spawnVar)
 {
     const char *weaponinfoname; // [esp+0h] [ebp-4h] BYREF
 
-    if ( !G_SpawnString(spawnVar, "weaponinfo", &toastPopupTitle, &weaponinfoname) )
+    if ( !G_SpawnString(spawnVar, "weaponinfo", "", &weaponinfoname) )
         Com_Error(ERR_DROP, &byte_CCF8AC);
     G_SpawnTurret(self, weaponinfoname, spawnVar);
 }

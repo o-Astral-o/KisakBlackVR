@@ -334,7 +334,7 @@ void __cdecl SV_MasterHeartbeat(int controllerIndex)
     {
         forceSessionUpdate = 0;
         if ( !sv_authenticating )
-            sv_authenticating = _Dvar_RegisterBool("sv_authenticating", 0, 0x40u, &toastPopupTitle);
+            sv_authenticating = _Dvar_RegisterBool("sv_authenticating", 0, 0x40u, "");
         if ( sessionCreateFinished )
         {
             qosprobe = dwGetQoSProbe();

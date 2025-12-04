@@ -1,4 +1,583 @@
 #include "r_dvars.h"
+#include "r_sky.h"
+
+#include <cstddef>
+#include <qcommon/threads.h>
+#include "r_reflection_probe.h"
+#include "r_warn.h"
+#include <universal/q_shared.h>
+
+const dvar_s *r_ignore;
+const dvar_s *r_clipCodec;
+const dvar_s *r_clipSize;
+const dvar_s *r_clipFPS;
+const dvar_s *vid_xpos;
+const dvar_s *vid_ypos;
+const dvar_s *r_fullscreen;
+const dvar_s *r_gamma;
+const dvar_s *r_ignorehwgamma;
+const dvar_s *r_texFilterAnisoMax;
+const dvar_s *r_texFilterDisable;
+const dvar_s *r_texFilterAnisoMin;
+const dvar_s *r_texFilterMipMode;
+const dvar_s *r_texFilterMipBias;
+const dvar_s *r_fullbright;
+const dvar_s *r_debugShader;
+const dvar_s *r_lightConflicts;
+const dvar_s *r_gpuSync;
+const dvar_s *r_multiGpu;
+const dvar_s *r_skinCache;
+const dvar_s *r_fastSkin;
+const dvar_s *r_smc_enable;
+const dvar_s *r_pretess;
+const dvar_s *r_lodScaleRigid;
+const dvar_s *r_lodBiasRigid;
+const dvar_s *r_lodScaleSkinned;
+const dvar_s *r_lodBiasSkinned;
+const dvar_s *r_fovScaleThresholdSkinned;
+const dvar_s *r_fovScaleThresholdRigid;
+const dvar_s *r_worldLod;
+const dvar_s *r_znear;
+const dvar_s *r_znear_depthhack;
+const dvar_s *r_zfar;
+const dvar_s *r_fog;
+const dvar_s *r_polygonOffsetScale;
+const dvar_s *r_polygonOffsetBias;
+const dvar_s *r_picmip_manual;
+const dvar_s *r_picmip;
+const dvar_s *r_picmip_bump;
+const dvar_s *r_picmip_spec;
+const dvar_s *r_picmip_water;
+const dvar_s *r_envMapSpecular;
+const dvar_s *r_lightMap;
+const dvar_s *r_colorMap;
+const dvar_s *r_normalMap;
+const dvar_s *r_specularRoughnessMap;
+const dvar_s *r_specularColorScale;
+const dvar_s *r_diffuseColorScale;
+const dvar_s *r_useLayeredMaterials;
+const dvar_s *r_loadForRenderer;
+const dvar_s *r_showLodInfo;
+const dvar_s *r_showTris;
+const dvar_s *r_showTriCounts;
+const dvar_s *r_showSurfCounts;
+const dvar_s *r_showVertCounts;
+const dvar_s *r_resampleScene;
+const dvar_s *r_showPenetration;
+const dvar_s *r_showPixelCost;
+const dvar_s *r_xdebug;
+const dvar_s *r_debugLineWidth;
+const dvar_s *r_vc_makelog;
+const dvar_s *r_vc_showlog;
+const dvar_s *r_showLightGrid;
+const dvar_s *r_showLightingOrigins;
+const dvar_s *r_showMissingLightGrid;
+const dvar_s *r_cacheSModelLighting;
+const dvar_s *r_cacheModelLighting;
+const dvar_s *r_lightTweakAmbient;
+const dvar_s *r_lightTweakDiffuseFraction;
+const dvar_s *r_lightTweakSunLight;
+const dvar_s *r_lightTweakAmbientColor;
+const dvar_s *r_lightTweakSunColor;
+const dvar_s *r_lightTweakSunDiffuseColor;
+const dvar_s *r_lightTweakSunDirection;
+const dvar_s *r_ui3d_h;
+const dvar_s *r_bloomStreakYTintControl;
+const dvar_s *r_filmTweakLightTint;
+const dvar_s *r_bloomStreakYTintControl;
+const dvar_s *r_envMapOverride;
+const dvar_s *r_envMapMinIntensity;
+const dvar_s *r_envMapMaxIntensity;
+const dvar_s *r_envMapExponent;
+const dvar_s *r_envMapSunIntensity;
+const dvar_s *r_showSunDirectionDebug;
+const dvar_s *r_showOutdoorVolumeDebug;
+const dvar_s *r_materialXYZ;
+const dvar_s *r_collectActiveMaterials;
+const dvar_s *r_drawPrimHistogram;
+const dvar_s *r_logFile;
+const dvar_s *r_norefresh;
+const dvar_s *r_scaleViewport;
+const dvar_s *r_smp_backend;
+const dvar_s *r_smp_worker;
+const dvar_s *r_aaAlpha;
+const dvar_s *r_aaSamples;
+const dvar_s *r_vsync;
+const dvar_s *r_clear;
+const dvar_s *r_clearColor;
+const dvar_s *r_clearColor2;
+const dvar_s *r_setFrameBufferAlpha;
+const dvar_s *r_drawSun;
+const dvar_s *r_drawWorld;
+const dvar_s *r_drawEntities;
+const dvar_s *r_drawPoly;
+const dvar_s *r_drawPrimFloor;
+const dvar_s *r_skipDrawTris;
+const dvar_s *r_drawWater;
+const dvar_s *r_lockPvs;
+const dvar_s *r_skipPvs;
+const dvar_s *r_portalBevels;
+const dvar_s *r_portalBevelsOnly;
+const dvar_s *r_singleCell;
+const dvar_s *r_showForcedInvisibleCells;
+const dvar_s *r_portalWalkLimit;
+const dvar_s *r_portalMinClipArea;
+const dvar_s *r_portalMinRecurseDepth;
+const dvar_s *r_enableOccluders;
+const dvar_s *r_showPortals;
+const dvar_s *r_showOccluders;
+const dvar_s *r_showAabbTrees;
+const dvar_s *r_showSModelNames;
+const dvar_s *r_showDynEntModelNames;
+const dvar_s *r_showDObjModelNames;
+const dvar_s *r_showEntModelNames;
+const dvar_s *r_showTess;
+const dvar_s *r_showCullBModels;
+const dvar_s *r_showCullSModels;
+const dvar_s *r_showCullXModels;
+const dvar_s *r_showFbColorDebug;
+const dvar_s *r_showFloatZDebug;
+const dvar_s *r_showCollision;
+const dvar_s *r_showCollisionGroups;
+const dvar_s *r_showCollisionPolyType;
+const dvar_s *r_showCollisionDepthTest;
+const dvar_s *r_showCollisionDist;
+const dvar_s *r_floatz;
+const dvar_s *r_depthPrepass;
+const dvar_s *r_highLodDist;
+const dvar_s *r_mediumLodDist;
+const dvar_s *r_lowLodDist;
+const dvar_s *r_lowestLodDist;
+const dvar_s *r_forceLod;
+const dvar_s *r_modelVertColor;
+const dvar_s *sm_enable;
+const dvar_s *sm_sunEnable;
+const dvar_s *sm_spotEnable;
+const dvar_s *sm_maxLights;
+const dvar_s *sm_spotShadowFadeTime;
+const dvar_s *sm_lightScore_eyeProjectDist;
+const dvar_s *sm_lightScore_spotProjectFrac;
+const dvar_s *sm_showOverlay;
+const dvar_s *sm_showOverlayDepthBounds;
+const dvar_s *sm_showSpotAxis;
+const dvar_s *sm_sunAlwaysCastsShadow;
+const dvar_s *sm_polygonOffsetScale;
+const dvar_s *sm_polygonOffsetBias;
+const dvar_s *sm_sunSampleSizeNear;
+const dvar_s *sm_sunShadowCenter;
+const dvar_s *sm_sunShadowScale;
+const dvar_s *sm_sunShadowSmall;
+const dvar_s *sm_sunShadowSmallEnable;
+const dvar_s *r_backBufferSize;
+const dvar_s *r_backBufferSizeY;
+const dvar_s *sm_spotShadowLargeRadiusScale;
+const dvar_s *sm_strictCull;
+const dvar_s *sm_fastSunShadow;
+const dvar_s *sm_qualitySpotShadow;
+const dvar_s *sm_fullResSpotShadowEnable;
+const dvar_s *sm_debugFastSunShadow;
+const dvar_s *r_stream;
+const dvar_s *r_streamCheckAabb;
+const dvar_s *r_streamClear;
+const dvar_s *r_streamDebug;
+const dvar_s *r_streamFull;
+const dvar_s *r_streamFakeLagMsec;
+const dvar_s *r_streamMaxDist;
+const dvar_s *r_streamShowStats;
+const dvar_s *r_streamShowList;
+const dvar_s *r_streamSize;
+const dvar_s *r_streamTaint;
+const dvar_s *r_streamFreezeState;
+const dvar_s *r_streamLog;
+const dvar_s *r_streamHiddenPush;
+const dvar_s *r_streamLowDetail;
+const dvar_s *r_stereoTurretShift;
+const dvar_s *r_blur_allowed;
+const dvar_s *r_blur;
+const dvar_s *r_distortion;
+const dvar_s *r_flame_allowed;
+const dvar_s *r_filmLut;
+const dvar_s *r_filmTweakLut;
+const dvar_s *r_enablePlayerShadow;
+const dvar_s *r_enableFlashlight;
+const dvar_s *r_waterFogTest;
+const dvar_s *r_contrast;
+const dvar_s *r_brightness;
+const dvar_s *r_desaturation;
+const dvar_s *r_filmTweakBrightness;
+const dvar_s *r_filmTweakDesaturation;
+const dvar_s *r_filmTweakInvert;
+const dvar_s *r_filmUseTweaks;
+const dvar_s *r_filmTweakEnable;
+const dvar_s *r_filmTweakHue;
+const dvar_s *r_filmTweakSaturation;
+const dvar_s *r_filmTweakColorTemp;
+const dvar_s *r_filmTweakDarkTint;
+const dvar_s *r_filmTweakMidTint;
+const dvar_s *r_filmTweakLightTint;
+const dvar_s *r_filmTweakMidStart;
+const dvar_s *r_filmTweakMidEnd;
+const dvar_s *r_filmTweakDarkFeather;
+const dvar_s *r_filmTweakLightFeather;
+const dvar_s *r_filmTweakContrast;
+const dvar_s *r_filmTweakBleach;
+const dvar_s *r_filmTweakRangeDebug;
+const dvar_s *r_sCurveShoulderStrength;
+const dvar_s *r_sCurveLinearStrength;
+const dvar_s *r_sCurveLinearAngle;
+const dvar_s *r_sCurveToeStrength;
+const dvar_s *r_sCurveToeNumerator;
+const dvar_s *r_sCurveToeDenominator;
+const dvar_s *r_sCurveEnable;
+const dvar_s *r_flimCurveBlack;
+const dvar_s *r_flimCurveWhite;
+const dvar_s *r_filmCurveSoftClip;
+const dvar_s *r_waterWaveAngle;
+const dvar_s *r_waterWaveWavelength;
+const dvar_s *r_waterWaveAmplitude;
+const dvar_s *r_waterWavePhase;
+const dvar_s *r_waterWaveSteepness;
+const dvar_s *r_waterWaveSpeed;
+const dvar_s *r_dof_enable;
+const dvar_s *r_dof_tweak;
+const dvar_s *r_dof_nearBlur;
+const dvar_s *r_dof_farBlur;
+const dvar_s *r_dof_viewModelStart;
+const dvar_s *r_dof_viewModelEnd;
+const dvar_s *r_dof_nearStart;
+const dvar_s *r_dof_nearEnd;
+const dvar_s *r_dof_farStart;
+const dvar_s *r_dof_farEnd;
+const dvar_s *r_dof_bias;
+const dvar_s *r_dof_showdebug;
+const dvar_s *r_motionblur_enable;
+const dvar_s *r_motionblur_frameBased_enable;
+const dvar_s *r_motionblur_numberOfSamples;
+const dvar_s *r_motionblur_blurOrigin;
+const dvar_s *r_motionblur_directionFactor;
+const dvar_s *r_motionblur_positionFactor;
+const dvar_s *r_motionblur_maxblur;
+const dvar_s *r_flameFX_enable;
+const dvar_s *r_flameFX_distortionScaleFactor;
+const dvar_s *r_flameFX_magnitude;
+const dvar_s *r_flameFX_FPS;
+const dvar_s *r_flameFX_fadeDuration;
+const dvar_s *r_waterSheetingFX_allowed;
+const dvar_s *r_waterSheetingFX_enable;
+const dvar_s *r_drawDynEnts;
+const dvar_s *r_drawBModels;
+const dvar_s *r_drawSModels;
+const dvar_s *r_drawXModels;
+const dvar_s *r_drawSkinnedModels;
+const dvar_s *r_dlightLimit;
+const dvar_s *r_dlightMaxFullScreenRadius;
+const dvar_s *r_dlightMaxNonFullScreenRadius;
+const dvar_s *r_dobjLimit;
+const dvar_s *r_modelLimit;
+const dvar_s *r_brushLimit;
+const dvar_s *r_spotLightFovInnerFraction;
+const dvar_s *r_spotLightStartRadius;
+const dvar_s *r_spotLightEndRadius;
+const dvar_s *r_spotLightShadows;
+const dvar_s *r_spotLightSModelShadows;
+const dvar_s *r_spotLightEntityShadows;
+const dvar_s *r_spotLightBrightness;
+const dvar_s *r_flashLightFovInnerFraction;
+const dvar_s *r_flashLightStartRadius;
+const dvar_s *r_flashLightEndRadius;
+const dvar_s *r_flashLightShadows;
+const dvar_s *r_flashLightBrightness;
+const dvar_s *r_flashLightOffset;
+const dvar_s *r_flashLightRange;
+const dvar_s *r_flashLightColor;
+const dvar_s *r_flashLightBobAmount;
+const dvar_s *r_flashLightBobRate;
+const dvar_s *r_flashLightSpecularScale;
+const dvar_s *r_flashLightFlickerAmount;
+const dvar_s *r_flashLightFlickerRate;
+const dvar_s *r_drawPrimCap;
+const dvar_s *r_waterSheetingFX_distortionScaleFactor;
+const dvar_s *r_waterSheetingFX_magnitude;
+const dvar_s *r_waterSheetingFX_radius;
+const dvar_s *r_waterSheetingFX_fadeDuration;
+const dvar_s *r_reviveFX_debug;
+const dvar_s *r_reviveFX_fadeDuration;
+const dvar_s *r_reviveFX_edgeColorTemp;
+const dvar_s *r_reviveFX_edgeSaturation;
+const dvar_s *r_reviveFX_edgeScale;
+const dvar_s *r_reviveFX_edgeContrast;
+const dvar_s *r_reviveFX_edgeOffset;
+const dvar_s *r_reviveFX_edgeAmount;
+const dvar_s *r_reviveFX_edgeMaskAdjust;
+const dvar_s *r_genericFilter_enable;
+const dvar_s *r_superFlare_enable;
+const dvar_s *r_superFlare_debug;
+const dvar_s *r_poisonFX_debug_enable;
+const dvar_s *r_poisonFX_debug_amount;
+const dvar_s *r_poisonFX_pulse;
+const dvar_s *r_poisonFX_warpX;
+const dvar_s *r_poisonFX_warpY;
+const dvar_s *r_poisonFX_dvisionA;
+const dvar_s *r_poisonFX_dvisionX;
+const dvar_s *r_poisonFX_dvisionY;
+const dvar_s *r_poisonFX_blurMin;
+const dvar_s *r_poisonFX_blurMax;
+const dvar_s *r_showHDRalpha;
+const dvar_s *r_fullHDRrendering;
+const dvar_s *r_lutvar_0;
+const dvar_s *r_lutvar_1;
+const dvar_s *r_lutvar_2;
+const dvar_s *r_lutvar_3;
+const dvar_s *r_lutvar_4;
+const dvar_s *r_lutvar_5;
+const dvar_s *r_lutvar_6;
+const dvar_s *r_lutvar_7;
+const dvar_s *r_lutvar_8;
+const dvar_s *r_lutvar_9;
+const dvar_s *r_lutvar_10;
+const dvar_s *r_lutvar_11;
+const dvar_s *r_lutvar_12;
+const dvar_s *r_lutvar_13;
+const dvar_s *r_lutvar_14;
+const dvar_s *r_lutvar_15;
+const dvar_s *r_exposureTweak;
+const dvar_s *r_exposureValue;
+const dvar_s *r_bloomTweaks;
+const dvar_s *r_bloomBlurRadius;
+const dvar_s *r_bloomTintWeights;
+const dvar_s *r_bloomColorScale;
+const dvar_s *r_bloomTintScale;
+const dvar_s *r_bloomCurveBreakpoint;
+const dvar_s *r_bloomCurveLoBlack;
+const dvar_s *r_bloomCurveLoGamma;
+const dvar_s *r_bloomCurveLoWhite;
+const dvar_s *r_bloomCurveLoRemapBlack;
+const dvar_s *r_bloomCurveLoRemapWhite;
+const dvar_s *r_bloomCurveHiBlack;
+const dvar_s *r_bloomCurveHiGamma;
+const dvar_s *r_bloomCurveHiWhite;
+const dvar_s *r_bloomCurveHiRemapBlack;
+const dvar_s *r_bloomCurveHiRemapWhite;
+const dvar_s *r_bloomExpansionControl;
+const dvar_s *r_bloomExpansionWeights;
+const dvar_s *r_bloomExpansionSource;
+const dvar_s *r_bloomPersistence;
+const dvar_s *r_bloomStreakXLevels0;
+const dvar_s *r_bloomStreakXLevels1;
+const dvar_s *r_bloomStreakXInnerTint;
+const dvar_s *r_bloomStreakXOuterTint;
+const dvar_s *r_bloomStreakXTintControl;
+const dvar_s *r_bloomStreakXTint;
+const dvar_s *r_bloomStreakYLevels0;
+const dvar_s *r_bloomStreakYLevels1;
+const dvar_s *r_bloomStreakYInnerTint;
+const dvar_s *r_bloomStreakYOuterTint;
+const dvar_s *r_bloomStreakYTintControl;
+const dvar_s *r_bloomStreakYTint;
+const dvar_s *r_finalShiftX;
+const dvar_s *r_finalShiftY;
+const dvar_s *r_primaryLightUseTweaks;
+const dvar_s *r_primaryLightTweakDiffuseStrength;
+const dvar_s *r_primaryLightTweakSpecularStrength;
+const dvar_s *r_lightGridEnableTweaks;
+const dvar_s *r_lightGridUseTweakedValues;
+const dvar_s *r_lightGridIntensity;
+const dvar_s *r_lightGridContrast;
+const dvar_s *r_heroLighting;
+const dvar_s *r_heroLightSaturation;
+const dvar_s *r_heroLightColorTemp;
+const dvar_s *r_heroLightScale;
+const dvar_s *r_enableDlights;
+const dvar_s *r_debugHDRdlight;
+const dvar_s *r_debugHDRdlight_scale;
+const dvar_s *r_debugHDRdlight_distance;
+const dvar_s *r_debugHDRdlight_radius;
+const dvar_s *r_debugHDRdlight_color;
+const dvar_s *r_num_viewports;
+const dvar_s *r_pix_material;
+const dvar_s *r_outdoorAwayBias;
+const dvar_s *r_outdoorDownBias;
+const dvar_s *r_outdoorFeather;
+const dvar_s *r_sun_from_dvars;
+const dvar_s *developer;
+const dvar_s *sv_cheats;
+const dvar_s *com_statmon;
+const dvar_s *r_sse_skinning;
+const dvar_s *r_monitor;
+const dvar_s *r_aspectRatio;
+const dvar_s *r_customMode;
+const dvar_s *r_open_automate;
+const dvar_s *r_gfxopt_dynamic_foliage;
+const dvar_s *r_gfxopt_water_simulation;
+const dvar_s *r_allow_intz;
+const dvar_s *r_allow_null_rt;
+const dvar_s *r_use_driver_convergence;
+const dvar_s *r_convergence;
+const dvar_s *r_multithreaded_device;
+const dvar_s *r_warm_dpvs;
+const dvar_s *r_warm_bsp;
+const dvar_s *r_warm_static;
+const dvar_s *r_warm_dobj;
+const dvar_s *r_staticModelDumpLodInfo;
+const dvar_s *r_grassBurn;
+const dvar_s *r_grassEnable;
+const dvar_s *r_skyTransition;
+const dvar_s *r_treeScale;
+const dvar_s *r_testScale;
+const dvar_s *r_skyColorTemp;
+const dvar_s *r_debugLayers;
+const dvar_s *r_burnedDestructibleColor;
+const dvar_s *r_swrk_override_enable;
+const dvar_s *r_swrk_override_characterCharredAmount;
+const dvar_s *r_swrk_override_characterDissolveColor;
+const dvar_s *r_swrk_override_wetness;
+const dvar_s *r_debugShowPrimaryLights;
+const dvar_s *r_debugShowDynamicLights;
+const dvar_s *r_debugShowCoronas;
+const dvar_s *r_use_separate_char_tech;
+const dvar_s *r_drawDebugFogParams;
+const dvar_s *r_debugShowPrimaryLightLines;
+const dvar_s *r_seethru_decal_enable;
+const dvar_s *r_tension_enable;
+const dvar_s *r_MaterialParameterTweak;
+const dvar_s *r_ui3d_debug_display;
+const dvar_s *r_ui3d_use_debug_values;
+const dvar_s *r_ui3d_x;
+const dvar_s *r_ui3d_y;
+const dvar_s *r_ui3d_w;
+const dvar_s *r_ui3d_h;
+const dvar_s *r_missile_cam_debug_display;
+const dvar_s *r_extracam_custom_aspectratio;
+const dvar_s *r_extracam_shadowmap_enable;
+const dvar_s *r_shader_constant_set_debug_range;
+const dvar_s *r_shader_constant_set_enable;
+const dvar_s *r_sky_intensity_showDebugDisplay;
+const dvar_s *r_reflectionProbeGenerate;
+const dvar_s *r_ignoreHwGamma;
+const dvar_s *r_sky_intensity_useDebugValues;
+const dvar_s *r_sky_intensity_angle0;
+const dvar_s *r_sky_intensity_angle1;
+const dvar_s *r_sky_intensity_factor0;
+const dvar_s *r_sky_intensity_factor1;
+const dvar_s *r_fog_disable;
+const dvar_s *r_grassWindForceEnable;
+const dvar_s *r_dpvs_useCellForceInvisibleBits;
+const dvar_s *r_remotescreen_renderlastframe;
+const dvar_s *r_offscreenCasterLodScale;
+const dvar_s *r_dynSModelBurnValueDisplayRange;
+const dvar_s *r_useHidePartbits;
+
+
+
+const dvar_s *r_smp_worker_threads;
+const dvar_s *r_smp_worker_thread[8];
+
+const char *showCollisionGroupsNames[4] =
+{ "All", "Brush", "Terrain", NULL };
+
+const char *showCollisionPolyTypeNames[4] =
+{ "All", "Wireframe", "Interior", NULL };
+
+const char *r_forceLodNames[6] =
+{ "high", "medium", "low", "lowest", "none", NULL };
+
+const char *sm_showOverlayNames[4] =
+{ "off", "sun", "spot", NULL };
+
+const char *s_aspectRatioNames[5] =
+{ "auto", "standard", "wide 16:10", "wide 16:9", NULL };
+
+const char *showPrimaryLightLinesNames[6] =
+{ "off", "static models", "scene models", "dobj", "dyn ent models", NULL };
+
+const char *showCollisionNames[11] =
+{
+  "None",
+  "All",
+  "Player",
+  "Bullet",
+  "Missile",
+  "Vehicle",
+  "Monster",
+  "Item",
+  "CanShoot",
+  "AINoSight",
+  NULL
+};
+
+const char *r_clearNames[6] =
+{ "never", "dev-only blink", "blink", "steady", "fog color", NULL };
+
+const char *s_aaAlphaNames[4] =
+{ "off", "dither (fast)", "supersample (nice)", NULL };
+
+const char *r_showTessNames[7] =
+{ "off", "tech", "techset", "material", "vertexshader", "pixelshader", NULL };
+
+const char *fbColorDebugNames[4] =
+{ "None", "Screen", "Feedback", NULL };
+
+
+char *names[8] =
+{
+  (char*)"r_smp_worker_thread0",
+  (char*)"r_smp_worker_thread1",
+  (char*)"r_smp_worker_thread2",
+  (char*)"r_smp_worker_thread3",
+  (char*)"r_smp_worker_thread4",
+  (char*)"r_smp_worker_thread5",
+  (char*)"r_smp_worker_thread6",
+  (char*)"r_smp_worker_thread7"
+};
+
+const char *gpuSyncNames[4] =
+{ "off", "adaptive", "aggressive", NULL };
+
+const char *debugShaderNames[6] =
+{ "none", "normal", "basisTangent", "basisBinormal", "basisNormal", NULL };
+
+const char *codecNames[3] =
+{ "MJPEG", "VP8", NULL };
+
+const char *clipSizeNames[5] =
+{ "360", "480", "720", "1080", NULL };
+
+const char *mipFilterNames[5] =
+{ "Unchanged", "Force Trilinear", "Force Bilinear", "Force Mipmaps Off", NULL };
+
+const char *colorMapNames[5] =
+{ "Black", "Unchanged", "White", "Gray", NULL };
+
+const char *normalMapNames[3] =
+{ "Flat", "Unchanged", NULL };
+
+const char *specularRoughnessMapNames[6] =
+{
+  "Unchanged",
+  "Matte Smooth",
+  "Matte Rough",
+  "Shiny Smooth",
+  "Shiny Rough",
+  NULL
+};
+
+const char *lodInfoNames[6] =
+{
+  "None",
+  "All",
+  "Current LOD",
+  "Current Distance",
+  "Auto LOD Distance Only",
+  NULL
+};
+
+const char *showPenetrationNames[4] =
+{ "off", "flash penetrable materials", "flash non-penetrable materials", NULL };
+
+const char *showPixelCostNames[5] =
+{ "off", "timing", "use depth", "ignore depth", NULL };
+
+
 
 void __cdecl R_RegisterDvars()
 {
@@ -279,10 +858,10 @@ void __cdecl R_RegisterDvars()
                                                              0x240u,
                                                              "Light ambient color");
     r_lightTweakSunColor = _Dvar_RegisterLinearRGB(
-                                                     "r_lightTweakSunColor",
-                                                     COERCE_UNSIGNED_INT(1.0),
-                                                     COERCE_UNSIGNED_INT(1.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
+                                                     (char*)"r_lightTweakSunColor",
+                                                     1.0,
+                                                     1.0,
+                                                     0.0,
                                                      0.0,
                                                      1.0,
                                                      0x280u,
@@ -295,11 +874,11 @@ void __cdecl R_RegisterDvars()
                                                                     1.0,
                                                                     0x240u,
                                                                     "Sun diffuse color");
-    r_lightTweakSunDirection.integer = (int)_Dvar_RegisterVec3(
+    r_lightTweakSunDirection = _Dvar_RegisterVec3(
                                                                                         "r_lightTweakSunDirection",
-                                                                                        COERCE_UNSIGNED_INT(0.0),
-                                                                                        COERCE_UNSIGNED_INT(0.0),
-                                                                                        COERCE_UNSIGNED_INT(0.0),
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0,
                                                                                         -360.0,
                                                                                         360.0,
                                                                                         0x1280u,
@@ -339,9 +918,9 @@ void __cdecl R_RegisterDvars()
                                                              "Toggles the display of particle outdoor volume debug");
     r_materialXYZ = _Dvar_RegisterColorXYZ(
                                         "r_materialXYZ",
-                                        COERCE_UNSIGNED_INT(3.8599999),
-                                        COERCE_UNSIGNED_INT(3.98),
-                                        COERCE_UNSIGNED_INT(4.5500002),
+                                        3.8599999,
+                                        3.98,
+                                        4.5500002,
                                         0.0,
                                         100.0,
                                         0,
@@ -527,9 +1106,9 @@ void __cdecl R_RegisterDvars()
                                                          "Brightness scale for flash light.");
     r_flashLightOffset = _Dvar_RegisterVec3(
                                                  "r_flashLightOffset",
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(2.0),
-                                                 COERCE_UNSIGNED_INT(1.0),
+                                                 0.0,
+                                                 2.0,
+                                                 1.0,
                                                  -100.0,
                                                  100.0,
                                                  0x1000u,
@@ -543,27 +1122,27 @@ void __cdecl R_RegisterDvars()
                                                 "Distance of the flash light in inches.");
     r_flashLightColor = _Dvar_RegisterVec3(
                                                 "r_flashLightColor",
-                                                COERCE_UNSIGNED_INT(1.0),
-                                                COERCE_UNSIGNED_INT(1.0),
-                                                COERCE_UNSIGNED_INT(1.0),
+                                                1.0,
+                                                1.0,
+                                                1.0,
                                                 0.0,
                                                 1.0,
                                                 0x1000u,
                                                 "Flashlight Color.");
     r_flashLightBobAmount = _Dvar_RegisterVec3(
                                                         "r_flashLightBobAmount",
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
+                                                        (0.0),
+                                                        (0.0),
+                                                        (0.0),
                                                         0.0,
                                                         50.0,
                                                         0x1000u,
                                                         "Flashlight Movement Amount.");
     r_flashLightBobRate = _Dvar_RegisterVec3(
                                                     "r_flashLightBobRate",
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.2),
-                                                    COERCE_UNSIGNED_INT(0.30000001),
+                                                    (0.0),
+                                                    (0.2),
+                                                    (0.30000001),
                                                     0.0,
                                                     2.0,
                                                     0x1000u,
@@ -800,8 +1379,8 @@ void __cdecl R_RegisterDvars()
     sm_showOverlay = _Dvar_RegisterEnum("sm_showOverlay", sm_showOverlayNames, 0, 0x80u, "Show shadow map overlay");
     sm_showOverlayDepthBounds = _Dvar_RegisterVec2(
                                                                 "sm_showOverlayDepthBounds",
-                                                                COERCE_UNSIGNED_INT(0.25),
-                                                                COERCE_UNSIGNED_INT(0.75),
+                                                                (0.25),
+                                                                (0.75),
                                                                 0.0,
                                                                 1.0,
                                                                 0x80u,
@@ -817,9 +1396,9 @@ void __cdecl R_RegisterDvars()
     sm_sunSampleSizeNear = _Dvar_RegisterFloat("sm_sunSampleSizeNear", 0.25, 0.0625, 32.0, 0x1080u, "Shadow sample size");
     sm_sunShadowCenter = _Dvar_RegisterVec3(
                                                  "sm_sunShadowCenter",
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
+                                                 (0.0),
+                                                 (0.0),
+                                                 (0.0),
                                                  -3.4028235e38,
                                                  3.4028235e38,
                                                  0x1080u,
@@ -945,54 +1524,54 @@ void __cdecl R_RegisterDvars()
     r_filmTweakEnable = _Dvar_RegisterBool("r_filmTweakEnable", 0, 0x1000u, "Tweak dev var; enable film color effects");
     r_filmTweakHue = _Dvar_RegisterVec3(
                                          "r_filmTweakHue",
-                                         COERCE_UNSIGNED_INT(0.0),
-                                         COERCE_UNSIGNED_INT(0.0),
-                                         COERCE_UNSIGNED_INT(0.0),
+                                         (0.0),
+                                         (0.0),
+                                         (0.0),
                                          -180.0,
                                          180.0,
                                          0x1000u,
                                          "Tweak dev var; film color Hue dark - mid - light");
     r_filmTweakSaturation = _Dvar_RegisterVec3(
                                                         "r_filmTweakSaturation",
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
+                                                        (1.0),
+                                                        (1.0),
+                                                        (1.0),
                                                         0.0,
                                                         2.0,
                                                         0x1000u,
                                                         "Tweak dev var; film color Saturation dark - mid - light");
     r_filmTweakColorTemp = _Dvar_RegisterVec3(
                                                      "r_filmTweakColorTemp",
-                                                     COERCE_UNSIGNED_INT(6500.0),
-                                                     COERCE_UNSIGNED_INT(6500.0),
-                                                     COERCE_UNSIGNED_INT(6500.0),
+                                                     (6500.0),
+                                                     (6500.0),
+                                                     (6500.0),
                                                      1650.0,
                                                      25000.0,
                                                      0x1000u,
                                                      "Tweak dev var; film color Color Temp dark - mid - light");
     r_filmTweakDarkTint = _Dvar_RegisterVec3(
                                                     "r_filmTweakDarkTint",
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
                                                     0.0,
                                                     6.0,
                                                     0x1000u,
                                                     "Tweak dev var; film color Dark Tint");
     r_filmTweakMidTint = _Dvar_RegisterVec3(
                                                  "r_filmTweakMidTint",
-                                                 COERCE_UNSIGNED_INT(1.0),
-                                                 COERCE_UNSIGNED_INT(1.0),
-                                                 COERCE_UNSIGNED_INT(1.0),
+                                                 (1.0),
+                                                 (1.0),
+                                                 (1.0),
                                                  0.0,
                                                  6.0,
                                                  0x1000u,
                                                  "Tweak dev var; film color Mid Tint");
-    LODWORD(r_lightTweakSunDirection.vector[2]) = _Dvar_RegisterVec3(
+    r_filmTweakLightTint = _Dvar_RegisterVec3(
                                                                                                     "r_filmTweakLightTint",
-                                                                                                    COERCE_UNSIGNED_INT(1.0),
-                                                                                                    COERCE_UNSIGNED_INT(1.0),
-                                                                                                    COERCE_UNSIGNED_INT(1.0),
+                                                                                                    (1.0),
+                                                                                                    (1.0),
+                                                                                                    (1.0),
                                                                                                     0.0,
                                                                                                     6.0,
                                                                                                     0x1000u,
@@ -1027,18 +1606,18 @@ void __cdecl R_RegisterDvars()
                                                             "Tweak dev var; film color Light range feather amount");
     r_filmTweakContrast = _Dvar_RegisterVec3(
                                                     "r_filmTweakContrast",
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
                                                     0.0,
                                                     2.0,
                                                     0x1000u,
                                                     "Tweak dev var; film color Contrast dark - mid - light");
     r_filmTweakBleach = _Dvar_RegisterVec3(
                                                 "r_filmTweakBleach",
-                                                COERCE_UNSIGNED_INT(0.0),
-                                                COERCE_UNSIGNED_INT(0.0),
-                                                COERCE_UNSIGNED_INT(0.0),
+                                                (0.0),
+                                                (0.0),
+                                                (0.0),
                                                 0.0,
                                                 1.0,
                                                 0x1000u,
@@ -1084,60 +1663,60 @@ void __cdecl R_RegisterDvars()
     r_filmCurveSoftClip = _Dvar_RegisterFloat("r_filmCurveSoftClip", 1.0, 0.0, 1.0, 0x1000u, "film curve soft clip point");
     r_waterWaveAngle = _Dvar_RegisterVec4(
                                              "r_waterWaveAngle",
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
+                                             (0.0),
+                                             (0.0),
+                                             (0.0),
+                                             (0.0),
                                              0.0,
                                              360.0,
                                              0x5000u,
                                              "water wave angle");
     r_waterWaveWavelength = _Dvar_RegisterVec4(
                                                         "r_waterWaveWavelength",
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
+                                                        (1.0),
+                                                        (1.0),
+                                                        (1.0),
+                                                        (1.0),
                                                         1.0,
                                                         1024.0,
                                                         0x5000u,
                                                         "water wave wavelength");
     r_waterWaveAmplitude = _Dvar_RegisterVec4(
                                                      "r_waterWaveAmplitude",
-                                                     COERCE_UNSIGNED_INT(0.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
+                                                     (0.0),
+                                                     (0.0),
+                                                     (0.0),
+                                                     (0.0),
                                                      0.0,
                                                      256.0,
                                                      0x5000u,
                                                      "water wave amplitude");
     r_waterWavePhase = _Dvar_RegisterVec4(
                                              "r_waterWavePhase",
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
+                                             (0.0),
+                                             (0.0),
+                                             (0.0),
+                                             (0.0),
                                              0.0,
                                              6.283185,
                                              0x5000u,
                                              "water wave phase");
     r_waterWaveSteepness = _Dvar_RegisterVec4(
                                                      "r_waterWaveSteepness",
-                                                     COERCE_UNSIGNED_INT(0.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
-                                                     COERCE_UNSIGNED_INT(0.0),
+                                                     (0.0),
+                                                     (0.0),
+                                                     (0.0),
+                                                     (0.0),
                                                      0.0,
                                                      1.0,
                                                      0x5000u,
                                                      "water wave steepness");
     r_waterWaveSpeed = _Dvar_RegisterVec4(
                                              "r_waterWaveSpeed",
-                                             COERCE_UNSIGNED_INT(1.0),
-                                             COERCE_UNSIGNED_INT(1.0),
-                                             COERCE_UNSIGNED_INT(1.0),
-                                             COERCE_UNSIGNED_INT(1.0),
+                                             (1.0),
+                                             (1.0),
+                                             (1.0),
+                                             (1.0),
                                              0.0,
                                              2.0,
                                              0x5000u,
@@ -1227,10 +1806,10 @@ void __cdecl R_RegisterDvars()
                                                                      "Tweak dev var; sets the number of pixels sampled");
     r_motionblur_blurOrigin = _Dvar_RegisterVec4(
                                                             "r_motionblur_blurOrigin",
-                                                            COERCE_UNSIGNED_INT(0.5),
-                                                            COERCE_UNSIGNED_INT(0.5),
-                                                            COERCE_UNSIGNED_INT(0.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
+                                                            (0.5),
+                                                            (0.5),
+                                                            (0.0),
+                                                            (1.0),
                                                             0.0,
                                                             1.0,
                                                             0x80u,
@@ -1259,10 +1838,10 @@ void __cdecl R_RegisterDvars()
     r_flameFX_enable = _Dvar_RegisterBool("r_flameFX_enable", 0, 1u, "Enable the flamethrower effect");
     r_flameFX_distortionScaleFactor = _Dvar_RegisterVec4(
                                                                             "r_flameFX_distortionScaleFactor",
-                                                                            COERCE_UNSIGNED_INT(0.0),
-                                                                            COERCE_UNSIGNED_INT(1.0),
-                                                                            COERCE_UNSIGNED_INT(1.0),
-                                                                            COERCE_UNSIGNED_INT(0.51191801),
+                                                                            (0.0),
+                                                                            (1.0),
+                                                                            (1.0),
+                                                                            (0.51191801),
                                                                             0.0,
                                                                             1.0,
                                                                             0x1081u,
@@ -1286,10 +1865,10 @@ void __cdecl R_RegisterDvars()
     r_waterSheetingFX_enable = _Dvar_RegisterBool("r_waterSheetingFX_enable", 0, 1u, "Enable the water sheeting effect");
     r_waterSheetingFX_distortionScaleFactor = _Dvar_RegisterVec4(
                                                                                             "r_waterSheetingFX_distortionScaleFactor",
-                                                                                            COERCE_UNSIGNED_INT(0.021961),
-                                                                                            COERCE_UNSIGNED_INT(1.0),
-                                                                                            COERCE_UNSIGNED_INT(0.0),
-                                                                                            COERCE_UNSIGNED_INT(0.0),
+                                                                                            (0.021961),
+                                                                                            (1.0),
+                                                                                            (0.0),
+                                                                                            (0.0),
                                                                                             0.0,
                                                                                             1.0,
                                                                                             1u,
@@ -1339,27 +1918,27 @@ void __cdecl R_RegisterDvars()
                                                                 "edge saturation");
     r_reviveFX_edgeScale = _Dvar_RegisterVec3(
                                                      "r_reviveFX_edgeScale",
-                                                     COERCE_UNSIGNED_INT(1.0),
-                                                     COERCE_UNSIGNED_INT(1.0),
-                                                     COERCE_UNSIGNED_INT(1.0),
+                                                     (1.0),
+                                                     (1.0),
+                                                     (1.0),
                                                      0.0,
                                                      2.0,
                                                      0x5000u,
                                                      "edge scale (tint) adjust RGB");
     r_reviveFX_edgeContrast = _Dvar_RegisterVec3(
                                                             "r_reviveFX_edgeContrast",
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
+                                                            (1.0),
+                                                            (1.0),
+                                                            (1.0),
                                                             0.0,
                                                             2.0,
                                                             0x5000u,
                                                             "edge contrast adjust RGB");
     r_reviveFX_edgeOffset = _Dvar_RegisterVec3(
                                                         "r_reviveFX_edgeOffset",
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
+                                                        (0.0),
+                                                        (0.0),
+                                                        (0.0),
                                                         -2.0,
                                                         2.0,
                                                         0x5000u,
@@ -1423,160 +2002,160 @@ void __cdecl R_RegisterDvars()
     r_fullHDRrendering = _Dvar_RegisterInt("r_fullHDRrendering", 0, 0, 2, 0x4000u, "enable full HDR rendering");
     r_lutvar_0 = _Dvar_RegisterVec4(
                                  "r_lutvar_0",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_1 = _Dvar_RegisterVec4(
                                  "r_lutvar_1",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_2 = _Dvar_RegisterVec4(
                                  "r_lutvar_2",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_3 = _Dvar_RegisterVec4(
                                  "r_lutvar_3",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_4 = _Dvar_RegisterVec4(
                                  "r_lutvar_4",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_5 = _Dvar_RegisterVec4(
                                  "r_lutvar_5",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_6 = _Dvar_RegisterVec4(
                                  "r_lutvar_6",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_7 = _Dvar_RegisterVec4(
                                  "r_lutvar_7",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_8 = _Dvar_RegisterVec4(
                                  "r_lutvar_8",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_9 = _Dvar_RegisterVec4(
                                  "r_lutvar_9",
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(0.0),
-                                 COERCE_UNSIGNED_INT(1.0),
+                                 (0.0),
+                                 (0.0),
+                                 (0.0),
+                                 (1.0),
                                  -100.0,
                                  100.0,
                                  0x4000u,
                                  "lut data");
     r_lutvar_10 = _Dvar_RegisterVec4(
                                     "r_lutvar_10",
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(1.0),
+                                    (0.0),
+                                    (0.0),
+                                    (0.0),
+                                    (1.0),
                                     -100.0,
                                     100.0,
                                     0x4000u,
                                     "lut data");
     r_lutvar_11 = _Dvar_RegisterVec4(
                                     "r_lutvar_11",
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(1.0),
+                                    (0.0),
+                                    (0.0),
+                                    (0.0),
+                                    (1.0),
                                     -100.0,
                                     100.0,
                                     0x4000u,
                                     "lut data");
     r_lutvar_12 = _Dvar_RegisterVec4(
                                     "r_lutvar_12",
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(1.0),
+                                    (0.0),
+                                    (0.0),
+                                    (0.0),
+                                    (1.0),
                                     -100.0,
                                     100.0,
                                     0x4000u,
                                     "lut data");
     r_lutvar_13 = _Dvar_RegisterVec4(
                                     "r_lutvar_13",
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(1.0),
+                                    (0.0),
+                                    (0.0),
+                                    (0.0),
+                                    (1.0),
                                     -100.0,
                                     100.0,
                                     0x4000u,
                                     "lut data");
     r_lutvar_14 = _Dvar_RegisterVec4(
                                     "r_lutvar_14",
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(1.0),
+                                    (0.0),
+                                    (0.0),
+                                    (0.0),
+                                    (1.0),
                                     -100.0,
                                     100.0,
                                     0x4000u,
                                     "lut data");
     r_lutvar_15 = _Dvar_RegisterVec4(
                                     "r_lutvar_15",
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(0.0),
-                                    COERCE_UNSIGNED_INT(1.0),
+                                    (0.0),
+                                    (0.0),
+                                    (0.0),
+                                    (1.0),
                                     -100.0,
                                     100.0,
                                     0x4000u,
@@ -1587,160 +2166,160 @@ void __cdecl R_RegisterDvars()
     r_bloomBlurRadius = _Dvar_RegisterFloat("r_bloomBlurRadius", 1.75, 1.0, 3.0, 0x5000u, "bloom blur radius");
     r_bloomTintWeights = _Dvar_RegisterVec4(
                                                  "r_bloomTintWeights",
-                                                 COERCE_UNSIGNED_INT(0.25),
-                                                 COERCE_UNSIGNED_INT(0.5),
-                                                 COERCE_UNSIGNED_INT(0.25),
-                                                 COERCE_UNSIGNED_INT(0.0),
+                                                 (0.25),
+                                                 (0.5),
+                                                 (0.25),
+                                                 (0.0),
                                                  0.0,
                                                  1.0,
                                                  0x5000u,
                                                  "tint weights RGB, desaturation amount");
     r_bloomColorScale = _Dvar_RegisterVec4(
                                                 "r_bloomColorScale",
-                                                COERCE_UNSIGNED_INT(0.0),
-                                                COERCE_UNSIGNED_INT(0.0),
-                                                COERCE_UNSIGNED_INT(0.0),
-                                                COERCE_UNSIGNED_INT(0.0),
+                                                (0.0),
+                                                (0.0),
+                                                (0.0),
+                                                (0.0),
                                                 0.0,
                                                 8.0,
                                                 0x5000u,
                                                 "color scale RGB, desaturation start");
     r_bloomTintScale = _Dvar_RegisterVec4(
                                              "r_bloomTintScale",
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(0.0),
-                                             COERCE_UNSIGNED_INT(1.0),
+                                             (0.0),
+                                             (0.0),
+                                             (0.0),
+                                             (1.0),
                                              0.0,
                                              8.0,
                                              0x5000u,
                                              "tint scale RGB, desaturation end");
     r_bloomCurveBreakpoint = _Dvar_RegisterVec4(
                                                          "r_bloomCurveBreakpoint",
-                                                         COERCE_UNSIGNED_INT(1.0),
-                                                         COERCE_UNSIGNED_INT(1.0),
-                                                         COERCE_UNSIGNED_INT(1.0),
-                                                         COERCE_UNSIGNED_INT(1.0),
+                                                         (1.0),
+                                                         (1.0),
+                                                         (1.0),
+                                                         (1.0),
                                                          0.0,
                                                          8.0,
                                                          0x5000u,
                                                          "lo hi curve breakpoint RGBT");
     r_bloomCurveLoBlack = _Dvar_RegisterVec4(
                                                     "r_bloomCurveLoBlack",
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.0),
+                                                    (0.0),
+                                                    (0.0),
+                                                    (0.0),
+                                                    (0.0),
                                                     0.0,
                                                     1.0,
                                                     0x5000u,
                                                     "curve lo black point RGBT");
     r_bloomCurveLoGamma = _Dvar_RegisterVec4(
                                                     "r_bloomCurveLoGamma",
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
                                                     0.1,
                                                     9.9899998,
                                                     0x5000u,
                                                     "curve lo gamma ramp RGBT");
     r_bloomCurveLoWhite = _Dvar_RegisterVec4(
                                                     "r_bloomCurveLoWhite",
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
                                                     0.0,
                                                     1.0,
                                                     0x5000u,
                                                     "curve lo white point RGBT");
     r_bloomCurveLoRemapBlack = _Dvar_RegisterVec4(
                                                              "r_bloomCurveLoRemapBlack",
-                                                             COERCE_UNSIGNED_INT(0.0),
-                                                             COERCE_UNSIGNED_INT(0.0),
-                                                             COERCE_UNSIGNED_INT(0.0),
-                                                             COERCE_UNSIGNED_INT(0.0),
+                                                             (0.0),
+                                                             (0.0),
+                                                             (0.0),
+                                                             (0.0),
                                                              0.0,
                                                              1.0,
                                                              0x5000u,
                                                              "curve lo output black point RGBT");
     r_bloomCurveLoRemapWhite = _Dvar_RegisterVec4(
                                                              "r_bloomCurveLoRemapWhite",
-                                                             COERCE_UNSIGNED_INT(1.0),
-                                                             COERCE_UNSIGNED_INT(1.0),
-                                                             COERCE_UNSIGNED_INT(1.0),
-                                                             COERCE_UNSIGNED_INT(1.0),
+                                                             (1.0),
+                                                             (1.0),
+                                                             (1.0),
+                                                             (1.0),
                                                              0.0,
                                                              1.0,
                                                              0x5000u,
                                                              "curve lo output white point RGBT");
     r_bloomCurveHiBlack = _Dvar_RegisterVec4(
                                                     "r_bloomCurveHiBlack",
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.0),
-                                                    COERCE_UNSIGNED_INT(0.0),
+                                                    (0.0),
+                                                    (0.0),
+                                                    (0.0),
+                                                    (0.0),
                                                     0.0,
                                                     1.0,
                                                     0x5000u,
                                                     "curve hi black point RGBT");
     r_bloomCurveHiGamma = _Dvar_RegisterVec4(
                                                     "r_bloomCurveHiGamma",
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
                                                     0.1,
                                                     9.9899998,
                                                     0x5000u,
                                                     "curve hi gamma ramp RGBT");
     r_bloomCurveHiWhite = _Dvar_RegisterVec4(
                                                     "r_bloomCurveHiWhite",
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
-                                                    COERCE_UNSIGNED_INT(1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
+                                                    (1.0),
                                                     0.0,
                                                     1.0,
                                                     0x5000u,
                                                     "curve hi white point RGBT");
     r_bloomCurveHiRemapBlack = _Dvar_RegisterVec4(
                                                              "r_bloomCurveHiRemapBlack",
-                                                             COERCE_UNSIGNED_INT(0.0),
-                                                             COERCE_UNSIGNED_INT(0.0),
-                                                             COERCE_UNSIGNED_INT(0.0),
-                                                             COERCE_UNSIGNED_INT(0.0),
+                                                             (0.0),
+                                                             (0.0),
+                                                             (0.0),
+                                                             (0.0),
                                                              0.0,
                                                              1.0,
                                                              0x5000u,
                                                              "curve hi output black point RGBT");
     r_bloomCurveHiRemapWhite = _Dvar_RegisterVec4(
                                                              "r_bloomCurveHiRemapWhite",
-                                                             COERCE_UNSIGNED_INT(1.0),
-                                                             COERCE_UNSIGNED_INT(1.0),
-                                                             COERCE_UNSIGNED_INT(1.0),
-                                                             COERCE_UNSIGNED_INT(1.0),
+                                                             (1.0),
+                                                             (1.0),
+                                                             (1.0),
+                                                             (1.0),
                                                              0.0,
                                                              1.0,
                                                              0x5000u,
                                                              "curve hi output white point RGBT");
     r_bloomExpansionControl = _Dvar_RegisterVec4(
                                                             "r_bloomExpansionControl",
-                                                            COERCE_UNSIGNED_INT(0.5),
-                                                            COERCE_UNSIGNED_INT(0.5),
-                                                            COERCE_UNSIGNED_INT(0.5),
-                                                            COERCE_UNSIGNED_INT(0.5),
+                                                            (0.5),
+                                                            (0.5),
+                                                            (0.5),
+                                                            (0.5),
                                                             0.0,
                                                             1.0,
                                                             0x5000u,
                                                             "expansion amount x&y and expansion target x&y ");
     r_bloomExpansionWeights = _Dvar_RegisterVec4(
                                                             "r_bloomExpansionWeights",
-                                                            COERCE_UNSIGNED_INT(0.0),
-                                                            COERCE_UNSIGNED_INT(0.0),
-                                                            COERCE_UNSIGNED_INT(0.0),
-                                                            COERCE_UNSIGNED_INT(0.0),
+                                                            (0.0),
+                                                            (0.0),
+                                                            (0.0),
+                                                            (0.0),
                                                             0.0,
                                                             1.0,
                                                             0x5000u,
@@ -1749,132 +2328,132 @@ void __cdecl R_RegisterDvars()
     r_bloomPersistence = _Dvar_RegisterFloat("r_bloomPersistence", 0.0, 0.0, 1.0, 0x5000u, "amount of bloom feedback");
     r_bloomStreakXLevels0 = _Dvar_RegisterVec4(
                                                         "r_bloomStreakXLevels0",
-                                                        COERCE_UNSIGNED_INT(0.25),
-                                                        COERCE_UNSIGNED_INT(0.5),
-                                                        COERCE_UNSIGNED_INT(0.25),
-                                                        COERCE_UNSIGNED_INT(1.0),
+                                                        (0.25),
+                                                        (0.5),
+                                                        (0.25),
+                                                        (1.0),
                                                         0.0,
                                                         9.9899998,
                                                         0x5000u,
                                                         "level weights RGB, level gamma");
     r_bloomStreakXLevels1 = _Dvar_RegisterVec4(
                                                         "r_bloomStreakXLevels1",
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
+                                                        (0.0),
+                                                        (1.0),
+                                                        (0.0),
+                                                        (1.0),
                                                         0.0,
                                                         1.0,
                                                         0x5000u,
                                                         "level in black white, out black white");
     r_bloomStreakXInnerTint = _Dvar_RegisterVec3(
                                                             "r_bloomStreakXInnerTint",
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
+                                                            (1.0),
+                                                            (1.0),
+                                                            (1.0),
                                                             0.0,
                                                             1.0,
                                                             0x5000u,
                                                             "streak inner tint");
     r_bloomStreakXOuterTint = _Dvar_RegisterVec3(
                                                             "r_bloomStreakXOuterTint",
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
+                                                            (1.0),
+                                                            (1.0),
+                                                            (1.0),
                                                             0.0,
                                                             1.0,
                                                             0x5000u,
                                                             "streak outer tint");
     r_bloomStreakXTintControl = _Dvar_RegisterVec4(
                                                                 "r_bloomStreakXTintControl",
-                                                                COERCE_UNSIGNED_INT(0.25),
-                                                                COERCE_UNSIGNED_INT(0.5),
-                                                                COERCE_UNSIGNED_INT(0.25),
-                                                                COERCE_UNSIGNED_INT(1.0),
+                                                                (0.25),
+                                                                (0.5),
+                                                                (0.25),
+                                                                (1.0),
                                                                 0.0,
                                                                 1.0,
                                                                 0x5000u,
                                                                 "streak saturation weights, saturation");
     r_bloomStreakXTint = _Dvar_RegisterVec3(
                                                  "r_bloomStreakXTint",
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
+                                                 (0.0),
+                                                 (0.0),
+                                                 (0.0),
                                                  0.0,
                                                  2.0,
                                                  0x5000u,
                                                  "streak tint");
     r_bloomStreakYLevels0 = _Dvar_RegisterVec4(
                                                         "r_bloomStreakYLevels0",
-                                                        COERCE_UNSIGNED_INT(0.25),
-                                                        COERCE_UNSIGNED_INT(0.5),
-                                                        COERCE_UNSIGNED_INT(0.25),
-                                                        COERCE_UNSIGNED_INT(1.0),
+                                                        (0.25),
+                                                        (0.5),
+                                                        (0.25),
+                                                        (1.0),
                                                         0.0,
                                                         9.9899998,
                                                         0x5000u,
                                                         "level weights RGB, level gamma");
     r_bloomStreakYLevels1 = _Dvar_RegisterVec4(
                                                         "r_bloomStreakYLevels1",
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(1.0),
+                                                        (0.0),
+                                                        (1.0),
+                                                        (0.0),
+                                                        (1.0),
                                                         0.0,
                                                         1.0,
                                                         0x5000u,
                                                         "level in black white, out black white");
     r_bloomStreakYInnerTint = _Dvar_RegisterVec3(
                                                             "r_bloomStreakYInnerTint",
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
+                                                            (1.0),
+                                                            (1.0),
+                                                            (1.0),
                                                             0.0,
                                                             1.0,
                                                             0x5000u,
                                                             "streak inner tint");
     r_bloomStreakYOuterTint = _Dvar_RegisterVec3(
                                                             "r_bloomStreakYOuterTint",
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
-                                                            COERCE_UNSIGNED_INT(1.0),
+                                                            (1.0),
+                                                            (1.0),
+                                                            (1.0),
                                                             0.0,
                                                             1.0,
                                                             0x5000u,
                                                             "streak outer tint");
-    LODWORD(r_lightTweakSunDirection.vector[3]) = _Dvar_RegisterVec4(
+    r_bloomStreakYTintControl = _Dvar_RegisterVec4(
                                                                                                     "r_bloomStreakYTintControl",
-                                                                                                    COERCE_UNSIGNED_INT(0.25),
-                                                                                                    COERCE_UNSIGNED_INT(0.5),
-                                                                                                    COERCE_UNSIGNED_INT(0.25),
-                                                                                                    COERCE_UNSIGNED_INT(1.0),
+                                                                                                    (0.25),
+                                                                                                    (0.5),
+                                                                                                    (0.25),
+                                                                                                    (1.0),
                                                                                                     0.0,
                                                                                                     1.0,
                                                                                                     0x5000u,
                                                                                                     "streak saturation weights, saturation");
     r_bloomStreakYTint = _Dvar_RegisterVec3(
                                                  "r_bloomStreakYTint",
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
+                                                 (0.0),
+                                                 (0.0),
+                                                 (0.0),
                                                  0.0,
                                                  2.0,
                                                  0x5000u,
                                                  "streak tint");
     r_finalShiftX = _Dvar_RegisterVec3(
                                         "r_finalShiftX",
-                                        COERCE_UNSIGNED_INT(0.0),
-                                        COERCE_UNSIGNED_INT(0.0),
-                                        COERCE_UNSIGNED_INT(0.0),
+                                        (0.0),
+                                        (0.0),
+                                        (0.0),
                                         -5.0,
                                         5.0,
                                         0x5000u,
                                         "r,g,b channel shift x");
     r_finalShiftY = _Dvar_RegisterVec3(
                                         "r_finalShiftY",
-                                        COERCE_UNSIGNED_INT(0.0),
-                                        COERCE_UNSIGNED_INT(0.0),
-                                        COERCE_UNSIGNED_INT(0.0),
+                                        (0.0),
+                                        (0.0),
+                                        (0.0),
                                         -5.0,
                                         5.0,
                                         0x5000u,
@@ -1939,9 +2518,9 @@ void __cdecl R_RegisterDvars()
                                                      "hero diffuse light temp");
     r_heroLightScale = _Dvar_RegisterVec3(
                                              "r_heroLightScale",
-                                             COERCE_UNSIGNED_INT(1.0),
-                                             COERCE_UNSIGNED_INT(1.0),
-                                             COERCE_UNSIGNED_INT(1.0),
+                                             (1.0),
+                                             (1.0),
+                                             (1.0),
                                              0.0,
                                              2.0,
                                              0x5000u,
@@ -1965,9 +2544,9 @@ void __cdecl R_RegisterDvars()
                                                             "dlights falloff radius");
     r_debugHDRdlight_color = _Dvar_RegisterVec3(
                                                          "r_debugHDRdlight_color",
-                                                         COERCE_UNSIGNED_INT(0.25),
-                                                         COERCE_UNSIGNED_INT(0.80000001),
-                                                         COERCE_UNSIGNED_INT(1.0),
+                                                         (0.25),
+                                                         (0.80000001),
+                                                         (1.0),
                                                          0.0,
                                                          1.0,
                                                          0x4000u,
@@ -2020,7 +2599,7 @@ void __cdecl R_RegisterDvars()
                                         "Screen aspect ratio.    Most widescreen monitors are 16:10 instead of 16:9.");
     r_customMode = _Dvar_RegisterString(
                                      "r_customMode",
-                                     (char *)&toastPopupTitle,
+                                     (char *)"",
                                      0x21u,
                                      "Special resolution mode for the remote debugger");
     r_open_automate = _Dvar_RegisterBool("r_open_automate", 0, 0, "Enable Nvidia Open Automate testing");
@@ -2074,10 +2653,10 @@ void __cdecl R_RegisterDvars()
                                                                                          "overrides the __characterCharredAmount Shaderworks tweak");
     r_swrk_override_characterDissolveColor = _Dvar_RegisterVec4(
                                                                                          "r_swrk_override_characterDissolveColor",
-                                                                                         COERCE_UNSIGNED_INT(0.0),
-                                                                                         COERCE_UNSIGNED_INT(0.0),
-                                                                                         COERCE_UNSIGNED_INT(0.0),
-                                                                                         COERCE_UNSIGNED_INT(0.0),
+                                                                                         (0.0),
+                                                                                         (0.0),
+                                                                                         (0.0),
+                                                                                         (0.0),
                                                                                          0.0,
                                                                                          10.0,
                                                                                          0x80u,
@@ -2120,10 +2699,10 @@ void __cdecl R_RegisterDvars()
     r_tension_enable = _Dvar_RegisterBool("r_tension_enable", 1, 0x1080u, "Toggles tension");
     _Dvar_RegisterVec4(
         "r_MaterialParameterTweak",
-        COERCE_UNSIGNED_INT(0.0),
-        COERCE_UNSIGNED_INT(0.0),
-        COERCE_UNSIGNED_INT(0.0),
-        COERCE_UNSIGNED_INT(0.0),
+        (0.0),
+        (0.0),
+        (0.0),
+        (0.0),
         0.0,
         1.0,
         0x280u,
@@ -2133,7 +2712,7 @@ void __cdecl R_RegisterDvars()
     r_ui3d_x = _Dvar_RegisterFloat("r_ui3d_x", 0.0, 0.0, 1.0, 0x80u, "ui3d texture window x");
     r_ui3d_y = _Dvar_RegisterFloat("r_ui3d_y", 0.0, 0.0, 1.0, 0x80u, "ui3d texture window y");
     r_ui3d_w = _Dvar_RegisterFloat("r_ui3d_w", 1.0, 0.0, 1.0, 0x80u, "ui3d texture window width");
-    LODWORD(r_lightTweakSunDirection.vector[1]) = _Dvar_RegisterFloat(
+    r_ui3d_h = _Dvar_RegisterFloat(
                                                                                                     "r_ui3d_h",
                                                                                                     1.0,
                                                                                                     0.0,

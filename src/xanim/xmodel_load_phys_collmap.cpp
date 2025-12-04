@@ -276,14 +276,14 @@ void __cdecl XModel_LoadCollMap(const char *name, void *(__cdecl *Alloc)(int), X
                     {
                         __debugbreak();
                     }
-                    LowercaseString = SL_FindLowercaseString(&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                    LowercaseString = SL_FindLowercaseString("", SCRIPTINSTANCE_SERVER);
                     if ( boneHash == LowercaseString )
                         collmap = model->collmaps;
                     else
                         collmap = &model->collmaps[collIndex];
                     for ( boneIndex = 0; ; ++boneIndex )
                     {
-                        v5 = SL_FindLowercaseString(&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                        v5 = SL_FindLowercaseString("", SCRIPTINSTANCE_SERVER);
                         if ( boneHash == v5 || boneIndex >= model->numBones )
                             break;
                         if ( boneHash == model->localBoneNames[boneIndex] )
@@ -307,7 +307,7 @@ void __cdecl XModel_LoadCollMap(const char *name, void *(__cdecl *Alloc)(int), X
                     if ( geomCount )
                     {
                         mat = 0;
-                        v7 = SL_FindLowercaseString(&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                        v7 = SL_FindLowercaseString("", SCRIPTINSTANCE_SERVER);
                         if ( boneHash != v7 && boneIndex < model->numBones )
                         {
                             if ( boneIndex > model->numBones
@@ -383,7 +383,7 @@ unsigned int __cdecl Xmodel_CountPhysicsCollMaps(
             }
             if ( !strcmp(tokena->token, "{") )
             {
-                AddBoneName(boneHashes, boneNameLen, &toastPopupTitle);
+                AddBoneName(boneHashes, boneNameLen, "");
                 collMapCount = 1;
                 while ( 1 )
                 {
@@ -392,7 +392,7 @@ unsigned int __cdecl Xmodel_CountPhysicsCollMaps(
                         break;
                     if ( !strcmp(tokenb->token, "}") )
                     {
-                        if ( AddBoneName(boneHashes, boneNameLen, &toastPopupTitle) )
+                        if ( AddBoneName(boneHashes, boneNameLen, "") )
                             ++collMapCount;
                     }
                     else if ( !strcmp(tokenb->token, "collmap_bone") )
@@ -498,7 +498,7 @@ LABEL_12:
                                 break;
                             if ( !strcmp(tokenc->token, "}") )
                             {
-                                if ( boneHash == SL_FindLowercaseString(&toastPopupTitle, SCRIPTINSTANCE_SERVER) )
+                                if ( boneHash == SL_FindLowercaseString("", SCRIPTINSTANCE_SERVER) )
                                     ++brushCount;
                                 goto LABEL_12;
                             }
@@ -890,7 +890,7 @@ char __cdecl Xmodel_ParsePhysicsBrush(
             return 0;
         str = (char *)Com_Parse((const char **)file);
     }
-    else if ( boneHash != SL_FindLowercaseString(&toastPopupTitle, SCRIPTINSTANCE_SERVER) )
+    else if ( boneHash != SL_FindLowercaseString("", SCRIPTINSTANCE_SERVER) )
     {
         return 0;
     }

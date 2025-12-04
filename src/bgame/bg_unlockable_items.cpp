@@ -222,9 +222,9 @@ const char *__cdecl BG_UnlockablesGetClanTagFeature(unsigned int index, clanTagF
     const StringTable *clanTagFeatures; // [esp+4h] [ebp-4h] BYREF
 
     if ( index >= 0x100 || s_unlockableItems.clanTagFeatureRows[index] == -1 )
-        return &toastPopupTitle;
+        return "";
     if ( !useFastFile->current.enabled )
-        return &toastPopupTitle;
+        return "";
     StringTable_GetAsset("mp/clantagfeatures.csv", (XAssetHeader *)&clanTagFeatures);
     if ( !clanTagFeatures
         && !Assert_MyHandler(
@@ -239,7 +239,7 @@ const char *__cdecl BG_UnlockablesGetClanTagFeature(unsigned int index, clanTagF
     if ( clanTagFeatures )
         return StringTable_GetColumnValueForRow(clanTagFeatures, s_unlockableItems.clanTagFeatureRows[index], column);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 int __cdecl BG_UnlockablesGetClanTagFeaturePLvlUnlock(unsigned int index)
@@ -2114,7 +2114,7 @@ bool __cdecl BG_UnlockablesIsItemAttachmentPointPurchased(
     }
     if ( !BG_UnlockablesGetItemInfo(itemIndex) )
         return 0;
-    if ( !I_stricmp(attachmentPoint, &toastPopupTitle) )
+    if ( !I_stricmp(attachmentPoint, "") )
         return 0;
     AttachmentPointIndex = BG_GetAttachmentPointIndex(attachmentPoint);
     if ( !BG_GetAttachmentPointCost(AttachmentPointIndex) )
@@ -4407,7 +4407,7 @@ void __cdecl BG_UnlockablesEquipClassCurrentItemCmdInternal(bool isGlobal)
                 else if ( (loadoutSlot == LOADOUTSLOT_FIRST || loadoutSlot == LOADOUTSLOT_SECONDARY_WEAPON)
                              && itemInfo->numAttachments[0] == 1 )
                 {
-                    BG_UnlockablesEquipClassAttachment(0, customClassName, itemInfo->name, "none", &toastPopupTitle);
+                    BG_UnlockablesEquipClassAttachment(0, customClassName, itemInfo->name, "none", "");
                 }
                 else
                 {
@@ -4502,7 +4502,7 @@ void __cdecl BG_UnlockablesEquipClassItemCmd()
                 if ( (itemInfo->loadoutSlot == LOADOUTSLOT_FIRST || itemInfo->loadoutSlot == LOADOUTSLOT_SECONDARY_WEAPON)
                     && itemInfo->numAttachments[0] == 1 )
                 {
-                    BG_UnlockablesEquipClassAttachment(0, customClassName, itemInfo->name, "none", &toastPopupTitle);
+                    BG_UnlockablesEquipClassAttachment(0, customClassName, itemInfo->name, "none", "");
                 }
                 else
                 {

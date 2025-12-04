@@ -1,5 +1,9 @@
 #include "snd_radverb.h"
 
+#include <universal/assertive.h>
+#include <universal/com_math.h>
+#include "snd_dsp.h"
+
 void __cdecl SND_RvParamsDefault(snd_rv_params *params)
 {
     params->earlySize = 1.0f;
@@ -24,7 +28,7 @@ void __cdecl SND_RvParamsDefault(snd_rv_params *params)
     params->wallReflect[1] = 0.5f;
     params->wallReflect[2] = 0.5f;
     params->wallReflect[3] = 0.5f;
-    params->frameRate = FLOAT_48000_0;
+    params->frameRate = 48000.0f;
     params->delayMatrix = 0;
 }
 
@@ -131,9 +135,9 @@ void __cdecl SND_RvFrameParam(snd_rv_params *params, snd_rv_state *state, unsign
     double v16; // st7
     bool v17; // cf
     unsigned int delayMatrix; // [esp-4h] [ebp-2Ch]
-    float x; // [esp+8h] [ebp-20h]
+    float v19; // [esp+8h] [ebp-20h]
     float xa; // [esp+8h] [ebp-20h]
-    _QWORD coef[2]; // [esp+18h] [ebp-10h]
+    float coef[4]; // [esp+18h] [ebp-10h]
     float smooth; // [esp+30h] [ebp+8h]
     float smootha; // [esp+30h] [ebp+8h]
     float *smoothb; // [esp+30h] [ebp+8h]
@@ -145,29 +149,29 @@ void __cdecl SND_RvFrameParam(snd_rv_params *params, snd_rv_state *state, unsign
 
     SND_RvParamsValidate(params);
     state->params.frameRate = params->frameRate;
-    if ( params->frameRate <= 1000.0
+    if (params->frameRate <= 1000.0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
-                    165,
-                    0,
-                    "%s",
-                    "params->frameRate > 1000.0f") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
+            165,
+            0,
+            "%s",
+            "params->frameRate > 1000.0f"))
     {
         __debugbreak();
     }
-    if ( params->frameRate >= 100000.0
+    if (params->frameRate >= 100000.0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
-                    166,
-                    0,
-                    "%s",
-                    "params->frameRate < 100000.0f") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
+            166,
+            0,
+            "%s",
+            "params->frameRate < 100000.0f"))
     {
         __debugbreak();
     }
     smooth = (1.0 - params->smoothing) / (params->frameRate / (double)frameCount * 0.1);
-    if ( IS_NAN(smooth)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp", 170, 0, "%s", "!IS_NAN(smooth)") )
+    if (IS_NAN(smooth)
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp", 170, 0, "%s", "!IS_NAN(smooth)"))
     {
         __debugbreak();
     }
@@ -192,8 +196,7 @@ void __cdecl SND_RvFrameParam(snd_rv_params *params, snd_rv_state *state, unsign
         v6 = I_flerp(*wallReflect, *db++, smooth);
         *wallReflect++ = v6;
         --frameCounta;
-    }
-    while ( frameCounta );
+    } while (frameCounta);
     state->params.dryGain = I_flerp(state->params.dryGain, params->dryGain, smooth);
     state->params.diffusion = I_flerp(state->params.diffusion, params->diffusion, smooth);
     state->params.earlySize = I_flerp(state->params.earlySize, params->earlySize, smooth);
@@ -204,21 +207,23 @@ void __cdecl SND_RvFrameParam(snd_rv_params *params, snd_rv_state *state, unsign
     dbc = state->params.diffusion * 1.5707964;
     smootha = cosf(dbc);
     dba = sinf(dbc);
-    if ( IS_NAN(smootha)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp", 205, 0, "%s", "!IS_NAN(da)") )
+    if (IS_NAN(smootha)
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp", 205, 0, "%s", "!IS_NAN(da)"))
     {
         __debugbreak();
     }
-    if ( IS_NAN(dba)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp", 206, 0, "%s", "!IS_NAN(db)") )
+    if (IS_NAN(dba)
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp", 206, 0, "%s", "!IS_NAN(db)"))
     {
         __debugbreak();
     }
     state->lateReflectionCoefs[0][0] = smootha;
     state->lateReflectionCoefs[0][1] = dba;
     state->lateReflectionCoefs[1][0] = dba;
-    LODWORD(state->lateReflectionCoefs[1][1]) = LODWORD(smootha) ^ _mask__NegFloat_;
-    LODWORD(state->lateReflectionCoefs[2][2]) = LODWORD(smootha) ^ _mask__NegFloat_;
+    //LODWORD(state->lateReflectionCoefs[1][1]) = LODWORD(smootha) ^ _mask__NegFloat_;
+    state->lateReflectionCoefs[1][1] = -smootha;
+    //LODWORD(state->lateReflectionCoefs[2][2]) = LODWORD(smootha) ^ _mask__NegFloat_;
+    state->lateReflectionCoefs[2][2] = -smootha;
     state->lateReflectionCoefs[2][3] = dba;
     state->lateReflectionCoefs[3][2] = dba;
     state->lateReflectionCoefs[3][3] = smootha;
@@ -226,29 +231,28 @@ void __cdecl SND_RvFrameParam(snd_rv_params *params, snd_rv_state *state, unsign
     smoothb = state->params.wallReflect;
     do
     {
-        x = (*smoothb - 1.0) * (double)v7 * 0.35355338 + 0.70710677;
-        v8 = I_fmax(0.0, x);
-        *((float *)coef + v7) = v8;
+        v19 = (*smoothb - 1.0) * (double)v7 * 0.35355338 + 0.70710677;
+        v8 = I_fmax(0.0, v19);
+        coef[v7] = v8;
         xa = v8;
-        if ( IS_NAN(xa)
+        if (IS_NAN(xa)
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
-                        222,
-                        0,
-                        "%s",
-                        "!IS_NAN(coef[i])") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
+                222,
+                0,
+                "%s",
+                "!IS_NAN(coef[i])"))
         {
             __debugbreak();
         }
         ++smoothb;
         ++v7;
-    }
-    while ( v7 < 4 );
-    v9 = *(float *)coef;
-    v10 = *((float *)&coef[1] + 1);
-    v11 = *(float *)&coef[1];
-    v12 = *((float *)coef + 1);
-    state->earlyReflectionCoefs[0][0] = *(float *)coef;
+    } while (v7 < 4);
+    v9 = coef[0];
+    v10 = coef[3];
+    v11 = coef[2];
+    v12 = coef[1];
+    state->earlyReflectionCoefs[0][0] = coef[0];
     state->earlyReflectionCoefs[0][1] = v10;
     state->earlyReflectionCoefs[0][2] = v11;
     state->earlyReflectionCoefs[0][3] = v12;
@@ -272,41 +276,39 @@ void __cdecl SND_RvFrameParam(snd_rv_params *params, snd_rv_state *state, unsign
         do
         {
             v15 = v13[105];
-            coef[1] = (__int64)((double)v13[89] * params->earlySize);
-            *v13 = coef[1];
+            *(__int64 *)&coef[2] = (__int64)((double)v13[89] * params->earlySize);
+            *v13 = coef[2];
             v16 = (double)(int)v13[105];
-            if ( v15 < 0 )
+            if (v15 < 0)
                 v16 = v16 + 4294967300.0;
             v17 = *v13 < 0x8000;
-            coef[1] = (__int64)(v16 * params->lateSize);
-            v13[32] = coef[1];
-            if ( !v17
+            *(__int64 *)&coef[2] = (__int64)(v16 * params->lateSize);
+            v13[32] = coef[2];
+            if (!v17
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
-                            252,
-                            0,
-                            "%s",
-                            "state->earlyReflectionDelays[i][j] < SND_RV_DELAY_FRAME_COUNT") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
+                    252,
+                    0,
+                    "%s",
+                    "state->earlyReflectionDelays[i][j] < SND_RV_DELAY_FRAME_COUNT"))
             {
                 __debugbreak();
             }
-            if ( v13[32] >= 0x8000
+            if (v13[32] >= 0x8000
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
-                            253,
-                            0,
-                            "%s",
-                            "state->lateReflectionDelays[i][j] < SND_RV_DELAY_FRAME_COUNT") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\sound\\snd_radverb.cpp",
+                    253,
+                    0,
+                    "%s",
+                    "state->lateReflectionDelays[i][j] < SND_RV_DELAY_FRAME_COUNT"))
             {
                 __debugbreak();
             }
             ++v13;
             --v14;
-        }
-        while ( v14 );
+        } while (v14);
         --dbb;
-    }
-    while ( dbb );
+    } while (dbb);
 }
 
 double __cdecl I_flerp(float a, float b, float w)
@@ -316,10 +318,19 @@ double __cdecl I_flerp(float a, float b, float w)
 
 void __cdecl SND_RvDelayInit(snd_rv_state *state, unsigned int values)
 {
-    *(_QWORD *)&state->lateReflectionDelayBase[0][2] = 0;
-    *(_QWORD *)&state->lateReflectionDelayBase[1][2] = 0;
-    *(_QWORD *)&state->lateReflectionDelayBase[2][0] = 0;
-    *(_QWORD *)&state->lateReflectionDelayBase[3][0] = 0;
+
+    //*(_QWORD *)&state->lateReflectionDelayBase[0][2] = 0;
+    //*(_QWORD *)&state->lateReflectionDelayBase[1][2] = 0;
+    //*(_QWORD *)&state->lateReflectionDelayBase[2][0] = 0;
+    //*(_QWORD *)&state->lateReflectionDelayBase[3][0] = 0;
+    state->lateReflectionDelayBase[0][2] = 0;
+    state->lateReflectionDelayBase[0][3] = 0;
+    state->lateReflectionDelayBase[1][2] = 0;
+    state->lateReflectionDelayBase[1][3] = 0;
+    state->lateReflectionDelayBase[2][0] = 0;
+    state->lateReflectionDelayBase[2][1] = 0;
+    state->lateReflectionDelayBase[3][0] = 0;
+    state->lateReflectionDelayBase[3][1] = 0;
     if ( values )
     {
         state->earlyReflectionDelayBase[0][0] = 587;

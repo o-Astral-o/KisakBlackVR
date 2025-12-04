@@ -66,7 +66,7 @@ char *__cdecl Demo_GetStreamAllocatedBuffer()
 void __cdecl Demo_GetDemoPath(char *demoPath)
 {
     if ( demo_usefilesystem->current.enabled )
-        FS_BuildOSPath((char *)fs_homepath->current.integer, "demos", (char *)&toastPopupTitle, demoPath);
+        FS_BuildOSPath((char *)fs_homepath->current.integer, "demos", (char *)"", demoPath);
 }
 
 int __cdecl Demo_OpenFileWrite(const char *filename, const char *dir, bool supressErrors)

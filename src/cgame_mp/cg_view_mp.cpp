@@ -1,5 +1,12 @@
 #include "cg_view_mp.h"
 
+#include "cg_local_mp.h"
+#include "cg_main_mp.h"
+#include <EffectsCore/fx_system.h>
+
+static const float cg_shallowWaterLevel = 30.0f;
+
+
 void __cdecl CG_DrawWaterTrail(int localClientNum, const float *pos, float waterHeight)
 {
     int waterEffect; // [esp+0h] [ebp-38h]
@@ -9,11 +16,19 @@ void __cdecl CG_DrawWaterTrail(int localClientNum, const float *pos, float water
 
     cgameGlob = CG_GetLocalClientGlobals(localClientNum);
     axis[0][0] = 0.0f;
-    *(_QWORD *)&axis[0][1] = __PAIR64__(LODWORD(1.0f), 0);
-    *(_QWORD *)&axis[1][0] = __PAIR64__(LODWORD(-1.0f), 0);
+    axis[0][1] = 0.0f;
+    axis[0][2] = 1.0f;
+    //*(_QWORD *)&axis[0][1] = __PAIR64__(LODWORD(1.0f), 0);
+    axis[1][0] = 0.0f;
+    axis[1][1] = -1.0f;
+    //*(_QWORD *)&axis[1][0] = __PAIR64__(LODWORD(-1.0f), 0);
     axis[1][2] = 0.0f;
-    *(_QWORD *)&axis[2][0] = __PAIR64__(0, LODWORD(1.0f));
+
+    axis[2][0] = 1.0f;
+    axis[2][1] = 0.0f;
+    //*(_QWORD *)&axis[2][0] = __PAIR64__(0, LODWORD(1.0f));
     axis[2][2] = 0.0f;
+
     fxPos[0] = *pos;
     fxPos[1] = pos[1];
     fxPos[2] = waterHeight;
@@ -3965,7 +3980,7 @@ LABEL_22:
     CG_UpdateBolt(localClientNum);
     CG_UpdateEnemyScramblerAlpha(localClientNum);
     CG_ProcessDestructibleEvents();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     delayedEnt = CG_AddPacketEntities(localClientNum);
     AimTarget_UpdateClientTargets((jpeg_decompress_struct *)localClientNum);
     if ( !cgameGlob->predictedPlayerState.locationSelectionInfo
@@ -4188,7 +4203,7 @@ LABEL_22:
         cgameGlob->refdef.tanHalfFovY);
     if ( GetCurrentThreadId() == g_DXDeviceThread )
         D3DPERF_EndEvent();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     CG_UpdateSceneDepthOfField(localClientNum);
     CG_UpdateWaterSheetingFX(cgameGlob);
     CG_UpdateFlameFX(cgameGlob);

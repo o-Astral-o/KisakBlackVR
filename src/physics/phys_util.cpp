@@ -51,7 +51,7 @@ Phys_UnitQuaternion *__cdecl Phys_GetQuaternion(Phys_UnitQuaternion *result, con
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -62,7 +62,7 @@ Phys_UnitQuaternion *__cdecl Phys_GetQuaternion(Phys_UnitQuaternion *result, con
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      32,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -156,7 +156,7 @@ void __cdecl nuge::get_ballistic_info(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                      444,
                      "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -169,7 +169,7 @@ void __cdecl nuge::get_ballistic_info(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                      444,
                      "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -300,7 +300,7 @@ void __cdecl nuge::get_ballistic_info(
     }
     if ( *total_mass <= 0.0000099999997 )
     {
-        if ( _tlAssert("source/phys_util.cpp", 23, "*total_mass > 0.00001f", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_util.cpp", 23, "*total_mass > 0.00001f", "") )
             __debugbreak();
         v5 = center_of_mass;
         v9 = 1.0;
@@ -515,7 +515,7 @@ void    nuge::apply_ballistic_target(
         }
         if ( total_momentum.w <= 0.0000099999997 )
         {
-            if ( _tlAssert("source/phys_util.cpp", 82, "total_square_mass > 0.00001f", &toastPopupTitle) )
+            if ( _tlAssert("source/phys_util.cpp", 82, "total_square_mass > 0.00001f", "") )
                 __debugbreak();
             v19 = rbodies_count;
             v21 = 1.0;
@@ -580,7 +580,7 @@ void    nuge::calc_velocities(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -589,7 +589,7 @@ void    nuge::calc_velocities(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -679,7 +679,7 @@ void    nuge::calc_velocities(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -688,7 +688,7 @@ void    nuge::calc_velocities(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -716,7 +716,7 @@ void __cdecl nuge::calc_sphere_inertia(float radius, phys_vec3 *unit_inertia, fl
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                      444,
                      "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -752,7 +752,7 @@ void __cdecl nuge::calc_box_inertia(const phys_vec3 *dim, phys_vec3 *unit_inerti
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                      444,
                      "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -835,7 +835,7 @@ void __cdecl nuge::calc_bound_sphere(const phys_vec3 *vert_list, int vert_count,
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -844,7 +844,7 @@ void __cdecl nuge::calc_bound_sphere(const phys_vec3 *vert_list, int vert_count,
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1008,7 +1008,7 @@ void __cdecl nuge::calc_bound_box(const phys_vec3 *vert_list, int vert_count, ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1017,7 +1017,7 @@ void __cdecl nuge::calc_bound_box(const phys_vec3 *vert_list, int vert_count, ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1026,7 +1026,7 @@ void __cdecl nuge::calc_bound_box(const phys_vec3 *vert_list, int vert_count, ph
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_math.h",
                  444,
                  "uint(v) % PHYS_ALIGNOF(phys_vec3) == 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

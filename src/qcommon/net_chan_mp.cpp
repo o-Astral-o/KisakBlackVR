@@ -84,7 +84,7 @@ void __cdecl NetProf_NewSendPacket(netchan_t *pChan, int iSize, int bFragment)
             if ( bFragment )
                 Com_Printf(16, "[%s] send%s: %i\n", netsrcString[pChan->sock], " fragment", iSize);
             else
-                Com_Printf(16, "[%s] send%s: %i\n", netsrcString[pChan->sock], &toastPopupTitle, iSize);
+                Com_Printf(16, "[%s] send%s: %i\n", netsrcString[pChan->sock], "", iSize);
         }
     }
 }
@@ -99,7 +99,7 @@ void __cdecl NetProf_NewRecievePacket(netchan_t *pChan, int iSize, int bFragment
             if ( bFragment )
                 Com_Printf(16, "[%s] recieve%s: %i\n", netsrcString[pChan->sock], " fragment", iSize);
             else
-                Com_Printf(16, "[%s] recieve%s: %i\n", netsrcString[pChan->sock], &toastPopupTitle, iSize);
+                Com_Printf(16, "[%s] recieve%s: %i\n", netsrcString[pChan->sock], "", iSize);
         }
     }
 }
@@ -214,7 +214,7 @@ void __cdecl Net_DisplayProfile(int localClientNum)
         if ( net_iProfilingOn == 1 )
             CL_Netchan_PrintProfileStats(localClientNum, 0);
         else
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
     }
 }
 
@@ -246,7 +246,7 @@ void __cdecl Net_Dump//Profile_f()
         if ( net_iProfilingOn == 1 )
             CL_Netchan_PrintProfileStats(0, 1);
         else
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
     }
     else
     {

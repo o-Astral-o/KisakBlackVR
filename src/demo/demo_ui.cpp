@@ -5,7 +5,7 @@ const char *__cdecl Demo_GetKeyboardTitle()
     if ( demo.keyboard.title )
         return demo.keyboard.title;
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Demo_GetKeyboardDefaultText()
@@ -13,7 +13,7 @@ const char *__cdecl Demo_GetKeyboardDefaultText()
     if ( demo.keyboard.defaultText )
         return demo.keyboard.defaultText;
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 int __cdecl Demo_GetKeyboardTextSize()
@@ -90,8 +90,8 @@ void __cdecl Demo_KeyboardComplete(int localClientNum, char *string, bool errorR
         }
     }
     demo.keyboard.mode = 0;
-    demo.keyboard.title = &toastPopupTitle;
-    demo.keyboard.defaultText = &toastPopupTitle;
+    demo.keyboard.title = "";
+    demo.keyboard.defaultText = "";
     demo.keyboard.textSize = 0;
 }
 
@@ -142,22 +142,22 @@ char *__cdecl Demo_GetDuration()
 char *__cdecl Demo_GetSaveScreenName(const char *type)
 {
     if ( !Demo_IsPlaybackInited() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !I_stricmp(type, "clip") )
         return demo.playback->clipRecordInfo.name;
     if ( I_stricmp(type, "screenshot") )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     return demo.playback->screenshotInfo.name;
 }
 
 char *__cdecl Demo_GetSaveScreenDescription(const char *type)
 {
     if ( !Demo_IsPlaybackInited() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( !I_stricmp(type, "clip") )
         return demo.playback->clipRecordInfo.description;
     if ( I_stricmp(type, "screenshot") )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     return demo.playback->screenshotInfo.description;
 }
 
@@ -351,7 +351,7 @@ clipSegment *__cdecl Demo_GetSegmentName(int index)
     if ( Demo_IsPlaybackInited() )
         return &demo.playback->segments[index];
     else
-        return (clipSegment *)&toastPopupTitle;
+        return (clipSegment *)"";
 }
 
 char *__cdecl Demo_GetSegmentTransition(int index)
@@ -359,7 +359,7 @@ char *__cdecl Demo_GetSegmentTransition(int index)
     char *s; // [esp+4h] [ebp-4h]
 
     if ( !Demo_IsPlaybackInited() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( index == demo.playback->segmentCount - 1 )
         s = UI_SafeTranslateString("MENU_NONE");
     else
@@ -375,10 +375,10 @@ clipSegment *__cdecl Demo_GetSegmentInformation(int index, const char *s)
     const char *outputStr; // [esp+18h] [ebp-4h]
 
     memset(output, 0, sizeof(output));
-    outputStr = &toastPopupTitle;
+    outputStr = "";
     total = 0;
     if ( !Demo_IsPlaybackInited() )
-        return (clipSegment *)&toastPopupTitle;
+        return (clipSegment *)"";
     if ( !I_stricmp(s, "name") )
         return Demo_GetSegmentName(index);
     if ( I_stricmp(s, "duration") )
@@ -389,7 +389,7 @@ clipSegment *__cdecl Demo_GetSegmentInformation(int index, const char *s)
             {
                 if ( I_stricmp(s, "totalClipDurationLocString") )
                 {
-                    return (clipSegment *)&toastPopupTitle;
+                    return (clipSegment *)"";
                 }
                 else
                 {

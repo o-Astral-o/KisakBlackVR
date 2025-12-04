@@ -40,7 +40,7 @@ char __cdecl Live_RequireUserToPlayOnline()
     }
     else
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         return 0;
     }
 }
@@ -258,7 +258,7 @@ void __cdecl Live_InitPlatform()
     }
     else
     {
-        steamid = _Dvar_RegisterString("steamid", (char *)&toastPopupTitle, 0x40u, "Player's SteamID");
+        steamid = _Dvar_RegisterString("steamid", (char *)"", 0x40u, "Player's SteamID");
         dw_loggedin = _Dvar_RegisterBool("dw_loggedin", 0, 0x40u, "Every frame is updated with Demonware login status");
         dw_active = _Dvar_RegisterBool("dw_active", 1, 0, "Pumps Live_Frame() (and hence DW) if true");
         pc_newversionavailable = _Dvar_RegisterBool(
@@ -278,16 +278,16 @@ void __cdecl Live_InitPlatform()
                     i--;
                     dw_usernames[i] = _Dvar_RegisterString(
                                                             &aDwUser0[9 * i],
-                                                            (char *)&toastPopupTitle,
+                                                            (char *)"",
                                                             0,
                                                             "Online user name registered for the license") )
         {
             ;
         }
-        dw_popup = _Dvar_RegisterString("dw_popup", (char *)&toastPopupTitle, 0, "Online services popup");
+        dw_popup = _Dvar_RegisterString("dw_popup", (char *)"", 0, "Online services popup");
         Live_InitFavourites();
         for ( controllerIndex = 0; controllerIndex < 1; ++controllerIndex )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         LiveGroups_Init();
         PCache_Init();
         Cmd_AddCommandInternal(
@@ -308,7 +308,7 @@ void __cdecl Live_InitPlatform()
         LB_Init();
         LiveStorage_Init();
         Friends_Init();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         LiveCounter_Init();
         xblive_loggedin = _Dvar_RegisterBool("xblive_loggedin", 0, 0, "User is logged into online service");
         xenon_voiceDebug = _Dvar_RegisterBool("xenon_voiceDebug", 0, 0, "Debug voice communication");
@@ -334,7 +334,7 @@ void __cdecl Live_InitPlatform()
                                                                 "false = load the dlc maps from content packages, true = load the dlc maps from the local"
                                                                 " machine harddrive");
         session_nonblocking = _Dvar_RegisterBool("session_nonblocking", 1, 0, "Non-blocking Session code");
-        inviteText = _Dvar_RegisterString("inviteText", (char *)&toastPopupTitle, 0, "Text to display for the game invite");
+        inviteText = _Dvar_RegisterString("inviteText", (char *)"", 0, "Text to display for the game invite");
         systemUiActive = _Dvar_RegisterBool("systemUiActive", 0, 0, "Is the system UI active");
         bandwidth_retry_interval = _Dvar_RegisterInt(
                                                                  "bandwidth_retry_interval",
@@ -376,7 +376,7 @@ void __cdecl Live_InitPlatform()
                                                                      "The user has seen the basic training popup description");
         scr_bot_difficulty = _Dvar_RegisterString(
                                                      "scr_bot_difficulty",
-                                                     (char *)&toastPopupTitle,
+                                                     (char *)"",
                                                      1u,
                                                      "Difficulty level of the basic training bots.");
         bot_friends = _Dvar_RegisterInt("bot_friends", 6, 1, 11, 0, "Number of friends allowed in basic training");
@@ -423,7 +423,7 @@ void __cdecl Live_InitPlatform()
                                                                 0,
                                                                 "false = load the dlc maps from content packages, true = load the dlc maps from the local"
                                                                 " machine harddrive");
-        clanName = _Dvar_RegisterString("clanName", (char *)&toastPopupTitle, 0, "Your clan abbreviation");
+        clanName = _Dvar_RegisterString("clanName", (char *)"", 0, "Your clan abbreviation");
         g_presenceSecKeyAndIDRegistered = 0;
         s_updatePerformanceValues = 0;
         s_performanceValueTimer = 0;
@@ -677,10 +677,10 @@ bool __cdecl Live_UserSignedInToLive(int controllerIndex, char **disconnectMessa
     Live_RequestSessionsFromFriends();
     LiveStorage_SetAllStatsNotFetched(controllerIndex);
     LiveStorage_ReadStats(controllerIndex, 0, 0);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( (s_signInRequirement[controllerIndex] & 4) != 0 )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         if ( Live_ContentRatingAllowed() )
         {
             LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
@@ -1047,7 +1047,7 @@ bool __cdecl Live_UserSignedOut(int controllerIndex)
     {
         Flame_GetLocalClientSourceRange();
         CL_GetLocalClientConnectionState(localClientNum);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         Com_LocalClient_SetBeingUsed(localClientNum, 0);
         if ( (s_signInRequirement[controllerIndex] & 7) == 0 )
             Com_Printf(16, "Controller #%i signed out\n", controllerIndex);
@@ -1234,7 +1234,7 @@ void __cdecl Live_SendInvite(const char *friendName)
         dwMatchMaking_InviteDWUserToSession(friendID, v7[0]);
         *(unsigned int *)&v7[0].m_sessionID.ab[4] = 2700;
         *(unsigned int *)v7[0].m_sessionID.ab = UI_SafeTranslateString("MENU_SENT_CAPS");
-        v7[0].__vftable = (bdSessionID_vtbl *)&toastPopupTitle;
+        v7[0].__vftable = (bdSessionID_vtbl *)"";
         LocalClientNum = Com_ControllerIndex_GetLocalClientNum(0);
         UI_OpenToastPopup(
             LocalClientNum,
@@ -1250,7 +1250,7 @@ void __cdecl Live_SendInvite(const char *friendName)
         dwMatchMaking_InviteDWUserToSession(s_selectedPlayerXUID, v7[0]);
         *(unsigned int *)&v7[0].m_sessionID.ab[4] = 2700;
         *(unsigned int *)v7[0].m_sessionID.ab = UI_SafeTranslateString("MENU_SENT_CAPS");
-        v7[0].__vftable = (bdSessionID_vtbl *)&toastPopupTitle;
+        v7[0].__vftable = (bdSessionID_vtbl *)"";
         v4 = Com_ControllerIndex_GetLocalClientNum(0);
         UI_OpenToastPopup(
             v4,
@@ -1270,7 +1270,7 @@ void __cdecl Live_SendInvite(const char *friendName)
         dwMatchMaking_InviteDWUserToSession(s_selectedMetPlayerXUID, v7[0]);
         *(unsigned int *)&v7[0].m_sessionID.ab[4] = 2700;
         *(unsigned int *)v7[0].m_sessionID.ab = UI_SafeTranslateString("MENU_SENT_CAPS");
-        v7[0].__vftable = (bdSessionID_vtbl *)&toastPopupTitle;
+        v7[0].__vftable = (bdSessionID_vtbl *)"";
         v6 = Com_ControllerIndex_GetLocalClientNum(0);
         UI_OpenToastPopup(
             v6,
@@ -2062,7 +2062,7 @@ void __cdecl Live_OnInvite(unsigned __int64 uid, bdSessionID sessionID, const ch
     {
         v3 = UI_SafeTranslateString("MENU_INVITE_RECEIVED_FROM");
         toastMessage = UI_ReplaceConversionString(v3, info.name);
-        v13 = UI_SafeTranslateString(&toastPopupTitle);
+        v13 = UI_SafeTranslateString("");
         LocalClientNum = Com_ControllerIndex_GetLocalClientNum(0);
         UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", v13, toastMessage, 2700);
     }
@@ -2070,7 +2070,7 @@ void __cdecl Live_OnInvite(unsigned __int64 uid, bdSessionID sessionID, const ch
     {
         v5 = UI_SafeTranslateString("MENU_INVITE_RECEIVED_FROM");
         toastPopupDesc = UI_ReplaceConversionString(v5, xinfo.gamertag);
-        v14 = UI_SafeTranslateString(&toastPopupTitle);
+        v14 = UI_SafeTranslateString("");
         v6 = Com_ControllerIndex_GetLocalClientNum(0);
         UI_OpenToastPopup(v6, "menu_mp_killstreak_select", v14, toastPopupDesc, 2700);
     }

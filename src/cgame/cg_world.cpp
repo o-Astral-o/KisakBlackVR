@@ -2247,32 +2247,3 @@ int __cdecl CG_GetEntityBoneInfo(int entID, int boneIndex, float *bonePos, float
     *boneName = SL_ConvertToString(boneNames[boneIndex - boneBase], SCRIPTINSTANCE_SERVER);
     return 1;
 }
-
-float *__thiscall phys_vec3::operator[]<int>(phys_vec3 *this, unsigned int i)
-{
-    if ( i > 2
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 34,
-                 "i >= 0 && i < 3",
-                 &toastPopupTitle) )
-    {
-        __debugbreak();
-    }
-    return (float *)this + i;
-}
-
-const float *__thiscall phys_vec3::operator[]<int>(phys_vec3 *this, unsigned int i)
-{
-    if ( i > 2
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 32,
-                 "i >= 0 && i < 3",
-                 &toastPopupTitle) )
-    {
-        __debugbreak();
-    }
-    return (const float *)this + i;
-}
-

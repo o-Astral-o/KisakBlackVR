@@ -606,7 +606,7 @@ void __cdecl MSG_WriteString(msg_t *sb, const char *s)
     else
     {
         Com_Printf(16, "MSG_WriteString: MAX_STRING_CHARS");
-        MSG_WriteData(sb, (unsigned __int8 *)&toastPopupTitle, 1u);
+        MSG_WriteData(sb, (unsigned __int8 *)"", 1u);
     }
 }
 
@@ -638,7 +638,7 @@ void __cdecl MSG_WriteBigString(msg_t *sb, char *s)
     else
     {
         Com_Printf(16, "MSG_WriteString: BIG_INFO_STRING");
-        MSG_WriteData(sb, (unsigned __int8 *)&toastPopupTitle, 1u);
+        MSG_WriteData(sb, (unsigned __int8 *)"", 1u);
     }
 }
 

@@ -4,11 +4,400 @@
 #include <qcommon/common.h>
 #include <universal/q_parse.h>
 #include "bg_local.h"
+#include "bg_public.h"
 #include <clientscript/cscr_animtree.h>
 #include "bg_weapons_load_obj.h"
+#include <clientscript/cscr_stringlist.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+#include "bg_misc.h"
+#include <cgame/cg_bolt.h>
+#include "bg_weapons.h"
+#include "bg_weapons_def.h"
+#include <demo/demo_common.h>
+#include <demo/demo_playback.h>
+#include <game_mp/g_main_mp.h>
+#include "bg_animconditions.h"
+#include <xanim/xanim.h>
+#include <ik/ik_import.h>
+#include <xanim/xmodel.h>
+#include <xanim/dobj_utils.h>
+#include <universal/com_memory.h>
+#include <universal/com_loadutils.h>
+#include <string.h>
+
+animStringItem_t defineStr[23][16];
+char defineStrings[10000];
+unsigned int defineBits[23][16];
+int numDefines[23];
+unsigned int defineStringsOffset;
+
+char debugString[16];
 
 const char *globalFilename;
 animStringItem_t weaponStrings[2048];
+
+thread_local bgs_t *bgs; // tls+8
+bgs_t level_bgs;
+
+loadAnim_t *g_pLoadAnims;
+unsigned int *g_piNumLoadAnims;
+
+bool parseVehicleLoop;
+int parseVehicleNameIndex;
+
+void __cdecl BG_NULLSUB(pmove_t *pm)
+{
+    ;
+}
+void(__cdecl *localClientConditionUpdateFunc[23])(pmove_t *) =
+{
+  &BG_LocalEvalPlayerAnimType,
+  &BG_LocalEvalWeaponClass,
+  &BG_LocalEvalNextPlayerAnimType,
+  &BG_LocalEvalNextWeaponClass,
+  &BG_LocalEvalMounted,
+  &BG_LocalEvalMoveStatus,
+  &BG_LocalEvalDirection,
+  &BG_LocalEvalDmgDirection,
+  &BG_LocalEvalDmgType,
+  &BG_LocalEvalStance,
+  &BG_LocalEvalUnderhand,
+  &BG_LocalEvalFiring,
+  &BG_LocalEvalWeaponPosition,
+  &BG_LocalEvalSlope,
+  &BG_LocalEvalPerk,
+  &BG_LocalEvalAttachment,
+  &BG_LocalEvalVehicleName,
+  &BG_LocalEvalVehicleSeatTo,
+  &BG_NULLSUB,
+  &BG_NULLSUB,
+  &BG_NULLSUB,
+  &BG_LocalEvalEvent,
+  &BG_NULLSUB
+};
+
+animStringItem_t animParseModesStr[7] =
+{
+  { "defines", -1 },
+  { "animations", -1 },
+  { "canned_animations", -1 },
+  { "statechanges", -1 },
+  { "events", -1 },
+  { "forceload", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animStateStr[2] =
+{ { "COMBAT", -1 }, { NULL, -1 } };
+
+animStringItem_t animMoveTypesStr[28] =
+{
+  { "** UNUSED **", -1 },
+  { "IDLE", -1 },
+  { "SHUFFLE", -1 },
+  { "WALK", -1 },
+  { "RUN", -1 },
+  { "CLIMBUP", -1 },
+  { "CLIMBDOWN", -1 },
+  { "SPRINT", -1 },
+  { "MANTLE_ROOT", -1 },
+  { "MANTLE_UP_57", -1 },
+  { "MANTLE_UP_51", -1 },
+  { "MANTLE_UP_45", -1 },
+  { "MANTLE_UP_39", -1 },
+  { "MANTLE_UP_33", -1 },
+  { "MANTLE_UP_27", -1 },
+  { "MANTLE_UP_21", -1 },
+  { "MANTLE_OVER_HIGH", -1 },
+  { "MANTLE_OVER_MID", -1 },
+  { "MANTLE_OVER_LOW", -1 },
+  { "TURNRIGHT", -1 },
+  { "TURNLEFT", -1 },
+  { "STUMBLE", -1 },
+  { "STUMBLE_WALK", -1 },
+  { "STUMBLE_SPRINT", -1 },
+  { "SWIM", -1 },
+  { "DTP_MOVE", -1 },
+  { "SLIDE_MOVE", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animVehicleAnimTypeStr[3] =
+{ { "DEFAULT", -1 }, { "TANK", -1 }, { NULL, -1 } };
+
+animStringItem_t animConditionsStr[24] =
+{
+  { "PLAYERANIMTYPE", -1 },
+  { "WEAPONCLASS", -1 },
+  { "NEXTPLAYERANIMTYPE", -1 },
+  { "NEXTWEAPONCLASS", -1 },
+  { "MOUNTED", -1 },
+  { "MOVESTATUS", -1 },
+  { "DIRECTION", -1 },
+  { "DMGDIRECTION", -1 },
+  { "DMGTYPE", -1 },
+  { "STANCE", -1 },
+  { "UNDERHAND", -1 },
+  { "FIRING", -1 },
+  { "WEAPON_POSITION", -1 },
+  { "SLOPE", -1 },
+  { "PERK", -1 },
+  { "ATTACHMENT", -1 },
+  { "VEHICLE_NAME", -1 },
+  { "VEHICLE_SEAT_TO", -1 },
+  { "VEHICLE_SEAT_FROM", -1 },
+  { "VEHICLE_ANIM_STAGE", -1 },
+  { "VEHICLE_ENTRY_POS", -1 },
+  { "EVENT", -1 },
+  { "CAC", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animEventTypesStr[35] =
+{
+  { "** UNUSED **", -1 },
+  { "DEATH", -1 },
+  { "FIREWEAPON", -1 },
+  { "JUMP", -1 },
+  { "LAND", -1 },
+  { "DROPWEAPON", -1 },
+  { "RAISEWEAPON", -1 },
+  { "RELOAD", -1 },
+  { "CROUCH_TO_PRONE", -1 },
+  { "PRONE_TO_CROUCH", -1 },
+  { "STAND_TO_CROUCH", -1 },
+  { "CROUCH_TO_STAND", -1 },
+  { "PRONE_TO_STAND", -1 },
+  { "PRONE_TO_SPRINT", -1 },
+  { "MELEEATTACK", -1 },
+  { "KNIFE_MELEE", -1 },
+  { "KNIFE_MELEE_CHARGE", -1 },
+  { "FLINCH", -1 },
+  { "SHELLSHOCK", -1 },
+  { "VEHICLE_ENTRY", -1 },
+  { "VEHICLE_CHANGE_SEAT", -1 },
+  { "VEHICLE_EXIT", -1 },
+  { "SCRIPTEVENT", -1 },
+  { "DTP_TAKEOFF", -1 },
+  { "DTP_LAND", -1 },
+  { "STAND_TO_LASTSTAND", -1 },
+  { "CROUCH_TO_LASTSTAND", -1 },
+  { "PRONE_TO_LASTSTAND", -1 },
+  { "LASTSTAND_TO_STAND", -1 },
+  { "LASTSTAND_TO_CROUCH", -1 },
+  { "LASTSTAND_TO_PRONE", -1 },
+  { "FLARED", -1 },
+  { "LASTSTAND_SUICIDE", -1 },
+  { "PRIME_GRENADE", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animConditionMountedStr[3] = { { "** UNUSED **", -1 }, { "MG42", -1 }, { NULL, -1 } };
+
+animStringItem_t animWeaponPositionStr[3] = { { "HIP", -1 }, { "ADS", -1 }, { NULL, -1 } };
+
+animStringItem_t animPerkStateStr[4] =
+{
+  { "** UNUSED **", -1 },
+  { "LASTSTAND", -1 },
+  { "GRENADEDEATH", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animAttachmentStateStr[3] = { { "** UNUSED **", -1 }, { "BAYONET", -1 }, { NULL, -1 } };
+
+animStringItem_t animVehicleSeatStr[12] =
+{
+  { "DRIVER", -1 },
+  { "GUNNER1", -1 },
+  { "GUNNER2", -1 },
+  { "GUNNER3", -1 },
+  { "GUNNER4", -1 },
+  { "PASSENGER1", -1 },
+  { "PASSENGER2", -1 },
+  { "PASSENGER3", -1 },
+  { "PASSENGER4", -1 },
+  { "PASSENGER5", -1 },
+  { "PASSENGER6", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animVehicleEntryPosStr[4] = { { "SIDE_LEFT", -1 }, { "SIDE_RIGHT", -1 }, { "REAR", -1 }, { NULL, -1 } };
+
+
+animConditionTable_t animConditionsTable[23] =
+{
+  { ANIM_CONDTYPE_BITFLAGS, weaponStrings, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animWeaponClassStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, weaponStrings, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animWeaponClassStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animConditionMountedStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animMoveStatusStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animDirectionStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animDmgDirectionStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animDmgTypeStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animStanceStr, 0, 0 },
+  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 },
+  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animWeaponPositionStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animSlopeStateStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animPerkStateStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animAttachmentStateStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animVehicleNameStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animVehicleSeatStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animVehicleSeatStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, NULL, 1, 7 },
+  { ANIM_CONDTYPE_VALUE, animVehicleEntryPosStr, 0, 0 },
+  { ANIM_CONDTYPE_STRINGHASH, NULL, 0, 0 },
+  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 }
+};
+
+animStringItem_t animVehicleNameStr[16] =
+{
+  { NULL, -1 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 },
+  { NULL, 0 }
+};
+
+animStringItem_t animStanceStr[4] =
+{ 
+    { "STAND", -1 }, 
+    { "CROUCH", -1 }, 
+    { "PRONE", -1 }, 
+    { NULL, -1 } 
+};
+
+animStringItem_t animBodyPartsStr[5] =
+{
+  { "** UNUSED **", -1 },
+  { "LEGS", -1 },
+  { "TORSO", -1 },
+  { "BOTH", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animMoveStatusStr[4] =
+{ 
+    { "STATIONARY", -1 }, 
+    { "WALK", -1 }, 
+    { "RUN", -1 }, 
+    { NULL, -1 } 
+};
+
+animStringItem_t animDirectionStr[6] =
+{
+  { "NONE", -1 },
+  { "FORWARD", -1 },
+  { "BACKWARD", -1 },
+  { "LEFT", -1 },
+  { "RIGHT", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animDmgDirectionStr[6] =
+{
+  { "NONE", -1 },
+  { "FRONT", -1 },
+  { "BACK", -1 },
+  { "LEFT", -1 },
+  { "RIGHT", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animDmgTypeStr[8] =
+{
+  { "NORMAL", -1 },
+  { "EXPLOSIVE", -1 },
+  { "MELEE", -1 },
+  { "HEADSHOT", -1 },
+  { "FIRE", -1 },
+  { "SUICIDE", -1 },
+  { "GAS", -1 },
+  { NULL, -1 }
+};
+
+animStringItem_t animSlopeStateStr[4] =
+{ { "NONE", -1 }, { "UP", -1 }, { "DOWN", -1 }, { NULL, -1 } };
+
+animStringItem_t animWeaponClassStr[14] =
+{
+  { "RIFLE", -1 },
+  { "MG", -1 },
+  { "SMG", -1 },
+  { "SPREAD", -1 },
+  { "PISTOL", -1 },
+  { "GRENADE", -1 },
+  { "ROCKETLAUNCHER", -1 },
+  { "TURRET", -1 },
+  { "NON-PLAYER", -1 },
+  { "GAS", -1 },
+  { "ITEM", -1 },
+  { "MELEE", -1 },
+  { "KILLSTREAK_ALT_STORED_WEAPON", -1 },
+  { NULL, -1 }
+};
+
+void BG_NULLSUB2(const entityState_s *, const clientInfo_t *)
+{
+    ;
+}
+
+void(__cdecl * clientConditionUpdateFunc[23])(const entityState_s *, const clientInfo_t *) =
+{
+  BG_EvalPlayerAnimType,
+  BG_EvalWeaponClass,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_EvalMounted,
+  BG_EvalMoveStatus,
+  BG_EvalDirection,
+  BG_EvalDmgDirection,
+  BG_NULLSUB2,
+  BG_EvalStance,
+  BG_EvalUnderhand,
+  BG_EvalFiring,
+  BG_EvalWeaponPosition,
+  BG_EvalSlope,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2,
+  BG_NULLSUB2
+};
+
+
+
+
+
+char animVehicleNameStrings[24 * 16 /*384*/];
+int animVehicleTypes[16];
+animVehicleSeats_t animVehicleSeats[16];
+
+scriptAnimMoveTypes_t parseMovetype;
+scriptAnimStances_t parseStance;
+scriptAnimMoveStatusStates_t parseMovestatus;
+int parseEvent;
+
+
 
 int __cdecl BG_StringHashValue(const char *fname)
 {
@@ -51,24 +440,22 @@ unsigned int __cdecl BG_AnimationIndexForString(const char *string)
     int hasha; // [esp+10h] [ebp-10h]
     loadAnim_t *loadAnim; // [esp+14h] [ebp-Ch]
     loadAnim_t *loadAnima; // [esp+14h] [ebp-Ch]
-    animation_s *anim; // [esp+18h] [ebp-8h]
+    bgsAnim_s *anim; // [esp+18h] [ebp-8h]
     unsigned int i; // [esp+1Ch] [ebp-4h]
     unsigned int ia; // [esp+1Ch] [ebp-4h]
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 630, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
-    if ( g_pLoadAnims )
+
+    iassert(bgs);
+
+    if (g_pLoadAnims)
     {
         hasha = BG_StringHashValue(string);
         ia = 0;
         loadAnim = g_pLoadAnims;
-        while ( ia < *g_piNumLoadAnims )
+        while (ia < *g_piNumLoadAnims)
         {
-            if ( hasha == loadAnim->iNameHash && !I_stricmp(string, loadAnim->szAnimName) )
+            if (hasha == loadAnim->iNameHash && !I_stricmp(string, loadAnim->szAnimName))
                 return ia;
             ++ia;
             ++loadAnim;
@@ -79,15 +466,14 @@ unsigned int __cdecl BG_AnimationIndexForString(const char *string)
             "multiplayer",
             string,
             &loadAnima->anim,
-            *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 16));
+            bgs->anim_user);
         v4 = string;
         szAnimName = loadAnima->szAnimName;
         do
         {
             v2 = *v4;
             *szAnimName++ = *v4++;
-        }
-        while ( v2 );
+        } while (v2);
         loadAnima->iNameHash = hasha;
         return (*g_piNumLoadAnims)++;
     }
@@ -95,14 +481,13 @@ unsigned int __cdecl BG_AnimationIndexForString(const char *string)
     {
         hash = BG_StringHashValue(string);
         i = 0;
-        anim = **(animation_s ***)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8);
-        while ( i < *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 122880) )
+        anim = bgs->animData;
+        while (i < bgs->animData->animScriptData.numAnimations)
         {
-            if ( hash == anim->nameHash && !I_stricmp(string, anim->name) )
+            if (hash == anim->animScriptData.animations[0].nameHash && !I_stricmp(string, (const char *)anim))
                 return i;
             ++i;
-            ++anim;
+            anim = (bgsAnim_s *)((char *)anim + 120);
         }
         BG_AnimParseError("BG_AnimationIndexForString: unknown player animation '%s'", string);
         return -1;
@@ -253,7 +638,7 @@ void __cdecl BG_ParseCommands(const char **input, animScriptItem_t *scriptItem, 
     unsigned __int16 String; // ax
     unsigned __int16 v9; // ax
     int v10; // eax
-    int v11; // eax
+    const char *v11; // eax
     snd_alias_list_t *v12; // eax
     float v13; // [esp+18h] [ebp-BCh]
     char *v15; // [esp+20h] [ebp-B4h]
@@ -361,7 +746,7 @@ void __cdecl BG_ParseCommands(const char **input, animScriptItem_t *scriptItem, 
                 }
                 else if ( parseMovestatus == ANIM_MOVESTATUS_WALK )
                 {
-                    scriptData->animations[command->animIndex[partIndex]].flags |= (unsigned int)&cls.wagerServers[5331].basictraining;
+                    scriptData->animations[command->animIndex[partIndex]].flags |= 0x2000000u;
                 }
                 if ( (parseMovetype == ANIM_MT_CLIMBUP || parseMovetype == ANIM_MT_CLIMBDOWN)
                     && scriptData->animations[command->animIndex[partIndex]].moveSpeed != 0.0 )
@@ -423,7 +808,7 @@ void __cdecl BG_ParseCommands(const char **input, animScriptItem_t *scriptItem, 
                                     scriptData->animations[command->animIndex[partIndex]].flags |= 0x4000000u;
                                     break;
                                 case 1u:
-                                    scriptData->animations[command->animIndex[partIndex]].flags |= (unsigned int)&cls.wagerServers[5331].basictraining;
+                                    scriptData->animations[command->animIndex[partIndex]].flags |= 0x2000000u;
                                     break;
                                 case 0u:
                                     scriptData->animations[command->animIndex[partIndex]].flags = 0;
@@ -433,11 +818,11 @@ void __cdecl BG_ParseCommands(const char **input, animScriptItem_t *scriptItem, 
                         case 9:
                             if ( scriptItem->conditions[i].value == 1 )
                             {
-                                scriptData->animations[command->animIndex[partIndex]].flags |= (unsigned int)&loc_800000;
+                                scriptData->animations[command->animIndex[partIndex]].flags |= 0x800000u;
                             }
                             else if ( scriptItem->conditions[i].value == 2 )
                             {
-                                scriptData->animations[command->animIndex[partIndex]].flags |= (unsigned int)&cls.rankedServers[711].game[35];
+                                scriptData->animations[command->animIndex[partIndex]].flags |= 0x1000000u;
                             }
                             else
                             {
@@ -452,7 +837,7 @@ void __cdecl BG_ParseCommands(const char **input, animScriptItem_t *scriptItem, 
             if ( parseMovetype == ANIM_MT_RUN )
                 scriptData->animations[command->animIndex[partIndex]].flags |= 0x4000000u;
             if ( parseMovetype == ANIM_MT_WALK )
-                scriptData->animations[command->animIndex[partIndex]].flags |= (unsigned int)&cls.wagerServers[5331].basictraining;
+                scriptData->animations[command->animIndex[partIndex]].flags |= 0x2000000u;
             switch ( parseEvent )
             {
                 case 2:
@@ -693,14 +1078,10 @@ LABEL_198:
                 token = (const char *)Com_ParseOnLine(input);
                 if ( !token || !*token )
                     BG_AnimParseError("BG_ParseCommands: expected sound");
-                strstr((unsigned __int8 *)token, ".wav");
+                v11 = strstr(token, ".wav");
                 if ( v11 )
                     BG_AnimParseError("BG_ParseCommands: wav files not supported, only sound scripts");
-                v12 = (snd_alias_list_t *)(*(int (__cdecl **)(const char *))(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                                                     + _tls_index)
-                                                                                                                                                                 + 8)
-                                                                                                                                     + 578428))(token);
-                command->soundAlias = v12;
+                command->soundAlias = bgs->animData->animScriptData.soundAlias(token);
             }
         }
         partIndex = 0;
@@ -771,31 +1152,23 @@ int __cdecl BG_PlayAnim(
     const char *v27; // [esp+8h] [ebp-24h]
     const char *v28; // [esp+Ch] [ebp-20h]
     const char *v29; // [esp+14h] [ebp-18h]
-    float v30; // [esp+1Ch] [ebp-10h]
+    float forceAnimRate; // [esp+1Ch] [ebp-10h]
     int wasSet; // [esp+24h] [ebp-8h]
     int duration; // [esp+28h] [ebp-4h]
 
     wasSet = 0;
-    if ( *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                + 120 * animNum
-                                + 72) <= 0.0 )
-        v30 = 1.0f;
+    if (bgs->animData->animScriptData.animations[animNum].forceAnimRate <= 0.0)
+        forceAnimRate = 1.0f;
     else
-        v30 = *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                     + 120 * animNum
-                                     + 72);
+        forceAnimRate = bgs->animData->animScriptData.animations[animNum].forceAnimRate;
+
     if ( bg_forceDurationOverride->current.integer > 0 )
         forceDuration = bg_forceDurationOverride->current.integer;
-    if ( forceDuration )
-        duration = (int)(float)((float)forceDuration / v30);
+
+    if (forceDuration)
+        duration = (int)(float)((float)forceDuration / forceAnimRate);
     else
-        duration = (int)(float)((float)*(int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                    + _tls_index)
-                                                                                                                + 8)
-                                                                                    + 120 * animNum
-                                                                                    + 84)
-                                                    / v30)
-                         + 50;
+        duration = (int)(float)((float)bgs->animData->animScriptData.animations[animNum].duration / forceAnimRate) + 50;
     if ( bodyPart != ANIM_BP_LEGS )
     {
         if ( bodyPart == ANIM_BP_TORSO )
@@ -806,10 +1179,7 @@ LABEL_53:
                 if ( isContinue && (ps->torsoAnim & 0xFFFFFBFF) == animNum )
                 {
                     if ( setTimer
-                        && (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 120 * animNum
-                                                    + 92)
-                            & 0x200) != 0 )
+                        && (bgs->animData->animScriptData.animations[animNum].flags & 0x200) != 0 )
                     {
                         ps->torsoTimer = duration;
                     }
@@ -826,18 +1196,19 @@ LABEL_53:
                             v27 = "body";
                         else
                             v27 = "torso";
-                        if ( *(bgs_t **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) == &level_bgs )
+
+                        if ( bgs == &level_bgs )
                             v26 = "SV";
                         else
                             v26 = "CL";
+
                         Com_Printf(
                             19,
                             "\n[%s]%i: Playing (client %i) %s on %s\n",
                             v26,
                             ps->commandTime,
                             ps->clientNum,
-                            (const char *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                     + 120 * animNum),
+                            bgs->animData->animScriptData.animations[animNum].name,
                             v27);
                         CurrentMoveStatus = BG_GetCurrentMoveStatus(ps);
                         Com_Printf(19, "         MoveStatus: %s\n", CurrentMoveStatus);
@@ -867,39 +1238,12 @@ LABEL_53:
     }
     if ( !force && (ps->legsAnim & 0xFFFFFBFF) != animNum )
     {
-        if ( ps->legsAnim < 0
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                        3055,
-                        0,
-                        "%s",
-                        "(ps->legsAnim & ~ANIM_TOGGLEBIT) >= 0") )
-        {
-            __debugbreak();
-        }
-        if ( (ps->legsAnim & 0xFFFFFBFF) >= *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                    + _tls_index)
-                                                                                                                                + 8)
-                                                                                                    + 122880)
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                        3056,
-                        0,
-                        "%s",
-                        "(uint)(ps->legsAnim & ~ANIM_TOGGLEBIT) < bgs->animData->animScriptData.numAnimations") )
-        {
-            __debugbreak();
-        }
-        if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                        + 120 * (ps->legsAnim & 0xFFFFFBFF)
-                                        + 92)
-                & 0x8000000) != 0
-            && (*(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                     + 120 * animNum
-                                     + 76) != 0.0
-             || *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                     + 120 * animNum
-                                     + 80) != 0.0) )
+        iassert((ps->legsAnim & ~ANIM_TOGGLEBIT) >= 0);
+        iassert((uint)(ps->legsAnim & ~ANIM_TOGGLEBIT) < bgs->animData->animScriptData.numAnimations);
+
+        if (bgs->animData->animScriptData.animations[ps->legsAnim & 0xFFFFFBFF].flags != 0
+            && (bgs->animData->animScriptData.animations[animNum].moveSpeed != 0.0
+             || bgs->animData->animScriptData.animations[animNum].rotSpeed != 0.0) )
         {
             force = 1;
         }
@@ -909,10 +1253,7 @@ LABEL_53:
         if ( isContinue && (ps->legsAnim & 0xFFFFFBFF) == animNum )
         {
             if ( setTimer
-                && (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                            + 120 * animNum
-                                            + 92)
-                    & 0x200) != 0 )
+                && (bgs->animData->animScriptData.animations[animNum].flags & 0x200) != 0 )
             {
                 ps->legsTimer = duration;
             }
@@ -925,17 +1266,12 @@ LABEL_53:
                     Com_Printf(
                         19,
                         ", legsAnim is %s, asking to play %s",
-                        (const char *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                 + 120 * ps->legsAnim),
-                        (const char *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                 + 120 * animNum));
+                        bgs->animData->animScriptData.animations[ps->legsAnim].name,
+                        bgs->animData->animScriptData.animations[animNum].name);
                 }
                 if ( setTimer )
                 {
-                    if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 120 * animNum
-                                                    + 92)
-                            & 0x200) == 0 )
+                    if ((bgs->animData->animScriptData.animations[animNum].flags & 0x200) == 0 )
                         Com_Printf(19, ", on a non-looped anim");
                 }
                 else
@@ -958,7 +1294,7 @@ LABEL_53:
                     v29 = "body";
                 else
                     v29 = "legs";
-                if ( *(bgs_t **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) == &level_bgs )
+                if (bgs == &level_bgs )
                     v28 = "SV";
                 else
                     v28 = "CL";
@@ -968,8 +1304,7 @@ LABEL_53:
                     v28,
                     ps->commandTime,
                     ps->clientNum,
-                    (const char *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * animNum),
+                    bgs->animData->animScriptData.animations[animNum].name,
                     v29);
                 v7 = BG_GetCurrentMoveStatus(ps);
                 Com_Printf(19, "         MoveStatus: %s\n", v7);
@@ -1006,70 +1341,35 @@ LABEL_71:
 
 const char *__cdecl BG_GetCurrentStance(playerState_s *ps)
 {
-    return animStanceStr[BG_GetConditionValue(
-                                                 (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                        + _tls_index)
-                                                                                                                    + 8)
-                                                                                            + 1480 * ps->clientNum
-                                                                                            + 192),
-                                                 9u)].string;
+    return animStanceStr[BG_GetConditionValue(&bgs->clientinfo[ps->clientNum],9)].string;
 }
 
 const char *__cdecl BG_GetCurrentMoveStatus(playerState_s *ps)
 {
     int moveStatus; // [esp+0h] [ebp-4h]
 
-    moveStatus = BG_GetConditionValue(
-                                 (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                    + 8)
-                                                                            + 1480 * ps->clientNum
-                                                                            + 192),
-                                 5u);
+    moveStatus = BG_GetConditionValue(&bgs->clientinfo[ps->clientNum], 5u);
     return animMoveStatusStr[GetValueForBitfield(moveStatus)].string;
 }
 
 const char *__cdecl BG_GetCurrentDirection(playerState_s *ps)
 {
-    return animDirectionStr[BG_GetConditionValue(
-                                                        (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                             + _tls_index)
-                                                                                                                         + 8)
-                                                                                                 + 1480 * ps->clientNum
-                                                                                                 + 192),
-                                                        6u)].string;
+    return animDirectionStr[BG_GetConditionValue(&bgs->clientinfo[ps->clientNum], 6u)].string;
 }
 
 const char *__cdecl BG_GetCurrentDmgDirection(playerState_s *ps)
 {
-    return animDmgDirectionStr[BG_GetConditionValue(
-                                                             (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                    + _tls_index)
-                                                                                                                                + 8)
-                                                                                                        + 1480 * ps->clientNum
-                                                                                                        + 192),
-                                                             7u)].string;
+    return animDmgDirectionStr[BG_GetConditionValue(&bgs->clientinfo[ps->clientNum], 7u)].string;
 }
 
 const char *__cdecl BG_GetCurrentDmgType(playerState_s *ps)
 {
-    return animDmgTypeStr[BG_GetConditionValue(
-                                                    (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                         + _tls_index)
-                                                                                                                     + 8)
-                                                                                             + 1480 * ps->clientNum
-                                                                                             + 192),
-                                                    8u)].string;
+    return animDmgTypeStr[BG_GetConditionValue(&bgs->clientinfo[ps->clientNum], 8u)].string;
 }
 
 const char *__cdecl BG_GetCurrentSlope(playerState_s *ps)
 {
-    return animSlopeStateStr[BG_GetConditionValue(
-                                                         (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                + _tls_index)
-                                                                                                                            + 8)
-                                                                                                    + 1480 * ps->clientNum
-                                                                                                    + 192),
-                                                         0xDu)].string;
+    return animSlopeStateStr[BG_GetConditionValue(&bgs->clientinfo[ps->clientNum], 0xDu)].string;
 }
 
 const char *__cdecl BG_GetCurrentWeaponName(playerState_s *ps)
@@ -1099,40 +1399,34 @@ char *__cdecl BG_GetCurrentPlayerAnimType(playerState_s *ps)
 }
 
 int __cdecl BG_ExecuteCommand(
-                playerState_s *ps,
-                animScriptCommand_t *scriptCommand,
-                int setTimer,
-                int isContinue,
-                int force)
+    playerState_s *ps,
+    animScriptCommand_t *scriptCommand,
+    int setTimer,
+    int isContinue,
+    int force)
 {
     int duration; // [esp+0h] [ebp-8h]
     bool playedLegsAnim; // [esp+4h] [ebp-4h]
 
     duration = -1;
     playedLegsAnim = 0;
-    if ( Demo_IsPlaying() )
+    if (Demo_IsPlaying())
         return -1;
-    if ( scriptCommand->bodyPart[0] )
+    if (scriptCommand->bodyPart[0])
     {
-        if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                        + 120 * scriptCommand->animIndex[0]
-                                        + 92)
-                & 0x1000) != 0 )
-            duration = *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                     + 120 * scriptCommand->animIndex[0]
-                                                     + 84)
-                             + 50;
+        if ((bgs->animData->animScriptData.animations[scriptCommand->animIndex[0]].flags & 0x1000) != 0)
+            duration = bgs->animData->animScriptData.animations[scriptCommand->animIndex[0]].duration + 50;
         else
             duration = scriptCommand->animDuration[0] + 50;
-        if ( scriptCommand->bodyPart[0] == 1 || scriptCommand->bodyPart[0] == 3 )
+        if (scriptCommand->bodyPart[0] == 1 || scriptCommand->bodyPart[0] == 3)
             playedLegsAnim = BG_PlayAnim(
-                                                 ps,
-                                                 scriptCommand->animIndex[0],
-                                                 (animBodyPart_t)scriptCommand->bodyPart[0],
-                                                 duration,
-                                                 setTimer,
-                                                 isContinue,
-                                                 force) > -1;
+                ps,
+                scriptCommand->animIndex[0],
+                (animBodyPart_t)scriptCommand->bodyPart[0],
+                duration,
+                setTimer,
+                isContinue,
+                force) > -1;
         else
             BG_PlayAnim(
                 ps,
@@ -1143,27 +1437,22 @@ int __cdecl BG_ExecuteCommand(
                 isContinue,
                 force);
     }
-    if ( scriptCommand->bodyPart[1] )
+    if (scriptCommand->bodyPart[1])
     {
-        if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                        + 120 * scriptCommand->animIndex[0]
-                                        + 92)
-                & 0x1000) != 0 )
-            duration = *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                     + 120 * scriptCommand->animIndex[0]
-                                                     + 84)
-                             + 50;
+        if ((bgs->animData->animScriptData.animations[scriptCommand->animIndex[0]].flags
+            & 0x1000) != 0)
+            duration = bgs->animData->animScriptData.animations[scriptCommand->animIndex[0]].duration + 50;
         else
             duration = scriptCommand->animDuration[0] + 50;
-        if ( scriptCommand->bodyPart[0] == 1 || scriptCommand->bodyPart[0] == 3 )
+        if (scriptCommand->bodyPart[0] == 1 || scriptCommand->bodyPart[0] == 3)
             playedLegsAnim = BG_PlayAnim(
-                                                 ps,
-                                                 scriptCommand->animIndex[1],
-                                                 (animBodyPart_t)scriptCommand->bodyPart[1],
-                                                 duration,
-                                                 setTimer,
-                                                 isContinue,
-                                                 force) > -1;
+                ps,
+                scriptCommand->animIndex[1],
+                (animBodyPart_t)scriptCommand->bodyPart[1],
+                duration,
+                setTimer,
+                isContinue,
+                force) > -1;
         else
             BG_PlayAnim(
                 ps,
@@ -1174,14 +1463,11 @@ int __cdecl BG_ExecuteCommand(
                 isContinue,
                 force);
     }
-    if ( scriptCommand->soundAlias )
-        (*(void (__cdecl **)(unsigned int, snd_alias_list_t *))(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                        + _tls_index)
-                                                                                                                                    + 8)
-                                                                                                        + 578432))(
+    if (scriptCommand->soundAlias)
+        bgs->animData->animScriptData.playSoundAlias(
             ps->clientNum,
             scriptCommand->soundAlias);
-    if ( playedLegsAnim )
+    if (playedLegsAnim)
         return duration;
     else
         return -1;
@@ -1195,51 +1481,45 @@ int __cdecl BG_AnimScriptAnimation(pmove_t *pm, aistateEnum_t state, scriptAnimM
 
     scriptItem = 0;
     ps = pm->ps;
+
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3267, 0, "%s", "bgs") )
+    iassert(bgs);
+    if (movetype < ANIM_MT_UNUSED
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3269, 0, "%s", "movetype >= 0"))
     {
         __debugbreak();
     }
-    if ( movetype < ANIM_MT_UNUSED
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3269, 0, "%s", "movetype >= 0") )
-    {
-        __debugbreak();
-    }
-    if ( movetype >= NUM_ANIM_MOVETYPES
+    if (movetype >= NUM_ANIM_MOVETYPES
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3270,
-                    0,
-                    "%s",
-                    "movetype < NUM_ANIM_MOVETYPES") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3270,
+            0,
+            "%s",
+            "movetype < NUM_ANIM_MOVETYPES"))
     {
         __debugbreak();
     }
-    if ( ps->clientNum >= 0x20u
+    if (ps->clientNum >= 0x20u
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3272,
-                    0,
-                    "ps->clientNum doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                    ps->clientNum,
-                    32) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3272,
+            0,
+            "ps->clientNum doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+            ps->clientNum,
+            32))
     {
         __debugbreak();
     }
     BG_AnimUpdatePlayerStateConditions(pm);
-    if ( ps->pm_type >= 9 )
+    if (ps->pm_type >= 9)
         return -1;
-    while ( !scriptItem && state >= AISTATE_COMBAT )
+    while (!scriptItem && state >= AISTATE_COMBAT)
     {
-        script = (animScript_t *)(516 * movetype
-                                                        + **(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                        + 13932 * state
-                                                        + 122884);
-        if ( script->numItems )
+        script = &bgs->animData->animScriptData.scriptAnims[state][movetype];
+        if (script->numItems)
         {
             scriptItem = BG_FirstValidItem(ps->clientNum, script);
-            if ( !scriptItem )
+            if (!scriptItem)
                 --state;
         }
         else
@@ -1247,29 +1527,29 @@ int __cdecl BG_AnimScriptAnimation(pmove_t *pm, aistateEnum_t state, scriptAnimM
             --state;
         }
     }
-    if ( scriptItem )
+    if (scriptItem)
     {
-        if ( scriptItem->numCommands )
+        if (scriptItem->numCommands)
         {
             ps->moveType = movetype;
-            if ( ps->clientNum >= 0x20u
+            if (ps->clientNum >= 0x20u
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                            3319,
-                            0,
-                            "ps->clientNum doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                            ps->clientNum,
-                            32) )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+                    3319,
+                    0,
+                    "ps->clientNum doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+                    ps->clientNum,
+                    32))
             {
                 __debugbreak();
             }
-            if ( !scriptItem->numCommands
+            if (!scriptItem->numCommands
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                            3322,
-                            0,
-                            "%s",
-                            "scriptItem->numCommands") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+                    3322,
+                    0,
+                    "%s",
+                    "scriptItem->numCommands"))
             {
                 __debugbreak();
             }
@@ -1277,14 +1557,14 @@ int __cdecl BG_AnimScriptAnimation(pmove_t *pm, aistateEnum_t state, scriptAnimM
         }
         else
         {
-            if ( xanim_debug->current.enabled )
+            if (xanim_debug->current.enabled)
                 Com_Printf(19, "Animation has no commands associated, finding new animation\n");
             return -1;
         }
     }
     else
     {
-        if ( xanim_debug->current.enabled )
+        if (xanim_debug->current.enabled)
             Com_Printf(19, "Failed playing animation, finding new animation\n");
         return -1;
     }
@@ -1298,48 +1578,39 @@ animScriptItem_t *__cdecl BG_FirstValidItem(unsigned int client, animScript_t *s
     animScriptItem_t **ppScriptItem; // [esp+8h] [ebp-4h]
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 2929, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     i = 0;
     ppScriptItem = script->items;
-    while ( i < script->numItems )
+    while (i < script->numItems)
     {
-        if ( animscript_debug->current.enabled )
+        if (animscript_debug->current.enabled)
         {
             Com_Printf(19, "Evaluating whether to play: ");
-            for ( command = 0; command < (*ppScriptItem)->numCommands; ++command )
+            for (command = 0; command < (*ppScriptItem)->numCommands; ++command)
             {
                 BodyPart = GetBodyPart((*ppScriptItem)->commands[command].bodyPart[0]);
                 Com_Printf(
                     19,
                     "%s on %s",
-                    (const char *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * (*ppScriptItem)->commands[command].animIndex[0]),
+                    bgs->animData->animScriptData.animations[(*ppScriptItem)->commands[command].animIndex[0]].name,
                     BodyPart);
-                if ( command > 0 )
-                    Com_Printf(19, asc_C5E62C);
+                if (command > 0)
+                    Com_Printf(19, ", ");
             }
             Com_Printf(19, "\n");
         }
-        if ( client >= 0x20
+        if (client >= 0x20
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                        2947,
-                        0,
-                        "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                        client,
-                        32) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+                2947,
+                0,
+                "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+                client,
+                32))
         {
             __debugbreak();
         }
-        if ( BG_EvaluateConditions(
-                     (clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 1480 * client
-                                                    + 192),
-                     *ppScriptItem) )
+        if (BG_EvaluateConditions(&bgs->clientinfo[client], *ppScriptItem))
         {
             return *ppScriptItem;
         }
@@ -1581,24 +1852,18 @@ animScriptCommand_t *__cdecl BG_AnimScriptEventGetCommand(playerState_s *ps, scr
     animScript_t *script; // [esp+4h] [ebp-8h]
     animScriptItem_t *scriptItem; // [esp+8h] [ebp-4h]
 
-    if ( event != ANIM_ET_DEATH && ps->pm_type >= 9 )
+    if (event != ANIM_ET_DEATH && ps->pm_type >= 9)
         return 0;
-    if ( G_IsServerGameSystem(ps->clientNum) )
+    if (G_IsServerGameSystem(ps->clientNum))
         Com_Printf(19, "event: %s\n", animEventTypesStr[event].string);
-    script = (animScript_t *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 516 * event
-                                                    + 151264);
-    if ( !script->numItems )
+    script = &bgs->animData->animScriptData.scriptEvents[event];
+    if (!script->numItems)
         return 0;
     scriptItem = BG_FirstValidItem(ps->clientNum, script);
-    if ( !scriptItem )
+    if (!scriptItem)
         return 0;
-    if ( scriptItem->numCommands )
-        return &scriptItem->commands[(*(int (**)(void))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                + _tls_index)
-                                                                                                                            + 8)
-                                                                                                    + 172))()
-                                                             % scriptItem->numCommands];
+    if (scriptItem->numCommands)
+        return &scriptItem->commands[bgs->Rand() % scriptItem->numCommands];
     return 0;
 }
 
@@ -1615,66 +1880,44 @@ int __cdecl BG_AnimScriptEvent(pmove_t *pm, scriptAnimEventTypes_t event, int is
     ps = pm->ps;
     BG_AnimUpdatePlayerStateConditions(pm);
     scriptCommand = BG_AnimScriptEventGetCommand(ps, event);
-    for ( i = 0; i < 2; ++i )
+    for (i = 0; i < 2; ++i)
     {
-        if ( scriptCommand
-            && (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                        + 120 * scriptCommand->animIndex[i]
-                                        + 92)
-                & 0x4000) != 0 )
+        if (scriptCommand
+            && (bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].flags & 0x4000) != 0)
         {
-            forcedAnimRate = (float)*(int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                     + 8)
-                                                                         + 120 * scriptCommand->animIndex[i]
-                                                                         + 84)
-                                         / (float)ps->weaponTime;
-            if ( fabs(forcedAnimRate - 1.0) <= bg_maxWeaponAnimScale->current.value )
+            forcedAnimRate = (float)bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].duration / (float)ps->weaponTime;
+            if (fabs(forcedAnimRate - 1.0) <= bg_maxWeaponAnimScale->current.value)
             {
-                *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                 + 120 * scriptCommand->animIndex[i]
-                                 + 72) = forcedAnimRate;
+                bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].forceAnimRate = forcedAnimRate;
             }
             else
             {
-                if ( (float)(forcedAnimRate - 1.0) <= 0.0 )
+                if ((float)(forcedAnimRate - 1.0) <= 0.0)
                     v6 = 1.0 - bg_maxWeaponAnimScale->current.value;
                 else
                     v6 = bg_maxWeaponAnimScale->current.value + 1.0;
-                *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                 + 120 * scriptCommand->animIndex[i]
-                                 + 72) = v6;
+                bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].forceAnimRate = v6;
             }
         }
-        else if ( scriptCommand
-                     && (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                 + 120 * scriptCommand->animIndex[i]
-                                                 + 92)
-                         & 0x8000) != 0 )
+        else if (scriptCommand
+            && (bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].flags & 0x8000) != 0)
         {
-            forcedAnimRatea = (float)*(int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                        + 8)
-                                                                            + 120 * scriptCommand->animIndex[i]
-                                                                            + 84)
-                                            / (float)ps->weaponDelay;
-            if ( fabs(forcedAnimRatea - 1.0) <= bg_maxWeaponAnimScale->current.value )
+            forcedAnimRatea = (float)bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].duration / (float)ps->weaponDelay;
+            if (fabs(forcedAnimRatea - 1.0) <= bg_maxWeaponAnimScale->current.value)
             {
-                *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                 + 120 * scriptCommand->animIndex[i]
-                                 + 72) = forcedAnimRatea;
+                bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].forceAnimRate = forcedAnimRatea;
             }
             else
             {
-                if ( (float)(forcedAnimRatea - 1.0) <= 0.0 )
+                if ((float)(forcedAnimRatea - 1.0) <= 0.0)
                     v5 = 1.0 - bg_maxWeaponAnimScale->current.value;
                 else
                     v5 = bg_maxWeaponAnimScale->current.value + 1.0;
-                *(float *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                 + 120 * scriptCommand->animIndex[i]
-                                 + 72) = v5;
+                bgs->animData->animScriptData.animations[scriptCommand->animIndex[i]].forceAnimRate = v5;
             }
         }
     }
-    if ( scriptCommand )
+    if (scriptCommand)
         return BG_ExecuteCommand(ps, scriptCommand, 1, isContinue, force);
     else
         return -1;
@@ -1686,63 +1929,45 @@ void __cdecl BG_SetConditionValue(unsigned int client, unsigned int condition, u
     char *ConditionString; // eax
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3449, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
-    if ( condition > 0x16
+    iassert(bgs);
+    if (condition > 0x16
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3450,
-                    0,
-                    "%s\n\t(condition) = %i",
-                    "(condition < NUM_ANIM_CONDITIONS && condition >= 0)",
-                    condition) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3450,
+            0,
+            "%s\n\t(condition) = %i",
+            "(condition < NUM_ANIM_CONDITIONS && condition >= 0)",
+            condition))
     {
         __debugbreak();
     }
-    if ( client >= 0x20
+    if (client >= 0x20
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3452,
-                    0,
-                    "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                    client,
-                    32) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3452,
+            0,
+            "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+            client,
+            32))
     {
         __debugbreak();
     }
-    *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                        + 1480 * client
-                        + 192
-                        + 4 * condition
-                        + 1240) = value;
-    if ( *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                 + 1480 * client
-                                 + 192
-                                 + 4 * condition
-                                 + 1240) != (unsigned int)value
-        && G_IsServerGameSystem(client) )
+    bgs->clientinfo[client].clientConditions[condition] = value;
+    if (bgs->clientinfo[client].clientConditions[condition] != (_DWORD)value
+        && G_IsServerGameSystem(client))
     {
-        if ( client >= 0x20
+        if (client >= 0x20
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                        3461,
-                        0,
-                        "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                        client,
-                        32) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+                3461,
+                0,
+                "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+                client,
+                32))
         {
             __debugbreak();
         }
-        ConditionBit = BG_GetConditionBit(
-                                         (const clientInfo_t *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                + _tls_index)
-                                                                                                            + 8)
-                                                                                    + 1480 * client
-                                                                                    + 192),
-                                         condition);
+        ConditionBit = BG_GetConditionBit(&bgs->clientinfo[client], condition);
         ConditionString = BG_GetConditionString(condition, ConditionBit);
         Com_Printf(19, "condition: %s: %s\n", animConditionsStr[condition].string, ConditionString);
     }
@@ -1753,88 +1978,72 @@ void __cdecl BG_SetConditionBit(unsigned int client, int condition, int value)
     char *ConditionString; // eax
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3479, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
-    if ( animConditionsTable[condition].type
+    iassert(bgs);
+    if (animConditionsTable[condition].type
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3481,
-                    0,
-                    "%s",
-                    "animConditionsTable[condition].type == ANIM_CONDTYPE_BITFLAGS") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3481,
+            0,
+            "%s",
+            "animConditionsTable[condition].type == ANIM_CONDTYPE_BITFLAGS"))
     {
         __debugbreak();
     }
-    if ( client >= 0x20
+    if (client >= 0x20
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3483,
-                    0,
-                    "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                    client,
-                    32) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3483,
+            0,
+            "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+            client,
+            32))
     {
         __debugbreak();
     }
-    if ( value >= 32
+    if (value >= 32
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3484,
-                    0,
-                    "%s",
-                    "value < MAX_PLAYERANIMTYPE_NAMES") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3484,
+            0,
+            "%s",
+            "value < MAX_PLAYERANIMTYPE_NAMES"))
     {
         __debugbreak();
     }
-    if ( client >= 0x20
+    if (client >= 0x20
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3487,
-                    0,
-                    "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                    client,
-                    32) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3487,
+            0,
+            "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+            client,
+            32))
     {
         __debugbreak();
     }
-    if ( !Com_BitCheckAssert(
-                    (const unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                             + 1480 * client
-                                                             + 192
-                                                             + 4 * condition
-                                                             + 1240),
-                    value,
-                    0xFFFFFFF)
-        && G_IsServerGameSystem(client) )
+    if (!Com_BitCheckAssert(
+        &bgs->clientinfo[client].clientConditions[condition],
+        value,
+        0xFFFFFFF)
+        && G_IsServerGameSystem(client))
     {
         ConditionString = BG_GetConditionString(condition, value);
         Com_Printf(19, "condition: %s: %s\n", animConditionsStr[condition].string, ConditionString);
     }
-    if ( client >= 0x20
+    if (client >= 0x20
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    3498,
-                    0,
-                    "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
-                    client,
-                    32) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
+            3498,
+            0,
+            "client doesn't index MAX_CLIENTS\n\t%i not in [0, %i)",
+            client,
+            32))
     {
         __debugbreak();
     }
-    *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                        + 1480 * client
-                        + 192
-                        + 4 * condition
-                        + 1240) = 0;
+    bgs->clientinfo[client].clientConditions[condition] = 0;
     Com_BitSetAssert(
-        (unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                     + 1480 * client
-                                     + 192
-                                     + 4 * condition
-                                     + 1240),
+        &bgs->clientinfo[client].clientConditions[condition],
         value,
         0xFFFFFFF);
 }
@@ -1860,7 +2069,7 @@ void __cdecl Com_BitSetAssert(unsigned int *array, int bitNum, int size)
     array[bitNum >> 5] |= 1 << (bitNum & 0x1F);
 }
 
-unsigned int __cdecl BG_GetConditionValue(const clientInfo_t *ci, unsigned int condition)
+unsigned int __cdecl BG_GetConditionValue(clientInfo_t *ci, unsigned int condition)
 {
     if ( condition > 0x16
         && !Assert_MyHandler(
@@ -1912,16 +2121,14 @@ unsigned int __cdecl BG_GetConditionBit(const clientInfo_t *ci, unsigned int con
 
 scriptAnimMoveTypes_t __cdecl BG_GetAnimMoveType(const clientInfo_t *ci)
 {
-    return ci->moveType;
+    return (scriptAnimMoveTypes_t)ci->moveType; // KISAKTODO: odd
 }
 
-animation_s *__cdecl BG_GetAnimationForIndex(int client, unsigned int index)
+bgsAnim_s *__cdecl BG_GetAnimationForIndex(int client, unsigned int index)
 {
-    if ( index >= *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 122880) )
-        Com_Error(ERR_DROP, &byte_C5EB28);
-    return (animation_s *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                             + 120 * index);
+    if (index >= bgs->animData->animScriptData.numAnimations)
+        Com_Error(ERR_DROP, "BG_GetAnimationForIndex: index out of bounds");
+    return (bgsAnim_s *)((char *)bgs->animData + 120 * index);
 }
 
 int __cdecl BG_GetPlayerStateWeaponIndex(const pmove_t *pm)
@@ -1954,30 +2161,30 @@ void __cdecl BG_AnimUpdatePlayerStateConditions(pmove_t *pmove)
 
 bool __cdecl BG_IsCrouchingAnim(const clientInfo_t *ci, int animNum)
 {
-    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->stance & 2) != 0;
+    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->animScriptData.animations[0].stance & 2) != 0;
 }
 
 bool __cdecl BG_IsAds(const clientInfo_t *ci, int animNum)
 {
-    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->movestatus & 2) != 0;
+    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->animScriptData.animations[0].movestatus & 2) != 0;
 }
 
 bool __cdecl BG_IsProneAnim(const clientInfo_t *ci, int animNum)
 {
-    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->stance & 4) != 0;
+    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->animScriptData.animations[0].stance & 4) != 0;
 }
 
 bool __cdecl BG_IsKnifeMeleeAnim(const clientInfo_t *ci, int animNum)
 {
-    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->flags & 0x400) != 0;
+    return (BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF)->animScriptData.animations[0].flags & 0x400) != 0;
 }
 
 bool __cdecl BG_IsGrenadeAnim(const clientInfo_t *ci, int animNum)
 {
-    animation_s *anim; // [esp+0h] [ebp-4h]
+    bgsAnim_s *anim; // [esp+0h] [ebp-4h]
 
     anim = BG_GetAnimationForIndex(ci->clientNum, animNum & 0xFFFFFBFF);
-    return bg_drawGrenadeInHand->current.enabled && (anim->flags & 0x10000) != 0;
+    return bg_drawGrenadeInHand->current.enabled && (anim->animScriptData.animations[0].flags & 0x10000) != 0;
 }
 
 bool __cdecl BG_IsSliding(const clientInfo_t *ci)
@@ -2013,64 +2220,6 @@ void __cdecl BG_LerpOffset(float *offset_goal, float maxOffsetChange, float *off
             offset[2] = (float)(errora * diff_8) + offset[2];
         }
     }
-}
-
-double __cdecl I_rsqrt(int number)
-{
-    if ( (number & 0x7F800000) == 0x7F800000
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\universal\\com_math.h", 112, 0, "%s", "!IS_NAN(number)") )
-    {
-        __debugbreak();
-    }
-    if ( *(float *)&number == 0.0
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\universal\\com_math.h", 113, 0, "%s", "number") )
-    {
-        __debugbreak();
-    }
-    return (float)((float)(1.5
-                                             - (float)((float)((float)(*(float *)&number * 0.5) * COERCE_FLOAT(1597463007 - (number >> 1)))
-                                                             * COERCE_FLOAT(1597463007 - (number >> 1))))
-                             * COERCE_FLOAT(1597463007 - (number >> 1)));
-}
-
-void __cdecl BG_Player_DoControllersSetup(const entityState_s *es, clientInfo_t *ci, int frametime)
-{
-    int v3; // [esp+8h] [ebp-74h]
-    controller_info_t info; // [esp+Ch] [ebp-70h] BYREF
-    float maxAngleChange; // [esp+70h] [ebp-Ch]
-    int time; // [esp+74h] [ebp-8h]
-    int i; // [esp+78h] [ebp-4h]
-
-    if ( (es->lerp.eFlags & 8) != 0 )
-    {
-        time = frametime
-                 + *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                         + 4 * es->number
-                                         + 20);
-        if ( time >= 500 )
-            v3 = 500;
-        else
-            v3 = time;
-        *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                            + 4 * es->number
-                            + 20) = v3;
-    }
-    else
-    {
-        time = *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                         + 4 * es->number
-                                         + 20)
-                 - frametime;
-        *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                            + 4 * es->number
-                            + 20) = time <= 0 ? 0 : time;
-    }
-    BG_Player_DoControllersInternal(es, ci, &info);
-    maxAngleChange = (float)frametime * 0.30000001;
-    for ( i = 0; i < 6; ++i )
-        BG_LerpAngles(info.angles[i], maxAngleChange, ci->control.angles[i]);
-    BG_LerpAngles(info.tag_origin_angles, maxAngleChange, ci->control.tag_origin_angles);
-    BG_LerpOffset(info.tag_origin_offset, (float)frametime * 0.1, ci->control.tag_origin_offset);
 }
 
 void __cdecl BG_Player_DoControllersInternal(const entityState_s *es, const clientInfo_t *ci, controller_info_t *info)
@@ -2140,13 +2289,9 @@ LABEL_7:
         {
             lean_direction = fLeanFrac > 0.0;
             if ( (es->lerp.eFlags & 4) != 0 )
-                v3 = (float)(COERCE_FLOAT(LODWORD(fLeanFrac) ^ _mask__NegFloat_)
-                                     * player_lean_shift_crouch->current.vector[lean_direction])
-                     + 0.0;
+                v3 = (float)(fabs(fLeanFrac) * player_lean_shift_crouch->current.vector[lean_direction]) + 0.0;
             else
-                v3 = (float)(COERCE_FLOAT(LODWORD(fLeanFrac) ^ _mask__NegFloat_)
-                                     * player_lean_shift->current.vector[lean_direction])
-                     + 0.0;
+                v3 = (float)(fabs(fLeanFrac) * player_lean_shift->current.vector[lean_direction]) + 0.0;
             tag_origin_offset_4 = v3;
         }
         if ( (es->lerp.eFlags & 0x40000) == 0 )
@@ -2156,22 +2301,20 @@ LABEL_7:
         {
             if ( fLeanFrac != 0.0 )
                 vHeadAngles[2] = vHeadAngles[2] * 0.5;
-            tag_origin_angles[0] = tag_origin_angles[0] + es->un2.animState.fAimLeftRight;
+            tag_origin_angles[0] = tag_origin_angles[0] + es->animState.fAimLeftRight;
             v4 = (float)(vTorsoAngles[1] * 0.017453292);
             c = cos(v4);
             s = sin(v4);
             tag_origin_offset = (float)((float)(1.0 - c) * 0.0) + 0.0;
             tag_origin_offset_4 = (float)(s * 0.0) + tag_origin_offset_4;
             if ( (float)(fLeanFrac * s) > 0.0 )
-                tag_origin_offset_4 = (float)((float)(COERCE_FLOAT(LODWORD(fLeanFrac) ^ _mask__NegFloat_) * (float)(1.0 - c))
-                                                                        * 16.0)
-                                                        + tag_origin_offset_4;
+                tag_origin_offset_4 = (float)((float)(fabs(fLeanFrac) * (float)(1.0 - c)) * 16.0) + tag_origin_offset_4;
             angles[0][0] = 0.0f;
             angles[0][1] = (float)(vTorsoAngles[1] * 0.30000001) + (float)(vTorsoAngles[2] * -1.2);
             angles[0][2] = vTorsoAngles[2] * 0.30000001;
-            if ( es->un2.animState.fAimUpDown != 0.0 || es->un2.animState.fAimLeftRight != 0.0 )
+            if ( es->animState.fAimUpDown != 0.0 || es->animState.fAimLeftRight != 0.0 )
             {
-                v8 = AngleNormalize180(es->un2.animState.fAimUpDown - es->un2.animState.fAimLeftRight);
+                v8 = AngleNormalize180(es->animState.fAimUpDown - es->animState.fAimLeftRight);
                 angles[0][0] = angles[0][0] + v8;
             }
             angles[1][0] = 0.0f;
@@ -2201,9 +2344,9 @@ LABEL_7:
             angles[0][0] = vTorsoAngles[0] * player_AimBlend_Back_Low->current.value;
             angles[0][1] = vTorsoAngles[1] * player_AimBlend_Back_Low->current.vector[1];
             angles[0][2] = vTorsoAngles[2] * player_AimBlend_Back_Low->current.vector[2];
-            if ( es->un2.animState.fAimUpDown != 0.0 || es->un2.animState.fAimLeftRight != 0.0 )
+            if ( es->animState.fAimUpDown != 0.0 || es->animState.fAimLeftRight != 0.0 )
             {
-                v7 = AngleNormalize180(es->un2.animState.fAimUpDown - es->un2.animState.fAimLeftRight);
+                v7 = AngleNormalize180(es->animState.fAimUpDown - es->animState.fAimLeftRight);
                 angles[0][0] = angles[0][0] + v7;
             }
             angles[1][0] = vTorsoAngles[0] * player_AimBlend_Back_Mid->current.value;
@@ -2222,8 +2365,8 @@ LABEL_7:
         angles[4][0] = vHeadAngles[0] * player_AimBlend_Head->current.value;
         angles[4][1] = vHeadAngles[1] * player_AimBlend_Head->current.vector[1];
         angles[4][2] = vHeadAngles[2] * player_AimBlend_Head->current.vector[2];
-        if ( es->un2.animState.fAimLeftRight != 0.0 || es->un2.animState.fAimUpDown != 0.0 )
-            angles[5][0] = AngleNormalize180(es->un2.animState.fAimLeftRight - es->un2.animState.fAimUpDown);
+        if ( es->animState.fAimLeftRight != 0.0 || es->animState.fAimUpDown != 0.0 )
+            angles[5][0] = AngleNormalize180(es->animState.fAimLeftRight - es->animState.fAimUpDown);
         for ( i = 0; i < 6; ++i )
         {
             v5 = info->angles[i];
@@ -2241,6 +2384,36 @@ LABEL_7:
     }
 }
 
+void __cdecl BG_Player_DoControllersSetup(const entityState_s *es, clientInfo_t *ci, int frametime)
+{
+    int v3; // [esp+8h] [ebp-74h]
+    controller_info_t info; // [esp+Ch] [ebp-70h] BYREF
+    float maxAngleChange; // [esp+70h] [ebp-Ch]
+    int time; // [esp+74h] [ebp-8h]
+    int i; // [esp+78h] [ebp-4h]
+
+    if ((es->lerp.eFlags & 8) != 0)
+    {
+        time = bgs->proneTime[es->number];
+        if (time >= 500)
+            v3 = 500;
+        else
+            v3 = time;
+        bgs->proneTime[es->number] = v3;
+    }
+    else
+    {
+        time = bgs->proneTime[es->number] - frametime;
+        bgs->proneTime[es->number] = time <= 0 ? 0 : time;
+    }
+    BG_Player_DoControllersInternal(es, (const clientInfo_t *)ci, &info);
+    maxAngleChange = (float)frametime * 0.30000001;
+    for (i = 0; i < 6; ++i)
+        BG_LerpAngles(info.angles[i], maxAngleChange, ci->control.angles[i]);
+    BG_LerpAngles(info.tag_origin_angles, maxAngleChange, ci->control.tag_origin_angles);
+    BG_LerpOffset(info.tag_origin_offset, (float)frametime * 0.1, ci->control.tag_origin_offset);
+}
+
 void __cdecl BG_LerpAngles(float *angles_goal, float maxAngleChange, float *angles)
 {
     float diff; // [esp+4h] [ebp-8h]
@@ -2251,7 +2424,7 @@ void __cdecl BG_LerpAngles(float *angles_goal, float maxAngleChange, float *angl
         diff = angles_goal[i] - angles[i];
         if ( diff <= maxAngleChange )
         {
-            if ( COERCE_FLOAT(LODWORD(maxAngleChange) ^ _mask__NegFloat_) <= diff )
+            if ( fabs(maxAngleChange) <= diff )
                 angles[i] = angles_goal[i];
             else
                 angles[i] = angles[i] - maxAngleChange;
@@ -2277,8 +2450,8 @@ void __cdecl BG_PlayerAnimation(int localClientNum, const entityState_s *es, cli
         ci->leftHandGun = 0;
         ci->dobjDirty = 1;
     }
-    BG_RunLerpFrameRate(localClientNum, ci, &ci->legs, es->un2.animState.state, es);
-    BG_RunLerpFrameRate(localClientNum, ci, &ci->torso, es->un2.anim.torsoAnim, es);
+    BG_RunLerpFrameRate(localClientNum, ci, &ci->legs, es->animState.state, es);
+    BG_RunLerpFrameRate(localClientNum, ci, &ci->torso, es->anim.torsoAnim, es);
 }
 
 void __cdecl BG_RunLerpFrameRate(
@@ -2294,7 +2467,7 @@ void __cdecl BG_RunLerpFrameRate(
     float v[2]; // [esp+30h] [ebp-3Ch] BYREF
     float v9; // [esp+38h] [ebp-34h]
     float *oldFramePos; // [esp+3Ch] [ebp-30h]
-    float *trBase; // [esp+40h] [ebp-2Ch]
+    const float *trBase; // [esp+40h] [ebp-2Ch]
     float fScaleMax; // [esp+44h] [ebp-28h]
     int bNewAnim; // [esp+48h] [ebp-24h]
     float moveSpeed; // [esp+4Ch] [ebp-20h]
@@ -2308,18 +2481,14 @@ void __cdecl BG_RunLerpFrameRate(
 
     bNewAnim = 0;
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3990, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     v6 = lf->animation && (lf->animation->flags & 2) != 0;
     isLadderAnim = v6;
     v5 = lf->animation && (lf->animation->flags & 0x800) != 0;
     isScriptEventAnim = v5;
     oldAnim = lf->animation;
     pAnimTree = ci->pXAnimTree;
-    pXAnims = *(XAnim_s **)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578412);
+    pXAnims = bgs->animData->animScriptData.animTree.anims;
     if ( newAnimation != lf->animationNumber || !lf->animation && (newAnimation & 0xFFFFFBFF) != 0 )
     {
         BG_SetNewAnimation(localClientNum, ci, lf, newAnimation, es);
@@ -2333,16 +2502,13 @@ void __cdecl BG_RunLerpFrameRate(
             if ( !anim || anim->rotSpeed == 0.0 && anim->moveSpeed == 0.0 || !lf->oldFrameSnapshotTime )
             {
                 lf->animSpeedScale = 1.0f;
-                lf->oldFrameSnapshotTime = *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 8);
+                lf->oldFrameSnapshotTime = bgs->latestSnapshotTime;
                 lf->oldFramePos[0] = es->lerp.pos.trBase[0];
                 lf->oldFramePos[1] = es->lerp.pos.trBase[1];
                 lf->oldFramePos[2] = es->lerp.pos.trBase[2];
                 lf->oldFrameYaw = es->lerp.apos.trBase[1];
             }
-            else if ( *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 8) != lf->oldFrameSnapshotTime )
+            else if (bgs->latestSnapshotTime != lf->oldFrameSnapshotTime)
             {
                 if ( isLadderAnim )
                 {
@@ -2355,22 +2521,13 @@ void __cdecl BG_RunLerpFrameRate(
                     v[1] = es->lerp.pos.trBase[1] - lf->oldFramePos[1];
                     moveSpeed = Vec2Length(v);
                 }
-                moveSpeed = moveSpeed
-                                    / (float)((float)(*(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                        + _tls_index)
-                                                                                                                    + 8)
-                                                                                            + 8)
-                                                                    - lf->oldFrameSnapshotTime)
-                                                    * 0.001);
+                moveSpeed = moveSpeed / (float)((float)(bgs->latestSnapshotTime - lf->oldFrameSnapshotTime) * 0.001);
                 v7 = AngleNormalize180(lf->oldFrameYaw - es->lerp.apos.trBase[1]);
                 rotSpeed = fabs(v7);
-                rotSpeed = fabs(v7)
-                                 / (float)((float)(*(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 8)
-                                                                 - lf->oldFrameSnapshotTime)
-                                                 * 0.001);
+                rotSpeed = rotSpeed
+                    / (float)((float)(bgs->latestSnapshotTime
+                        - lf->oldFrameSnapshotTime)
+                        * 0.001);
                 if ( anim->moveSpeed == 0.0
                     && anim->rotSpeed == 0.0
                     && !Assert_MyHandler(
@@ -2399,10 +2556,7 @@ void __cdecl BG_RunLerpFrameRate(
                 {
                     lf->animSpeedScale = moveSpeed / anim->moveSpeed;
                 }
-                lf->oldFrameSnapshotTime = *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 8);
+                lf->oldFrameSnapshotTime = bgs->latestSnapshotTime;
                 if ( isScriptEventAnim )
                     lf->animSpeedScale = 1.0f;
                 lf->oldFramePos[0] = es->lerp.pos.trBase[0];
@@ -2456,10 +2610,7 @@ void __cdecl BG_RunLerpFrameRate(
             oldFramePos[1] = trBase[1];
             oldFramePos[2] = trBase[2];
             lf->oldFrameYaw = es->lerp.apos.trBase[1];
-            lf->oldFrameSnapshotTime = *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                 + _tls_index)
-                                                                                                             + 8)
-                                                                                     + 8);
+            lf->oldFrameSnapshotTime = bgs->latestSnapshotTime;
         }
         if ( lf->animationNumber )
             XAnimSetAnimRate(pAnimTree, lf->animationNumber & 0xFFFFFBFF, lf->animSpeedScale);
@@ -2467,15 +2618,15 @@ void __cdecl BG_RunLerpFrameRate(
 }
 
 void __cdecl BG_SetNewAnimation(
-                int localClientNum,
-                clientInfo_t *ci,
-                lerpFrame_t *lf,
-                int newAnimation,
-                const entityState_s *es)
+    int localClientNum,
+    clientInfo_t *ci,
+    lerpFrame_t *lf,
+    int newAnimation,
+    const entityState_s *es)
 {
-    bool IsCrouchingAnim; // esi
-    bool IsProneAnim; // esi
-    bool v7; // [esp+20h] [ebp-50h]
+    BOOL IsCrouchingAnim; // esi
+    BOOL IsProneAnim; // esi
+    BOOL v7; // [esp+20h] [ebp-50h]
     animation_s *oldanim; // [esp+28h] [ebp-48h]
     int firstAnim; // [esp+2Ch] [ebp-44h]
     int transitionMin; // [esp+30h] [ebp-40h]
@@ -2485,81 +2636,59 @@ void __cdecl BG_SetNewAnimation(
     float fStartTimea; // [esp+3Ch] [ebp-34h]
     int cycleLen; // [esp+40h] [ebp-30h]
     unsigned int animIndex; // [esp+44h] [ebp-2Ch]
-    bool crouchMatch; // [esp+48h] [ebp-28h]
+    BOOL crouchMatch; // [esp+48h] [ebp-28h]
     int stanceTransitionTime; // [esp+4Ch] [ebp-24h]
     animation_s *anim; // [esp+5Ch] [ebp-14h]
     XAnimTree_s *pAnimTree; // [esp+60h] [ebp-10h]
     XAnim_s *pXAnims; // [esp+64h] [ebp-Ch]
-    bool proneMatch; // [esp+68h] [ebp-8h]
-    bool bNew; // [esp+6Ch] [ebp-4h]
+    BOOL proneMatch; // [esp+68h] [ebp-8h]
+    BOOL bNew; // [esp+6Ch] [ebp-4h]
     unsigned int newAnimationa; // [esp+84h] [ebp+14h]
 
     transitionMin = -1;
     firstAnim = 0;
     fStartTime = 0.0f;
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 3763, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    iassert(bgs);
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         bNew = (es->lerp.eFlags & 0x10) != 0;
         oldanim = lf->animation;
         oldAnimNum = lf->animationNumber;
-        if ( !oldanim )
+        if (!oldanim)
             firstAnim = 1;
         lf->animationNumber = newAnimation;
         newAnimationa = newAnimation & 0xFFFFFBFF;
-        if ( newAnimationa >= *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                    + 8)
-                                                                        + 122880) )
+        if (newAnimationa >= bgs->animData->animScriptData.numAnimations)
             Com_Error(
                 ERR_DROP,
-                &byte_C5EC14,
-                *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 122880),
+                "Player animation index out of range (%i): %i",
+                bgs->animData->animScriptData.numAnimations,
                 newAnimationa);
         pAnimTree = ci->pXAnimTree;
-        pXAnims = *(XAnim_s **)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                    + 578412);
-        if ( newAnimationa )
+        pXAnims = bgs->animData->animScriptData.animTree.anims;
+        if (newAnimationa)
         {
-            anim = (animation_s *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                     + 120 * newAnimationa);
+            anim = &bgs->animData->animScriptData.animations[newAnimationa];
             lf->animation = anim;
-            if ( anim->initialLerp >= 0
-                || *(int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * newAnimationa
-                                    + 68) < 0 )
+            if (anim->initialLerp >= 0
+                || bgs->animData->animScriptData.animations[newAnimationa].finalLerp < 0)
             {
                 lf->animationTime = anim->initialLerp;
             }
             else
             {
-                lf->animationTime = *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                        + 8)
-                                                                            + 120 * newAnimationa
-                                                                            + 68);
+                lf->animationTime = bgs->animData->animScriptData.animations[newAnimationa].finalLerp;
             }
-            if ( bg_blendTimeOverride->current.integer >= 0 )
+            if (bg_blendTimeOverride->current.integer >= 0)
                 lf->animationTime = bg_blendTimeOverride->current.integer;
             IsCrouchingAnim = BG_IsCrouchingAnim(ci, oldAnimNum);
             crouchMatch = BG_IsCrouchingAnim(ci, newAnimationa) == IsCrouchingAnim;
             IsProneAnim = BG_IsProneAnim(ci, oldAnimNum);
             proneMatch = BG_IsProneAnim(ci, newAnimationa) == IsProneAnim;
-            if ( lf == &ci->legs && (!crouchMatch || !proneMatch) )
-                ci->stanceTransitionTime = *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 4)
-                                                                 + 400;
+            if (lf == &ci->legs && (!crouchMatch || !proneMatch))
+                ci->stanceTransitionTime = bgs->time + 400;
         }
         else
         {
@@ -2567,28 +2696,28 @@ void __cdecl BG_SetNewAnimation(
             lf->animation = 0;
             lf->animationTime = 200;
         }
-        if ( firstAnim && lf == &ci->legs || Demo_IsPaused() )
+        if (firstAnim && lf == &ci->legs || Demo_IsPaused())
         {
             lf->animationTime = 0;
         }
         else
         {
-            if ( !anim || lf->animationTime < 0 )
+            if (!anim || lf->animationTime < 0)
             {
-                if ( anim && (anim->flags & 4) != 0 )
+                if (anim && (anim->flags & 4) != 0)
                 {
                     transitionMin = 0;
                 }
-                else if ( oldanim
-                             && (oldanim->flags & 0x8000000) != 0
-                             && anim
-                             && (anim->moveSpeed != 0.0 || anim->rotSpeed != 0.0) )
+                else if (oldanim
+                    && (oldanim->flags & 0x8000000) != 0
+                    && anim
+                    && (anim->moveSpeed != 0.0 || anim->rotSpeed != 0.0))
                 {
                     transitionMin = 267;
                 }
-                else if ( !anim || anim->moveSpeed == 0.0 )
+                else if (!anim || anim->moveSpeed == 0.0)
                 {
-                    if ( !oldanim || oldanim->moveSpeed == 0.0 )
+                    if (!oldanim || oldanim->moveSpeed == 0.0)
                         transitionMin = 167;
                     else
                         transitionMin = 267;
@@ -2598,52 +2727,45 @@ void __cdecl BG_SetNewAnimation(
                     transitionMin = 133;
                 }
             }
-            stanceTransitionTime = ci->stanceTransitionTime
-                                                     - *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                     + 8)
-                                                                             + 4);
-            if ( stanceTransitionTime > transitionMin )
+            stanceTransitionTime = ci->stanceTransitionTime - bgs->time;
+            if (stanceTransitionTime > transitionMin)
                 transitionMin = stanceTransitionTime;
-            if ( lf->animationTime < transitionMin )
+            if (lf->animationTime < transitionMin)
                 lf->animationTime = transitionMin;
         }
-        if ( anim && anim->moveSpeed != 0.0 && XAnimIsLooped(pXAnims, newAnimationa) )
+        if (anim && anim->moveSpeed != 0.0 && XAnimIsLooped(pXAnims, newAnimationa))
         {
             animIndex = oldAnimNum & 0xFFFFFBFF;
-            if ( oldanim && oldanim->moveSpeed != 0.0 && XAnimIsLooped(pXAnims, animIndex) )
+            if (oldanim && oldanim->moveSpeed != 0.0 && XAnimIsLooped(pXAnims, animIndex))
             {
                 fStartTime = XAnimGetTime(pAnimTree, animIndex);
             }
-            else if ( firstAnim )
+            else if (firstAnim)
             {
-                if ( XAnimIsPrimitive(pXAnims, animIndex) )
+                if (XAnimIsPrimitive(pXAnims, animIndex))
                     cycleLen = XAnimGetLengthMsec(pXAnims, animIndex) + 200;
                 else
                     cycleLen = 1000;
-                fStartTimea = (float)((float)(*(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                            + _tls_index)
-                                                                                                                        + 8)
-                                                                                                + 4)
-                                                                        % cycleLen)
-                                                        / (float)cycleLen)
-                                        + (float)((float)ci->clientNum * 0.36000001);
+                fStartTimea = (float)((float)(bgs->time % cycleLen)
+                    / (float)cycleLen)
+                    + (float)((float)ci->clientNum * 0.36000001);
                 fStartTime = fStartTimea - (float)(int)fStartTimea;
             }
         }
-        if ( oldanim )
+        if (oldanim)
             XAnimClearTreeGoalWeights(pAnimTree, oldAnimNum & 0xFFFFFBFF, (float)lf->animationTime * 0.001, -1);
-        if ( newAnimationa )
+        if (newAnimationa)
         {
-            if ( lf != &ci->legs && ci->leftHandGun )
+            if (lf != &ci->legs && ci->leftHandGun)
             {
                 ci->leftHandGun = 0;
                 ci->dobjDirty = 1;
             }
-            if ( (anim->flags & 0x100) != 0 )
+            if ((anim->flags & 0x100) != 0)
             {
-                if ( XAnimIsLooped(pXAnims, newAnimationa) )
+                if (XAnimIsLooped(pXAnims, newAnimationa))
                     Com_Error(ERR_DROP, "death animation '%s' is looping", anim->name);
-                if ( bNew )
+                if (bNew)
                 {
                     XAnimSetCompleteGoalWeight(obj, newAnimationa, 1.0, (float)lf->animationTime * 0.001, 1.0, 0, 0, 0, -1);
                 }
@@ -2656,7 +2778,7 @@ void __cdecl BG_SetNewAnimation(
             else
             {
                 v7 = anim->moveSpeed != 0.0 && XAnimGetWeight(pAnimTree, newAnimationa) == 0.0 || firstAnim;
-                if ( localClientNum >= 0 )
+                if (localClientNum >= 0)
                     XAnimSetCompleteGoalWeight(
                         obj,
                         newAnimationa,
@@ -2678,21 +2800,20 @@ void __cdecl BG_SetNewAnimation(
                         anim->noteType,
                         lf != &ci->legs,
                         -1);
-                if ( Demo_IsPaused() && (anim->flags & 0x400) != 0 )
+                if (Demo_IsPaused() && (anim->flags & 0x400) != 0)
                 {
                     XAnimSetTime(pAnimTree, newAnimationa, 0.1, 0xFFFFu);
                 }
-                else if ( v7 )
+                else if (v7)
                 {
                     XAnimSetTime(pAnimTree, newAnimationa, fStartTime, 0xFFFFu);
                 }
             }
-            if ( lf != &ci->legs )
+            if (lf != &ci->legs)
             {
                 XAnimSetCompleteGoalWeight(
                     obj,
-                    *(unsigned __int16 *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                            + 578420),
+                    bgs->animData->animScriptData.torsoAnim,
                     1.0,
                     (float)lf->animationTime * 0.001,
                     1.0,
@@ -2702,8 +2823,7 @@ void __cdecl BG_SetNewAnimation(
                     -1);
                 XAnimSetCompleteGoalWeight(
                     obj,
-                    *(unsigned __int16 *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                            + 578422),
+                    bgs->animData->animScriptData.legsAnim,
                     0.0099999998,
                     (float)lf->animationTime * 0.001,
                     1.0,
@@ -2713,12 +2833,11 @@ void __cdecl BG_SetNewAnimation(
                     -1);
             }
         }
-        else if ( lf != &ci->legs )
+        else if (lf != &ci->legs)
         {
             XAnimSetCompleteGoalWeight(
                 obj,
-                *(unsigned __int16 *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                        + 578420),
+                bgs->animData->animScriptData.torsoAnim,
                 0.0,
                 (float)lf->animationTime * 0.001,
                 1.0,
@@ -2728,8 +2847,7 @@ void __cdecl BG_SetNewAnimation(
                 -1);
             XAnimSetCompleteGoalWeight(
                 obj,
-                *(unsigned __int16 *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                        + 578422),
+                bgs->animData->animScriptData.legsAnim,
                 1.0,
                 (float)lf->animationTime * 0.001,
                 1.0,
@@ -2744,11 +2862,7 @@ void __cdecl BG_SetNewAnimation(
 void __cdecl BG_PlayerAnimation_VerifyAnim(XAnimTree_s *pAnimTree, lerpFrame_t *lf)
 {
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 4141, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     if ( lf->animationNumber )
     {
         if ( XAnimGetWeight(pAnimTree, lf->animationNumber & 0xFFFFFBFF) == 0.0 )
@@ -2783,11 +2897,7 @@ void __cdecl BG_PlayerAngles(const entityState_s *es, clientInfo_t *ci)
     float moveDir; // [esp+58h] [ebp-4h]
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 4285, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     GetLeanFraction(ci->lerpLean);
     moveDir = ci->lerpMoveDir;
     if ( bg_teleportAlignTime->current.integer > 0 )
@@ -2795,8 +2905,7 @@ void __cdecl BG_PlayerAngles(const entityState_s *es, clientInfo_t *ci)
         bTeleportBit = (es->lerp.eFlags & 2) != 0;
         if ( bTeleportBit != ci->teleportBit )
         {
-            ci->teleportTime = *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                     + 4);
+            ci->teleportTime = bgs->time;
             ci->teleportBit = bTeleportBit;
         }
     }
@@ -2832,10 +2941,7 @@ LABEL_20:
         ci->legs.yawing = 1;
         goto LABEL_25;
     }
-    if ( bg_teleportAlignTime->current.integer > 0
-        && ci->teleportTime > *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                        + 4)
-                                                - bg_teleportAlignTime->current.integer )
+    if (bg_teleportAlignTime->current.integer > 0 && ci->teleportTime > bgs->time - bg_teleportAlignTime->current.integer)
     {
 LABEL_18:
         ci->torso.yawing = 1;
@@ -2892,22 +2998,14 @@ LABEL_25:
         clampTolerance = 90.0f;
     }
     BG_SwingAngles(vTorsoAngles_4, 0.0, clampTolerance, swingSpeed, &ci->torso.yawAngle, &ci->torso.yawing);
-    if ( !**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
-                    4435,
-                    0,
-                    "%s",
-                    "bgs->animData->animScriptData.animations") )
-    {
-        __debugbreak();
-    }
+
+    iassert(bgs->animData->animScriptData.animations);
+    
     if ( (es->lerp.eFlags & 0x40000) != 0 )
         goto LABEL_46;
-    if ( (*(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                    + 120 * (es->un2.animState.state & 0xFFFFFBFF)
-                                    + 92)
-            & 0x30) != 0 )
+
+    if ((bgs->animData->animScriptData.animations[es->animState.state & 0xFFFFFBFF].flags
+        & 0x30) != 0)
     {
         ci->legs.yawing = 0;
         BG_SwingAngles(vHeadAngles_4, 0.0, 150.0, swingSpeed, &ci->legs.yawAngle, &ci->legs.yawing);
@@ -2963,8 +3061,12 @@ LABEL_55:
         ci->legs.yawAngle = vHeadAngles_4 + moveDir;
     }
     MAX_PITCH_FRACTION = 2.0f;
+
+    static const float IK_MAX_PITCH_FRACTION = 1.0f;
+
     if ( IKImport_GetVar_IK_Enable() )
         MAX_PITCH_FRACTION = IK_MAX_PITCH_FRACTION;
+
     if ( (es->lerp.eFlags & 0x40000) != 0
         || (es->lerp.eFlags & 0x300) != 0
         || es->lerp.u.actor.team == 5
@@ -3004,15 +3106,12 @@ void __cdecl BG_SwingAngles(
     float scale; // [esp+24h] [ebp-4h]
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 4185, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
+    
     if ( !*swinging )
     {
         swing = AngleNormalize180(*angle - destination);
-        if ( swing > swingTolerance || COERCE_FLOAT(LODWORD(swingTolerance) ^ _mask__NegFloat_) > swing )
+        if ( swing > swingTolerance || fabs(swingTolerance) > swing )
             *swinging = 1;
     }
     if ( *swinging )
@@ -3023,10 +3122,7 @@ void __cdecl BG_SwingAngles(
             scale = 0.5f;
         if ( swinga < 0.0 )
         {
-            move = (float)((float)*(int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                     + 12)
-                                     * scale)
-                     * COERCE_FLOAT(LODWORD(speed) ^ _mask__NegFloat_);
+            move = (float)((float)bgs->frametime * scale) * fabs(speed);
             if ( swinga < move )
             {
                 *swinging = 1;
@@ -3039,10 +3135,7 @@ void __cdecl BG_SwingAngles(
         }
         else
         {
-            move = (float)((float)*(int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                     + 12)
-                                     * scale)
-                     * speed;
+            move = (float)((float)bgs->frametime * scale) * speed;
             if ( move < swinga )
             {
                 *swinging = 1;
@@ -3057,7 +3150,7 @@ void __cdecl BG_SwingAngles(
         swingb = AngleNormalize180(destination - *angle);
         if ( swingb <= clampTolerance )
         {
-            if ( COERCE_FLOAT(LODWORD(clampTolerance) ^ _mask__NegFloat_) > swingb )
+            if ( fabs(clampTolerance) > swingb)
                 *angle = AngleNormalize360(destination + clampTolerance);
         }
         else
@@ -3109,11 +3202,7 @@ void __cdecl BG_UpdatePlayerDObj(
 
     ikActive = 0;
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 5032, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     objExists = pDObj != 0;
     iClientWeapon = BG_GetPlayerWeaponForDObj(localClientNum, es);
     iClientOffhandWeapon = BG_GetPlayerOffhandWeaponForDObj(localClientNum, es);
@@ -3123,10 +3212,7 @@ void __cdecl BG_UpdatePlayerDObj(
     if ( pAnimTree && (!ci->infoValid || !ci->model[0]) )
     {
         XAnimClearTree(pAnimTree);
-        (*(void (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                    + 164))(
-            es->number,
-            localClientNum);
+        bgs->SafeDObjFree(es->number, localClientNum);
         return;
     }
     if ( objExists )
@@ -3150,20 +3236,14 @@ void __cdecl BG_UpdatePlayerDObj(
             return;
         }
         ikActive = DObjHasIKActiveFlag(pDObj);
-        (*(void (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                    + 164))(
-            es->number,
-            localClientNum);
+        bgs->SafeDObjFree(es->number, localClientNum);
     }
     ci->iDObjMeleeWeapon = es->lerp.u.player.meleeWeapon;
     ci->meleeWeaponModel = es->lerp.u.player.meleeWeaponModel;
     ci->iDObjOffhandWeapon = es->lerp.u.player.offhandWeapon;
     ci->offhandWeaponModel = es->lerp.u.player.offhandWeaponModel;
     iNumModels = 0;
-    dobjModels[0].model = (XModel *)(*(int (__cdecl **)(char *))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                                     + _tls_index)
-                                                                                                                                                 + 8)
-                                                                                                                         + 148))(ci->model);
+    dobjModels[0].model = bgs->GetXModel(ci->model);
     if ( !dobjModels[0].model
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
@@ -3179,12 +3259,8 @@ void __cdecl BG_UpdatePlayerDObj(
     ci->iDObjWeapon = iClientWeapon;
     ci->weaponModel = es->weaponModel;
     firstWeaponModel = iNumModels;
-    if ( *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 156) )
-        iNumModels = (*(unsigned __int16 (__cdecl **)(DObjModel_s *, unsigned int, clientInfo_t *))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                                                                                                                                + 156))(
-                                     dobjModels,
-                                     (unsigned __int16)iNumModels,
-                                     ci);
+    if (bgs->AttachWeapon)
+        iNumModels = bgs->AttachWeapon(dobjModels, iNumModels, ci);
     lastWeaponModel = iNumModels;
     for ( i = 0; i < 6 && ci->attachModelNames[i][0]; ++i )
     {
@@ -3198,10 +3274,7 @@ void __cdecl BG_UpdatePlayerDObj(
         {
             __debugbreak();
         }
-        dobjModels[iNumModels].model = (XModel *)(*(int (__cdecl **)(char *))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                                                                            + _tls_index)
-                                                                                                                                                                        + 8)
-                                                                                                                                                + 148))(ci->attachModelNames[i]);
+        dobjModels[iNumModels].model = bgs->GetXModel(ci->attachModelNames[i]);
         if ( !dobjModels[iNumModels].model
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp",
@@ -3221,23 +3294,17 @@ void __cdecl BG_UpdatePlayerDObj(
         }
         ++iNumModels;
     }
-    if ( pAnimTree )
+    if (pAnimTree)
     {
-        (*(void (__cdecl **)(DObjModel_s *, unsigned int, XAnimTree_s *, int, int, clientInfo_t *))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                                                                                                                                                + 152))(
+        bgs->CreateDObj(
             dobjModels,
-            (unsigned __int16)iNumModels,
+            iNumModels,
             pAnimTree,
             es->number,
             localClientNum,
             ci);
         ci->dobjDirty = 0;
-        dobj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                            + _tls_index)
-                                                                                                                        + 8)
-                                                                                                + 160))(
-                                         es->number,
-                                         localClientNum);
+        dobj = bgs->GetDObj(es->number, localClientNum);
         es->partBits[0] = 0;
         es->partBits[1] = 0;
         es->partBits[2] = 0;
@@ -3245,60 +3312,60 @@ void __cdecl BG_UpdatePlayerDObj(
         es->partBits[4] = 0;
         weapVariantDef = BG_GetWeaponVariantDef(es->weapon);
         weapDef = BG_GetWeaponDef(es->weapon);
-        if ( weapDef->inventoryType == WEAPINVENTORY_ALTMODE )
+        if (weapDef->inventoryType == WEAPINVENTORY_ALTMODE)
             weapVariantDef = BG_GetWeaponVariantDef(es->lerp.u.player.primaryWeapon);
-        if ( ci->hideWeapon )
+        if (ci->hideWeapon)
         {
-            for ( m = firstWeaponModel; m < lastWeaponModel; ++m )
+            for (m = firstWeaponModel; m < lastWeaponModel; ++m)
             {
                 model = dobjModels[m].model;
-                for ( b = 0; b < model->numBones; ++b )
+                for (b = 0; b < model->numBones; ++b)
                 {
                     index = -2;
-                    if ( DObjGetBoneIndex(dobj, model->localBoneNames[b], &index, -1) )
+                    if (DObjGetBoneIndex(dobj, model->localBoneNames[b], &index, -1))
                         es->partBits[(int)index >> 5] |= 0x80000000 >> (index & 0x1F);
                 }
             }
-            Com_Memcpy(ci->weaponHideBits, es->partBits, 20);
+            Com_Memcpy((unsigned __int8 *)ci->weaponHideBits, (unsigned __int8 *)es->partBits, 0x14u);
         }
         else
         {
-            for ( tagIndex = 0; tagIndex < 32 && weapVariantDef->hideTags[tagIndex]; ++tagIndex )
+            for (tagIndex = 0; tagIndex < 32 && weapVariantDef->hideTags[tagIndex]; ++tagIndex)
             {
                 boneIndex = -2;
-                if ( DObjGetBoneIndex(dobj, weapVariantDef->hideTags[tagIndex], &boneIndex, -1) )
+                if (DObjGetBoneIndex(dobj, weapVariantDef->hideTags[tagIndex], &boneIndex, -1))
                     es->partBits[(int)boneIndex >> 5] |= 0x80000000 >> (boneIndex & 0x1F);
             }
-            if ( weapDef->bDualWield && !ci->usingKnife )
+            if (weapDef->bDualWield && !ci->usingKnife)
             {
                 weapVariantDefDW = BG_GetWeaponVariantDef(weapDef->dualWieldWeaponIndex);
                 weapDefDW = BG_GetWeaponDef(weapDef->dualWieldWeaponIndex);
-                for ( tagIndex = 0; tagIndex < 32 && weapVariantDefDW->hideTags[tagIndex]; ++tagIndex )
+                for (tagIndex = 0; tagIndex < 32 && weapVariantDefDW->hideTags[tagIndex]; ++tagIndex)
                 {
                     boneIndex = -2;
-                    if ( DObjGetModelBoneIndex(
-                                 dobj,
-                                 **(const char ***)weapDefDW->worldModel,
-                                 weapVariantDefDW->hideTags[tagIndex],
-                                 &boneIndex) )
+                    if (DObjGetModelBoneIndex(
+                        dobj,
+                        **(const char ***)weapDefDW->worldModel,
+                        weapVariantDefDW->hideTags[tagIndex],
+                        &boneIndex))
                     {
                         es->partBits[(int)boneIndex >> 5] |= 0x80000000 >> (boneIndex & 0x1F);
                     }
                 }
             }
         }
-        if ( es->lerp.u.player.stowedWeapon )
+        if (es->lerp.u.player.stowedWeapon)
         {
             weapVariantDefStowed = BG_GetWeaponVariantDef(es->lerp.u.player.stowedWeapon);
-            for ( tagIndex = 0; tagIndex < 32 && weapVariantDefStowed->hideTags[tagIndex]; ++tagIndex )
+            for (tagIndex = 0; tagIndex < 32 && weapVariantDefStowed->hideTags[tagIndex]; ++tagIndex)
             {
                 boneIndex = -2;
-                if ( DObjGetModelBoneIndex(dobj, iStowedWeaponModelIndex, weapVariantDefStowed->hideTags[tagIndex], &boneIndex) )
+                if (DObjGetModelBoneIndex(dobj, iStowedWeaponModelIndex, weapVariantDefStowed->hideTags[tagIndex], &boneIndex))
                     es->partBits[(int)boneIndex >> 5] |= 0x80000000 >> (boneIndex & 0x1F);
             }
         }
         DObjSetHidePartBits(dobj, es->partBits);
-        if ( bg_enableIKActiveFix->current.enabled )
+        if (bg_enableIKActiveFix->current.enabled)
             DObjSetIKActiveFlag(dobj, ikActive);
     }
 }
@@ -3340,16 +3407,16 @@ int __cdecl BG_GetPlayerOffhandWeaponForDObj(int localClientNum, entityState_s *
 void __cdecl BG_FindAnimTrees()
 {
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 5299, 0, "%s", "bgs") )
+    if (!bgs
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 5299, 0, "%s", "bgs"))
     {
         __debugbreak();
     }
-    *(scr_animtree_t *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578440) = BG_FindAnimTree("multiplayer", 1);
-    *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578412) = *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578440);
-    *(_WORD *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578418) = *(_WORD *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578448);
-    *(_WORD *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578420) = *(_WORD *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578452);
-    *(_WORD *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578422) = *(_WORD *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578456);
+    bgs->animData->generic_human.tree = BG_FindAnimTree("multiplayer", 1);
+    bgs->animData->animScriptData.animTree.anims = bgs->animData->generic_human.tree.anims;
+    bgs->animData->animScriptData.mainAnim = bgs->animData->generic_human.main.index;
+    bgs->animData->animScriptData.torsoAnim = bgs->animData->generic_human.torso.index;
+    bgs->animData->animScriptData.legsAnim = bgs->animData->generic_human.legs.index;
 }
 
 scr_animtree_t __cdecl BG_FindAnimTree(const char *filename, int bEnforceExists)
@@ -3358,37 +3425,35 @@ scr_animtree_t __cdecl BG_FindAnimTree(const char *filename, int bEnforceExists)
 
     tree.anims = Scr_FindAnimTree(SCRIPTINSTANCE_SERVER, filename).anims;
     if ( !tree.anims && bEnforceExists )
-        Com_Error(ERR_DROP, &byte_C5ECF0, filename);
+        Com_Error(ERR_DROP, "Could not find animation tree '%s'", filename);
     return tree;
 }
 
+unsigned int iNumPlayerAnims;
 void __cdecl BG_LoadAnim(const char *levelName)
 {
-    LargeLocal playerAnims_large_local; // [esp+0h] [ebp-Ch] BYREF
+    LargeLocal playerAnims_large_local(73728); // [esp+0h] [ebp-Ch] BYREF
     loadAnim_t (*playerAnims)[1024]; // [esp+8h] [ebp-4h]
 
-    LargeLocal::LargeLocal(&playerAnims_large_local, 73728);
-    playerAnims = (loadAnim_t (*)[1024])LargeLocal::GetBuf(&playerAnims_large_local);
+    //LargeLocal::LargeLocal(&playerAnims_large_local, 73728);
+    //playerAnims = (loadAnim_t (*)[1024])LargeLocal::GetBuf(&playerAnims_large_local);
+    playerAnims = (loadAnim_t (*)[1024]) playerAnims_large_local.GetBuf();
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 5323, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     iNumPlayerAnims = 0;
     BG_FindAnims();
     BG_AnimParseAnimScript(
-        **(animScriptData_t ***)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8),
+        (animScriptData_t *)bgs->animData,
         (loadAnim_t *)playerAnims,
         &iNumPlayerAnims,
         levelName);
     Scr_PrecacheAnimTrees(
         SCRIPTINSTANCE_SERVER,
-        *(void *(__cdecl **)(int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 168),
-        *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 16),
-        *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) == (unsigned int)&level_bgs);
+        bgs->AllocXAnim,
+        bgs->anim_user,
+        bgs == &level_bgs);
     BG_FindAnimTrees();
-    LargeLocal::~LargeLocal(&playerAnims_large_local);
+    //LargeLocal::~LargeLocal(&playerAnims_large_local);
 }
 
 void __cdecl BG_AnimParseAnimScript(
@@ -3441,7 +3506,7 @@ void __cdecl BG_AnimParseAnimScript(
     currentScriptItem = 0;
     input = Com_LoadRawTextFile(globalFilename);
     if ( !input )
-        Com_Error(ERR_DROP, &byte_C5F33C, globalFilename);
+        Com_Error(ERR_DROP, "Couldn't load player animation script %s", globalFilename);
     g_pLoadAnims = pLoadAnims;
     g_piNumLoadAnims = piNumAnims;
     parseMode = PARSEMODE_DEFINES;
@@ -3657,7 +3722,7 @@ void __cdecl BG_AnimParseAnimScript(
                                         if ( parseMode == PARSEMODE_ANIMATION )
                                         {
                                             currentScript = &scriptData->scriptAnims[indexes[0]][indexes[1]];
-                                            parseMovetype = indexes[1];
+                                            parseMovetype = (scriptAnimMoveTypes_t)indexes[1];
                                         }
                                         else if ( parseMode == PARSEMODE_CANNED_ANIMATIONS )
                                         {
@@ -3939,7 +4004,7 @@ LABEL_171:
             {
                 if ( indentLevel )
                     BG_AnimParseError("BG_AnimParseAnimScript: unexpected '%s'", token);
-                parseMode = newParseMode;
+                parseMode = (animScriptParseMode_t)newParseMode;
                 parseMovetype = ANIM_MT_UNUSED;
                 parseEvent = -1;
             }
@@ -3986,7 +4051,7 @@ void __cdecl BG_ParseConditionBits(
     unsigned int tempBits; // [esp+50h] [ebp-5Ch] BYREF
     char currentString[68]; // [esp+54h] [ebp-58h] BYREF
     int minus; // [esp+9Ch] [ebp-10h]
-    const char *token; // [esp+A0h] [ebp-Ch]
+    char *token; // [esp+A0h] [ebp-Ch]
     int endFlag; // [esp+A4h] [ebp-8h]
     int indexFound; // [esp+A8h] [ebp-4h]
 
@@ -3998,7 +4063,7 @@ void __cdecl BG_ParseConditionBits(
     tempBits = 0;
     while ( !endFlag )
     {
-        token = (const char *)Com_ParseOnLine(text_pp);
+        token = Com_ParseOnLine(text_pp)->token;
         if ( !token || !*token )
         {
             Com_UngetToken();
@@ -4013,7 +4078,7 @@ void __cdecl BG_ParseConditionBits(
             if ( I_stricmp(token, "none,") )
             {
                 if ( !I_stricmp(token, "NOT") )
-                    token = "MINUS";
+                    token = (char*)"MINUS";
                 if ( !endFlag && I_stricmp(token, "AND") && I_stricmp(token, "MINUS") )
                 {
                     if ( token[strlen(token) - 1] == 44 )
@@ -4097,14 +4162,14 @@ void __cdecl BG_SetAnimConditionFlags(int condIndex, unsigned int result)
         if ( Com_BitCheckAssert(&result, 2, 0xFFFFFFF) )
             parseMovestatus = ANIM_MOVESTATUS_RUN;
         else
-            parseMovestatus = Com_BitCheckAssert(&result, 1, 0xFFFFFFF);
+            parseMovestatus = (scriptAnimMoveStatusStates_t )Com_BitCheckAssert(&result, 1, 0xFFFFFFF);
     }
     else if ( condIndex == 9 )
     {
         if ( Com_BitCheckAssert(&result, 2, 0xFFFFFFF) )
             parseStance = ANIM_STANCE_PRONE;
         else
-            parseStance = Com_BitCheckAssert(&result, 1, 0xFFFFFFF);
+            parseStance = (scriptAnimStances_t)Com_BitCheckAssert(&result, 1, 0xFFFFFFF);
     }
 }
 
@@ -4112,14 +4177,14 @@ int __cdecl BG_ParseConditions(const char **text_pp, animScriptItem_t *scriptIte
 {
     int conditionIndex; // [esp+44h] [ebp-14h]
     unsigned int conditionValue; // [esp+50h] [ebp-8h] BYREF
-    const char *token; // [esp+54h] [ebp-4h]
+    char *token; // [esp+54h] [ebp-4h]
 
     conditionValue = 0;
     parseStance = ANIM_STANCE_STAND;
     parseMovestatus = ANIM_MOVESTATUS_STATIONARY;
     while ( 1 )
     {
-        token = (const char *)Com_ParseOnLine(text_pp);
+        token = Com_ParseOnLine(text_pp)->token;
         if ( !token || !*token )
             break;
         if ( !I_stricmp(token, "default") )
@@ -4131,7 +4196,7 @@ int __cdecl BG_ParseConditions(const char **text_pp, animScriptItem_t *scriptIte
                 BG_ParseConditionBits(text_pp, animConditionsTable[conditionIndex].values, conditionIndex, &conditionValue);
                 break;
             case ANIM_CONDTYPE_VALUE:
-                token = (const char *)Com_ParseOnLine(text_pp);
+                token = Com_ParseOnLine(text_pp)->token;
                 if ( !token || !*token )
                     BG_AnimParseError("BG_ParseConditions: expected condition value, found end of line");
                 if ( token[strlen(token) - 1] == 44 )
@@ -4158,7 +4223,7 @@ int __cdecl BG_ParseConditions(const char **text_pp, animScriptItem_t *scriptIte
                 conditionValue = 1;
                 break;
             case ANIM_CONDTYPE_STRINGHASH:
-                token = (const char *)Com_ParseOnLine(text_pp);
+                token = Com_ParseOnLine(text_pp)->token;
                 if ( !token || !*token )
                     BG_AnimParseError("BG_ParseConditions: expected condition value, found end of line");
                 if ( token[strlen(token) - 1] == 44 )
@@ -4179,29 +4244,25 @@ int __cdecl BG_ParseConditions(const char **text_pp, animScriptItem_t *scriptIte
 void BG_FindAnims()
 {
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 5262, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     Scr_FindAnim(
         SCRIPTINSTANCE_SERVER,
         "multiplayer",
         "main",
-        (scr_anim_s *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578448),
-        *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 16));
+        &bgs->animData->generic_human.main,
+        bgs->anim_user);
     Scr_FindAnim(
         SCRIPTINSTANCE_SERVER,
         "multiplayer",
         "torso",
-        (scr_anim_s *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578452),
-        *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 16));
+        &bgs->animData->generic_human.torso,
+        bgs->anim_user);
     Scr_FindAnim(
         SCRIPTINSTANCE_SERVER,
         "multiplayer",
         "legs",
-        (scr_anim_s *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578456),
-        *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 16));
+        &bgs->animData->generic_human.legs,
+        bgs->anim_user);
 }
 
 void __cdecl BG_PostLoadAnim(const char *levelName)
@@ -4213,10 +4274,10 @@ void __cdecl BG_PostLoadAnim(const char *levelName)
 void __cdecl BG_FinalizePlayerAnims(const char *levelName)
 {
     const char *AnimName; // eax
-    int v2; // eax
-    int v3; // eax
-    int v4; // eax
-    int v5; // eax
+    char *v2; // eax
+    char *v3; // eax
+    char *v4; // eax
+    char *v5; // eax
     double v6; // st7
     double v7; // st7
     double moveSpeed; // [esp+Ch] [ebp-70h]
@@ -4252,8 +4313,8 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
     {
         __debugbreak();
     }
-    pAnims = **(animation_s ***)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8);
-    pXAnims = *(XAnim_s **)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578412);
+    pAnims = (animation_s *)bgs->animData;
+    pXAnims = bgs->animData->animScriptData.animTree.anims;
     iNumAnims = XAnimGetAnimTreeSize(pXAnims);
     if ( iNumAnims >= 1024
         && !Assert_MyHandler(
@@ -4265,7 +4326,7 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
     {
         __debugbreak();
     }
-    *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 122880) = iNumAnims;
+    bgs->animData->animScriptData.numAnimations = iNumAnims;
     pCurrAnima = pAnims;
     pAnims->flags |= 0x2001u;
     I_strncpyz(pCurrAnima->name, "root", 64);
@@ -4323,7 +4384,7 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
                                 fullspeed = (float)g_speed->current.integer;
                             else
                                 fullspeed = 190.0f;
-                            strstr((unsigned __int8 *)pCurrAnim, "crouch");
+                            v2 = strstr(pCurrAnim->name, "crouch");
                             if ( v2 )
                             {
                                 fullspeeda = fullspeed * 0.64999998;
@@ -4331,7 +4392,7 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
                             }
                             else
                             {
-                                strstr((unsigned __int8 *)pCurrAnim, "prone");
+                                v3 = strstr(pCurrAnim->name, "prone");
                                 if ( v3 )
                                 {
                                     fullspeeda = fullspeed * 0.15000001;
@@ -4339,7 +4400,7 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
                                 }
                                 else
                                 {
-                                    strstr((unsigned __int8 *)pCurrAnim, "walk");
+                                    v4 = strstr(pCurrAnim->name, "walk");
                                     if ( v4 )
                                     {
                                         fullspeeda = fullspeed * 0.40000001;
@@ -4347,7 +4408,7 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
                                     }
                                     else
                                     {
-                                        strstr((unsigned __int8 *)pCurrAnim, "fast");
+                                        v5 = strstr(pCurrAnim->name, "fast");
                                         if ( v5 )
                                         {
                                             fullspeeda = fullspeed * player_sprintSpeedScale->current.value;
@@ -4417,11 +4478,11 @@ void __cdecl BG_FinalizePlayerAnims(const char *levelName)
         Com_Printf(19, "===========================================================\n");
     }
     BG_AnimParseAnimScript(
-        **(animScriptData_t ***)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8),
+        (animScriptData_t *)bgs->animData,
         0,
         0,
         levelName);
-    BG_SetupAnimNoteTypes(**(animScriptData_t ***)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8));
+    BG_SetupAnimNoteTypes((animScriptData_t *)bgs->animData); 
 }
 
 loadAnim_t *__cdecl BG_LoadAnimForAnimIndex(unsigned int iAnimIndex)
@@ -4429,13 +4490,12 @@ loadAnim_t *__cdecl BG_LoadAnimForAnimIndex(unsigned int iAnimIndex)
     unsigned int i; // [esp+0h] [ebp-8h]
     loadAnim_t *pAnim; // [esp+4h] [ebp-4h]
 
-    if ( iAnimIndex >= *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-                                                             + 122880) )
+    if ( iAnimIndex >= bgs->animData->animScriptData.numAnimations)
         Com_Error(
             ERR_DROP,
-            &byte_C5F6F0,
+            "Player animation index %i out of 0 to %i range",
             iAnimIndex,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 122880));
+            bgs->animData->animScriptData.numAnimations);
     i = 0;
     pAnim = g_pLoadAnims;
     while ( i < *g_piNumLoadAnims )
@@ -4457,42 +4517,22 @@ void __cdecl BG_SetupAnimNoteTypes(animScriptData_t *scriptData)
     int itemIndex; // [esp+14h] [ebp-4h]
 
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_animation.cpp", 962, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
-    for ( animIndex = 0; animIndex < scriptData->numAnimations; ++animIndex )
+    iassert(bgs);
+    for (animIndex = 0; animIndex < scriptData->numAnimations; ++animIndex)
         scriptData->animations[animIndex].noteType = 0;
-    if ( !*(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 16) )
+    if (!bgs->anim_user)
     {
         script = &scriptData->scriptEvents[7];
-        for ( itemIndex = 0; itemIndex < script->numItems; ++itemIndex )
+        for (itemIndex = 0; itemIndex < script->numItems; ++itemIndex)
         {
             scriptItem = script->items[itemIndex];
-            for ( cmdIndex = 0; cmdIndex < scriptItem->numCommands; ++cmdIndex )
+            for (cmdIndex = 0; cmdIndex < scriptItem->numCommands; ++cmdIndex)
             {
-                if ( scriptItem->commands[cmdIndex].bodyPart[0] )
+                if (scriptItem->commands[cmdIndex].bodyPart[0])
                     scriptData->animations[scriptItem->commands[cmdIndex].animIndex[0]].noteType = 1;
-                if ( scriptItem->commands[cmdIndex].bodyPart[1] )
+                if (scriptItem->commands[cmdIndex].bodyPart[1])
                     scriptData->animations[scriptItem->commands[cmdIndex].animIndex[1]].noteType = 1;
             }
         }
     }
 }
-
-void __cdecl AssignToSmallerType<short>(__int16 *dest, int src)
-{
-    *dest = src;
-    if ( *dest != src
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\bgame\\../universal/q_shared.h",
-                    285,
-                    0,
-                    "%s",
-                    "(int) dest == src") )
-    {
-        __debugbreak();
-    }
-}
-

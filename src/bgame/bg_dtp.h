@@ -1,5 +1,11 @@
 #pragma once
 
+#include <universal/dvar.h>
+
+struct pmove_t;
+struct pml_t;
+struct playerState_s;
+
 void __cdecl Dtp_RegisterDvars();
 int __cdecl Dtp_CalcSurfaceType(pmove_t *pm, pml_t *pml);
 bool __cdecl Dtp_IsSliding(const playerState_s *ps);

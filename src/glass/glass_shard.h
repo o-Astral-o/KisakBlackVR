@@ -1,4 +1,141 @@
 #pragma once
+#include <universal/com_math.h>
+#include <physics/phys_local.h>
+#include <gfx_d3d/r_material.h>
+
+struct ray2_t // sizeof=0x14
+{                                       // XREF: GlassShard::Outline::Vertex/r
+                                        // OutlineEdge/r
+    float origin[2];
+    float dir[2];                       // XREF: GlassClient::PlayShatterFX(int,float const * const,float const * const)+5AC/o
+    float len;                          // XREF: GlassClient::PlayShatterFX(int,float const * const,float const * const)+481/r
+                                        // GlassClient::PlayShatterFX(int,float const * const,float const * const)+4B3/r ...
+};
+
+struct __declspec(align(16)) GlassPhysics // sizeof=0xA0
+{
+    phys_mat44 m_mat;
+    phys_vec3 m_inv_inertia;
+    phys_vec3 m_t_vel;
+    phys_vec3 m_a_vel;
+    phys_vec3 m_force_sum;
+    phys_vec3 m_torque_sum;
+    float m_inv_mass;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct GlassDef // sizeof=0x3C
+{                                       // XREF: GlassDefLoad/r
+    const char *name;
+    int maxHealth;
+    float thickness;
+    float minShardSize;
+    float maxShardSize;
+    float shardLifeProbablility;
+    int maxShards;
+    Material *pristineMaterial;
+    Material *crackedMaterial;
+    Material *shardMaterial;
+    const char *crackSound;
+    const char *shatterShound;
+    const char *autoShatterShound;
+    const FxEffectDef *crackEffect;
+    const FxEffectDef *shatterEffect;
+};
+
+struct ShardGroup // sizeof=0x54
+{
+    unsigned int packedPos;
+    const GlassDef *glassDef;
+    struct GlassShard *head;
+    float worldBBoxMin[3];
+    float worldBBoxMax[3];
+    float origin[3];
+    float extent[3];
+    bool invalidBBox;
+    bool visible;
+    bool highLod;
+    // padding byte
+    __int16 numShards;
+    __int16 numIndices;
+    __int16 numVerts;
+    unsigned __int16 lightingHandle;
+    GfxLightingInfo lightingInfo;
+    unsigned __int16 *renderIndices;
+};
+
+struct GlassShard // sizeof=0x90
+{
+    struct Outline
+    {
+        struct Vertex
+        {
+            ray2_t edge;
+            bool isOriginalEdge;                // XREF: GlassShard::Outline::Reverse(void)+1E7/w
+            // padding byte
+            // padding byte
+            // padding byte
+        };
+        GlassShard::Outline::Vertex *verts; // XREF: GlassClient::Outlines::InitShards(GlassShard const *,GlassShard * * const,int)+4F/w
+                                            // GlassShard::Create(Glass const *)+35/w ...
+        float length;
+        float area;
+        unsigned __int8 numVerts;           // XREF: GlassClient::Outlines::InitShards(GlassShard const *,GlassShard * * const,int)+55/w
+                                            // GlassShard::Create(Glass const *)+3B/w ...
+        unsigned __int8 maxVerts;           // XREF: GlassClient::Outlines::InitShards(GlassShard const *,GlassShard * * const,int)+5C/w
+                                            // GlassShard::Create(Glass const *)+42/w ...
+        bool isClosed;                      // XREF: GlassClient::Outlines::InitShards(GlassShard const *,GlassShard * * const,int)+63/w
+                                            // GlassShard::Create(Glass const *)+49/w ...
+        // padding byte
+    };
+
+    struct __declspec(align(4)) Mesh // sizeof=0x10
+    {                                       // XREF: GlassShard/r
+        PackedUnitVec *normArray;
+        unsigned __int8 *indices;
+        unsigned __int8 numNorm;
+        unsigned __int8 numVerts;
+        unsigned __int8 numVertsLow;
+        unsigned __int8 numIndices;
+        unsigned __int8 numIndicesLow;
+        // padding byte
+        // padding byte
+        // padding byte
+    };
+
+    GlassShard *groupNext;
+    unsigned __int8 *memoryPtr;
+    unsigned __int16 memorySize;
+    unsigned __int16 glassIndex;
+    GlassShard::Outline outline;
+    float thickness;
+    float uvScale;
+    GlassShard::Mesh mesh;
+    float axis[3][3];
+    float origin[3];
+    int physObjId;
+    GlassPhysics *glassPhysics;
+    float timeUntilAction;
+    float worldBBoxMin[3];
+    float worldBBoxMax[3];
+    ShardGroup *group;
+    bool isOriginalEdge;
+    bool remove;
+    bool inGroupChange;
+    bool delayedDrop;
+};
+
 
 void __cdecl GlassShard::Defrag(GlassShard *ptr);
 void __userpurge GlassPhysics::CreateAxis(
@@ -22,7 +159,6 @@ void __userpurge GlassPhysics::tensor_transform_principle(
                 const phys_mat44 *mat,
                 phys_mat44 *tensor);
 void __userpurge GlassPhysics::IntegrateVelocity(GlassPhysics *this@<ecx>, int a2@<ebp>, float deltaTime);
-phys_vec3 *__thiscall phys_vec3::operator+=(phys_vec3 *this, const phys_vec3 *v);
 void __userpurge GlassPhysics::IntegratePos(GlassPhysics *this@<ecx>, int a2@<ebp>, float deltaTime);
 void __thiscall GlassPhysics::GetPosition(GlassPhysics *this, float *position, float (*axis)[3]);
 int __thiscall GlassShard::Outline::Init(

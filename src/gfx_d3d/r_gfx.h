@@ -77,7 +77,7 @@ struct GfxSModelDrawSurfLightingData // sizeof=0x28
 
 struct __declspec(align(4)) GfxLightImage // sizeof=0x8
 {                                                                             // XREF: GfxLightDef/r
-        GfxImage *image;
+        struct GfxImage *image;
         unsigned __int8 samplerState;
         // padding byte
         // padding byte
@@ -175,4 +175,201 @@ struct GfxExposureValue // sizeof=0xB0
                                                                                 // R_DefaultExposureValue(int)+3B1/w ...
         float bloomScale[4];                                // XREF: R_DefaultExposureValue(int)+3FC/w
                                                                                 // R_DefaultExposureValue(int)+415/w ...
+};
+
+struct GfxDepthOfField // sizeof=0x20
+{                                       // XREF: refdef_s/r
+                                        // GfxViewInfo/r ...
+    float viewModelStart;
+    float viewModelEnd;
+    float nearStart;
+    float nearEnd;
+    float farStart;
+    float farEnd;
+    float nearBlur;
+    float farBlur;
+};
+
+struct GfxDoubleVision // sizeof=0x1C
+{                                       // XREF: refdef_s/r
+                                        // GfxViewInfo/r ...
+    float direction[3];
+    float motionBlurMagnitude;
+    float deltaPerMS;
+    float cur;
+    float targ;
+};
+
+struct __declspec(align(4)) GfxCompositeFx // sizeof=0x2C
+{                                       // XREF: refdef_s/r refdef_s/r ...
+    float distortionScale[2];
+    float blurRadius;
+    float distortionMagnitude;
+    float frameRate;
+    int lastUpdate;
+    int frame;
+    int startMSec;
+    int currentTime;
+    int duration;
+    bool enabled;
+    bool scriptEnabled;
+    // padding byte
+    // padding byte
+};
+
+struct GfxGenericFilter // sizeof=0x10BC
+{                                       // XREF: refdef_s/r
+                                        // GfxViewInfo/r ...
+    bool passEnabled[3][16];
+    struct Material *passMaterial[3][16];
+    int passTarget[3][16];
+    int passSampler0[3][16];
+    int passSampler1[3][16];
+    float passParam[3][16][16];
+    int passQuads[3][16];
+    float passFlareOcclusion[3][16];
+    float sunPosition[3];
+};
+
+struct GfxPoison // sizeof=0x8
+{                                       // XREF: refdef_s/r
+                                        // GfxViewInfo/r ...
+    float curAmountTarget;
+    float curAmount;
+};
+
+struct __declspec(align(4)) GfxSaveScreenParam // sizeof=0x18
+{                                       // XREF: GfxSaveScreenFx/r
+    float s0;
+    float t0;
+    float ds;
+    float dt;
+    int screenTimerId;
+    unsigned __int8 mode;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(4)) GfxBlendSaveScreenBlurredParam // sizeof=0x1C
+{                                       // XREF: GfxSaveScreenFx/r
+    int fadeMsec;
+    float s0;
+    float t0;
+    float ds;
+    float dt;
+    int screenTimerId;
+    unsigned __int8 enabled;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(4)) GfxBlendSaveScreenFlashedParam // sizeof=0x20
+{                                       // XREF: GfxSaveScreenFx/r
+    float intensityWhiteout;
+    float intensityScreengrab;
+    float s0;
+    float t0;
+    float ds;
+    float dt;
+    int screenTimerId;
+    unsigned __int8 enabled;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct GfxSaveScreenFx // sizeof=0x54
+{                                       // XREF: refdef_s/r
+                                        // GfxViewInfo/r ...
+    GfxSaveScreenParam saveScreenParam;
+    GfxBlendSaveScreenBlurredParam blendBlurredParam;
+    GfxBlendSaveScreenFlashedParam blendFlashedParam;
+};
+
+struct WaterFogDef // sizeof=0x4C
+{                                       // XREF: refdef_s/r
+    int startTime;
+    int finishTime;
+    float color[4];
+    float fogStart;
+    float density;
+    float heightDensity;
+    float baseHeight;
+    float sunFogColor[4];
+    float sunFogDir[3];
+    float sunFogStartAng;
+    float sunFogEndAng;
+};
+
+struct GfxPlacement // sizeof=0x1C
+{                                       // XREF: GfxScaledPlacement/r
+    float quat[4];                      // XREF: R_InitGlobalStructs+38/w
+    float origin[3];                    // XREF: CG_Player(int,centity_s *)+D8D/w
+};
+
+struct GfxScaledPlacement // sizeof=0x20
+{                                       // XREF: .data:GfxScaledPlacement s_manualObjectPlacement/r
+    GfxPlacement base;                  // XREF: CG_Player(int,centity_s *)+D8D/w
+    float scale;                        // XREF: CG_Player(int,centity_s *)+DD9/w
+};
+
+struct GfxWorldVertex // sizeof=0x2C
+{                                       // XREF: GfxWorldVertex0/r
+                                        // GfxWorldVertex1/r
+    float xyz[3];
+    float binormalSign;
+    GfxColor color;
+    float texCoord[2];
+    float lmapCoord[2];
+    PackedUnitVec normal;
+    PackedUnitVec tangent;
+};
+
+struct GfxBrushModelWritable // sizeof=0x1C
+{                                       // XREF: GfxBrushModel/r
+    float mins[3];
+    float maxs[3];
+    float mip1radiusSq;
+};
+
+struct GfxBrushModel // sizeof=0x3C
+{
+    GfxBrushModelWritable writable;
+    float bounds[2][3];
+    unsigned int surfaceCount;
+    unsigned int startSurfIndex;
+};
+
+struct srfTriangles_t // sizeof=0x30
+{                                       // XREF: GfxSurface/r
+    float mins[3];
+    int vertexLayerData;
+    float maxs[3];
+    int firstVertex;
+    unsigned __int16 vertexCount;
+    unsigned __int16 triCount;
+    int baseIndex;
+    float himipRadiusSq;
+    int stream2ByteOffset;
+};
+
+struct GfxSurface // sizeof=0x50
+{                                       // XREF: ??$_Insertion_sort1@PAUGfxSurface@@P6A_NABU1@0@ZU1@@std@@YAXPAUGfxSurface@@0P6A_NABU1@1@Z0@Z/r
+                                        // ??$_Adjust_heap@PAUGfxSurface@@HU1@P6A_NABU1@0@Z@std@@YAXPAUGfxSurface@@HHU1@P6A_NABU1@2@Z@Z/r ...
+    srfTriangles_t tris;
+    Material *material;
+    unsigned __int8 lightmapIndex;
+    unsigned __int8 reflectionProbeIndex;
+    unsigned __int8 primaryLightIndex;
+    unsigned __int8 flags;
+    float bounds[2][3];
+};
+
+struct GfxLightmapArray // sizeof=0xC
+{
+    GfxImage *primary;
+    GfxImage *secondary;
+    GfxImage *secondaryB;
 };

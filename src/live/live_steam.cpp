@@ -308,7 +308,7 @@ char *__cdecl LiveSteam_GetClientPersonaName(bool shortName)
     const char *s; // [esp+4h] [ebp-4h]
 
     if ( !_SteamFriends() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     v1 = (int (__thiscall ***)(unsigned int, unsigned int))_SteamFriends();
     s = (const char *)(**v1)(v1, v1);
     if ( !shortName )

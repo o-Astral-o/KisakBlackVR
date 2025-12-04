@@ -108,7 +108,7 @@ void __cdecl FX_InitSystem(int localClientNum)
     FX_LinkSystemBuffers(&system->system, systemBuffers);
     FX_RegisterDvars();
     FX_CreateDevGui();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     FX_ResetSystem(&system->system);
     system->system.msecNow = 0;
     system->system.msecDraw = -1;
@@ -322,7 +322,7 @@ void __cdecl FX_EffectNoLongerReferenced(FxSystem *system, FxEffectContainer *re
                 21,
                 "effect 0x%08x \"%s\", status 0x%08x, owner 0x%08x\n",
                 remoteEffect,
-                &toastPopupTitle,
+                "",
                 remoteEffect->atomics.status,
                 owner);
     }

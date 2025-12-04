@@ -32,7 +32,7 @@ void __cdecl Ragdoll_ResetBodiesUsingDef()
                      "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_cmds.cpp",
                      20,
                      "Ragdoll_BodyInUse( body )",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }

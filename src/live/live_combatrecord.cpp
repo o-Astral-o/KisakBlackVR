@@ -98,7 +98,7 @@ const char *__cdecl LiveCombatRecord_GetGameTypeName(unsigned int index)
     if ( index < 0x10 )
         return gameTypeNames[index];
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 int __cdecl LiveCombatRecord_GetGameTypeLbIndex(unsigned int index)

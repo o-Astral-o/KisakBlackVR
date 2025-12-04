@@ -1,5 +1,107 @@
 #include "cg_visionsets.h"
 #include <universal/com_memory.h>
+#include <universal/dvar.h>
+#include <universal/q_shared.h>
+#include <xanim/xmodel.h>
+#include <devgui/devgui.h>
+#include <cgame_mp/cg_local_mp.h>
+#include <cgame_mp/cg_main_mp.h>
+
+#include <cmath>
+#include <universal/com_loadutils.h>
+#include <qcommon/common.h>
+#include <universal/q_parse.h>
+#include <client_mp/cl_cgame_mp.h>
+#include <cgame_mp/cg_consolecmds_mp.h>
+#include <cgame_mp/cg_view_mp.h>
+#include "cg_camera.h"
+#include <bgame/bg_weapons.h>
+#include <bgame/bg_weapons_def.h>
+#include <gfx_d3d/r_font.h>
+#include <gfx_d3d/r_rendercmds.h>
+#include <gfx_d3d/r_exposure.h>
+
+const dvar_s *nightVisionFadeInOutTime;
+const dvar_s *nightVisionPowerOnTime;
+const dvar_s *nightVisionDisableEffects;
+const dvar_s *flareDisableEffects;
+const dvar_s *showVisionSetDebugInfo;
+
+const char *MYDEFAULTVISIONNAME = "default";
+
+visField_t visionDefFields[68] =
+{
+  { "r_filmEnable", 0, 0 },
+  { "r_filmContrast", 92, 2 },
+  { "r_filmColorTemp", 44, 2 },
+  { "r_filmHue", 20, 2 },
+  { "r_filmSaturation", 32, 2 },
+  { "r_filmDarkTint", 80, 2 },
+  { "r_filmMidTint", 68, 2 },
+  { "r_filmLightTint", 56, 2 },
+  { "r_filmMidStart", 4, 1 },
+  { "r_filmMidEnd", 8, 1 },
+  { "r_filmDarkFeather", 12, 1 },
+  { "r_filmLightFeather", 16, 1 },
+  { "r_filmBleach", 104, 2 },
+  { "r_primaryLightUseTweaks", 176, 0 },
+  { "r_primaryLightTweakDiffuseStrength", 180, 1 },
+  { "r_primaryLightTweakSpecularStrength", 184, 1 },
+  { "r_filmLut", 116, 4 },
+  { "r_reviveFX_enable", 120, 0 },
+  { "r_reviveFX_edgeColorTemp", 124, 1 },
+  { "r_reviveFX_edgeSaturation", 128, 1 },
+  { "r_reviveFX_edgeScale", 132, 2 },
+  { "r_reviveFX_edgeContrast", 144, 2 },
+  { "r_reviveFX_edgeOffset", 156, 2 },
+  { "r_reviveFX_edgeMaskAdjust", 168, 1 },
+  { "r_reviveFX_edgeAmount", 172, 1 },
+  { "snd_masterRingmod", 188, 1 },
+  { "snd_reverbRingmod", 192, 1 },
+  { "snd_hiFilter", 196, 1 },
+  { "snd_lowFilter", 200, 1 },
+  { "r_sCurveEnable", 204, 5 },
+  { "r_sCurveShoulderStrength", 208, 1 },
+  { "r_sCurveLinearStrength", 212, 1 },
+  { "r_sCurveLinearAngle", 216, 1 },
+  { "r_sCurveToeStrength", 220, 1 },
+  { "r_sCurveToeNumerator", 224, 1 },
+  { "r_sCurveToeDenominator", 228, 1 },
+  { "r_postEmissiveBrightening", 232, 1 },
+  { "r_bloomBlurRadius", 236, 1 },
+  { "r_bloomTintWeights", 240, 3 },
+  { "r_bloomColorScale", 256, 3 },
+  { "r_bloomTintScale", 272, 3 },
+  { "r_bloomCurveBreakpoint", 288, 3 },
+  { "r_bloomCurveLoBlack", 304, 3 },
+  { "r_bloomCurveLoGamma", 320, 3 },
+  { "r_bloomCurveLoWhite", 336, 3 },
+  { "r_bloomCurveLoRemapBlack", 352, 3 },
+  { "r_bloomCurveLoRemapWhite", 368, 3 },
+  { "r_bloomCurveHiBlack", 384, 3 },
+  { "r_bloomCurveHiGamma", 400, 3 },
+  { "r_bloomCurveHiWhite", 416, 3 },
+  { "r_bloomCurveHiRemapBlack", 432, 3 },
+  { "r_bloomCurveHiRemapWhite", 448, 3 },
+  { "r_bloomExpansionControl", 464, 3 },
+  { "r_bloomExpansionWeights", 480, 3 },
+  { "r_bloomExpansionSource", 496, 5 },
+  { "r_bloomPersistence", 500, 1 },
+  { "r_bloomStreakXLevels0", 504, 3 },
+  { "r_bloomStreakXLevels1", 520, 3 },
+  { "r_bloomStreakXInnerTint", 536, 2 },
+  { "r_bloomStreakXOuterTint", 548, 2 },
+  { "r_bloomStreakXTintControl", 560, 3 },
+  { "r_bloomStreakXTint", 576, 2 },
+  { "r_bloomStreakYLevels0", 588, 3 },
+  { "r_bloomStreakYLevels1", 604, 3 },
+  { "r_bloomStreakYInnerTint", 620, 2 },
+  { "r_bloomStreakYOuterTint", 632, 2 },
+  { "r_bloomStreakYTintControl", 644, 3 },
+  { "r_bloomStreakYTint", 660, 2 }
+};
+
+
 
 void __cdecl CG_RegisterVisionSetsDvars()
 {
@@ -17,8 +119,8 @@ void __cdecl CG_RegisterVisionSetsDvars()
                                                          10000.0,
                                                          0x1000u,
                                                          "How long the black-to-nightvision fade lasts when turning on the goggles.");
-    nightVisionDisableEffects = _Dvar_RegisterBool("nightVisionDisableEffects", 0, 0x1000u, &toastPopupTitle);
-    flareDisableEffects = _Dvar_RegisterBool("flareDisableEffects", 0, 0x80u, &toastPopupTitle);
+    nightVisionDisableEffects = _Dvar_RegisterBool("nightVisionDisableEffects", 0, 0x1000u, "");
+    flareDisableEffects = _Dvar_RegisterBool("flareDisableEffects", 0, 0x80u, "");
     showVisionSetDebugInfo = _Dvar_RegisterInt("showVisionSetDebugInfo", -1, -1, 3, 0x80u, "Enables visionset debug info");
 }
 
@@ -76,8 +178,8 @@ void __cdecl CG_AddVisionSetMenuItem(XAssetHeader header)
             __debugbreak();
         }
         strncpy(
-            (unsigned __int8 *)visionSetName,
-            (unsigned __int8 *)visionSetNameBegin,
+            visionSetName,
+            visionSetNameBegin,
             visionSetNameEnd - visionSetNameBegin);
         visionSetName[visionSetNameEnd - visionSetNameBegin] = 0;
         _snprintf(devguiPath, 0x100u, "Art/Post FX/Vision Sets/%s", visionSetName);
@@ -190,8 +292,8 @@ void __cdecl UpdateVarsLerpCustom(
                 visionSetLerpData_t *lerpData,
                 visionSetVars_t *result)
 {
-    bool *voidFrom; // [esp+18h] [ebp-10h]
-    bool *voidTo; // [esp+1Ch] [ebp-Ch]
+    const bool *voidFrom; // [esp+18h] [ebp-10h]
+    const bool *voidTo; // [esp+1Ch] [ebp-Ch]
     float *voidResult; // [esp+20h] [ebp-8h]
     int fieldNum; // [esp+24h] [ebp-4h]
 
@@ -317,49 +419,30 @@ double __cdecl LerpFloat(float from, float to, float fraction, visionSetLerpStyl
     double v5; // st7
     long double var4; // [esp+0h] [ebp-4h]
 
-    if ( style == VISIONSETLERP_NONE
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\cgame\\cg_visionsets.cpp",
-                    472,
-                    0,
-                    "%s",
-                    "style != VISIONSETLERP_NONE") )
+    iassert(style != VISIONSETLERP_NONE);
+
+    //LODWORD(var4) = style - 2;
+    switch (style)
     {
-        __debugbreak();
+    case VISIONSETLERP_TO_LINEAR:
+        return (to - from) * fraction + from;
+    case VISIONSETLERP_TO_SMOOTH:
+        fraction = sin(fraction * 3.141592741012573 * 0.5);
+        return (to - from) * fraction + from;
+    case VISIONSETLERP_BACKFORTH_SMOOTH:
+        fraction = sin(fraction * 3.141592741012573 * 0.5);
+        break;
+    case VISIONSETLERP_CUSTOM_VALUE:
+        return (to - from) * fraction + from;
     }
-    LODWORD(var4) = style - 2;
-    switch ( style )
-    {
-        case VISIONSETLERP_TO_LINEAR:
-            return (to - from) * fraction + from;
-        case VISIONSETLERP_TO_SMOOTH:
-            __libm_sse2_sin(var4);
-            fraction = (float)(fraction * 3.1415927) * 0.5;
-            return (to - from) * fraction + from;
-        case VISIONSETLERP_BACKFORTH_SMOOTH:
-            __libm_sse2_sin(var4);
-            fraction = (float)(fraction * 3.1415927) * 0.5;
-            goto LABEL_9;
-        case VISIONSETLERP_CUSTOM_VALUE:
-            return (to - from) * fraction + from;
-        default:
-LABEL_9:
-            if ( style != VISIONSETLERP_BACKFORTH_SMOOTH
-                && style != VISIONSETLERP_BACKFORTH_LINEAR
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\cgame\\cg_visionsets.cpp",
-                            489,
-                            0,
-                            "%s",
-                            "(style == VISIONSETLERP_BACKFORTH_SMOOTH) || (style == VISIONSETLERP_BACKFORTH_LINEAR)") )
-            {
-                __debugbreak();
-            }
-            if ( fraction >= 0.5 )
-                return (from - to) * (fraction - 0.5) + (from - to) * (fraction - 0.5) + to;
-            v5 = (to - from) * fraction;
-            return v5 + v5 + from;
-    }
+
+    iassert((style == VISIONSETLERP_BACKFORTH_SMOOTH) || (style == VISIONSETLERP_BACKFORTH_LINEAR));
+
+    if ( fraction >= 0.5 )
+        return (from - to) * (fraction - 0.5) + (from - to) * (fraction - 0.5) + to;
+
+    v5 = (to - from) * fraction;
+    return v5 + v5 + from;
 }
 
 void __cdecl LerpVec3(float *from, float *to, float fraction, visionSetLerpStyle_t style, float *result)
@@ -387,8 +470,8 @@ void __cdecl UpdateVarsLerp(
     float v5; // [esp+1Ch] [ebp-24h]
     visionSetLerpStyle_t style; // [esp+20h] [ebp-20h]
     float v7; // [esp+24h] [ebp-1Ch]
-    bool *voidFrom; // [esp+2Ch] [ebp-14h]
-    bool *voidTo; // [esp+30h] [ebp-10h]
+    const bool *voidFrom; // [esp+2Ch] [ebp-14h]
+    const bool *voidTo; // [esp+30h] [ebp-10h]
     float *voidResult; // [esp+34h] [ebp-Ch]
     float fraction; // [esp+38h] [ebp-8h]
     int fieldNum; // [esp+3Ch] [ebp-4h]
@@ -705,7 +788,7 @@ bool __cdecl ApplyTokenToField(unsigned int fieldNum, char *token, visionSetVars
             break;
         case 6:
             matField = (Material **)voidField;
-            *(unsigned int *)voidField = Material_Register(token, 6);
+            *(unsigned int *)voidField = (unsigned int)Material_Register(token, 6);
             if ( *matField )
                 goto LABEL_32;
             result = 0;
@@ -791,9 +874,9 @@ void __cdecl CG_VisionSetConfigString_Naked(int localClientNum)
 
     cgameGlob = CG_GetLocalClientGlobals(localClientNum);
     configString = CL_GetConfigString(1550);
-    token = Com_Parse(&configString);
+    token = Com_Parse(&configString)->token;
     I_strncpyz(cgameGlob->visionNameNaked, token, 64);
-    v1 = Com_Parse(&configString);
+    v1 = Com_Parse(&configString)->token;
     duration = atoi(v1);
     CG_VisionSetStartLerp_To(
         localClientNum,
@@ -813,9 +896,9 @@ void __cdecl CG_VisionSetConfigString_Night(int localClientNum)
 
     cgameGlob = CG_GetLocalClientGlobals(localClientNum);
     configString = CL_GetConfigString(1551);
-    token = Com_Parse(&configString);
+    token = Com_Parse(&configString)->token;
     I_strncpyz(cgameGlob->visionNameNight, token, 64);
-    v1 = Com_Parse(&configString);
+    v1 = Com_Parse(&configString)->token;
     duration = atoi(v1);
     CG_VisionSetStartLerp_To(
         localClientNum,
@@ -1209,6 +1292,13 @@ char __cdecl CG_LookingThroughNightVision(int localClientNum)
     return 0;
 }
 
+static float textStartY = 200.0f;
+static float curChannelScaleMult = 1.2f;
+static float textX = 75.0f;
+static float textScaleX = 1.25f;
+static float textScaleY = 1.5f;
+static float textVertSpacing = 20.0f;
+
 void __cdecl DrawVisionSetDebug(int localClientNum, visionSetMode_t curChannel)
 {
     float v2; // [esp+1Ch] [ebp-140h]
@@ -1288,7 +1378,7 @@ void __cdecl CG_VisionSetApplyToRefdef(int localClientNum, bool isExtracam)
     }
     else
     {
-        visionChannel = CG_LookingThroughNightVision(localClientNum) != 0;
+        visionChannel = (visionSetMode_t)(CG_LookingThroughNightVision(localClientNum) != 0);
         DrawVisionSetDebug(localClientNum, visionChannel);
     }
     if ( cgameGlob->visionSetLerpData[visionChannel].style )
@@ -1475,8 +1565,8 @@ void __cdecl CG_VisionSetApplyToRefdef(int localClientNum, bool isExtracam)
 
 void __cdecl CG_InitExposure(int localClientNum, char *mapname)
 {
-    int v2; // eax
-    _BYTE *v3; // eax
+    char *v2; // eax
+    char *v3; // eax
     char v4; // [esp+23h] [ebp-121h]
     char *v5; // [esp+28h] [ebp-11Ch]
     char *v6; // [esp+2Ch] [ebp-118h]
@@ -1485,9 +1575,9 @@ void __cdecl CG_InitExposure(int localClientNum, char *mapname)
     char *fileBuf; // [esp+38h] [ebp-10Ch]
     char temp[260]; // [esp+3Ch] [ebp-108h] BYREF
 
-    strrchr((unsigned __int8 *)mapname, 0x2Fu);
-    if ( v2 )
-        r = (char *)(v2 + 1);
+    v2 = strrchr(mapname, '/');
+    if (v2)
+        r = v2 + 1;
     else
         r = mapname;
     r[255] = 0;
@@ -1499,7 +1589,7 @@ void __cdecl CG_InitExposure(int localClientNum, char *mapname)
         *v5++ = *v6++;
     }
     while ( v4 );
-    strstr((unsigned __int8 *)temp, "_geo");
+    v3 = strstr(temp, "_geo");
     if ( v3 )
         *v3 = 0;
     R_SetExposureToDefault();
@@ -1515,7 +1605,7 @@ void __cdecl CG_InitExposure(int localClientNum, char *mapname)
     }
     if ( fileBuf )
     {
-        R_LoadExposureData(fileBuf);
+        R_LoadExposureData((unsigned int*)fileBuf);
         Com_UnloadRawTextFile(fileBuf);
     }
 }

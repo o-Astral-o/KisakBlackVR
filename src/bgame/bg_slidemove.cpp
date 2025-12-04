@@ -151,7 +151,7 @@ void __thiscall phys_heap_gjk_cache_system_avl_tree::shutdown(phys_heap_gjk_cach
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
                      260,
                      "m_list_phys_gjk_cache_info_internal.get_count() == 0",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -585,7 +585,7 @@ bool __userpurge gjk_cylinder_t::is_foot@<al>(gjk_cylinder_t *this@<ecx>, int a2
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  32,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1092,7 +1092,7 @@ const phys_mat44 *__thiscall gjk_base_t::get_xform(gjk_base_t *this)
                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                  105,
                  "get_flag(FLAG_XFORM_VALID)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1788,14 +1788,6 @@ LABEL_53:
             ;
         return v35;
     }
-}
-
-phys_vec3 *__thiscall phys_vec3::operator=(phys_vec3 *this, const phys_vec3 *v)
-{
-    this->x = v->x;
-    this->y = v->y;
-    this->z = v->z;
-    return this;
 }
 
 void __cdecl Phys_NitrousVecToVec3(const phys_vec3 *inVector, float *outVector)
@@ -3156,7 +3148,7 @@ void __thiscall gjk_base_t::~gjk_base_t(gjk_base_t *this)
                      "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                      87,
                      "!get_flag(FLAG_TEMP_ALLOCATION)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3433,7 +3425,7 @@ void __userpurge gjk_polygon_cylinder_t::get_simplex(
                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                          916,
                          "ind == 0 || ind == 1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -3463,7 +3455,7 @@ void __userpurge gjk_polygon_cylinder_t::get_simplex(
         {
             v41 = cache_info->m_indices[co_].x;
             if ( v41 < 0.0
-                && _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 883, "ind >= 0", &toastPopupTitle) )
+                && _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 883, "ind >= 0", "") )
             {
                 __debugbreak();
             }
@@ -3489,7 +3481,7 @@ void __userpurge gjk_polygon_cylinder_t::get_simplex(
                                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                                          904,
                                          "ind == 2 * s_poly_verts.get_num_verts() + 1",
-                                         &toastPopupTitle) )
+                                         "") )
                             {
                                 __debugbreak();
                             }
@@ -4591,7 +4583,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
     {
         root = *cur_item->m_node;
         if ( !root
-            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h", 161, "root", &toastPopupTitle) )
+            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h", 161, "root", "") )
         {
             __debugbreak();
         }
@@ -4600,7 +4592,7 @@ void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_ca
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                      162,
                      "cur_item + 1 - the_stack < 32",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -4628,7 +4620,7 @@ LABEL_26:
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                  176,
                  "key == accessor::get_avl_key(root)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4647,7 +4639,7 @@ LABEL_26:
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                              191,
                              "cur_item + 1 - the_stack < 32",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -4690,7 +4682,7 @@ LABEL_26:
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          218,
                          "accessor::get_avl_node(root)->m_balance == 0 || accessor::get_avl_node(root)->m_balance == +1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -4710,7 +4702,7 @@ LABEL_26:
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          225,
                          "accessor::get_avl_node(root)->m_balance == 0 || accessor::get_avl_node(root)->m_balance == -1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -4726,7 +4718,7 @@ void __thiscall phys_link_list<gjk_geom_info_t>::add(phys_link_list<gjk_geom_inf
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  230,
                  "m_last_next_ptr",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4818,7 +4810,7 @@ void __thiscall phys_link_list<gjk_trace_output_t>::add(
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                  230,
                  "m_last_next_ptr",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4853,7 +4845,7 @@ geom_plane *__thiscall phys_static_array<geom_plane,128>::operator[](phys_static
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_array_base.inc",
                      118,
                      "i >= 0 && i < m_alloc_count",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -4868,7 +4860,7 @@ void __thiscall gjk_query_output::~gjk_query_output(gjk_query_output *this)
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_transient_allocator.h",
                  69,
                  "m_first_block == NULL",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4913,7 +4905,7 @@ void __thiscall phys_inplace_avl_tree<bpei_database_id,broad_phase_environment_i
     {
         root = *cur_item->m_node;
         if ( !root
-            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h", 161, "root", &toastPopupTitle) )
+            && _tlAssert("C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h", 161, "root", "") )
         {
             __debugbreak();
         }
@@ -4922,7 +4914,7 @@ void __thiscall phys_inplace_avl_tree<bpei_database_id,broad_phase_environment_i
                      "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                      162,
                      "cur_item + 1 - the_stack < 32",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -4952,7 +4944,7 @@ LABEL_26:
                  "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                  176,
                  "key == accessor::get_avl_key(root)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -4971,7 +4963,7 @@ LABEL_26:
                              "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                              191,
                              "cur_item + 1 - the_stack < 32",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -5012,7 +5004,7 @@ LABEL_26:
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          218,
                          "accessor::get_avl_node(root)->m_balance == 0 || accessor::get_avl_node(root)->m_balance == +1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -5030,7 +5022,7 @@ LABEL_26:
                          "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          225,
                          "accessor::get_avl_node(root)->m_balance == 0 || accessor::get_avl_node(root)->m_balance == -1",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }

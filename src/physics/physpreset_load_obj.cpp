@@ -170,7 +170,7 @@ void __cdecl PhysPreset_Strcpy(unsigned __int8 *member, const char *keyValue)
     }
     else
     {
-        *(unsigned int *)member = &toastPopupTitle;
+        *(unsigned int *)member = "";
     }
 }
 

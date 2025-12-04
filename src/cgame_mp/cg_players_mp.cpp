@@ -1568,7 +1568,7 @@ const char *__cdecl CG_GetTeamName(team_t team)
             v2 = va("Unhandled team index %i!", team);
             if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_players_mp.cpp", 1501, 0, v2) )
                 __debugbreak();
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -1590,7 +1590,7 @@ const char *__cdecl CG_GetFFATeamName(ffa_team_t team)
     v2 = va("Unhandled team index %i!", team);
     if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_players_mp.cpp", 1517, 0, v2) )
         __debugbreak();
-    return &toastPopupTitle;
+    return "";
 }
 
 const char *__cdecl CG_GetOpposingTeamName(team_t team)
@@ -1614,7 +1614,7 @@ const char *__cdecl CG_GetOpposingTeamName(team_t team)
             v2 = va("Unhandled team index %i!", team);
             if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_players_mp.cpp", 1535, 0, v2) )
                 __debugbreak();
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;

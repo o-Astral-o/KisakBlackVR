@@ -1,4 +1,11 @@
 #include "com_stringtable.h"
+#include "com_stringtable_obj.h"
+#include "q_shared.h"
+#include <qcommon/common.h>
+#include <string.h>
+#include <database/db_registry.h>
+#include <xanim/xanim.h>
+#include <xanim/xmodel.h>
 
 int __cdecl StringTable_LookupRowNumForValue(const StringTable *table, int comparisonColumn, const char *value)
 {
@@ -204,7 +211,7 @@ const char *__cdecl StringTable_GetColumnValueForRow(const StringTable *table, i
     }
     else
     {
-        return &toastPopupTitle;
+        return "";
     }
 }
 
@@ -224,7 +231,7 @@ const char *__cdecl StringTable_Lookup(
     else
     {
         Com_PrintError(13, "Unable to find the lookup table in the fastfile, aborting lookup\n");
-        return &toastPopupTitle;
+        return "";
     }
 }
 
@@ -246,7 +253,7 @@ const char *__cdecl StringTable_Lookup(
     else
     {
         Com_PrintError(13, "Unable to find the lookup table in the fastfile, aborting lookup\n");
-        return &toastPopupTitle;
+        return "";
     }
 }
 

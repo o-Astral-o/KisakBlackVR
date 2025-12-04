@@ -114,7 +114,7 @@ void __cdecl MemFile_StartSegment(MemoryFile *memFile, int index)
                 {
                     __debugbreak();
                 }
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             }
             else
             {
@@ -431,7 +431,7 @@ char *__cdecl MemFile_ReadCString(MemoryFile *memFile)
     {
         MemFile_ReadData(memFile, 1, (unsigned __int8 *)string);
         if ( memFile->memoryOverflow )
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         if ( !*string )
             break;
         if ( ++string >= (char *)&g_mem )

@@ -37,7 +37,7 @@ const Material *__cdecl R_GetBspMaterial(unsigned int materialIndex)
     if ( !strcmp(diskMaterial->material, "$default") )
         name = (const dmaterial_t *)"$default3d";
     if ( name->material[0] == 42 )
-        Com_sprintf(materialName, 0x100u, "%s%s", &toastPopupTitle, name->material);
+        Com_sprintf(materialName, 0x100u, "%s%s", "", name->material);
     else
         Com_sprintf(materialName, 0x100u, "%s%s", "wc/", name->material);
     return Material_Register(materialName, 9);
@@ -513,7 +513,7 @@ GfxWorld *__cdecl R_LoadWorldInternal(const char *name)
     R_LoadHeroOnlyLights(rgl.load.bspVersion);
     R_PostLoadEntities();
     R_InitShadowGeometryArrays();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     ProfLoad_Begin("Generate high mip aabbs");
     R_GenerateHighmipAabbs();
     ProfLoad_End();
@@ -1914,7 +1914,7 @@ void __cdecl R_LoadLightGridColors(unsigned int bspVersion)
     else
     {
         for ( colorIndex = 0; colorIndex < s_world.lightGrid.colorCount; ++colorIndex )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
     }
     ++s_world.lightGrid.colorCount;
 }
@@ -4106,7 +4106,7 @@ void __cdecl R_LoadEntities()
         token = (const char *)Com_Parse(&text);
         if ( !text || *token != 123 )
             break;
-        spawnVars[0][0] = (char *)&toastPopupTitle;
+        spawnVars[0][0] = (char *)"";
         spawnVarCount = 1;
         charsUsed = 0x100000;
         while ( 1 )
@@ -4180,7 +4180,7 @@ void __cdecl R_LoadEntities()
         token = (const char *)Com_Parse(&text);
         if ( *token != 123 )
             break;
-        spawnVars[0][0] = (char *)&toastPopupTitle;
+        spawnVars[0][0] = (char *)"";
         spawnVarCounta = 1;
         charsUsed = 0x100000;
         while ( 1 )

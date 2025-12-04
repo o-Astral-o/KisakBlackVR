@@ -124,7 +124,7 @@ int __cdecl DL_BeginDownload(char *localName, char *remoteName)
     if ( localName && remoteName )
     {
         DL_InitDownload();
-        access = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)&toastPopupTitle, 16);
+        access = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)"", 16);
         if ( !_stricmp(access, "ftp") )
         {
             dl_is_ftp = 1;
@@ -137,8 +137,8 @@ int __cdecl DL_BeginDownload(char *localName, char *remoteName)
         }
         dl_request = (_HTRequest *)HTRequest_new();
         if ( !_stricmp(access, "http")
-            && (login = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)&toastPopupTitle, 8),
-                    path = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)&toastPopupTitle, 5),
+            && (login = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)"", 8),
+                    path = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)"", 5),
                     strchr((unsigned __int8 *)login, 0x40u),
                     (ptr = v3) != 0) )
         {
@@ -175,9 +175,9 @@ int __cdecl DL_BeginDownload(char *localName, char *remoteName)
         {
             HTMemory_free(url);
             url = 0;
-            access = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)&toastPopupTitle, 16);
-            login = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)&toastPopupTitle, 8);
-            path = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)&toastPopupTitle, 5);
+            access = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)"", 16);
+            login = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)"", 8);
+            path = (char *)HTParse((unsigned __int8 *)remoteName, (unsigned __int8 *)"", 5);
             strchr((unsigned __int8 *)login, 0x40u);
             ptr = v5;
             if ( v5 )

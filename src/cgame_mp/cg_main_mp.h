@@ -50,7 +50,7 @@ void __cdecl CGScr_LoadClientScriptsAndAnims();
 void __cdecl CG_InitScreenDimensions(int localClientNum);
 int __cdecl CG_GetClientNum(int localClientNum);
 bool __cdecl CG_IsMature();
-char __cdecl CG_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles);
+bool __cdecl CG_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles);
 unsigned __int16 __cdecl CG_GetVehicleTypeString(int clientNum, int entityNum);
 int __cdecl CachedTag_GetCachedTagPos(
                 const centity_s *ent,

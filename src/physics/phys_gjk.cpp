@@ -1,29 +1,5 @@
 #include "phys_gjk.h"
 
-phys_vec3 *__thiscall phys_vec3::operator*=(phys_vec3 *this, float d)
-{
-    phys_vec3 *result; // eax
-
-    result = this;
-    this->x = this->x * d;
-    this->y = this->y * d;
-    this->z = d * this->z;
-    return result;
-}
-
-phys_vec3 *__thiscall phys_vec3::operator/=(phys_vec3 *this, const float d)
-{
-    phys_vec3 *result; // eax
-    float d_inv; // [esp+8h] [ebp+8h]
-
-    result = this;
-    d_inv = 1.0 / d;
-    this->x = this->x * d_inv;
-    this->y = this->y * d_inv;
-    this->z = d_inv * this->z;
-    return result;
-}
-
 phys_mat44 *__thiscall phys_mat44::phys_mat44(
                 phys_mat44 *this,
                 const phys_vec3 *x_,
@@ -98,7 +74,7 @@ void __cdecl get_simplex(
                 int *vert_count)
 {
     if ( (gjk_ci->m_flags & 8) == 0
-        && _tlAssert("source/phys_gjk.cpp", 27, "gjk_ci->is_simplex_valid()", &toastPopupTitle) )
+        && _tlAssert("source/phys_gjk.cpp", 27, "gjk_ci->is_simplex_valid()", "") )
     {
         __debugbreak();
     }
@@ -119,7 +95,7 @@ void __cdecl set_simplex(
 {
     if ( w_set <= 0 || w_set > 15 )
     {
-        if ( _tlAssert("source/phys_gjk.cpp", 36, "w_set > 0 && w_set <= 15", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_gjk.cpp", 36, "w_set > 0 && w_set <= 15", "") )
             __debugbreak();
     }
     gjk_ci->m_flags |= 8u;
@@ -186,9 +162,9 @@ int __userpurge phys_gjk_info::seed_simplex@<eax>(phys_gjk_info *this@<ecx>, int
     v48[0] = a2;
     v48[1] = retaddr;
     v3 = cached_vert_count;
-    if ( cached_vert_count <= 0 && _tlAssert("source/phys_gjk.cpp", 381, "cached_vert_count > 0", &toastPopupTitle) )
+    if ( cached_vert_count <= 0 && _tlAssert("source/phys_gjk.cpp", 381, "cached_vert_count > 0", "") )
         __debugbreak();
-    if ( cached_vert_count >= 4 && _tlAssert("source/phys_gjk.cpp", 382, "cached_vert_count < 4", &toastPopupTitle) )
+    if ( cached_vert_count >= 4 && _tlAssert("source/phys_gjk.cpp", 382, "cached_vert_count < 4", "") )
         __debugbreak();
     v5 = 0;
     this->m_w_set = 0;
@@ -941,7 +917,7 @@ phys_gjk_info::gjk_retval_e __userpurge phys_gjk_info::gjk_ray_cast@<eax>(
         m_geom_radii_sum = 0.050999999;
     w.w = m_geom_radii_sum;
     if ( this->m_gjk_sep_thresh <= (double)w.w
-        && _tlAssert("source/phys_gjk.cpp", 1726, "support_dir_moveback < m_gjk_sep_thresh", &toastPopupTitle) )
+        && _tlAssert("source/phys_gjk.cpp", 1726, "support_dir_moveback < m_gjk_sep_thresh", "") )
     {
         __debugbreak();
     }
@@ -1109,7 +1085,7 @@ LABEL_27:
             v40 = 0.0;
             if ( lambda <= 0.0 )
             {
-                if ( _tlAssert("source/phys_gjk.cpp", 1813, "nsupport_dir > 0.0f", &toastPopupTitle) )
+                if ( _tlAssert("source/phys_gjk.cpp", 1813, "nsupport_dir > 0.0f", "") )
                     __debugbreak();
                 v40 = 0.0;
             }
@@ -1200,14 +1176,14 @@ LABEL_65:
         if ( !this->m_w_set )
             this->m_w_set = 1 << v74;
         if ( !phys_gjk_info::init_gjk(this, (int)&ray_end_dist_numer, d, &this->m_support_dir, 1)
-            && _tlAssert("source/phys_gjk.cpp", 1918, "did_init", &toastPopupTitle) )
+            && _tlAssert("source/phys_gjk.cpp", 1918, "did_init", "") )
         {
             __debugbreak();
         }
-        if ( !this->m_w_set && _tlAssert("source/phys_gjk.cpp", 1919, "m_w_set != 0", &toastPopupTitle) )
+        if ( !this->m_w_set && _tlAssert("source/phys_gjk.cpp", 1919, "m_w_set != 0", "") )
             __debugbreak();
         if ( this->m_last_w_set != this->m_w_set
-            && _tlAssert("source/phys_gjk.cpp", 1920, "m_last_w_set == m_w_set", &toastPopupTitle) )
+            && _tlAssert("source/phys_gjk.cpp", 1920, "m_last_w_set == m_w_set", "") )
         {
             __debugbreak();
         }
@@ -1225,7 +1201,7 @@ LABEL_65:
         v50 = v75;
         goto LABEL_65;
     }
-    if ( v47 <= v40 && _tlAssert("source/phys_gjk.cpp", 1850, "ray_end_dist_numer > 0.0f", &toastPopupTitle) )
+    if ( v47 <= v40 && _tlAssert("source/phys_gjk.cpp", 1850, "ray_end_dist_numer > 0.0f", "") )
         __debugbreak();
     return 0;
 }
@@ -1293,10 +1269,10 @@ phys_gjk_info::gjk_retval_e __userpurge phys_gjk_info::collide@<eax>(
     v29 = result;
     if ( result == GJK_INVALID )
     {
-        if ( _tlAssert("source/phys_gjk.cpp", 2058, "retv != GJK_INVALID", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_gjk.cpp", 2058, "retv != GJK_INVALID", "") )
             __debugbreak();
 LABEL_9:
-        if ( _tlAssert("source/phys_gjk.cpp", 2062, "retv == GJK_SEPARATED || retv == GJK_VALID", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_gjk.cpp", 2062, "retv == GJK_SEPARATED || retv == GJK_VALID", "") )
             __debugbreak();
         return v29;
     }
@@ -1397,7 +1373,7 @@ LABEL_27:
             phys_gjk_info::comp_v(this, COERCE_FLOAT(&v30), this->m_w_set, (phys_vec3 *)&w.y);
             support_dir.w = w.z * w.z + w.y * w.y + w.w * w.w;
             if ( this->m_gjk_pen_thresh_sq > (double)support_dir.w
-                && _tlAssert("source/phys_gjk.cpp", 2115, "AbsSquared(support_dir) >= m_gjk_pen_thresh_sq", &toastPopupTitle) )
+                && _tlAssert("source/phys_gjk.cpp", 2115, "AbsSquared(support_dir) >= m_gjk_pen_thresh_sq", "") )
             {
                 __debugbreak();
             }
@@ -1457,7 +1433,7 @@ char __userpurge phys_gjk_info::phys_collide_do_gjk_collide@<al>(
                  "source/phys_gjk.cpp",
                  2176,
                  "(d->m_start_time >= 0.0f) && (d->m_start_time <= d->m_end_time) && (d->m_end_time <= 1.0f)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1514,7 +1490,7 @@ char __userpurge phys_gjk_info::phys_collide_do_gjk_collide@<al>(
         {
             if ( v8 != GJK_VALID && v8 != GJK_PENETRATING )
             {
-                if ( _tlAssert("source/phys_gjk.cpp", 2218, "retv == GJK_VALID || retv == GJK_PENETRATING", &toastPopupTitle) )
+                if ( _tlAssert("source/phys_gjk.cpp", 2218, "retv == GJK_VALID || retv == GJK_PENETRATING", "") )
                     __debugbreak();
                 v8 = v29;
             }
@@ -1533,7 +1509,7 @@ char __userpurge phys_gjk_info::phys_collide_do_gjk_collide@<al>(
             else
             {
                 if ( v8 != GJK_PENETRATING
-                    && _tlAssert("source/phys_gjk.cpp", 2230, "retv == GJK_PENETRATING", &toastPopupTitle) )
+                    && _tlAssert("source/phys_gjk.cpp", 2230, "retv == GJK_PENETRATING", "") )
                 {
                     __debugbreak();
                 }
@@ -1545,7 +1521,7 @@ char __userpurge phys_gjk_info::phys_collide_do_gjk_collide@<al>(
         {
             if ( v8 != GJK_VALID
                 && v8 != GJK_PENETRATING
-                && _tlAssert("source/phys_gjk.cpp", 2237, "retv == GJK_VALID || retv == GJK_PENETRATING", &toastPopupTitle) )
+                && _tlAssert("source/phys_gjk.cpp", 2237, "retv == GJK_VALID || retv == GJK_PENETRATING", "") )
             {
                 __debugbreak();
             }
@@ -1560,7 +1536,7 @@ char __userpurge phys_gjk_info::phys_collide_do_gjk_collide@<al>(
             else
             {
                 if ( (v12 >= 15 || v12 <= 0)
-                    && _tlAssert("source/phys_gjk.cpp", 2244, "m_w_set < 15 && m_w_set > 0", &toastPopupTitle) )
+                    && _tlAssert("source/phys_gjk.cpp", 2244, "m_w_set < 15 && m_w_set > 0", "") )
                 {
                     __debugbreak();
                 }
@@ -1818,7 +1794,7 @@ void __thiscall phys_gjk_info::comp_closest_points(phys_gjk_info *this, int w_se
         b->z = v17 + b->z;
         v34 = v32 + v34;
     }
-    if ( v34 < 0.0 && _tlAssert("source/phys_gjk.cpp", 173, "lambda_sum >= 0.0f", &toastPopupTitle) )
+    if ( v34 < 0.0 && _tlAssert("source/phys_gjk.cpp", 173, "lambda_sum >= 0.0f", "") )
         __debugbreak();
     v33 = 1.0 / v34;
     a->x = a->x * v33;
@@ -2084,7 +2060,7 @@ void __userpurge phys_gjk_info::comp_v(phys_gjk_info *this@<ecx>, float a2@<ebp>
     v5 = w_set;
     if ( w_set <= 0 || w_set >= 15 )
     {
-        if ( _tlAssert("source/phys_gjk.cpp", 79, "w_set > 0 && w_set < 15", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_gjk.cpp", 79, "w_set > 0 && w_set < 15", "") )
             __debugbreak();
         v5 = w_set;
     }
@@ -2121,7 +2097,7 @@ void __userpurge phys_gjk_info::comp_v(phys_gjk_info *this@<ecx>, float a2@<ebp>
         v9[2] = this->m_w_verts[3].z;
     }
     if ( (v6 <= 0 || v6 >= 4)
-        && _tlAssert("source/phys_gjk.cpp", 87, "list_w_vert_count > 0 && list_w_vert_count < 4", &toastPopupTitle) )
+        && _tlAssert("source/phys_gjk.cpp", 87, "list_w_vert_count > 0 && list_w_vert_count < 4", "") )
     {
         __debugbreak();
     }
@@ -2137,7 +2113,7 @@ void __userpurge phys_gjk_info::comp_v(phys_gjk_info *this@<ecx>, float a2@<ebp>
     normal.w = list_w_vert[0].w - side[2].w;
     if ( v6 != 2 )
     {
-        if ( v6 != 3 && _tlAssert("source/phys_gjk.cpp", 103, "list_w_vert_count == 3", &toastPopupTitle) )
+        if ( v6 != 3 && _tlAssert("source/phys_gjk.cpp", 103, "list_w_vert_count == 3", "") )
             __debugbreak();
         v22 = list_w_vert[1].y - side[2].y;
         v23 = list_w_vert[1].z - side[2].z;
@@ -2188,7 +2164,7 @@ void __userpurge phys_gjk_info::comp_v(phys_gjk_info *this@<ecx>, float a2@<ebp>
         v13 = 2;
 LABEL_35:
         v14 = &normal.z + v13;
-        if ( *v14 <= 0.0 && _tlAssert("source/phys_gjk.cpp", 137, "nside_sq[side_i] > 0.0f", &toastPopupTitle) )
+        if ( *v14 <= 0.0 && _tlAssert("source/phys_gjk.cpp", 137, "nside_sq[side_i] > 0.0f", "") )
             __debugbreak();
         v15 = v13;
         *((float *)&ne1_sq + 1) = side[v15 + 2].z * *(float *)((char *)&z + v15 * 16)
@@ -2206,7 +2182,7 @@ LABEL_35:
     v21 = normal.z * normal.z + normal.y * normal.y + normal.w * normal.w;
     if ( v21 <= 0.0 )
     {
-        if ( _tlAssert("source/phys_gjk.cpp", 98, "ne1_sq > 0.0f", &toastPopupTitle) )
+        if ( _tlAssert("source/phys_gjk.cpp", 98, "ne1_sq > 0.0f", "") )
             __debugbreak();
     }
     *((float *)&ne1_sq + 1) = normal.y * side[2].y + normal.z * side[2].z + normal.w * side[2].w;

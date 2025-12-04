@@ -654,7 +654,7 @@ char *__cdecl Info_ValueForKey(char *s, char *key)
     const char *v7; // [esp+2018h] [ebp+8h]
 
     if ( !s || !key )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     ++valueindex;
     valueindex %= 2;
     if ( *s == 92 )
@@ -665,7 +665,7 @@ char *__cdecl Info_ValueForKey(char *s, char *key)
         while ( *s != 92 )
         {
             if ( !*s )
-                return (char *)&toastPopupTitle;
+                return (char *)"";
             *v3++ = *s++;
             if ( v3 - s1 >= 0x2000 )
                 Com_Error(ERR_DROP, &byte_D0BEA0, v3 - s1);
@@ -708,7 +708,7 @@ char *__cdecl Info_ValueForKey(char *s, char *key)
             break;
         s = (char *)(v7 + 1);
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 void __cdecl Info_NextPair(const char **head, char *key, char *value)

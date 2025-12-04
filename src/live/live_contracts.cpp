@@ -814,7 +814,7 @@ char *__cdecl LiveContracts_GetTokenString(const char *token)
     else
     {
         Com_PrintError(16, "ERROR: Contract string %s overflows contract string buffer\n", token);
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -1002,7 +1002,7 @@ char *__cdecl LiveContracts_GetContractName(int index)
     if ( LiveContracts_ValidateContractIndex(index) )
         return contracts[index].name;
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 bool __cdecl LiveContracts_ValidateContractIndex(int contractIndex)
@@ -1019,7 +1019,7 @@ char *__cdecl LiveContracts_GetContractDesc(int index)
     if ( LiveContracts_ValidateContractIndex(index) )
         return contracts[index].description;
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 char *__cdecl LiveContracts_GetContractStatType(int index)
@@ -1027,7 +1027,7 @@ char *__cdecl LiveContracts_GetContractStatType(int index)
     if ( LiveContracts_ValidateContractIndex(index) )
         return contracts[index].statType;
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 char *__cdecl LiveContracts_GetContractStatName(int index)
@@ -1035,7 +1035,7 @@ char *__cdecl LiveContracts_GetContractStatName(int index)
     if ( LiveContracts_ValidateContractIndex(index) )
         return contracts[index].statName;
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 int __cdecl LiveContracts_GetContractCost(int index)
@@ -1127,7 +1127,7 @@ char *__cdecl LiveContracts_GetExpirationType(int index)
     if ( LiveContracts_ValidateContractIndex(index) )
         return contracts[index].expirationType;
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 int __cdecl LiveContracts_GetExpirationData(int index)

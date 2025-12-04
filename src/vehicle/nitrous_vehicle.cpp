@@ -955,7 +955,7 @@ void __userpurge gjk_geom_list_t::comp_aabb_loc(
                  "c:\\projects_pc\\cod\\codsrc\\src\\vehicle\\../physics/phys_colgeom.h",
                  1040,
                  "m_first_geom",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -966,7 +966,7 @@ void __userpurge gjk_geom_list_t::comp_aabb_loc(
                  "c:\\projects_pc\\cod\\codsrc\\src\\vehicle\\../physics/phys_colgeom.h",
                  82,
                  "get_flag(FLAG_AABB_LOC_VALID)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -983,7 +983,7 @@ void __userpurge gjk_geom_list_t::comp_aabb_loc(
                  "c:\\projects_pc\\cod\\codsrc\\src\\vehicle\\../physics/phys_colgeom.h",
                  83,
                  "get_flag(FLAG_AABB_LOC_VALID)",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1002,7 +1002,7 @@ void __userpurge gjk_geom_list_t::comp_aabb_loc(
                      "c:\\projects_pc\\cod\\codsrc\\src\\vehicle\\../physics/phys_colgeom.h",
                      82,
                      "get_flag(FLAG_AABB_LOC_VALID)",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1017,7 +1017,7 @@ void __userpurge gjk_geom_list_t::comp_aabb_loc(
                          "c:\\projects_pc\\cod\\codsrc\\src\\vehicle\\../physics/phys_colgeom.h",
                          83,
                          "get_flag(FLAG_AABB_LOC_VALID)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1393,7 +1393,7 @@ void __thiscall NitrousVehicle::_update_orientation_constraint(NitrousVehicle *t
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle.cpp",
                  880,
                  "m_orientation_constraint",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1402,7 +1402,7 @@ void __thiscall NitrousVehicle::_update_orientation_constraint(NitrousVehicle *t
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle.cpp",
                  881,
                  "m_phys_user_data",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1411,7 +1411,7 @@ void __thiscall NitrousVehicle::_update_orientation_constraint(NitrousVehicle *t
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle.cpp",
                  882,
                  "m_phys_user_data->body",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -3741,7 +3741,7 @@ void __thiscall phys_free_list<NitrousVehicle>::remove(
     phys_free_list<NitrousVehicle>::T_internal_base *prev; // [esp+18h] [ebp-4h]
 
     if ( !data
-        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
     {
         __debugbreak();
     }
@@ -3765,7 +3765,7 @@ void __thiscall phys_free_list<NitrousVehicle>::debug_remove(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                      421,
                      "T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -3775,7 +3775,7 @@ void __thiscall phys_free_list<NitrousVehicle>::debug_remove(
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                          422,
                          "m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }

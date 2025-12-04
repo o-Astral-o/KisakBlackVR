@@ -383,11 +383,11 @@ void __cdecl CL_GamepadGenerateAPad(int localClientNum, int portIndex, unsigned 
     if ( stick )
     {
         if ( GPad_IsStickPressed(portIndex, stick, GPAD_STICK_POS) || GPad_IsStickPressed(portIndex, stick, GPAD_STICK_NEG) )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         if ( GPad_IsStickReleased(portIndex, stick, GPAD_STICK_POS)
             || GPad_IsStickReleased(portIndex, stick, GPAD_STICK_NEG) )
         {
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         }
     }
 }
@@ -714,7 +714,7 @@ void __cdecl CL_GamepadButtonEvent(
                                     }
                                     else if ( cls.uiStarted && !i )
                                     {
-                                        BLOPS_NULLSUB();
+                                        //BLOPS_NULLSUB();
                                         UI_KeyEvent(localClientNum, key, v15);
                                     }
                                 }

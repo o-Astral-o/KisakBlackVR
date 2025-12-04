@@ -256,27 +256,27 @@ void __cdecl SND_InitDvar()
     snd_radverb_matrix = _Dvar_RegisterInt("snd_radverb_matrix", 0, 0, 2, 0x80u, "radverb delay matrix selection");
     snd_reverb_override = _Dvar_RegisterString(
                                                     "snd_reverb_override",
-                                                    (char *)&toastPopupTitle,
+                                                    (char *)"",
                                                     0x80u,
                                                     "overide current verb");
     snd_master_override = _Dvar_RegisterString(
                                                     "snd_master_override",
-                                                    (char *)&toastPopupTitle,
+                                                    (char *)"",
                                                     0x80u,
                                                     "overide current master");
     snd_assert_on_play = _Dvar_RegisterString(
                                                  "snd_assert_on_play",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0x80u,
                                                  "assert if played alias");
     snd_assert_on_stop = _Dvar_RegisterString(
                                                  "snd_assert_on_stop",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0x80u,
                                                  "assert if stopped alias");
     snd_assert_on_enqueue = _Dvar_RegisterString(
                                                         "snd_assert_on_enqueue",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0x80u,
                                                         "assert if played alias is put into q");
     snd_debugReplace = _Dvar_RegisterBool(
@@ -286,7 +286,7 @@ void __cdecl SND_InitDvar()
                                              "Print out information about when we stop a playing sound to play another");
     snd_debugAlias = _Dvar_RegisterString(
                                          "snd_debugAlias",
-                                         (char *)&toastPopupTitle,
+                                         (char *)"",
                                          0x80u,
                                          "Print out tracking information about a particular alias");
     snd_entityRandomize = _Dvar_RegisterBool("snd_entityRandomize", 1, 0x80u, "entity randomization");
@@ -297,7 +297,7 @@ void __cdecl SND_InitDvar()
                                                                  "Check whether stream sound files exist while loading");
     snd_debug_snapshot = _Dvar_RegisterString(
                                                  "snd_debug_snapshot",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0x80u,
                                                  "enable debug snapshot");
     snd_boat_current_rpm = _Dvar_RegisterFloat(
@@ -478,12 +478,12 @@ void __cdecl SND_InitDvar()
                                                              "boat pitch high max");
     snd_solo_alias_substring = _Dvar_RegisterString(
                                                              "snd_solo_alias_substring",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              0x80u,
                                                              "mute alias with matching substring");
     snd_mute_alias_substring = _Dvar_RegisterString(
                                                              "snd_mute_alias_substring",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              0x80u,
                                                              "mute alias with not matching substring");
     snd_minigun_loop_start = _Dvar_RegisterFloat(
@@ -507,19 +507,19 @@ void __cdecl SND_InitDvar()
                                                         2.0,
                                                         0x80u,
                                                         "pitch where the loop ends");
-    snd_start_alias = _Dvar_RegisterString("snd_start_alias", (char *)&toastPopupTitle, 0x80u, "start sound");
-    snd_stop_alias = _Dvar_RegisterString("snd_stop_alias", (char *)&toastPopupTitle, 0x80u, "stop sound");
+    snd_start_alias = _Dvar_RegisterString("snd_start_alias", (char *)"", 0x80u, "start sound");
+    snd_stop_alias = _Dvar_RegisterString("snd_stop_alias", (char *)"", 0x80u, "stop sound");
     snd_proximity_enable = _Dvar_RegisterBool("snd_proximity_enable", 1, 0x80u, "enable reverb prox");
-    snd_proximity_min_dist = _Dvar_RegisterFloat("snd_proximity_min_dist", 20.0, 0.0, 10000.0, 0x80u, &toastPopupTitle);
-    snd_proximity_max_dist = _Dvar_RegisterFloat("snd_proximity_max_dist", 400.0, 0.0, 10000.0, 0x80u, &toastPopupTitle);
+    snd_proximity_min_dist = _Dvar_RegisterFloat("snd_proximity_min_dist", 20.0, 0.0, 10000.0, 0x80u, "");
+    snd_proximity_max_dist = _Dvar_RegisterFloat("snd_proximity_max_dist", 400.0, 0.0, 10000.0, 0x80u, "");
     snd_proximity_max_late_cut = _Dvar_RegisterFloat(
                                                                  "snd_proximity_max_late_cut",
                                                                  -20.0,
                                                                  -60.0,
                                                                  0.0,
                                                                  0x80u,
-                                                                 &toastPopupTitle);
-    snd_proximity_filter = _Dvar_RegisterFloat("snd_proximity_filter", 0.1, 0.0, 1.0, 0x80u, &toastPopupTitle);
+                                                                 "");
+    snd_proximity_filter = _Dvar_RegisterFloat("snd_proximity_filter", 0.1, 0.0, 1.0, 0x80u, "");
     snd_auto_random = _Dvar_RegisterFloat(
                                             "snd_auto_random",
                                             0.0,
@@ -530,22 +530,22 @@ void __cdecl SND_InitDvar()
     snd_trace_master = _Dvar_RegisterBool("snd_trace_master", 0, 0x80u, "trace master dsp");
     snd_trace_reverb = _Dvar_RegisterBool("snd_trace_reverb", 0, 0x80u, "trace reverb dsp");
     snd_trace_voice = _Dvar_RegisterBool("snd_trace_voice", 0, 0x80u, "trace voice dsp");
-    snd_futz_blend = _Dvar_RegisterFloat("snd_futz_blend", 0.0, 0.0, 1.0, 0x80u, &toastPopupTitle);
-    snd_futz_bpf_f = _Dvar_RegisterFloat("snd_futz_bpf_f", 1454.236, 20.0, 10000.0, 0x80u, &toastPopupTitle);
-    snd_futz_bpf_q = _Dvar_RegisterFloat("snd_futz_bpf_q", 1.781, 0.2, 16.0, 0x80u, &toastPopupTitle);
-    snd_futz_ls_g = _Dvar_RegisterFloat("snd_futz_ls_g", -10.44, -60.0, 12.0, 0x80u, &toastPopupTitle);
-    snd_futz_ls_f = _Dvar_RegisterFloat("snd_futz_ls_f", 483.24969, 20.0, 10000.0, 0x80u, &toastPopupTitle);
-    snd_futz_ls_q = _Dvar_RegisterFloat("snd_futz_ls_q", 10.0, 0.2, 16.0, 0x80u, &toastPopupTitle);
-    snd_futz_distortion = _Dvar_RegisterFloat("snd_futz_distortion", 0.30000001, 0.0, 1.0, 0x80u, &toastPopupTitle);
-    snd_futz_preg = _Dvar_RegisterFloat("snd_futz_preg", 0.247529, 0.0, 12.0, 0x80u, &toastPopupTitle);
-    snd_futz_postg = _Dvar_RegisterFloat("snd_futz_postg", 0.14267001, 0.0, 24.0, 0x80u, &toastPopupTitle);
-    snd_futz_th = _Dvar_RegisterFloat("snd_futz_th", 0.01227265, 0.0099999998, 1.0, 0x80u, &toastPopupTitle);
-    snd_futz_tg = _Dvar_RegisterFloat("snd_futz_tg", 0.28999999, 0.0, 4.0, 0x80u, &toastPopupTitle);
-    snd_futz_clip_pre = _Dvar_RegisterFloat("snd_futz_clip_pre", 0.99636263, 0.0, 4.0, 0x80u, &toastPopupTitle);
-    snd_futz_clip_post = _Dvar_RegisterFloat("snd_futz_clip_post", 1.781976, 0.0, 4.0, 0x80u, &toastPopupTitle);
-    snd_futz_force = _Dvar_RegisterFloat("snd_futz_force", 0.0, 0.0, 1.0, 0x1000u, &toastPopupTitle);
+    snd_futz_blend = _Dvar_RegisterFloat("snd_futz_blend", 0.0, 0.0, 1.0, 0x80u, "");
+    snd_futz_bpf_f = _Dvar_RegisterFloat("snd_futz_bpf_f", 1454.236, 20.0, 10000.0, 0x80u, "");
+    snd_futz_bpf_q = _Dvar_RegisterFloat("snd_futz_bpf_q", 1.781, 0.2, 16.0, 0x80u, "");
+    snd_futz_ls_g = _Dvar_RegisterFloat("snd_futz_ls_g", -10.44, -60.0, 12.0, 0x80u, "");
+    snd_futz_ls_f = _Dvar_RegisterFloat("snd_futz_ls_f", 483.24969, 20.0, 10000.0, 0x80u, "");
+    snd_futz_ls_q = _Dvar_RegisterFloat("snd_futz_ls_q", 10.0, 0.2, 16.0, 0x80u, "");
+    snd_futz_distortion = _Dvar_RegisterFloat("snd_futz_distortion", 0.30000001, 0.0, 1.0, 0x80u, "");
+    snd_futz_preg = _Dvar_RegisterFloat("snd_futz_preg", 0.247529, 0.0, 12.0, 0x80u, "");
+    snd_futz_postg = _Dvar_RegisterFloat("snd_futz_postg", 0.14267001, 0.0, 24.0, 0x80u, "");
+    snd_futz_th = _Dvar_RegisterFloat("snd_futz_th", 0.01227265, 0.0099999998, 1.0, 0x80u, "");
+    snd_futz_tg = _Dvar_RegisterFloat("snd_futz_tg", 0.28999999, 0.0, 4.0, 0x80u, "");
+    snd_futz_clip_pre = _Dvar_RegisterFloat("snd_futz_clip_pre", 0.99636263, 0.0, 4.0, 0x80u, "");
+    snd_futz_clip_post = _Dvar_RegisterFloat("snd_futz_clip_post", 1.781976, 0.0, 4.0, 0x80u, "");
+    snd_futz_force = _Dvar_RegisterFloat("snd_futz_force", 0.0, 0.0, 1.0, 0x1000u, "");
     snd_dsp_futz = _Dvar_RegisterBool("snd_dsp_futz", 1, 0x1000u, "enable dsp futz");
-    snd_pan_filter = _Dvar_RegisterFloat("snd_pan_filter", 1.0, 1.0, 100.0, 0x80u, &toastPopupTitle);
+    snd_pan_filter = _Dvar_RegisterFloat("snd_pan_filter", 1.0, 1.0, 100.0, 0x80u, "");
     snd_ps3_vol_occlusion_attenuation_dry = _Dvar_RegisterFloat(
                                                                                         "snd_ps3_vol_occlusion_attenuation_dry",
                                                                                         -20.0,

@@ -656,7 +656,7 @@ void __cdecl UI_Gametype_UpdateCustomClassDvarsForClass_f()
         _CustomClassData::PopulateCustomDvarsFromClassData(&g_customGameModeClasses[classNum]);
         custom_class_name = Dvar_FindVar("custom_class_name");
         if ( !custom_class_name )
-            custom_class_name = _Dvar_RegisterString("custom_class_name", (char *)&toastPopupTitle, 0, "custom class name");
+            custom_class_name = _Dvar_RegisterString("custom_class_name", (char *)"", 0, "custom class name");
         Dvar_SetString((dvar_s *)custom_class_name, g_customGameModeClassDescriptions[classNum].name);
     }
     else
@@ -881,7 +881,7 @@ void __cdecl UI_Gametype_SetupCustomModeNameAndDesc()
     const StringTable *gameTypeTable; // [esp+4h] [ebp-8h] BYREF
     const char *gameType; // [esp+8h] [ebp-4h]
 
-    Dvar_SetString((dvar_s *)ui_customModeName, &toastPopupTitle);
+    Dvar_SetString((dvar_s *)ui_customModeName, "");
     StringTable_GetAsset("mp/gametypesTable.csv", (XAssetHeader *)&gameTypeTable);
     if ( !gameTypeTable
         && !Assert_MyHandler(
@@ -1673,7 +1673,7 @@ void __cdecl UI_Gametype_Custom_UploadToFileShareSuccess(int controllerIndex, un
                                     LiveCounter_IncrementCounterValueByName("global_fileshare_shared", 1u);
                                     v12 = UI_SafeTranslateString("MENU_SAVED_CAPS");
                                     LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-                                    UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", &toastPopupTitle, v12, 2700);
+                                    UI_OpenToastPopup(LocalClientNum, "menu_mp_killstreak_select", "", v12, 2700);
                                     Z_VirtualFree(s_fileShareBuffer, 0);
                                     v13 = 40;
                                     for ( j = (bdTaskResult *)&v43; --v13 >= 0; bdTag::~bdTag(j) )

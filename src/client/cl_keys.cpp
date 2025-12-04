@@ -1139,7 +1139,7 @@ void __cdecl Key_Unbind_f()
         }
         else
         {
-            Key_SetBinding(0, b, (char *)&toastPopupTitle, 0);
+            Key_SetBinding(0, b, (char *)"", 0);
         }
     }
     else
@@ -1165,7 +1165,7 @@ void __cdecl Key_Unbind2_f()
         }
         else
         {
-            Key_SetBinding(0, b, (char *)&toastPopupTitle, 1);
+            Key_SetBinding(0, b, (char *)"", 1);
         }
     }
     else
@@ -1181,9 +1181,9 @@ void __cdecl Key_Unbindall_f()
     for ( keynum = 0; keynum < 256; ++keynum )
     {
         if ( playerKeys[0].keys[keynum].binding )
-            Key_SetBinding(0, keynum, (char *)&toastPopupTitle, 0);
+            Key_SetBinding(0, keynum, (char *)"", 0);
         if ( playerKeys[0].keys[keynum].binding2 )
-            Key_SetBinding(0, keynum, (char *)&toastPopupTitle, 1);
+            Key_SetBinding(0, keynum, (char *)"", 1);
     }
 }
 
@@ -1194,7 +1194,7 @@ void __cdecl Key_Unbindall2_f()
     for ( keynum = 0; keynum < 256; ++keynum )
     {
         if ( playerKeys[0].keys[keynum].binding2 )
-            Key_SetBinding(0, keynum, (char *)&toastPopupTitle, 1);
+            Key_SetBinding(0, keynum, (char *)"", 1);
     }
 }
 
@@ -1690,7 +1690,7 @@ LABEL_37:
                      || clcState == CA_LOGO)
                     && !LocalClientUIGlobals->keyCatchers )
                 {
-                    Dvar_SetString((dvar_s *)nextdemo, &toastPopupTitle);
+                    Dvar_SetString((dvar_s *)nextdemo, "");
                     key = 27;
                 }
             }

@@ -187,7 +187,7 @@ _CustomClassDescription *__cdecl UI_FeederItemText(
             return (_CustomClassDescription *)UI_SelectedMap(index, &actual);
         case 7:
             if ( index < ITEMGROUP_SMG || index >= *(int *)sharedUiInfo.gap58 )
-                return (_CustomClassDescription *)&toastPopupTitle;
+                return (_CustomClassDescription *)"";
             if ( column )
             {
                 if ( column == 1 )
@@ -197,7 +197,7 @@ _CustomClassDescription *__cdecl UI_FeederItemText(
             {
                 *handle = sharedUiInfo.assets.whiteMaterial;
             }
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case 9:
             return (_CustomClassDescription *)UI_FeederItemText_Mods(index);
         case 13:
@@ -208,12 +208,12 @@ _CustomClassDescription *__cdecl UI_FeederItemText(
             return (_CustomClassDescription *)UI_FeederItemText_Playlists(controllerIndex, index);
         case 27:
             if ( index < ITEMGROUP_SMG || index >= Playlist_GetGametypeCount() )
-                return (_CustomClassDescription *)&toastPopupTitle;
+                return (_CustomClassDescription *)"";
             else
                 return (_CustomClassDescription *)Playlist_GetGametypeLocalizedName(index);
         case 28:
             if ( index < ITEMGROUP_SMG || index >= Playlist_GetCategoryCount() )
-                return (_CustomClassDescription *)&toastPopupTitle;
+                return (_CustomClassDescription *)"";
             CategoryIdForNum = Playlist_GetCategoryIdForNum(index);
             return (_CustomClassDescription *)Playlist_GetCategoryLocalizedName(controllerIndex, CategoryIdForNum);
         case 29:
@@ -231,9 +231,9 @@ _CustomClassDescription *__cdecl UI_FeederItemText(
         case 38:
             return (_CustomClassDescription *)UI_FeederItemText_CustomGametypes(index);
         case 45:
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case 46:
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case 47:
             return (_CustomClassDescription *)UI_FeederItemText_Invites(
                                                                                     controllerIndex,
@@ -245,7 +245,7 @@ _CustomClassDescription *__cdecl UI_FeederItemText(
         case 54:
             return (_CustomClassDescription *)UI_FeederItemText_DynamicMenu(contextIndex, index, column, listPtr, handle);
         case 70:
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case 74:
             return (_CustomClassDescription *)Live_FileShare_SearchResultsItemText(
                                                                                     controllerIndex,
@@ -262,7 +262,7 @@ _CustomClassDescription *__cdecl UI_FeederItemText(
         case 80:
             return (_CustomClassDescription *)Live_FileShare_PrivateSlotsText(controllerIndex, 80, index, column, handle);
         case 84:
-            return (_CustomClassDescription *)&toastPopupTitle;
+            return (_CustomClassDescription *)"";
         case 86:
             return (_CustomClassDescription *)Live_FileShare_PrivateSlotsIngameText(controllerIndex, index, column, handle);
         case 91:
@@ -312,7 +312,7 @@ char *__cdecl UI_FeederItemText_Servers(int localClientNum, int contextIndex, in
     uiInfo = UI_UIContext_GetInfo(contextIndex);
     UI_UpdateDisplayServers(localClientNum, uiInfo);
     if ( index < 0 || index >= *(int *)&sharedUiInfo.gap0[81128] )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( lastColumn != column || lastTime_0 > uiInfo->uiDC.realTime + 5000 )
     {
         LAN_GetServerInfo(ui_netSource->current.integer, *(unsigned int *)&sharedUiInfo.gap0[4 * index + 1128], info, 1024);
@@ -352,19 +352,19 @@ char *__cdecl UI_FeederItemText_Servers(int localClientNum, int contextIndex, in
                 default:
                     break;
             }
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 1:
             v9 = Info_ValueForKey(info, "pb");
             if ( atoi(v9) )
                 *handle = Material_RegisterHandle("vac", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 2:
             v6 = Info_ValueForKey(info, "pswrd");
             if ( atoi(v6) )
                 *handle = Material_RegisterHandle("lock", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 3:
             if ( ping > 0 )
@@ -611,7 +611,7 @@ LABEL_34:
                 v15 = Material_RegisterHandle("flag_usa", 7);
             }
             *handle = v15;
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         case 8:
             if ( ping > 0 )
                 result = Info_ValueForKey(info, "ping");
@@ -623,14 +623,14 @@ LABEL_34:
             if ( mod && I_stristr(mod, "mods/") )
                 result = mod + 5;
             else
-                result = (char *)&toastPopupTitle;
+                result = (char *)"";
             break;
         case 10:
             v8 = Info_ValueForKey(info, "voice");
             if ( atoi(v8) )
                 result = "X";
             else
-                result = (char *)&toastPopupTitle;
+                result = (char *)"";
             break;
         default:
             result = "Dt";
@@ -642,7 +642,7 @@ LABEL_34:
 char *__cdecl UI_FeederItemText_ServerStatus(int index, unsigned int column)
 {
     if ( index < 0 || index >= (int)sharedUiInfo.serverStatusInfoScoreBoard.lines[2][5] || column > 1 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( sharedUiInfo.serverStatusInfo.lines[index + 4][column + 6]
         && *sharedUiInfo.serverStatusInfo.lines[index + 4][column + 6] == 64 )
     {
@@ -654,7 +654,7 @@ char *__cdecl UI_FeederItemText_ServerStatus(int index, unsigned int column)
 char *__cdecl UI_FeederItemText_ServerStatusScoreboard(int index, unsigned int column)
 {
     if ( index < 0 || index >= sharedUiInfo.pendingServerStatus.server[0].valid || column > 6 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( *sharedUiInfo.serverStatusInfoScoreBoard.lines[index + 4][column + 6] == 64 )
         return UI_SafeTranslateString(sharedUiInfo.serverStatusInfoScoreBoard.lines[index + 4][column + 6] + 1);
     return (char *)sharedUiInfo.serverStatusInfoScoreBoard.lines[index + 4][column + 6];
@@ -663,7 +663,7 @@ char *__cdecl UI_FeederItemText_ServerStatusScoreboard(int index, unsigned int c
 const char *__cdecl UI_FeederItemText_Mods(int index)
 {
     if ( index < 0 || index >= (int)sharedUiInfo.modList[63].modDescr )
-        return &toastPopupTitle;
+        return "";
     if ( sharedUiInfo.modList[index].modName && *sharedUiInfo.modList[index].modName )
         return sharedUiInfo.modList[index].modName;
     return (const char *)sharedUiInfo.serverHardwareIconList[2 * index + 9];
@@ -697,9 +697,9 @@ const char *__cdecl UI_FeederItemText_CommmonPlayerListHandler(
     prestige = 0;
     codpoints = 0;
     xuid = 0;
-    emblemBackingName = &toastPopupTitle;
-    name = &toastPopupTitle;
-    presenceString = &toastPopupTitle;
+    emblemBackingName = "";
+    name = "";
+    presenceString = "";
     if ( feederId == 32 )
     {
         if ( Friends_GetByIndex(controllerIndex, 0, index, &friendInfo) )
@@ -719,7 +719,7 @@ const char *__cdecl UI_FeederItemText_CommmonPlayerListHandler(
     {
         case 0:
             *handle = sharedUiInfo.assets.whiteMaterial;
-            return &toastPopupTitle;
+            return "";
         case 1:
             emblemBackingName = "emblem_bg_nocod";
             PlayerEmblemBackgroundID = PCache_GetPlayerEmblemBackgroundID(controllerIndex, xuid);
@@ -727,24 +727,24 @@ const char *__cdecl UI_FeederItemText_CommmonPlayerListHandler(
             if ( emblemBackingMaterial )
                 emblemBackingName = emblemBackingMaterial->info.name;
             *handle = Material_RegisterHandle((char *)emblemBackingName, 7);
-            return &toastPopupTitle;
+            return "";
         case 2:
             *useOwnerDraw = 1;
-            return &toastPopupTitle;
+            return "";
         case 3:
             if ( PCache_GetRank(controllerIndex, xuid, &rank, &prestige) )
                 return CL_GetRankData(rank, MP_RANKTABLE_DISPLAYLEVEL);
             else
-                return &toastPopupTitle;
+                return "";
         case 4:
             if ( PCache_GetRank(controllerIndex, xuid, &rank, &prestige) )
                 CL_GetRankIcon(rank, prestige, handle);
-            return &toastPopupTitle;
+            return "";
         case 5:
             return name;
         case 6:
             if ( !PCache_GetCodpoints(controllerIndex, xuid, &codpoints) )
-                return &toastPopupTitle;
+                return "";
             v11 = codpoints;
             v8 = UI_SafeTranslateString("MENU_POINTS");
             v9 = UI_ReplaceConversionInt(v8, v11);
@@ -782,10 +782,10 @@ const char *__cdecl UI_FeederItemText_CommmonPlayerListHandler(
             }
             else
             {
-                return &toastPopupTitle;
+                return "";
             }
         default:
-            return &toastPopupTitle;
+            return "";
     }
 }
 
@@ -870,7 +870,7 @@ const char *__cdecl UI_FeederItemText_Invites(
                 return UI_FeederItemText_CommmonPlayerListHandler(controllerIndex, 50, j, column, handle, useOwnerDraw);
         }
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 char *__cdecl UI_FeederItemText_Playlists(int controllerIndex, int index)
@@ -885,10 +885,10 @@ char *__cdecl UI_FeederItemText_Playlists(int controllerIndex, int index)
     else
         currentCategory = category->current.integer;
     if ( index < 0 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     CategoryIdForNum = Playlist_GetCategoryIdForNum(currentCategory);
     if ( index >= Playlist_GetPlaylistCount(CategoryIdForNum) )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     PlaylistIdForNum = Playlist_GetPlaylistIdForNum(controllerIndex, index, currentCategory);
     PlaylistName = Playlist_GetPlaylistName(controllerIndex, PlaylistIdForNum);
     return UI_ToUpper(PlaylistName);
@@ -910,16 +910,16 @@ const char *__cdecl UI_FeederItemText_NewCategories(
     if ( !column )
     {
         *handle = sharedUiInfo.assets.whiteMaterial;
-        return &toastPopupTitle;
+        return "";
     }
     if ( column != 1 )
     {
         if ( column == 2 && listboxPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window) )
-            BLOPS_NULLSUB();
-        return &toastPopupTitle;
+            //BLOPS_NULLSUB();
+        return "";
     }
     if ( index < 0 || index >= Playlist_GetCategoryCount() )
-        return &toastPopupTitle;
+        return "";
     CategoryIdForNum = Playlist_GetCategoryIdForNum(index);
     return Playlist_GetCategoryLocalizedName(controllerIndex, CategoryIdForNum);
 }
@@ -962,13 +962,13 @@ char *__cdecl UI_FeederItemText_NewPlaylists(
         if ( column == 1 )
             return UI_FeederItemText_Playlists(controllerIndex, index);
         if ( column == 2 && listboxPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window) )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
     }
     else
     {
         *handle = sharedUiInfo.assets.whiteMaterial;
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_MuteList(int localClientNum, int contextIndex, int index, int column)
@@ -976,14 +976,14 @@ char *__cdecl UI_FeederItemText_MuteList(int localClientNum, int contextIndex, i
     unsigned int ClientNumForPlayerListNum; // eax
 
     if ( index < 0 || index >= *(int *)sharedUiInfo.gap58 )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column == 1 )
         return &sharedUiInfo.gap58[32 * index + 4];
     ClientNumForPlayerListNum = UI_GetClientNumForPlayerListNum(index);
     if ( CL_IsPlayerMuted(localClientNum, ClientNumForPlayerListNum) )
         return UI_SafeTranslateString("MP_MUTED");
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_DynamicMenu(
@@ -1001,17 +1001,17 @@ char *__cdecl UI_FeederItemText_DynamicMenu(
         {
             if ( listPtr->cursorPos[contextIndex] == index )
                 *handle = sharedUiInfo.assets.whiteMaterial;
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         }
         else if ( column == 2 )
         {
             if ( listPtr->cursorPos[contextIndex] == index )
-                BLOPS_NULLSUB();
-            return (char *)&toastPopupTitle;
+                //BLOPS_NULLSUB();
+            return (char *)"";
         }
         else if ( listPtr->rows[index].status == 2 )
         {
-            return (char *)&toastPopupTitle;
+            return (char *)"";
         }
         else
         {
@@ -1023,22 +1023,22 @@ char *__cdecl UI_FeederItemText_DynamicMenu(
                     break;
                 case 2:
                     *handle = Material_RegisterHandle(listPtr->rows[index].cells[column].stringValue, 7);
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
                 case 3:
                 case 4:
                     if ( listPtr->cursorPos[contextIndex] == index )
                         result = listPtr->rows[index].cells[column].stringValue;
                     else
-                        result = (char *)&toastPopupTitle;
+                        result = (char *)"";
                     break;
                 case 5:
                     if ( listPtr->cursorPos[contextIndex] == index )
                         *handle = Material_RegisterHandle(listPtr->rows[index].cells[column].stringValue, 7);
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
                 default:
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
             }
         }
@@ -1046,7 +1046,7 @@ char *__cdecl UI_FeederItemText_DynamicMenu(
     else
     {
         *handle = sharedUiInfo.assets.whiteMaterial;
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
     return result;
 }
@@ -2040,7 +2040,7 @@ LABEL_188:
     {
         for ( j = 3; j < listPtr->numColumns; ++j )
         {
-            if ( listPtr->rows[i].cells[j].stringValue && I_stricmp(listPtr->rows[i].cells[j].stringValue, &toastPopupTitle) )
+            if ( listPtr->rows[i].cells[j].stringValue && I_stricmp(listPtr->rows[i].cells[j].stringValue, "") )
             {
                 jumpToIndex = 1;
                 break;
@@ -3006,7 +3006,7 @@ void __cdecl UI_ClearFeeder(int contextIndex, itemDef_s *item, bool resetCursorP
         for ( j = 0; j < listbox->numColumns; ++j )
             I_strncpyz(
                 listbox->rows[listbox->rowCount - 1].cells[j].stringValue,
-                &toastPopupTitle,
+                "",
                 listbox->rows[listbox->rowCount - 1].cells[j].maxChars);
         listbox->rows[listbox->rowCount - 1].name = 0;
         listbox->rows[--listbox->rowCount].status = 0;

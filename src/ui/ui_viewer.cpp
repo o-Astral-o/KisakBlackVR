@@ -37,7 +37,7 @@ void __thiscall UIViewer::Init(UIViewer *this, bool _ingame)
                                                     "weapon to equip the player (primary/secondary)");
         this->customname = _Dvar_RegisterString(
                                                  "uiViewer_customname",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "Custom class name to display");
         this->weaponDvar = _Dvar_RegisterInt("uiViewer_weapon", 0, 0, 1000, 0, "Current weapon index to show");
@@ -50,7 +50,7 @@ void __thiscall UIViewer::Init(UIViewer *this, bool _ingame)
                                                          "Current weapon attachment index to show");
         this->playerCameraDvar = _Dvar_RegisterString(
                                                              "uiViewer_playerCamera",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              0,
                                                              "UI viewer player camera name");
         this->cameraPitchRange = _Dvar_RegisterVec2(
@@ -116,7 +116,7 @@ void __thiscall UIViewer::Init(UIViewer *this, bool _ingame)
                                                              0,
                                                              0x80u,
                                                              "Draw a marker where weapons are attached to the player");
-        this->viewerMsg = _Dvar_RegisterString("uiViewer_msg", (char *)&toastPopupTitle, 0x80u, "UI viewer message");
+        this->viewerMsg = _Dvar_RegisterString("uiViewer_msg", (char *)"", 0x80u, "UI viewer message");
         this->dumpAnims = _Dvar_RegisterBool("uiViewer_dumpAnims", 0, 0x80u, "Enable dump anims");
         this->timeScale = _Dvar_RegisterFloat("uiViewer_timeScale", 1.0, 0.0099999998, 10.0, 0x80u, "Animation time scale");
         Cmd_AddCommandInternal("uiViewer_SetCameraPosition", UIViewer::SetCameraPosCmd, &SetCameraPosCmd_VAR);

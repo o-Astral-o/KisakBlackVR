@@ -419,16 +419,16 @@ void __cdecl CG_UpdateVehicleBindings(int localClientNum)
                     {
                         gasButton = 119;
                     }
-                    Key_SetBinding(localClientNum, 18, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 19, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 6, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 5, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 1, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 2, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 3, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 4, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 16, (char *)&toastPopupTitle, 1);
-                    Key_SetBinding(localClientNum, 17, (char *)&toastPopupTitle, 1);
+                    Key_SetBinding(localClientNum, 18, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 19, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 6, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 5, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 1, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 2, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 3, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 4, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 16, (char *)"", 1);
+                    Key_SetBinding(localClientNum, 17, (char *)"", 1);
                     if ( gasButton > 0 )
                     {
                         CG_RemapVehicleButton(localClientNum, twokeys, gasButton);

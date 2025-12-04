@@ -802,7 +802,7 @@ void __cdecl AimTarget_UpdateClientTargets(int localClientNum)
         __debugbreak();
     }
     AimTarget_ClearTargetList((int)localClientNum);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     for ( snapEntIndex = 0; snapEntIndex < cgameGlob->nextSnap->numEntities; ++snapEntIndex )
     {
         cent = CG_GetEntity((int)localClientNum, cgameGlob->nextSnap->entities[snapEntIndex].number);
@@ -830,7 +830,7 @@ LABEL_23:
         }
     }
     //PIXBeginNamedEvent(-1, "aim assist epilog");
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     //if ( g_DXDeviceThread == GetCurrentThreadId() )
     //    D3DPERF_EndEvent();
 }

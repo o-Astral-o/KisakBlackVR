@@ -80,7 +80,7 @@ rigid_body_constraint_custom_path * path_constraint_create@<eax>(int a1@<ebp>, g
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  38,
                  "veh",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -89,7 +89,7 @@ rigid_body_constraint_custom_path * path_constraint_create@<eax>(int a1@<ebp>, g
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  39,
                  "veh->scr_vehicle",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -98,7 +98,7 @@ rigid_body_constraint_custom_path * path_constraint_create@<eax>(int a1@<ebp>, g
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  40,
                  "veh->scr_vehicle->nitrousVehicle",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -108,7 +108,7 @@ rigid_body_constraint_custom_path * path_constraint_create@<eax>(int a1@<ebp>, g
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  41,
                  "veh->scr_vehicle->nitrousVehicle->get_phys_user_data()",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -118,7 +118,7 @@ rigid_body_constraint_custom_path * path_constraint_create@<eax>(int a1@<ebp>, g
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  42,
                  "veh->scr_vehicle->nitrousVehicle->get_phys_user_data()->body",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -132,7 +132,7 @@ rigid_body_constraint_custom_path * path_constraint_create@<eax>(int a1@<ebp>, g
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  49,
                  "rbc_custom_path",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -159,7 +159,7 @@ void __cdecl path_constraint_destroy(rigid_body_constraint_custom_path *vpc)
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  60,
                  "vpc->m_urb",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -168,7 +168,7 @@ void __cdecl path_constraint_destroy(rigid_body_constraint_custom_path *vpc)
                  "C:\\projects_pc\\cod\\codsrc\\src\\vehicle\\nitrous_vehicle_constraint.cpp",
                  61,
                  "vpc->get_b2() == vpc->m_urb",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

@@ -599,7 +599,7 @@ void __cdecl CG_ScoreboardTeamColor(int localClientNum, int team, float *color)
     else
     {
         Com_Printf(16, "You cannot do table lookups without fastfiles.\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 

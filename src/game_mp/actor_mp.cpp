@@ -1454,7 +1454,7 @@ actor_think_result_t __fastcall Actor_CallThink(actor_s *self)
     {
         __debugbreak();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( self->transitionCount )
     {
         Actor_ThinkStateTransitions(self);
@@ -1560,7 +1560,7 @@ actor_think_result_t __fastcall Actor_CallThink(actor_s *self)
     {
         __debugbreak();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     return eThinkResult;
 }
 

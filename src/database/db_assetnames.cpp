@@ -1,13 +1,217 @@
 #include "db_assetnames.h"
+#include "db_registry.h"
 
-XModelPiece *__cdecl DB_ImageGetName(const XAssetHeader *header)
+#include <gfx_d3d/r_material.h>
+
+#include <xanim/xmodel.h>
+#include <universal/q_shared.h>
+
+const char *(__cdecl *DB_XAssetGetNameHandler[43])(const XAssetHeader *) =
 {
-    return header->xmodelPieces[3].pieces;
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_ImageGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  NULL,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_LocalizeEntryGetName,
+  &DB_DDLGetName,
+  NULL,
+  NULL,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_DDLGetName,
+  &DB_GetEmblemSetName
+};
+
+const char *g_assetNames[] =
+{
+  "xmodelpieces",
+  "physpreset",
+  "physconstraints",
+  "destructibledef",
+  "xanim",
+  "xmodel",
+  "material",
+  "techset",
+  "image",
+  "sound",
+  "sound_patch",
+  "col_map_sp",
+  "col_map_mp",
+  "com_map",
+  "game_map_sp",
+  "game_map_mp",
+  "map_ents",
+  "gfx_map",
+  "lightdef",
+  "ui_map",
+  "font",
+  "menufile",
+  "menu",
+  "localize",
+  "weapon",
+  "weapondef",
+  "weaponvariant",
+  "snddriverglobals",
+  "fx",
+  "impactfx",
+  "aitype",
+  "mptype",
+  "mpbody",
+  "mphead",
+  "character",
+  "xmodelalias",
+  "rawfile",
+  "stringtable",
+  "packindex",
+  "xGlobals",
+  "ddl",
+  "glasses",
+  "emblemset"
+};
+
+void(__cdecl *DB_XAssetSetNameHandler[43])(XAssetHeader *, const char *) =
+{
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_ImageSetName,
+  &DB_DDLSetname,
+  NULL,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  NULL,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_LocalizeEntrySetName,
+  &DB_DDLSetname,
+  NULL,
+  NULL,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  &DB_DDLSetname,
+  NULL,
+  NULL
+};
+
+int __cdecl DB_SizeofXAsset_RawFile_()
+{
+    iassert(sizeof(RawFile) == 12);
+    return 12;
+}
+int(__cdecl *DB_GetXAssetSizeHandler[43])() =
+{
+  &DB_SizeofXAsset_RawFile_,
+  &DB_SizeofXAsset_PhysPreset_,
+  &DB_SizeofXAsset_PhysConstraints_,
+  &SV_GetMaxAttachCount,
+  &PM_MediumLandingForSurface,
+  &DB_SizeofXAsset_XModel_,
+  &DB_SizeofXAsset_Material_,
+  &DB_SizeofXAsset_MaterialTechniqueSet_,
+  &DB_SizeofXAsset_SndDriverGlobals_,
+  &DB_SizeofXAsset_XGlobals_,
+  &DB_SizeofXAsset_StringTable_,
+  &DB_SizeofXAsset_clipMap_t_,
+  &DB_SizeofXAsset_clipMap_t_,
+  &DB_SizeofXAsset_ComWorld_,
+  &DB_SizeofXAsset_EmblemSet_,
+  &DB_SizeofXAsset_EmblemSet_,
+  &DB_SizeofXAsset_RawFile_,
+  &DB_SizeofXAsset_GfxWorld_,
+  &DB_SizeofXAsset_GfxLightDef_,
+  NULL,
+  &SV_GetMaxAttachCount,
+  &DB_SizeofXAsset_RawFile_,
+  &DB_SizeofXAsset_menuDef_t_,
+  &XAnimTreeSize,
+  &DB_SizeofXAsset_WeaponVariantDef_,
+  NULL,
+  NULL,
+  &DB_SizeofXAsset_SndDriverGlobals_,
+  &DB_SizeofXAsset_FxEffectDef_,
+  &XAnimTreeSize,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  &DB_SizeofXAsset_RawFile_,
+  &DB_SizeofXAsset_StringTable_,
+  &DB_SizeofXAsset_PackIndex_,
+  &DB_SizeofXAsset_XGlobals_,
+  &XAnimTreeSize,
+  &DB_SizeofXAsset_Glasses_,
+  &DB_SizeofXAsset_EmblemSet_
+};
+
+
+
+
+
+const char *__cdecl DB_ImageGetName(const XAssetHeader *header)
+{
+    return header->image->name;
 }
 
-void __cdecl DB_ImageSetName(XAssetHeader *header, XModelPiece *name)
+void __cdecl DB_ImageSetName(XAssetHeader *header, const char *name)
 {
-    header->xmodelPieces[3].pieces = name;
+    //header->xmodelPieces[3].pieces = name;
+    header->image->name = name;
 }
 
 const char *__cdecl DB_LocalizeEntryGetName(const XAssetHeader *header)
@@ -30,7 +234,7 @@ const char *__cdecl DB_DDLGetName(const XAssetHeader *header)
     return header->xmodelPieces->name;
 }
 
-const char *__cdecl DB_GetEmblemSetName()
+const char *__cdecl DB_GetEmblemSetName(const XAssetHeader *header)
 {
     return "emblemset";
 }

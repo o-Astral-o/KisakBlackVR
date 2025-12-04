@@ -322,7 +322,7 @@ LABEL_6:
         default:
 LABEL_24:
             *intResult = 0;
-            *stringResult = (char *)&toastPopupTitle;
+            *stringResult = (char *)"";
             result = 0;
             break;
     }
@@ -395,7 +395,7 @@ const char *__cdecl Live_FileShare_GetGameTypeFromIndex(int index)
             return va("%s", result);
         Com_PrintError(16, "Could not index %d in gameTypesTable.csv.\n", index);
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 const char *__cdecl Live_FileShare_GetGameTypeImageFromIndex(int index)
@@ -418,7 +418,7 @@ const char *__cdecl Live_FileShare_GetGameTypeImageFromIndex(int index)
             return va("%s", result);
         Com_PrintError(16, "Could not index %d in gameTypesTable.csv.\n", index);
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 char *__cdecl Live_FileShare_GetLocalizedGameTypeFromIndex(int index, bool upperCase)
@@ -444,13 +444,13 @@ char *__cdecl Live_FileShare_GetLocalizedGameTypeFromIndex(int index, bool upper
             return UI_SafeTranslateString(result);
         Com_PrintError(16, "Could not index %d in gameTypesTable.csv.\n", index);
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl Live_FileShare_GetLocalizedMapNameFromIndex(int index)
 {
     if ( index < 0 || index >= sharedUiInfo.joinGameTypes[31].basictraining )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     else
         return UI_SafeTranslateString(&sharedUiInfo.joinGameTypes[32].gameType[304 * index]);
 }
@@ -659,18 +659,18 @@ const char *__cdecl Live_FileShare_GetSelectedImage(bdFileMetaData *descriptors,
     unsigned __int64 map; // [esp+Ch] [ebp-8h] BYREF
 
     if ( !descriptors[index].m_category )
-        return &toastPopupTitle;
+        return "";
     if ( descriptors[index].m_category > 3u )
     {
         if ( descriptors[index].m_category == 4 )
             return "playlist_headquarters";
-        return &toastPopupTitle;
+        return "";
     }
     Live_FileShare_GetTag(descriptors, index, 2u, &map);
     if ( map < sharedUiInfo.joinGameTypes[31].basictraining )
         return va("menu_%s_map_select_final", &sharedUiInfo.mapList[map].mapName[28]);
     Com_PrintError(16, "File share map tag value out of bounds.\n");
-    return &toastPopupTitle;
+    return "";
 }
 
 unsigned int __cdecl Live_FileShare_GetRating()
@@ -690,7 +690,7 @@ char *__cdecl Live_FileShare_LocalizedGameTypeAndMap(int gameTypeIndex, int mapI
         || mapIndex >= sharedUiInfo.joinGameTypes[31].basictraining )
     {
         Com_PrintError(16, "File share game type or map name tag value out of bounds.\n");
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
     else
     {
@@ -894,7 +894,7 @@ char *__cdecl Live_FileShare_SearchResultsItemText(
         bdFileMetaData::~bdFileMetaData(&descriptor);
 LABEL_10:
         *useOwnerDraw = 1;
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
     if ( fshDebugFileList && fshDebugFileList->current.enabled )
     {
@@ -918,7 +918,7 @@ LABEL_10:
     {
         Live_FileShareSearch_MarkItemCorrupt(controllerIndex, itemIndex);
         bdFileMetaData::~bdFileMetaData(&descriptor);
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -974,14 +974,14 @@ char *__cdecl Live_FileShare_PrivateSlotsText(
         __debugbreak();
     }
     if ( !fileShareData )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     switch ( column )
     {
         case 0:
         case 1:
         case 2:
             *handle = Material_RegisterHandle("white", 7);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 3:
         case 4:
@@ -1006,7 +1006,7 @@ char *__cdecl Live_FileShare_PrivateSlotsText(
                 v6 = Material_RegisterHandle(SelectedImage, 7);
             }
             *handle = v6;
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 6:
         case 7:
@@ -1024,19 +1024,19 @@ LABEL_31:
             {
                 case 1u:
                     *handle = Material_RegisterHandle("menu_mp_lobby_icon_film", 7);
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
                 case 2u:
                     *handle = Material_RegisterHandle("menu_mp_lobby_icon_clip", 7);
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
                 case 3u:
                     *handle = Material_RegisterHandle("menu_mp_lobby_icon_screenshot", 7);
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
                 case 4u:
                     *handle = Material_RegisterHandle("menu_mp_lobby_icon_customgamemode", 7);
-                    result = (char *)&toastPopupTitle;
+                    result = (char *)"";
                     break;
                 default:
                     goto LABEL_31;
@@ -1048,13 +1048,13 @@ LABEL_31:
             for ( k = 0; k < fileShareData->descriptorCount; ++k )
             {
                 if ( fileShareData->descriptors[k].m_fileSlot == currSlot )
-                    return (char *)&toastPopupTitle;
+                    return (char *)"";
             }
             result = va("%d", currSlot);
             break;
         default:
 LABEL_40:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -1082,7 +1082,7 @@ const char *__cdecl Live_FileShare_PrivateSlotsIngameText(
         __debugbreak();
     }
     if ( !fileShareData )
-        return &toastPopupTitle;
+        return "";
     for ( i = 0; i < fileShareData->descriptorCount; ++i )
     {
         if ( fileShareData->descriptors[i].m_fileSlot == curSlot )
@@ -1105,7 +1105,7 @@ const char *__cdecl Live_FileShare_PrivateSlotsIngameText(
                      &result) )
         {
             *handle = Material_RegisterHandle((char *)stringResult, 7);
-            return &toastPopupTitle;
+            return "";
         }
     }
     else if ( column == 2
@@ -1120,7 +1120,7 @@ const char *__cdecl Live_FileShare_PrivateSlotsIngameText(
     {
         return stringResult;
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 void __cdecl Live_FileShare_FeederColor(
@@ -1234,7 +1234,7 @@ char __cdecl Live_FileShare_GetDate(
     }
     else
     {
-        *stringResult = &toastPopupTitle;
+        *stringResult = "";
         return 0;
     }
 }
@@ -1260,7 +1260,7 @@ char __cdecl Live_FileShare_GetLength(
     }
     else
     {
-        *stringResult = &toastPopupTitle;
+        *stringResult = "";
         return 0;
     }
 }
@@ -1313,7 +1313,7 @@ char __cdecl Live_FileShare_GetMap(
         }
         Com_PrintError(16, "Fileshare: Value not in sharedUiInfo bounds.\n");
     }
-    *stringResult = &toastPopupTitle;
+    *stringResult = "";
     return 0;
 }
 
@@ -1335,7 +1335,7 @@ char __cdecl Live_FileShare_GetMapName(
         }
         Com_PrintError(16, "Fileshare: Value not in sharedUiInfo bounds.\n");
     }
-    *stringResult = &toastPopupTitle;
+    *stringResult = "";
     return 0;
 }
 
@@ -1355,7 +1355,7 @@ char __cdecl Live_FileShare_GetGameType(
     }
     else
     {
-        *stringResult = &toastPopupTitle;
+        *stringResult = "";
         return 0;
     }
 }
@@ -1378,7 +1378,7 @@ char __cdecl Live_FileShare_GetGameTypeName(
         }
         Com_PrintError(16, "File share game type tag value out of bounds.\n");
     }
-    *stringResult = (char *)&toastPopupTitle;
+    *stringResult = (char *)"";
     return 0;
 }
 
@@ -1400,7 +1400,7 @@ char __cdecl Live_FileShare_GetGameTypeImage(
         }
         Com_PrintError(16, "File share game type tag value out of bounds.\n");
     }
-    *stringResult = &toastPopupTitle;
+    *stringResult = "";
     return 0;
 }
 
@@ -1422,7 +1422,7 @@ char __cdecl Live_FileShare_GetGameTypeAndMapName(
     }
     else
     {
-        *stringResult = (char *)&toastPopupTitle;
+        *stringResult = (char *)"";
         return 0;
     }
 }
@@ -1505,7 +1505,7 @@ bool __cdecl Live_FileShare_GetFileType(
             result = 1;
             break;
         default:
-            *stringResult = &toastPopupTitle;
+            *stringResult = "";
             result = 0;
             break;
     }
@@ -1598,7 +1598,7 @@ char __cdecl Live_FileShare_GetFileID(
         }
         Com_PrintError(16, "getFeederData could not get fileID for location %d, index %d.\n", location, index);
     }
-    *stringResult = &toastPopupTitle;
+    *stringResult = "";
     return 0;
 }
 
@@ -1708,7 +1708,7 @@ char __cdecl Live_FileShare_GetOwnerName(
 
     if ( Live_FileShare_ReadFromMetaData(0, &descriptors[index], stringResult, &intRes) )
         return 1;
-    *stringResult = (char *)&toastPopupTitle;
+    *stringResult = (char *)"";
     return 0;
 }
 
@@ -1762,7 +1762,7 @@ bool __cdecl Live_FileShare_GetTypeIconName(
             result = 1;
             break;
         default:
-            *stringResult = &toastPopupTitle;
+            *stringResult = "";
             result = 0;
             break;
     }
@@ -1849,7 +1849,7 @@ char __cdecl Live_FileShare_GetIsModifiedName(
     }
     else
     {
-        *stringResult = (char *)&toastPopupTitle;
+        *stringResult = (char *)"";
         return 0;
     }
 }
@@ -1871,7 +1871,7 @@ char __cdecl Live_FileShare_GetIsModifiedDescription(
     }
     else
     {
-        *stringResult = (char *)&toastPopupTitle;
+        *stringResult = (char *)"";
         return 0;
     }
 }
@@ -1905,7 +1905,7 @@ char __cdecl Live_FileShare_GetName(
         *stringResult = UI_SafeTranslateString(*stringResult + 1);
         return 1;
     }
-    *stringResult = (char *)&toastPopupTitle;
+    *stringResult = (char *)"";
     return 0;
 }
 
@@ -1938,7 +1938,7 @@ char __cdecl Live_FileShare_GetDescription(
         if ( Live_FileShare_GetGameTypeName(descriptors, descriptorCount, index, location, stringResult) )
             return 1;
     }
-    *stringResult = (char *)&toastPopupTitle;
+    *stringResult = (char *)"";
     return 0;
 }
 
@@ -1954,7 +1954,7 @@ const char *__cdecl Live_FileShare_GetPooledTeamIcon(int mapID, int team)
         __debugbreak();
     }
     if ( !mapTable )
-        return &toastPopupTitle;
+        return "";
     v3 = va("%d", mapID);
     if ( team == 1 )
         return StringTable_Lookup(mapTable, 5, v3, 15);
@@ -1975,7 +1975,7 @@ char *__cdecl Live_FileShare_GetPooledTeamName(int mapID, int team)
         __debugbreak();
     }
     if ( !mapTable )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     v3 = va("%d", mapID);
     if ( team == 1 )
         v4 = StringTable_Lookup(mapTable, 5, v3, 13);
@@ -2041,7 +2041,7 @@ const char *__cdecl Live_FileShare_GetPooledFileInfo(const char *field)
                                                                                     0,
                                                                                     "Invalid key") )
                                                                         __debugbreak();
-                                                                    return &toastPopupTitle;
+                                                                    return "";
                                                                 }
                                                                 else
                                                                 {
@@ -2133,7 +2133,7 @@ const char *__cdecl Live_FileShare_GetPooledMapKills()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.kills);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapDeaths()
@@ -2141,7 +2141,7 @@ const char *__cdecl Live_FileShare_GetPooledMapDeaths()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.deaths);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapTeam()
@@ -2149,7 +2149,7 @@ const char *__cdecl Live_FileShare_GetPooledMapTeam()
     if ( s_pooledFileDetails.isValid )
         return Live_FileShare_GetPooledTeamIcon(s_pooledFileDetails.mapID, s_pooledFileDetails.team);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapAxisScore()
@@ -2157,7 +2157,7 @@ const char *__cdecl Live_FileShare_GetPooledMapAxisScore()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.axisScore);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapAxisIcon()
@@ -2165,7 +2165,7 @@ const char *__cdecl Live_FileShare_GetPooledMapAxisIcon()
     if ( s_pooledFileDetails.isValid )
         return Live_FileShare_GetPooledTeamColorIcon(1);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledTeamColorIcon(int teamID)
@@ -2195,7 +2195,7 @@ char *__cdecl Live_FileShare_GetPooledMapAxisName()
     if ( s_pooledFileDetails.isValid )
         return Live_FileShare_GetPooledTeamName(s_pooledFileDetails.mapID, 1);
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapAlliesScore()
@@ -2203,7 +2203,7 @@ const char *__cdecl Live_FileShare_GetPooledMapAlliesScore()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.alliesScore);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapAlliesIcon()
@@ -2211,7 +2211,7 @@ const char *__cdecl Live_FileShare_GetPooledMapAlliesIcon()
     if ( s_pooledFileDetails.isValid )
         return Live_FileShare_GetPooledTeamColorIcon(2);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 char *__cdecl Live_FileShare_GetPooledMapAlliesName()
@@ -2219,13 +2219,13 @@ char *__cdecl Live_FileShare_GetPooledMapAlliesName()
     if ( s_pooledFileDetails.isValid )
         return Live_FileShare_GetPooledTeamName(s_pooledFileDetails.mapID, 2);
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 const char *__cdecl Live_FileShare_GetPooledMapVictory()
 {
     if ( !s_pooledFileDetails.isValid )
-        return &toastPopupTitle;
+        return "";
     if ( s_pooledFileDetails.alliesScore == s_pooledFileDetails.axisScore )
         return "draw";
     if ( s_pooledFileDetails.team == 2 && s_pooledFileDetails.alliesScore > s_pooledFileDetails.axisScore
@@ -2249,7 +2249,7 @@ const char *__cdecl Live_FileShare_GetPooledScore()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.score);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledWagerPayout()
@@ -2257,7 +2257,7 @@ const char *__cdecl Live_FileShare_GetPooledWagerPayout()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.wagerPayout);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Live_FileShare_GetPooledPosition()
@@ -2265,7 +2265,7 @@ const char *__cdecl Live_FileShare_GetPooledPosition()
     if ( s_pooledFileDetails.isValid )
         return va("%d", s_pooledFileDetails.position);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 char *__cdecl Live_FileShare_GetPooledIsWager()
@@ -2384,7 +2384,7 @@ LABEL_36:
     if ( !v6 )
     {
 LABEL_25:
-        *stringResult = &toastPopupTitle;
+        *stringResult = "";
         *floatResult = 0.0f;
         bdFileMetaData::~bdFileMetaData(&descriptor);
         return 0;
@@ -2421,7 +2421,7 @@ char __cdecl Live_FileShare_GetMySlotInfo(
     fileShareKeyIndex keyIndex; // [esp+Ch] [ebp-8h]
     int index; // [esp+10h] [ebp-4h]
 
-    *stringResult = &toastPopupTitle;
+    *stringResult = "";
     *floatResult = 0.0f;
     for ( i = 0; i < 30; ++i )
     {
@@ -3168,12 +3168,12 @@ void __cdecl Live_FileShare_Init()
                                             "Color of old items in search results that can't be selected.");
     fsSelectedFileID = _Dvar_RegisterString(
                                              "fsSelectedFileID",
-                                             (char *)&toastPopupTitle,
+                                             (char *)"",
                                              0,
                                              "File ID currently selected. Use to lookup up rating in ownerdraw.");
     fsSelectedFileName = _Dvar_RegisterString(
                                                  "fsSelectedFileName",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "Name when a file is selected to be transferred to My File Share");
     fsIsSelectedFileNameModified = _Dvar_RegisterBool(
@@ -3183,7 +3183,7 @@ void __cdecl Live_FileShare_Init()
                                                                      "A flag which gives us information if a selected filename is modified.");
     fsSelectedFileDescription = _Dvar_RegisterString(
                                                                 "fsSelectedFileDescription",
-                                                                (char *)&toastPopupTitle,
+                                                                (char *)"",
                                                                 0,
                                                                 "Description when a file is selected to be transferred to My File Share");
     fsIsSelectedFileDescriptionModified = _Dvar_RegisterBool(
@@ -3212,7 +3212,7 @@ void __cdecl Live_FileShare_Init()
                                                         0x7FFFFFFF,
                                                         0,
                                                         "Indicates if the first row in the 2d slot feeder must be selected when focused.");
-    fshLiveBlurb = _Dvar_RegisterString("fshLiveBlurb", (char *)&toastPopupTitle, 0, "Live subsription marketing blurb.");
+    fshLiveBlurb = _Dvar_RegisterString("fshLiveBlurb", (char *)"", 0, "Live subsription marketing blurb.");
     fshDebugFileList = _Dvar_RegisterBool(
                                              "fshDebugFileList",
                                              0,

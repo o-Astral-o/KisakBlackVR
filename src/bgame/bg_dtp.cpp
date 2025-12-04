@@ -1,4 +1,66 @@
 #include "bg_dtp.h"
+#include "bg_pmove.h"
+#include "bg_public.h"
+#include "bg_local.h"
+
+#include <string.h>
+#include <game/g_debug.h>
+#include "bg_misc.h"
+#include "bg_weapons.h"
+
+const dvar_s *dtp;
+const dvar_s *dtp_debug;
+const dvar_s *dtp_max_slide_duration;
+const dvar_s *dtp_max_slide_addition;
+const dvar_s *dtp_startup_delay;
+const dvar_s *dtp_post_move_pause;
+const dvar_s *dtp_fall_damage_min_height;
+const dvar_s *dtp_fall_damage_max_height;
+const dvar_s *dtp_exhaustion_window;
+const dvar_s *dtp_min_speed;
+const dvar_s *door_breach_weapondrop;
+const dvar_s *dtp_new_trajectory;
+const dvar_s *dtp_new_trajectory_multiplier;
+const dvar_s *dtp_max_apex_duration;
+const dvar_s *AAAAAAAAAAAAA;
+const dvar_s *AAAAAAAAAAAAA;
+
+int Dtp_SurfaceRemapTable[31] =
+{
+  0,
+  3,
+  2,
+  4,
+  4,
+  2,
+  5,
+  2,
+  7,
+  5,
+  7,
+  6,
+  4,
+  1,
+  8,
+  2,
+  2,
+  2,
+  5,
+  4,
+  8,
+  3,
+  2,
+  2,
+  2,
+  2,
+  5,
+  5,
+  1,
+  5,
+  7
+};
+
+
 
 void __cdecl Dtp_RegisterDvars()
 {
@@ -228,7 +290,7 @@ double __cdecl Dtp_ReduceFriction(pmove_t *pm, const playerState_s *ps)
     point[0] = ps->origin[0];
     point[1] = v3;
     point[2] = v4;
-    PM_trace(pm, &trace, start, pm->mins, pm->maxs, point, ps->clientNum, (int)&cls.rankedServers[711].game[35]);
+    PM_trace(pm, &trace, start, pm->mins, pm->maxs, point, ps->clientNum, 0x1000000);
     if ( trace.fraction < 1.0
         && (float)(dtp_max_slide_duration->current.value + dtp_max_slide_addition->current.value) > (float)delta )
     {
@@ -365,7 +427,8 @@ bool __cdecl Dtp_IsDtp(const pmove_t *pm, const playerState_s *ps)
         return 0;
     if ( ps->sprintState.lastSprintEnd != pm->cmd.serverTime )
         return 0;
-    if ( bitarray<51>::testBit(&pm->cmd.button_bits, 0x2Cu) )
+    //if ( bitarray<51>::testBit(&pm->cmd.button_bits, 0x2Cu) )
+    if ( pm->cmd.button_bits.testBit(44) )
         return (float)(dtp_min_speed->current.value * dtp_min_speed->current.value) < (float)((float)(ps->velocity[0]
                                                                                                                                                                                                 * ps->velocity[0])
                                                                                                                                                                                 + (float)(ps->velocity[1]

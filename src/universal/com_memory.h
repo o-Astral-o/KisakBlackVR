@@ -1,4 +1,32 @@
 #pragma once
+#include <xanim/xanim.h>
+
+struct __declspec(align(4)) fileData_s // sizeof=0xC
+{                                       // XREF: fileData_t/r
+    void *data;
+    fileData_s *next;
+    unsigned __int8 type;
+    char name[1];
+    // padding byte
+    // padding byte
+};
+
+struct hunkHeader_t // sizeof=0x10
+{
+    unsigned int magic;
+    int size;
+    const char *name;
+    int dummy;
+};
+
+struct hunkUsed_t // sizeof=0x8
+{                                       // XREF: .data:hunk_high/r
+                                        // .data:hunk_low/r
+    int permanent;                      // XREF: _Com_TouchMemory+53/r
+                                        // _Com_TouchMemory+93/r ...
+    int temp;                           // XREF: _Hunk_CheckTempMemoryClear:loc_7B2B10/r
+                                        // _Hunk_CheckTempMemoryHighClear:loc_7B2BC0/r ...
+};
 
 void *__cdecl Z_VirtualReserve(int size);
 void __cdecl Z_VirtualDecommitInternal(void *ptr, int size);
@@ -62,3 +90,22 @@ char *__cdecl Z_MallocGarbage(int size, const char *name, int type);
 char *__cdecl CopyString(char *in, const char *name, int type, scriptInstance_t inst);
 void __cdecl ReplaceString(const char **str, char *in, const char *name, int type, scriptInstance_t inst);
 void __cdecl FreeString(const char *str, int type, scriptInstance_t inst);
+
+
+class LargeLocal
+{
+public:
+    LargeLocal(int sizeParam);
+    ~LargeLocal();
+
+    unsigned __int8 *GetBuf();
+
+    int startPos;
+    int size;
+};
+
+int __cdecl LargeLocalBegin(int size);
+void __cdecl LargeLocalEnd(int startPos);
+unsigned __int8 *__cdecl LargeLocalGetBuf(int startPos);
+void __cdecl LargeLocalReset();
+unsigned int __cdecl LargeLocalRoundSize(int size);

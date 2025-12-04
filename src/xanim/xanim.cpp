@@ -1149,7 +1149,7 @@ const char *__cdecl XAnimGetAnimName(const XAnim_s *anims, unsigned int animInde
     if ( IsLeafNode(&anims->entries[animIndex]) )
         return anims->entries[animIndex].parts->name;
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 char *__cdecl XAnimGetAnimDebugName(const XAnim_s *anims, unsigned int animIndex)
@@ -2753,7 +2753,7 @@ void __cdecl XAnimDisplay(
     else if ( g_xAnimInfo[infoIndex].state.goalWeight <= g_xAnimInfo[infoIndex].state.weight )
     {
         if ( g_xAnimInfo[infoIndex].state.weight <= g_xAnimInfo[infoIndex].state.goalWeight )
-            color = &toastPopupTitle;
+            color = "";
         else
             color = "^1";
     }

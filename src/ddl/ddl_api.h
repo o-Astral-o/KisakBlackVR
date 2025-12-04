@@ -1,5 +1,70 @@
 #pragma once
 
+struct ddlEnumDef_t // sizeof=0xC
+{
+    const char *name;
+    int memberCount;
+    const char **members;
+};
+
+union ddlResult_t // sizeof=0x40
+{                                       // XREF: SV_SetClientDIntStat(int,ddlState_t *,uint)+171/r
+                                        // SV_SetClientDInt64Stat(int,ddlState_t *,unsigned __int64)+174/r ...
+    unsigned int intValue;
+    unsigned __int64 int64Value;
+    float floatValue;
+    char stringValue[64];
+};
+
+struct ddlMemberDef_t // sizeof=0x30
+{
+    const char *name;
+    int size;
+    int offset;
+    int type;
+    int externalIndex;
+    unsigned int min;
+    unsigned int max;
+    unsigned int serverDelta;
+    unsigned int clientDelta;
+    int arraySize;
+    int enumIndex;
+    int permission;
+};
+
+struct ddlStructDef_t // sizeof=0x10
+{
+    const char *name;
+    int size;
+    int memberCount;
+    ddlMemberDef_t *members;
+};
+
+struct ddlDef_t // sizeof=0x1C
+{                                       // XREF: XAssetPoolEntry<ddlDef_t>/r
+                                        // ddlDefNext/r
+    int version;
+    int size;
+    ddlStructDef_t *structList;
+    int structCount;
+    ddlEnumDef_t *enumList;
+    int enumCount;
+    ddlDef_t *next;
+};
+
+struct ddlState_t // sizeof=0x10
+{                                       // XREF: .data:ddlState_t g_UploadBandwitdh/r
+                                        // .data:ddlState_t g_Rank/r ...
+    int absoluteOffset;                 // XREF: MatchRecordSpawn(gclient_s *)+B0/r
+                                        // MatchRecordSpawn(gclient_s *)+23A/r ...
+    int arrayIndex;                     // XREF: MatchRecordSpawn(gclient_s *)+B5/r
+                                        // MatchRecordSpawn(gclient_s *)+23F/r ...
+    ddlMemberDef_t *member;             // XREF: MatchRecordSpawn(gclient_s *)+BB/r
+                                        // MatchRecordSpawn(gclient_s *)+245/r ...
+    ddlDef_t *ddl;                      // XREF: MatchRecordSpawn(gclient_s *)+C1/r
+                                        // MatchRecordSpawn(gclient_s *)+24B/r ...
+};
+
 void __cdecl DDL_Init();
 int __cdecl DDL_GetTotalBufferBitSize(ddlDef_t *ddl);
 void DDL_Printf(const char *fmt, ...);

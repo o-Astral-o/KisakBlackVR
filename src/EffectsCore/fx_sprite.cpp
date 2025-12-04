@@ -168,7 +168,7 @@ void __cdecl FX_BuildQuadStampCodeMeshVerts(
         index.value[0] = baseVertex + 1;
         index.value[1] = baseVertex + 2;
         indices[2] = index;
-        R_AddCodeMeshDrawSurf(material, indices, 6u, 0, 0, &toastPopupTitle, 0xDu);
+        R_AddCodeMeshDrawSurf(material, indices, 6u, 0, 0, "", 0xDu);
         leftUp[0] = *left + *up;
         leftUp[1] = left[1] + up[1];
         leftUp[2] = left[2] + up[2];

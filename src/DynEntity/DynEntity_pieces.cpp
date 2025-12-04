@@ -1,21 +1,38 @@
 #include "DynEntity_pieces.h"
 
+#include <universal/dvar.h>
+#include <gfx_d3d/r_gfx.h>
+#include <win32/win_common.h>
+#include <physics/phys_main.h>
+#include <gfx_d3d/r_dpvs.h>
+#include <xanim/xmodel.h>
+#include <qcommon/common.h>
+#include <bgame/bg_weapons_view.h>
+
+const dvar_s *dynEntPieces_velocity;
+const dvar_s *dynEntPieces_angularVelocity;
+const dvar_s *dynEntPieces_impactForce;
+
+int numPieces;
+
+BreakablePiece g_breakablePieces[100];
+
 void __cdecl DynEntPieces_RegisterDvars()
 {
     dynEntPieces_velocity = _Dvar_RegisterVec3(
                                                         "dynEntPieces_velocity",
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
-                                                        COERCE_UNSIGNED_INT(0.0),
+                                                        (0.0),
+                                                        (0.0),
+                                                        (0.0),
                                                         -1000.0,
                                                         1000.0,
                                                         0x80u,
                                                         "Initial breakable pieces velocity");
     dynEntPieces_angularVelocity = _Dvar_RegisterVec3(
                                                                      "dynEntPieces_angularVelocity",
-                                                                     COERCE_UNSIGNED_INT(0.0),
-                                                                     COERCE_UNSIGNED_INT(0.0),
-                                                                     COERCE_UNSIGNED_INT(0.0),
+                                                                     (0.0),
+                                                                     (0.0),
+                                                                     (0.0),
                                                                      -180.0,
                                                                      180.0,
                                                                      0x80u,

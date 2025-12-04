@@ -379,13 +379,6 @@ struct snd_group // sizeof=0x50
         unsigned __int16 attenuationMp;
 };
 
-struct snd_curve // sizeof=0x64
-{
-        char name[32];
-        unsigned int id;
-        float points[8][2];
-};
-
 struct snd_pan // sizeof=0x3C
 {
         char name[32];
@@ -520,14 +513,18 @@ struct snd_loop_emitter // sizeof=0x14
                                                                                 // SND_UpdateStaticSounds+2EF/w ...
 };
 
-struct snd_loop_emitter // sizeof=0x14
-{                                                                             // XREF: snd_local_t/r
-        unsigned int id;                                        // XREF: SND_UpdateStaticSounds+2B6/r
-                                                                                // SND_UpdateStaticSounds+2DA/r ...
-        float origin[3];                                        // XREF: SND_UpdateStaticSounds+3AA/o
-                                                                                // SNDL_PlayLoopAt(uint,float const * const)+88/o ...
-        const snd_alias_list_t *alias;            // XREF: SND_UpdateStaticSounds+2CB/r
-                                                                                // SND_UpdateStaticSounds+2EF/w ...
+struct snd_snapshot // sizeof=0x15C
+{
+    char name[32];
+    unsigned int id;
+    char occlusionName[32];
+    unsigned int occlusionId;
+    float fadeIn;
+    float fadeOut;
+    float distance;
+    unsigned int fadeInCurve;
+    unsigned int fadeOutCurve;
+    float attenuation[64];
 };
 
 struct snd_snapshot_category // sizeof=0x60C
@@ -599,67 +596,6 @@ enum snd_command_type : __int32
         SND_COMMAND_COUNT                             = 0x1E,
 };
 
-struct snd_voice_t // sizeof=0x1D8
-{                                                                             // XREF: snd_local_t/r
-        SndFileSpecificVoiceInfo soundFileInfo;
-                                                                                // XREF: SND_UnpauseSounds+85/r
-                                                                                // SND_UnpauseSounds+97/w ...
-        SndEntHandle sndEnt;                                // XREF: SND_ContinueLoopingSound(uint,float,SndEntHandle,float const * const,int,snd_playback *)+54/r
-                                                                                // SND_GetPlayingInfo+94/r ...
-        snd_entity_update entity_update;
-        int group;
-        int startDelay;
-        int startTime;                                            // XREF: SND_GetPlayingInfo+B3/r
-                                                                                // SND_GetPlayingInfo+C7/r ...
-        int looptime;
-        int totalMsec;
-        snd_playback *playback;
-        int playbackId;                                         // XREF: SND_SetPlaybackIdNotPlayed(int)+3E/w
-                                                                                // SND_ContinueLoopingSound(uint,float,SndEntHandle,float const * const,int,snd_playback *)+109/r ...
-        int firstPlaybackId;
-        sndLengthNotifyInfo lengthNotifyInfo;
-        const snd_alias_t *alias;                     // XREF: SND_ContinueLoopingSound(uint,float,SndEntHandle,float const * const,int,snd_playback *)+68/r
-                                                                                // SND_ContinueLoopingSound(uint,float,SndEntHandle,float const * const,int,snd_playback *)+8A/r ...
-        float offset[3];
-        float position[3];                                    // XREF: SND_SetPosition(int,float const * const)+40/o
-        float velocity[3];
-        float orientation[3][3];
-        float direction[3];
-        float fluxVelocity[3];
-        float baseDistance;
-        float distanceAttenuation;
-        float reverbAttenuation;
-        float cylinderAttenuation;
-        float volModSeed;
-        float volModStart;
-        float pitchModSeed;
-        float globalPriority;                             // XREF: Snd_GetLowestPriority+8B/r
-                                                                                // SND_Limit+8D/r ...
-        snd_fader_t doppler;
-        snd_fader_t fade;
-        snd_fader_t script_fade;
-        snd_fader_t script_pitch;
-        snd_fader_t losOcclusion;
-        int losHitCache;
-        int closestListenerIndex;                     // XREF: DebugDrawWorldSound3D+14F/r
-        int voiceStartTime;
-        float dryLevel;
-        float wetLevel;
-        float futzBlend;
-        snd_speaker_map pan;
-        snd_speaker_map panGoal;
-        bool paused;                                                // XREF: SND_PauseSounds+67/w
-                                                                                // SND_UnpauseSounds+50/r ...
-        bool timescale;
-        bool positionUpdated;
-        bool pitchShift;
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        __int64 played;
-};
-
 struct snd_occlusion_trace_t // sizeof=0x24
 {                                                                             // XREF: snd_local_t/r
         float listener[3];
@@ -671,88 +607,6 @@ struct snd_occlusion_trace_t // sizeof=0x24
         float occlusion;                                        // XREF: SND_LosOcclusionUpdate(void)+198/w
 };
 
-struct __declspec(align(4)) snd_game_state // sizeof=0x10
-{                                                                             // XREF: snd_local_t/r
-        float timescale;                                        // XREF: SNDL_Update(void)+A5/r
-                                                                                // SND_Init(void)+1B9/w ...
-        unsigned int cgTime;                                // XREF: SNDL_SetGameState(bool,bool,float,uint,uint)+53/w
-        unsigned int seed;                                    // XREF: SND_PickSoundAliasFromList(snd_alias_list_t const *,int):loc_934E73/r
-                                                                                // SND_PickSoundAliasFromList(snd_alias_list_t const *,int)+1CC/o ...
-        bool gamePaused;                                        // XREF: SND_UpdatePause+6/r
-                                                                                // SNDL_SetGameState(bool,bool,float,uint,uint)+3D/w
-        bool mature;                                                // XREF: SNDL_SetGameState(bool,bool,float,uint,uint)+35/w
-        // padding byte
-        // padding byte
-};
-
-struct snd_listener // sizeof=0x3C
-{                                                                             // XREF: snd_local_t/r
-        orientation_t orient;                             // XREF: SND_UpdateVoice(snd_voice_t *,float)+743/r
-                                                                                // SND_UpdateVoice(snd_voice_t *,float)+778/r ...
-        int clientNum;                                            // XREF: SNDL_SetListener(int,int,team_t,float const * const,float const (* const)[3])+4FA/w
-                                                                                // SNDL_SetListener(int,int,team_t,float const * const,float const (* const)[3])+6AE/w
-        bool active;                                                // XREF: SND_ActiveListenerCount(void)+2B/r
-                                                                                // SND_GetListenerIndexNearestToOrigin(float const * const)+50/r ...
-        // padding byte
-        // padding byte
-        // padding byte
-        team_t team;                                                // XREF: SND_IsOnSameTeam+1F/r
-                                                                                // SNDL_SetListener(int,int,team_t,float const * const,float const (* const)[3])+6CA/w
-};
-
-struct snd_line_emitter // sizeof=0x20
-{                                                                             // XREF: snd_local_t/r
-        unsigned int id;                                        // XREF: SND_UpdateStaticSounds+3C/r
-                                                                                // SND_UpdateStaticSounds+60/r ...
-        float origin[2][3];                                 // XREF: SND_UpdateStaticSounds+BD/o
-                                                                                // SND_UpdateStaticSounds+FB/o ...
-        const snd_alias_list_t *alias;            // XREF: SND_UpdateStaticSounds+51/r
-                                                                                // SND_UpdateStaticSounds+75/w ...
-};
-
-struct snd_loop_emitter // sizeof=0x14
-{                                                                             // XREF: snd_local_t/r
-        unsigned int id;                                        // XREF: SND_UpdateStaticSounds+2B6/r
-                                                                                // SND_UpdateStaticSounds+2DA/r ...
-        float origin[3];                                        // XREF: SND_UpdateStaticSounds+3AA/o
-                                                                                // SNDL_PlayLoopAt(uint,float const * const)+88/o ...
-        const snd_alias_list_t *alias;            // XREF: SND_UpdateStaticSounds+2CB/r
-                                                                                // SND_UpdateStaticSounds+2EF/w ...
-};
-
-struct snd_snapshot_category // sizeof=0x60C
-{                                                                             // XREF: snd_local_t/r
-        snd_fader_t attenuation[64];
-        snd_fader_t occlusion[64];
-        unsigned int snapshot;                            // XREF: SNDL_SetSnapshot(snd_snapshot_type,uint,float,float)+81/w
-                                                                                // SNDL_SetSnapshot(snd_snapshot_type,uint,float,float)+C3/w
-        float length;                                             // XREF: SNDL_SetSnapshot(snd_snapshot_type,uint,float,float)+95/w
-                                                                                // SNDL_SetSnapshot(snd_snapshot_type,uint,float,float)+D7/w
-        float amount;                                             // XREF: SNDL_SetSnapshot(snd_snapshot_type,uint,float,float)+AB/w
-                                                                                // SNDL_SetSnapshot(snd_snapshot_type,uint,float,float)+ED/w
-};
-
-struct snd_dsp_meters // sizeof=0x18
-{                                                                             // XREF: snd_local_t/r
-        float p;
-        float vu;
-        float dyn1Gain;
-        float dyn1Level;
-        float dyn2Gain;
-        float dyn2Level;
-};
-
-struct snd_ent_state // sizeof=0x48
-{                                                                             // XREF: snd_local_t/r
-        SndEntHandle handle;                                // XREF: SND_FindEntState(SndEntHandle,bool)+3C1/r
-        float origin[3];
-        float velocity[3];
-        float orientation[3][3];                        // XREF: .rdata:00D146D5/o
-                                                                                // .rdata:00D148C1/o
-        unsigned int lastUsed;                            // XREF: SND_FindEntState(SndEntHandle,bool)+2C6/r
-                                                                                // SND_FindEntState(SndEntHandle,bool)+3B4/r ...
-        snd_ent_state *next;                                // XREF: SND_FindEntState(SndEntHandle,bool)+39A/r
-};
 
 struct snd_alias_name_context // sizeof=0x34
 {                                                                             // XREF: snd_command_context/r
@@ -975,15 +829,6 @@ struct snd_subtitle // sizeof=0x8
 {                                                                             // XREF: snd_notify_context/r
         unsigned int lengthMs;
         const char *subtitle;
-};
-
-struct snd_playback // sizeof=0x10
-{                                                                             // XREF: snd_local_t/r
-        int id;                                                         // XREF: SND_ResetPlaybacks(void)+25/w
-                                                                                // SND_AllocatePlayback(void)+67/r ...
-        float attenuation;                                    // XREF: SND_AllocatePlayback(void)+8F/w
-        int lengthMs;                                             // XREF: SND_AllocatePlayback(void)+9D/w
-        int playedMs;                                             // XREF: SND_AllocatePlayback(void)+AD/w
 };
 
 struct snd_playback_update // sizeof=0x10

@@ -398,7 +398,7 @@ const dvar_s *G_RegisterDvars()
                                                                  1,
                                                                  0x80u,
                                                                  "Errors out during load if paths are not connected.");
-    _Dvar_RegisterString("sv_mapname", (char *)&toastPopupTitle, 0x44u, "The current map name");
+    _Dvar_RegisterString("sv_mapname", (char *)"", 0x44u, "The current map name");
     g_gametype = _Dvar_RegisterString("g_gametype", "tdm", 0x24u, "The current campaign");
     g_synchronousClients = _Dvar_RegisterBool(
                                                      "g_synchronousClients",
@@ -412,8 +412,8 @@ const dvar_s *G_RegisterDvars()
                                                             1u,
                                                             "Enable logging with time stamps in seconds since UTC 1/1/1970");
     g_logSync = _Dvar_RegisterBool("g_logSync", 0, 1u, "Enable synchronous logging");
-    g_password = _Dvar_RegisterString("g_password", (char *)&toastPopupTitle, 0, "Password");
-    g_banIPs = _Dvar_RegisterString("g_banIPs", (char *)&toastPopupTitle, 1u, "IP addresses to ban from playing");
+    g_password = _Dvar_RegisterString("g_password", (char *)"", 0, "Password");
+    g_banIPs = _Dvar_RegisterString("g_banIPs", (char *)"", 1u, "IP addresses to ban from playing");
     g_speed = _Dvar_RegisterInt("g_speed", 190, 0x80000000, 0x7FFFFFFF, 0, "Player speed");
     g_knockback = _Dvar_RegisterFloat("g_knockback", 1000.0, -3.4028235e38, 3.4028235e38, 0, "Maximum knockback");
     g_maxDroppedWeapons = _Dvar_RegisterInt("g_maxDroppedWeapons", 16, 2, 32, 0, "Maximum number of dropped weapons");
@@ -428,7 +428,7 @@ const dvar_s *G_RegisterDvars()
     g_debugBullets = _Dvar_RegisterInt("g_debugBullets", 0, -3, 6, 0x80u, "Show debug information for bullets");
     g_vehicleDrawPath = _Dvar_RegisterString(
                                                 "g_vehicleDrawPath",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0x80u,
                                                 "Turn on debug information for vehicle paths");
     ai_enableBadPlaces = _Dvar_RegisterBool("ai_enableBadPlaces", 1, 0, "toggle badplaces system on/off");
@@ -826,7 +826,7 @@ const dvar_s *G_RegisterDvars()
                                                             32,
                                                             0,
                                                             "Show debug information for playeranim.script");
-    g_motd = _Dvar_RegisterString("g_motd", (char *)&toastPopupTitle, 0, "The message of the day");
+    g_motd = _Dvar_RegisterString("g_motd", (char *)"", 0, "The message of the day");
     g_playerCollisionEjectSpeed = _Dvar_RegisterInt(
                                                                     "g_playerCollisionEjectSpeed",
                                                                     25,
@@ -916,12 +916,12 @@ const dvar_s *G_RegisterDvars()
                                             "Shader name for the axis scores banner");
     g_TeamIcon_Free = _Dvar_RegisterString(
                                             "g_TeamIcon_Free",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0x100u,
                                             "Shader name for the scores of players with no team");
     g_TeamIcon_Spectator = _Dvar_RegisterString(
                                                      "g_TeamIcon_Spectator",
-                                                     (char *)&toastPopupTitle,
+                                                     (char *)"",
                                                      0x100u,
                                                      "Shader name for the scores of players who are spectators");
     g_ScoresColor_MyTeam = _Dvar_RegisterColor(
@@ -1945,7 +1945,7 @@ LABEL_9:
             level.voteExecuteTime = level.time + 3000;
 LABEL_13:
             level.voteTime = 0;
-            SV_SetConfigstring(15, (char *)&toastPopupTitle);
+            SV_SetConfigstring(15, (char *)"");
             return;
         }
         passCount = level.numVotingClients / 2 + 1;
@@ -2674,7 +2674,7 @@ void    G_RunFrame(__m128 a1@<xmm0>, int levelTime)
     }
     *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) = 0;
     ShowEntityInfo();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     GlassSv_Update();
     LiveSteam_Server_RunCallbacks();
 }
@@ -3033,7 +3033,7 @@ bool __cdecl G_IsEntWalkable(int localClientNum, int entityNum)
     return g_entities[entityNum].client == 0;
 }
 
-char __cdecl G_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles)
+bool __cdecl G_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles)
 {
     gentity_s *ent; // [esp+8h] [ebp-4h]
 

@@ -1,5 +1,10 @@
 #pragma once
 
+#include "DynEntity_gamestate.h"
+#include <universal/q_shared.h>
+#include <qcommon/cm_trace.h>
+
+
 void __cdecl DynEntSv_RegisterDvars();
 void __cdecl DynEntSv_InitEntities();
 void __cdecl DynEntSv_LinkModel(unsigned __int16 dynEntId);

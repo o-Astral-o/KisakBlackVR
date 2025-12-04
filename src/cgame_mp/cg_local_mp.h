@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <universal/assertive.h>
 #include <universal/q_shared.h>
+#include <cgame/cg_visionsets.h>
+#include <gfx_d3d/r_gfx.h>
 
 enum DemoType : __int32
 {                                                                             // XREF: cg_s/r
@@ -317,6 +319,113 @@ struct __declspec(align(16)) refdef_s // sizeof=0x18510
         // padding byte
         // padding byte
         // padding byte
+};
+
+enum CameraMode : __int32
+{                                       // XREF: Camera/r
+                                        // CG_CalcViewValues/r ...
+    CAM_NORMAL              = 0x0,
+    CAM_LINKED              = 0x1,
+    CAM_VEHICLE             = 0x2,
+    CAM_VEHICLE_THIRDPERSON = 0x3,
+    CAM_VEHICLE_GUNNER      = 0x4,
+    CAM_TURRET              = 0x5,
+    CAM_MISSILE             = 0x6,
+    CAM_EXTRACAM            = 0x7,
+    CAM_RADIANT             = 0x8,
+    CAM_TOP_DOWN            = 0x9,
+};
+
+struct ScriptCamera // sizeof=0x30
+{                                       // XREF: Camera/r
+    int flags;
+    float origin[3];
+    float angles[3];
+    float lookat[3];
+    int originCent;
+    int lookAtCent;
+};
+
+struct __declspec(align(4)) Camera // sizeof=0xAC
+{                                       // XREF: cg_s/r
+    float lastViewOrg[3];
+    float lastViewAngles[3];
+    float lastFOV;
+    int lastViewInputTime;
+    float lastSpringOffset;
+    float lastViewTraceFraction;
+    int lastTime;
+    int lastClientNum;
+    float tweenStartOrg[3];
+    float tweenStartAngles[3];
+    float tweenStartFOV;
+    int tweenStartTime;
+    float tweenDuration;
+    CameraMode lastCamMode;
+    int lastVehicleInfoIndex;
+    int lastVehicleSeatPos;
+    float missileViewAngles[3];
+    bool missileWasKillCam;
+    // padding byte
+    // padding byte
+    // padding byte
+    ScriptCamera scriptCam;
+    int extraCamEntNum;
+    float extraCamFov;
+    bool useTagCamera;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+enum InvalidCmdHintType : __int32
+{                                       // XREF: cg_s/r
+                                        // CG_SetInvalidCmdHint/r
+    INVALID_CMD_NONE                 = 0x0,
+    INVALID_CMD_NO_AMMO_BULLETS      = 0x1,
+    INVALID_CMD_NO_AMMO_FRAG_GRENADE = 0x2,
+    INVALID_CMD_NO_AMMO_SPECIAL_GRENADE = 0x3,
+    INVALID_CMD_NO_AMMO_FLASH_GRENADE = 0x4,
+    INVALID_CMD_NO_AMMO_EQUIPMENT    = 0x5,
+    INVALID_CMD_STAND_BLOCKED        = 0x6,
+    INVALID_CMD_CROUCH_BLOCKED       = 0x7,
+    INVALID_CMD_TARGET_TOO_CLOSE     = 0x8,
+    INVALID_CMD_LOCKON_REQUIRED      = 0x9,
+    INVALID_CMD_NOT_ENOUGH_CLEARANCE = 0xA,
+    INVALID_CMD_CANT_PLACE_TURRET    = 0xB,
+    INVALID_CMD_CANT_EQUIP_WHILE_PRONE = 0xC,
+    INVALID_CMD_CANT_PLANT_EQUIPMENT = 0xD,
+};
+
+enum SuccessfulCmdHintType : __int32
+{                                       // XREF: cg_s/r
+    SUCCESSFUL_CMD_NONE             = 0x0,
+    SUCCESSFUL_CMD_GOD_MODE_ON      = 0x1,
+    SUCCESSFUL_CMD_GOD_MODE_OFF     = 0x2,
+    SUCCESSFUL_CMD_DEMIGOD_MODE_ON  = 0x3,
+    SUCCESSFUL_CMD_DEMIGOD_MODE_OFF = 0x4,
+    SUCCESSFUL_CMD_UFO_ON           = 0x5,
+    SUCCESSFUL_CMD_UFO_OFF          = 0x6,
+    SUCCESSFUL_CMD_WEAPNEXT         = 0x7,
+    SUCCESSFUL_CMD_WEAPPREV         = 0x8,
+    SUCCESSFUL_CMD_GIVE_ALL         = 0x9,
+    SUCCESSFUL_CMD_CAMLOCK_ON       = 0xA,
+    SUCCESSFUL_CMD_CAMLOCK_OFF      = 0xB,
+    SUCCESSFUL_CMD_LOOKSPRING_ON    = 0xC,
+    SUCCESSFUL_CMD_LOOKSPRING_OFF   = 0xD,
+};
+
+struct viewDirectionalHitIndicator_t // sizeof=0x10
+{                                       // XREF: cg_s/r
+    int time;
+    float entOrigin[3];
+};
+
+struct viewDamage_t // sizeof=0xC
+{                                       // XREF: cg_s/r
+    int time;
+    int duration;
+    float yaw;
 };
 
 struct __declspec(align(128)) cg_s // sizeof=0x71C80

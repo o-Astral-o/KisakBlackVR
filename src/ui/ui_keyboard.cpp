@@ -85,7 +85,7 @@ void __cdecl UI_KeyboardComplete(int localClientNum)
     int localControllerIndex; // [esp+414h] [ebp-4h]
 
     errorReported = 0;
-    errorString = (char *)&toastPopupTitle;
+    errorString = (char *)"";
     String = Dvar_GetString("ui_keyboard_dvar_new");
     Com_sprintf(textReturned, 0x400u, "%s", String);
     if ( UI_VerifyString(textReturned) )

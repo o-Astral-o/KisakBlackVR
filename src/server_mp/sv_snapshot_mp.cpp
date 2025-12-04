@@ -217,7 +217,7 @@ void __cdecl SV_EmitPacketEntities(
     {
         SV_EmitPacketEntities_GetOldEnt(newindex, to_num_entities, to_first_entity, &newent, &newnum);
         SV_EmitPacketEntities_GetOldEnt(oldindex, from_num_entities, from_first_entity, &oldent, &oldnum);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         if ( newnum <= oldnum )
         {
             number = newent->number;
@@ -259,7 +259,7 @@ void __cdecl SV_EmitPacketEntities(
         {
             MSG_WriteEntity(snapInfo, msg, svsHeader.time, (entityState_s *)oldent, newent, DELTA_FLAGS_NONE);
             if ( newent )
-                v8 = &toastPopupTitle;
+                v8 = "";
             else
                 v8 = " (remove)";
             if ( newent )
@@ -309,7 +309,7 @@ void __cdecl SV_EmitPacketEntities(
             MSG_WriteEntity(snapInfo, msg, svsHeader.time, (entityState_s *)baseline, newent, DELTA_FLAGS_FORCE);
             snapInfo->fromBaseline = 0;
             if ( newent )
-                v7 = &toastPopupTitle;
+                v7 = "";
             else
                 v7 = " (remove)";
             if ( newent )
@@ -430,7 +430,7 @@ void __cdecl SV_EmitPacketClients(
                     }
                     SV_EmitPacketClients_GetOldClient(newindex, to_num_clients, to_first_client, &newclient, &newnum);
                     SV_EmitPacketClients_GetOldClient(oldindex, from_num_clients, from_first_client, &oldclient, &oldnum);
-                    BLOPS_NULLSUB();
+                    //BLOPS_NULLSUB();
                     if ( newnum != oldnum )
                         break;
                     MSG_WriteDeltaClient(snapInfo, msg, svsHeader.time, (clientState_s *)oldclient, (clientState_s *)newclient, 0);

@@ -1,4 +1,7 @@
 #pragma once
+#include "assertive.h"
+
+#include <math.h>
 
 #define MAX_11BIT_FLT 0.99951172f // not a real name
 
@@ -217,11 +220,65 @@ void __cdecl Vec3Lerp(const float *start, const float *end, float fraction, floa
 float __cdecl Vec3DistanceSq(const float *p1, const float *p2);
 float __cdecl Vec3Normalize(float *v);
 float __cdecl Vec2Normalize(float *v);
+void __cdecl Vec3Cross(const float *v0, const float *v1, float *cross);
 
 float AngleNormalize180(float angle);
 
 float    __cdecl Abs(const float *v);
 
+/*
+===========================================================================
+Copyright (C) 1999-2005 Id Software, Inc.
+
+This file is part of Quake III Arena source code.
+
+Quake III Arena source code is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+Quake III Arena source code is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Foobar; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+===========================================================================
+*/
+inline float __cdecl Q_rsqrt(float number)
+{
+    iassert(number);
+    iassert(!isnan(number));
+
+    union standards_compliant_fp_bit_hack {
+        int i;
+        float f;
+    };
+
+    standards_compliant_fp_bit_hack v;
+    float x2, y;
+    const float threehalfs = 1.5F;
+
+    x2 = number * 0.5F;
+    y = number;
+    v.f = y;						// evil floating point bit level hacking
+    v.i = 0x5f3759df - (v.i >> 1);               // what the fuck?
+    y = v.f;
+    y = y * (threehalfs - (x2 * y * y));   // 1st iteration
+    //	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+
+    // TODO: use rsqrtss instead since it's not 1990 anymore
+    return y;
+}
+
+float Q_fabs(float f);
+
+#define I_rsqrt Q_rsqrt
+#define I_fabs Q_fabs
+
+#define IS_NAN(x) (isnan(x))
 
 constexpr float vec2_origin[2] = { 0.0, 0.0 };
 constexpr float vec3_origin[3] = { 0.0, 0.0, 0.0 };

@@ -9,8 +9,8 @@ int __cdecl UI_GameVariants_GetClassParameters()
     numClasses = 0;
     for ( c = 0; c < 0xA; ++c )
     {
-        classParamValues[c].m_displayValue = &toastPopupTitle;
-        dword_98A592C[2 * c] = (int)&toastPopupTitle;
+        classParamValues[c].m_displayValue = "";
+        dword_98A592C[2 * c] = (int)"";
     }
     if ( UI_Gametype_IsUsingCustom() && Dvar_GetInt(custom_class_mode) )
     {
@@ -767,7 +767,7 @@ char *__cdecl GetItemGroupDisplayValue(itemGroup_t itemGroup, const char *value)
             return UI_SafeTranslateString(ItemName);
         }
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 char *__cdecl UI_FeederItemText_GameVariantRules(int index, int column)
@@ -778,7 +778,7 @@ char *__cdecl UI_FeederItemText_GameVariantRules(int index, int column)
 
     rule = GetRuleForFeederIndex(index);
     if ( !rule )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     switch ( column )
     {
         case 0:
@@ -804,7 +804,7 @@ char *__cdecl UI_FeederItemText_GameVariantRules(int index, int column)
                 result = UI_SafeTranslateString("MPUI_NONE");
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -820,7 +820,7 @@ char *__cdecl UI_GV_GetRuleParamDisplayValue(GVRule *rule)
     switch ( action->m_parameterType )
     {
         case 0u:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 1u:
         case 2u:
@@ -833,7 +833,7 @@ char *__cdecl UI_GV_GetRuleParamDisplayValue(GVRule *rule)
             }
             else
             {
-                result = (char *)&toastPopupTitle;
+                result = (char *)"";
             }
             break;
         case 4u:
@@ -846,7 +846,7 @@ char *__cdecl UI_GV_GetRuleParamDisplayValue(GVRule *rule)
             result = GetItemGroupDisplayValue(ITEMGROUP_GLOBAL_ITEMS_START, rule->parameter.value);
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -873,9 +873,9 @@ char *__cdecl UI_FeederItemText_GameVariantEvents(int index, int column)
     int EventIndexFromFeederIndex; // eax
 
     if ( index < 0 || index >= UI_GetGVEventCount() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     EventIndexFromFeederIndex = GetEventIndexFromFeederIndex(index);
     return UI_SafeTranslateString(gvEvents[EventIndexFromFeederIndex].m_name);
 }
@@ -885,9 +885,9 @@ char *__cdecl UI_FeederItemText_GameVariantActions(int index, int column)
     int ActionIndexFromFeederIndex; // eax
 
     if ( index < 0 || index >= UI_GetGVActionCount() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     ActionIndexFromFeederIndex = GetActionIndexFromFeederIndex(index);
     return UI_SafeTranslateString(gvActions[ActionIndexFromFeederIndex].m_name);
 }
@@ -897,14 +897,14 @@ char *__cdecl UI_FeederItemText_GameVariantTargets(int index, int column)
     GVTarget *target; // [esp+0h] [ebp-4h]
 
     if ( index < 0 || index >= UI_GetGVTargetCount() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     target = GetTargetAtFeederIndex(index);
     if ( target )
         return UI_SafeTranslateString(target->m_name);
     else
-        return (char *)&toastPopupTitle;
+        return (char *)"";
 }
 
 GVTarget *__cdecl GetTargetAtFeederIndex(int feederIndex)
@@ -919,9 +919,9 @@ char *__cdecl UI_FeederItemText_GameVariantParams(int index, int column)
     GVAction *action; // [esp+0h] [ebp-4h]
 
     if ( index < 0 || index >= UI_GetGVParamCount() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     action = GetActionByDvarIndex("ui_gv_action_index");
     if ( action->m_parameterType == 6 || action->m_parameterType == 7 )
     {
@@ -935,7 +935,7 @@ char *__cdecl UI_FeederItemText_GameVariantParams(int index, int column)
     }
     else
     {
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     }
 }
 
@@ -944,9 +944,9 @@ char *__cdecl UI_FeederItemText_GameVariantCondLhs(int index, int column)
     GVConditionalLhs *lhs; // [esp+0h] [ebp-4h]
 
     if ( index < 0 || index >= UI_GetGVCondLhsCount() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     lhs = GetCondLhsForFeederIndex(index);
     return UI_SafeTranslateString(lhs->m_displayName);
 }
@@ -954,9 +954,9 @@ char *__cdecl UI_FeederItemText_GameVariantCondLhs(int index, int column)
 char *__cdecl UI_FeederItemText_GameVariantCondOp(int index, int column)
 {
     if ( index < 0 || index >= UI_GetGVCondOpCount() )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     return UI_SafeTranslateString(gvCondOpValues[index].m_displayValue);
 }
 
@@ -966,9 +966,9 @@ char *__cdecl UI_FeederItemText_GameVariantCondRhs(int index, int column)
 
     lhs = GetCondLhsForDvarIndex("ui_gv_condlhs_index");
     if ( index < 0 || index >= lhs->m_rhs.m_valuesSize )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     if ( column )
-        return (char *)&toastPopupTitle;
+        return (char *)"";
     return UI_SafeTranslateString(lhs->m_rhs.m_values[index].m_displayValue);
 }
 
@@ -1006,7 +1006,7 @@ char *__cdecl UI_FeederItemText_GameVariants(float feederID, int index, int colu
             result = UI_FeederItemText_GameVariantRules(index, 1);
             break;
         default:
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -1045,21 +1045,21 @@ void __cdecl UI_FeederSelection_GameVariantRules(int contextIndex, int index)
         Menu_SetFeederSelection(0, &dc->uiDC, 0, 37, rule->rules[0].m_conditional.m_rhsIndex, "popup_gv_select_cond");
         if ( !rule->rules[0].m_conditional.hasConditional )
         {
-            Dvar_SetStringByName("ui_gv_condlhs", (char *)&toastPopupTitle);
-            Dvar_SetStringByName("ui_gv_condop", (char *)&toastPopupTitle);
-            Dvar_SetStringByName("ui_gv_condrhs", (char *)&toastPopupTitle);
+            Dvar_SetStringByName("ui_gv_condlhs", (char *)"");
+            Dvar_SetStringByName("ui_gv_condop", (char *)"");
+            Dvar_SetStringByName("ui_gv_condrhs", (char *)"");
         }
         s_isFeederSelectionFromPopupStart = 0;
     }
     else
     {
-        Dvar_SetStringByName("ui_gv_event", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("ui_gv_action", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("ui_gv_target", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("ui_gv_param", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("ui_gv_condlhs", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("ui_gv_condop", (char *)&toastPopupTitle);
-        Dvar_SetStringByName("ui_gv_condrhs", (char *)&toastPopupTitle);
+        Dvar_SetStringByName("ui_gv_event", (char *)"");
+        Dvar_SetStringByName("ui_gv_action", (char *)"");
+        Dvar_SetStringByName("ui_gv_target", (char *)"");
+        Dvar_SetStringByName("ui_gv_param", (char *)"");
+        Dvar_SetStringByName("ui_gv_condlhs", (char *)"");
+        Dvar_SetStringByName("ui_gv_condop", (char *)"");
+        Dvar_SetStringByName("ui_gv_condrhs", (char *)"");
         Dvar_SetIntByName("ui_gv_event_index", 0);
         Dvar_SetIntByName("ui_gv_action_index", 0);
         Dvar_SetIntByName("ui_gv_target_index", 0);
@@ -1167,7 +1167,7 @@ void __cdecl UI_FeederSelection_GameVariantAction(int localClientNum, int contex
     {
         dc = UI_UIContext_GetInfo(contextIndex);
         Menu_SetFeederSelection(localClientNum, &dc->uiDC, 0, 42, 0, "popup_gv_select_param");
-        Dvar_SetStringByName("ui_gv_param", (char *)&toastPopupTitle);
+        Dvar_SetStringByName("ui_gv_param", (char *)"");
         Dvar_SetIntByName("ui_gv_param_index", 0);
     }
     actionName = UI_FeederItemText_GameVariantActions(index, 0);

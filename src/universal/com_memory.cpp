@@ -1,4 +1,32 @@
 #include "com_memory.h"
+#include "assertive.h"
+
+#include <Windows.h> // VirtualAlloc
+#include <win32/win_main.h>
+#include <qcommon/threads.h>
+#include <win32/win_shared.h>
+#include "com_files.h"
+#include <qcommon/common.h>
+#include <qcommon/mem_track.h>
+#include <gfx_d3d/r_reflection_probe.h>
+#include <qcommon/cmd.h>
+#include <database/db_registry.h>
+#include <gfx_d3d/r_image.h>
+#include <xanim/xmodel.h>
+#include <clientscript/cscr_stringlist.h>
+
+hunkUsed_t hunk_low;
+unsigned __int8 *s_hunkData;
+int s_hunkTotal;
+hunkUsed_t hunk_high;
+unsigned __int8 *s_origHunkData;
+fileData_s *com_fileDataHashTable[1024];
+fileData_s *com_hunkData;
+
+
+
+
+
 
 void *__cdecl Z_VirtualReserve(int size)
 {
@@ -81,60 +109,62 @@ void __cdecl Z_VirtualCommitInternal(void *ptr, int size)
 void Com_TouchMemory()
 {
     int sum; // [esp+4h] [ebp-10h]
-    unsigned intstart; // [esp+8h] [ebp-Ch]
-    unsigned intend; // [esp+Ch] [ebp-8h]
+    DWORD start; // [esp+8h] [ebp-Ch]
+    DWORD end; // [esp+Ch] [ebp-8h]
     int i; // [esp+10h] [ebp-4h]
     int ia; // [esp+10h] [ebp-4h]
 
-    if ( !Sys_IsMainThread()
+    if (!Sys_IsMainThread()
         && !Sys_IsRenderThread()
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
-                    518,
-                    0,
-                    "%s",
-                    "Sys_IsMainThread() || Sys_IsRenderThread()") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
+            518,
+            0,
+            "%s",
+            "Sys_IsMainThread() || Sys_IsRenderThread()"))
     {
         __debugbreak();
     }
     start = Sys_Milliseconds();
     sum = 0;
-    for ( i = 0; i < hunk_low.permanent >> 2; i += 64 )
-        sum += *(unsigned int *)&s_hunkData[4 * i];
-    for ( ia = (s_hunkTotal - hunk_high.permanent) >> 2; ia < hunk_high.permanent >> 2; ia += 64 )
-        sum += *(unsigned int *)&s_hunkData[4 * ia];
+    for (i = 0; i < hunk_low.permanent >> 2; i += 64)
+        sum += *(_DWORD *)&s_hunkData[4 * i];
+    for (ia = (s_hunkTotal - hunk_high.permanent) >> 2; ia < hunk_high.permanent >> 2; ia += 64)
+        sum += *(_DWORD *)&s_hunkData[4 * ia];
     end = Sys_Milliseconds();
     Com_Printf(16, "Com_TouchMemory: %i msec. Using sum: %d\n", end - start, sum);
 }
 
+cmd_function_s Com_AllMemInfo_f_VAR;
+cmd_function_s Com_TempMeminfo_f_VAR;
 void Com_InitHunkMemory()
 {
-    if ( !Sys_IsMainThread()
+    if (!Sys_IsMainThread()
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
-                    548,
-                    0,
-                    "%s",
-                    "Sys_IsMainThread()") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
+            548,
+            0,
+            "%s",
+            "Sys_IsMainThread()"))
     {
         __debugbreak();
     }
-    if ( s_hunkData
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp", 549, 0, "%s", "!s_hunkData") )
+    if (s_hunkData
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp", 549, 0, "%s", "!s_hunkData"))
     {
         __debugbreak();
     }
-    if ( FS_LoadStack() )
-        Com_Error(ERR_FATAL, &byte_D07B54);
-    if ( !useFastFile->current.enabled )
-        s_hunkTotal = (int)&gScrStringHashTable[2768];
-    if ( useFastFile->current.enabled )
-        s_hunkTotal = (int)&cg_bgsAnim.animScriptData.scriptItems[416].commands[0].tagName;
+    if (FS_LoadStack())
+        Com_Error(ERR_FATAL, "Hunk initialization failed. File system load stack not zero");
+    if (!useFastFile->current.enabled)
+        s_hunkTotal = 0xA000000;
+    if (useFastFile->current.enabled)
+        s_hunkTotal = 0xF00000;
     R_ReflectionProbeRegisterDvars();
-    if ( r_reflectionProbeGenerate->current.enabled )
-        s_hunkTotal = 314572800;
+    if (r_reflectionProbeGenerate->current.enabled)
+        s_hunkTotal = 0x12C00000;
     s_hunkData = (unsigned __int8 *)Z_VirtualReserve(s_hunkTotal);
-    if ( !s_hunkData )
+    if (!s_hunkData)
         Sys_OutOfMemErrorInternal("C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp", 596);
     s_origHunkData = s_hunkData;
     track_set_hunk_size(s_hunkTotal);
@@ -730,7 +760,7 @@ unsigned __int8 *__cdecl Hunk_AllocAlign(unsigned int size, int alignment, const
     if ( hunk_high.permanent + hunk_low.temp > s_hunkTotal )
     {
         track_PrintAllInfo();
-        Com_Error(ERR_DROP, &byte_D07CE0, size, s_hunkTotal / 0x100000, hunk_low.temp / 0x100000, hunk_high.temp / 0x100000);
+        Com_Error(ERR_DROP, "Hunk_AllocAlign failed on %i bytes (total %i MB, low %i MB, high %i MB)", size, s_hunkTotal / 0x100000, hunk_low.temp / 0x100000, hunk_high.temp / 0x100000);
     }
     buf = &s_hunkData[s_hunkTotal - hunk_high.permanent];
     if ( (alignmenta & (unsigned int)buf) != 0
@@ -776,7 +806,7 @@ unsigned int __cdecl Hunk_AllocateTempMemoryHigh(int size, const char *name)
     if ( hunk_high.temp + hunk_low.temp > s_hunkTotal )
     {
         track_PrintAllInfo();
-        Com_Error(ERR_DROP, &byte_D07D88, size, s_hunkTotal / 0x100000, hunk_low.temp / 0x100000, hunk_high.temp / 0x100000);
+        Com_Error(ERR_DROP, "Hunk_AllocateTempMemoryHigh: failed on %i bytes (total %i MB, low %i MB, high %i MB)", size, s_hunkTotal / 0x100000, hunk_low.temp / 0x100000, hunk_high.temp / 0x100000);
     }
     buf = (unsigned int)&s_hunkData[s_hunkTotal - hunk_high.temp];
     if ( (((_BYTE)s_hunkTotal + (_BYTE)s_hunkData - LOBYTE(hunk_high.temp)) & 0xF) != 0
@@ -897,7 +927,7 @@ unsigned __int8 *__cdecl Hunk_AllocLowAlign(unsigned int size, int alignment, co
     if ( hunk_high.temp + hunk_low.permanent > s_hunkTotal )
     {
         track_PrintAllInfo();
-        Com_Error(ERR_DROP, &byte_D07DE0, size, s_hunkTotal / 0x100000, hunk_low.temp / 0x100000, hunk_high.temp / 0x100000);
+        Com_Error(ERR_DROP, "Hunk_AllocLowAlign failed on %i bytes (total %i MB, low %i MB, high %i MB)", size, s_hunkTotal / 0x100000, hunk_low.temp / 0x100000, hunk_high.temp / 0x100000);
     }
     commitSize = ((unsigned int)&s_hunkData[hunk_low.permanent + 4095] & 0xFFFFF000) - (unsigned int)beginBuf;
     if ( commitSize )
@@ -941,7 +971,7 @@ unsigned int *__cdecl Hunk_AllocateTempMemory(int size, const char *name)
         track_PrintAllInfo();
         Com_Error(
             ERR_DROP,
-            &byte_D07E30,
+            "Hunk_AllocateTempMemory: failed on %i bytes (total %i MB, low %i MB, high %i MB), needs %i more hunk bytes",
             sizea,
             s_hunkTotal / 0x100000,
             hunk_low.temp / 0x100000,
@@ -963,7 +993,7 @@ unsigned int *__cdecl Hunk_AllocateTempMemory(int size, const char *name)
     commitSize = ((unsigned int)&s_hunkData[hunk_low.temp + 4095] & 0xFFFFF000) - (unsigned int)beginBuf;
     if ( commitSize )
         Z_VirtualCommit((char *)beginBuf, commitSize, 11);
-    hdr->magic = -1991018350;
+    hdr->magic = 0x89537892;
     hdr->size = hunk_low.temp - prev_temp;
     track_temp_alloc(hdr->size, hunk_high.temp + hunk_low.temp, hunk_low.permanent, name);
     hdr->name = name;
@@ -976,32 +1006,32 @@ void __cdecl Hunk_FreeTempMemory(char *buf)
     unsigned __int8 *endBuf; // [esp+4h] [ebp-Ch]
     unsigned __int8 *beginBuf; // [esp+Ch] [ebp-4h]
 
-    if ( !Sys_IsMainThread()
+    if (!Sys_IsMainThread()
         && !Sys_IsRenderThread()
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
-                    1583,
-                    0,
-                    "%s",
-                    "Sys_IsMainThread() || Sys_IsRenderThread()") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
+            1583,
+            0,
+            "%s",
+            "Sys_IsMainThread() || Sys_IsRenderThread()"))
     {
         __debugbreak();
     }
-    if ( s_hunkData )
+    if (s_hunkData)
     {
-        if ( !buf && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp", 1600, 0, "%s", "buf") )
+        if (!buf && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp", 1600, 0, "%s", "buf"))
             __debugbreak();
         hdr = (hunkHeader_t *)(buf - 16);
-        if ( *((unsigned int *)buf - 4) != -1991018350 )
-            Com_Error(ERR_FATAL, &byte_D07EEC);
-        hdr->magic = -1991018349;
-        if ( hdr != (hunkHeader_t *)&s_hunkData[(hunk_low.temp - hdr->size + 15) & 0xFFFFFFF0]
+        if (*((_DWORD *)buf - 4) != 0x89537892)
+            Com_Error(ERR_FATAL, "Hunk_FreeTempMemory: bad magic");
+        hdr->magic = 0x89537893;
+        if (hdr != (hunkHeader_t *)&s_hunkData[(hunk_low.temp - hdr->size + 15) & 0xFFFFFFF0]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
-                        1609,
-                        0,
-                        "%s",
-                        "hdr == (void *)( s_hunkData + ((hunk_low.temp - hdr->size + 15) & ~15) )") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\universal\\com_memory.cpp",
+                1609,
+                0,
+                "%s",
+                "hdr == (void *)( s_hunkData + ((hunk_low.temp - hdr->size + 15) & ~15) )"))
         {
             __debugbreak();
         }
@@ -1009,7 +1039,7 @@ void __cdecl Hunk_FreeTempMemory(char *buf)
         hunk_low.temp -= hdr->size;
         track_temp_free(hdr->size, hunk_low.permanent, hdr->name);
         beginBuf = (unsigned __int8 *)((unsigned int)&s_hunkData[hunk_low.temp + 4095] & 0xFFFFF000);
-        if ( endBuf != beginBuf )
+        if (endBuf != beginBuf)
             Z_VirtualDecommit((char *)beginBuf, endBuf - beginBuf, 11);
     }
     else
@@ -1058,7 +1088,7 @@ void __cdecl Com_TempMeminfo_f()
     {
         __debugbreak();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Com_Printf(0, "Related commands: meminfo, imagelist, gfx_world, gfx_model, cg_drawfps, com_statmon, tempmeminfo\n");
 }
 

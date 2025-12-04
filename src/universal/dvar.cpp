@@ -105,7 +105,7 @@ const char *__cdecl Dvar_EnumToString(const dvar_s *dvar)
     if ( dvar->domain.enumeration.stringCount )
         return *(const char **)(dvar->domain.integer.max + 4 * dvar->current.integer);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Dvar_IndexStringToEnumString(const dvar_s *dvar, const char *indexString)
@@ -155,18 +155,18 @@ const char *__cdecl Dvar_IndexStringToEnumString(const dvar_s *dvar, const char 
         __debugbreak();
     }
     if ( !dvar->domain.enumeration.stringCount )
-        return &toastPopupTitle;
+        return "";
     v3 = strlen(indexString);
     for ( indexStringIndex = 0; indexStringIndex < v3; ++indexStringIndex )
     {
         if ( !isdigit(indexString[indexStringIndex]) )
-            return &toastPopupTitle;
+            return "";
     }
     enumIndex = atoi(indexString);
     if ( enumIndex >= 0 && enumIndex < dvar->domain.enumeration.stringCount )
         return *(const char **)(dvar->domain.integer.max + 4 * enumIndex);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Dvar_DisplayableValue(const dvar_s *dvar)
@@ -224,7 +224,7 @@ const char *__cdecl Dvar_ValueToString(const dvar_s *dvar, DvarValue value)
             if ( dvar->domain.enumeration.stringCount )
                 result = *(const char **)(dvar->domain.integer.max + 4 * value.integer);
             else
-                result = &toastPopupTitle;
+                result = "";
             break;
         case DVAR_TYPE_STRING:
             if ( !value.integer
@@ -255,7 +255,7 @@ const char *__cdecl Dvar_ValueToString(const dvar_s *dvar, DvarValue value)
             v3 = va("unhandled dvar type '%i'", dvar->type);
             if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 322, 1, v3) )
                 __debugbreak();
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -1108,7 +1108,7 @@ const char *__cdecl Dvar_GetString(const char *dvarName)
 
     dvar = Dvar_FindVar(dvarName);
     if ( !dvar )
-        return &toastPopupTitle;
+        return "";
     if ( dvar->type != DVAR_TYPE_STRING
         && dvar->type != DVAR_TYPE_ENUM
         && !Assert_MyHandler(
@@ -1135,7 +1135,7 @@ const char *__cdecl Dvar_GetVariantString(const char *dvarName)
     if ( dvar )
         return Dvar_ValueToString(dvar, dvar->current);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 const char *__cdecl Dvar_GetVariantString(int dvarHash)
@@ -1146,7 +1146,7 @@ const char *__cdecl Dvar_GetVariantString(int dvarHash)
     if ( dvar )
         return Dvar_ValueToString(dvar, dvar->current);
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 void __cdecl Dvar_GetUnpackedColor(const dvar_s *dvar, float *expandedColor)
@@ -2540,7 +2540,7 @@ const dvar_s *__cdecl _Dvar_RegisterLinearRGB(
 }
 
 const dvar_s *__cdecl _Dvar_RegisterColorXYZ(
-                char *dvarName,
+                const char *dvarName,
                 unsigned int x,
                 unsigned int y,
                 unsigned int z,

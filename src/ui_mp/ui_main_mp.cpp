@@ -56,7 +56,7 @@ void __cdecl UI_Project_RegisterDvars()
     ui_allow_teamchange = _Dvar_RegisterBool("ui_allow_teamchange", 0, 0, "Whether the UI should allow changing team");
     ui_map_killstreak = _Dvar_RegisterString(
                                                 "ui_map_killstreak",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0,
                                                 "Reference of the killstreak that requires map placement.");
     ui_hud_visible = _Dvar_RegisterBool("ui_hud_visible", 1, 0x80u, "Whether the 2D HUD should be displayed or not.");
@@ -84,7 +84,7 @@ void __cdecl UI_Project_RegisterDvars()
                                                         "Whether an item has just been purchased and the item list needs to be closed.");
     ui_classesCurrentItemEquippedIn = _Dvar_RegisterString(
                                                                             "ui_classesCurrentItemEquippedIn",
-                                                                            (char *)&toastPopupTitle,
+                                                                            (char *)"",
                                                                             0,
                                                                             "The name of the class in which the currently selected item is equipped.");
     ui_heatMapColor = _Dvar_RegisterColor("ui_heatMapColor", 1.0, 0.0, 0.0, 1.0, 0, "Heat Map Blob Color");
@@ -614,7 +614,7 @@ void __cdecl UI_Project_OwnerDraw(
         switch ( ownerDraw )
         {
             case 131:
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 break;
             case 133:
                 UI_DrawBlurMaterial(contextIndex, &rect, color);
@@ -2274,7 +2274,7 @@ void __cdecl UI_Project_RunMenuScript(
                     }
                     else
                     {
-                        Dvar_SetStringByName("com_errorMessage", (char *)&toastPopupTitle);
+                        Dvar_SetStringByName("com_errorMessage", (char *)"");
                         Dvar_SetBoolByName("com_isNotice", 0);
                         if ( CL_GetLocalClientConnectionState(localClientNum) > 0 )
                             Key_RemoveCatcher(localClientNum, -17);
@@ -2316,7 +2316,7 @@ void __cdecl UI_RunMenuScript_StartListenServer()
     Dvar_SetStringByName("sv_mapRotationCurrent", v1);
     for ( value = UI_GetMapRotationToken(); value && I_strcmp(value->token, map); value = UI_GetMapRotationToken() )
         ;
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     v2 = va("wait ; wait ; map %s\n", map);
     Cbuf_AddText(0, v2);
 }
@@ -2336,8 +2336,8 @@ void __cdecl UI_RunMenuScript_StartServer(int localClientNum)
     Dvar_SetString((dvar_s *)sv_mapRotationCurrent, sv_mapRotation->current.string);
     for ( value = UI_GetMapRotationToken(); value && I_strcmp(value->token, map); value = UI_GetMapRotationToken() )
         ;
-    BLOPS_NULLSUB();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     v2 = va("wait ; wait ; map %s\n", map);
     Cbuf_AddText(localClientNum, v2);
 }
@@ -2669,7 +2669,7 @@ char *__cdecl UI_TranslateIntegerToOrdinal(int integer)
             break;
         default:
             Com_PrintWarning(13, "WARNING: Could not translate integer to ordinal: %i\n", integer);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
     }
     return result;
@@ -2727,8 +2727,8 @@ void __cdecl UI_DrawConnectScreen(int localClientNum)
 
     displayConnectionInfo = 1;
     CL_GetClientState(localClientNum, &cstate);
-    Dvar_SetStringByName("ls_gametype", (char *)&toastPopupTitle);
-    Dvar_SetStringByName("ls_mapname", (char *)&toastPopupTitle);
+    Dvar_SetStringByName("ls_gametype", (char *)"");
+    Dvar_SetStringByName("ls_mapname", (char *)"");
     if ( g_mapname[0] )
     {
         GameTypeDisplayNameCaps = UI_GetGameTypeDisplayNameCaps(s_gametype);
@@ -2756,7 +2756,7 @@ void __cdecl UI_DrawConnectScreen(int localClientNum)
             }
             else
             {
-                Dvar_SetStringByName("ls_demoauthor", (char *)&toastPopupTitle);
+                Dvar_SetStringByName("ls_demoauthor", (char *)"");
             }
         }
         if ( !I_stricmp(cstate.servername, "localhost") )
@@ -2814,7 +2814,7 @@ void __cdecl UI_DrawConnectScreen(int localClientNum)
         if ( s )
             Dvar_SetStringByName("ls_status", (char *)s);
         else
-            Dvar_SetStringByName("ls_status", (char *)&toastPopupTitle);
+            Dvar_SetStringByName("ls_status", (char *)"");
     }
     CG_DrawInformation(localClientNum);
 }

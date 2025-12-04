@@ -1,5 +1,7 @@
 #pragma once
 
+#include <zlib/zlib.h>
+
 int __cdecl DB_AuthLoad_InflateInit(z_stream_s *stream, bool isSecure);
 void __cdecl DB_AuthLoad_InflateEnd(z_stream_s *stream);
 int __cdecl DB_AuthLoad_Inflate(z_stream_s *stream, int flush);

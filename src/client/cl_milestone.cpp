@@ -458,7 +458,7 @@ char __cdecl PrepareKillstreakChallengeName(
     const char *itemName; // [esp+0h] [ebp-8h]
     const char *statsName; // [esp+4h] [ebp-4h]
 
-    statsName = &toastPopupTitle;
+    statsName = "";
     if ( !outputString
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\client_mp\\cl_milestone.cpp",
@@ -518,7 +518,7 @@ char __cdecl PrepareGrenadeChallengeName(const char *name, char *outputString, i
     const char *itemName; // [esp+0h] [ebp-8h]
     const char *statsName; // [esp+4h] [ebp-4h]
 
-    statsName = &toastPopupTitle;
+    statsName = "";
     if ( !outputString
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\client_mp\\cl_milestone.cpp",
@@ -579,7 +579,7 @@ char __cdecl PrepareAttachmentChallengeName(
     const char *itemName; // [esp+0h] [ebp-8h]
     const char *statsName; // [esp+4h] [ebp-4h]
 
-    statsName = &toastPopupTitle;
+    statsName = "";
     if ( !outputString
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\client_mp\\cl_milestone.cpp",
@@ -645,7 +645,7 @@ char __cdecl PrepareWeaponChallengeName(
     const char *itemName; // [esp+0h] [ebp-34h]
     const char *statsName; // [esp+8h] [ebp-2Ch]
 
-    statsName = &toastPopupTitle;
+    statsName = "";
     if ( !outputString
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\client_mp\\cl_milestone.cpp",

@@ -795,21 +795,21 @@ void __cdecl CG_ClearEndGame(int localClientNum)
     {
         __debugbreak();
     }
-    UILocalVar_SetString(vard->table, (char *)&toastPopupTitle);
+    UILocalVar_SetString(vard->table, (char *)"");
     vare = UILocalVar_FindOrCreate(&uiInfo->uiDC.localVars, "milestoneEndGameString1");
     if ( !vare
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_ui_animate_mp.cpp", 407, 0, "%s", "var") )
     {
         __debugbreak();
     }
-    UILocalVar_SetString(vare->table, (char *)&toastPopupTitle);
+    UILocalVar_SetString(vare->table, (char *)"");
     varf = UILocalVar_FindOrCreate(&uiInfo->uiDC.localVars, "milestoneEndGameString2");
     if ( !varf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_ui_animate_mp.cpp", 410, 0, "%s", "var") )
     {
         __debugbreak();
     }
-    UILocalVar_SetString(varf->table, (char *)&toastPopupTitle);
+    UILocalVar_SetString(varf->table, (char *)"");
 }
 
 void __cdecl CG_DisplayGameModeMessage(int localClientNum)
@@ -1204,7 +1204,7 @@ void __cdecl CG_DisplayContract(int localClientNum)
                     cpReward = LiveContracts_GetContractRewardCP(contractIndex);
                     if ( cpReward <= 0 )
                     {
-                        localizedCP = (char *)&toastPopupTitle;
+                        localizedCP = (char *)"";
                     }
                     else
                     {
@@ -1227,7 +1227,7 @@ void __cdecl CG_DisplayContract(int localClientNum)
                         "ContractPopUp",
                         localizedPopUpName,
                         localizedPopUpDesc,
-                        (char *)&toastPopupTitle,
+                        (char *)"",
                         "contract_expired",
                         "hud_medal_burst_red");
                 }
@@ -1349,7 +1349,7 @@ void __cdecl CG_DisplayWagerPopup(int localClientNum)
     char *localizedPoints; // [esp+34h] [ebp-8h]
     char *messageString; // [esp+38h] [ebp-4h]
 
-    subMessageString = (char *)&toastPopupTitle;
+    subMessageString = (char *)"";
     v1 = Cmd_Argv(2);
     messageStringIndex = atoi(v1);
     v2 = Cmd_Argv(3);

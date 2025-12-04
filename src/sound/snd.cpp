@@ -1097,7 +1097,7 @@ void __cdecl SND_SetSoundFileVoiceInfo(
     if ( voice->soundFileInfo.loadingState == SFLS_LOADING && loadingState == SFLS_LOADED )
     {
         Sys_Milliseconds();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
     voice->soundFileInfo.loadingState = loadingState;
     voice->soundFileInfo.srcChannelCount = srcChannelCount;
@@ -2116,7 +2116,7 @@ void __cdecl SND_UpdateDebugAlias()
                     SND_StopVoice(i);
             }
         }
-        Dvar_SetString((dvar_s *)snd_stop_alias, &toastPopupTitle);
+        Dvar_SetString((dvar_s *)snd_stop_alias, "");
     }
     if ( snd_start_alias && snd_start_alias->current.integer && *(_BYTE *)snd_start_alias->current.integer )
     {
@@ -2125,7 +2125,7 @@ void __cdecl SND_UpdateDebugAlias()
         soundDir[2] = 0.0f;
         entHandle.field = SND_EntHandle(0, 4094, 0, 0, 1, TEAM_FREE).field;
         SND_Play((char *)snd_start_alias->current.integer, 0, 1.0, entHandle, g_snd.listeners[0].orient.origin, soundDir, 0);
-        Dvar_SetString((dvar_s *)snd_start_alias, &toastPopupTitle);
+        Dvar_SetString((dvar_s *)snd_start_alias, "");
     }
 }
 
@@ -2175,7 +2175,7 @@ void __cdecl SNDL_Update()
         if ( g_DXDeviceThread == GetCurrentThreadId() )
             D3DPERF_EndEvent();
         //PIXBeginNamedEvent(-1, "Driver Post Update");
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         if ( g_DXDeviceThread == GetCurrentThreadId() )
             D3DPERF_EndEvent();
         //PIXBeginNamedEvent(-1, "debug");

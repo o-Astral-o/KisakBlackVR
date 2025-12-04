@@ -380,7 +380,7 @@ void __cdecl LiveSteam_Server_Init()
 
     if ( LiveSteam_IsInitialized() && !g_liveSteamServer )
     {
-        if ( !(unsigned __int8)_SteamGameServer_Init(0, 8766, 27015, 0, 27016, 3, &toastPopupTitle, "1.0.0.0") )
+        if ( !(unsigned __int8)_SteamGameServer_Init(0, 8766, 27015, 0, 27016, 3, "", "1.0.0.0") )
             Com_PrintError(0, "ERROR: STEAM: SteamGameServer_Init call failed\n");
         if ( _SteamMasterServerUpdater() )
         {

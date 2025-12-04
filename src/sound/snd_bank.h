@@ -1,4 +1,35 @@
 #pragma once
+#include "snd.h"
+#include "snd_radverb.h"
+
+struct SndIndexEntry // sizeof=0x4
+{
+    unsigned __int16 value;
+    unsigned __int16 next;
+};
+
+struct SndBank // sizeof=0x28
+{                                       // XREF: XAssetPoolEntry<SndBank>/r
+    const char *name;
+    unsigned int aliasCount;
+    snd_alias_list_t *alias;
+    SndIndexEntry *aliasIndex;
+    unsigned int packHash;
+    unsigned int packLocation;
+    unsigned int radverbCount;
+    snd_radverb *radverbs;
+    unsigned int snapshotCount;
+    snd_snapshot *snapshots;
+};
+
+struct SndPatch // sizeof=0x14
+{                                       // XREF: XAssetPoolEntry<SndPatch>/r
+    char *name;
+    unsigned int elementCount;
+    unsigned int *elements;
+    unsigned int fileCount;
+    SoundFile *files;
+};
 
 void __cdecl SND_AddBank(SndBank *bank);
 void __cdecl SND_AssertBankIndexValid(const SndBank *bank);

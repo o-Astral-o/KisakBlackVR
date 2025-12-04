@@ -90,4 +90,4 @@ double __cdecl Com_ParseFloatOnLine(const char **buf_p);
 int __cdecl Com_ParseInt(const char **buf_p);
 void __cdecl Com_Parse1DMatrix(const char **buf_p, int x, float *m);
 
-extern const char toastPopupTitle;
+extern const char GLOBAL_EMPTY_STRING;

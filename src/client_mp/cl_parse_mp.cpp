@@ -467,7 +467,7 @@ void __cdecl CL_ParseGamestate(int localClientNum, msg_t *msg)
             FS_Restart(localClientNum, clc->checksumFeed);
         }
         if ( net_lanauthorize->current.enabled || !Sys_IsLANAddress(clc->serverAddress) )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         CL_InitDownloads(localClientNum);
         cmd = MSG_ReadByte(msg);
         if ( cmd != 6
@@ -1126,7 +1126,7 @@ LABEL_19:
                     {
                         FS_FCloseFile(cls.download);
                         cls.download = 0;
-                        FS_SV_Rename(cls.downloadTempName, cls.downloadName, (char *)&toastPopupTitle);
+                        FS_SV_Rename(cls.downloadTempName, cls.downloadName, (char *)"");
                     }
                     cls.downloadName[0] = 0;
                     cls.downloadTempName[0] = 0;

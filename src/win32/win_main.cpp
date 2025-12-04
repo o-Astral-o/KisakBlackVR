@@ -53,7 +53,7 @@ const dvar_s *Sys_RegisterInfoDvars()
                                              0x11u,
                                              "Normalized total CPU power, based on cpu type, count, and speed; used in autoconfigure");
     sys_sysMB = _Dvar_RegisterInt("sys_sysMB", 0, 0x80000000, 0x7FFFFFFF, 0x11u, "Physical memory in the system");
-    sys_gpu = _Dvar_RegisterString("sys_gpu", (char *)&toastPopupTitle, 0x11u, "GPU description");
+    sys_gpu = _Dvar_RegisterString("sys_gpu", (char *)"", 0x11u, "GPU description");
     sys_configSum = _Dvar_RegisterInt("sys_configSum", 0, 0x80000000, 0x7FFFFFFF, 0x11u, "Configuration checksum");
     sys_SSE = _Dvar_RegisterBool("sys_SSE", sys_info.SSE, 0x40u, "Operating system allows Streaming SIMD Extensions");
     value = sys_info.cpuGHz;
@@ -116,7 +116,7 @@ void __cdecl    Sys_DirectXFatalError()
     ActiveWindow = GetActiveWindow();
     MessageBoxA(ActiveWindow, v1, v2, 0x10u);
     ShellExecuteA(0, "open", "Docs\\TechHelp\\Tech Help\\Information\\DirectX.htm", 0, 0, 3);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     exit(-1);
 }
 
@@ -139,7 +139,7 @@ void __cdecl    Sys_OutOfMemErrorInternal(const char *filename, int line)
     v4 = Win_LocalizeRef("WIN_OUT_OF_MEM_BODY");
     ActiveWindow = GetActiveWindow();
     MessageBoxA(ActiveWindow, v4, v5, 0x10u);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     exit(-1);
 }
 
@@ -184,7 +184,7 @@ void    Sys_Error(char *error, ...)
     }
     FixWindowsDesktop();
     Sys_SetErrorText(string);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     exit(0);
 }
 
@@ -203,8 +203,8 @@ void __cdecl    Sys_Quit()
     RefreshQuitOnErrorCondition();
     Dvar_Shutdown();
     Cmd_Shutdown();
-    BLOPS_NULLSUB();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     Sys_ShutdownEvents();
     SL_Shutdown(SCRIPTINSTANCE_SERVER);
     SL_Shutdown(SCRIPTINSTANCE_CLIENT);
@@ -449,11 +449,11 @@ void __cdecl Sys_Init()
     Com_Printf(16, "CPU vendor is \"%s\"\n", sys_info.cpuVendor);
     Com_Printf(16, "CPU name is \"%s\"\n", sys_info.cpuName);
     if ( sys_info.logicalCpuCount == 1 )
-        Com_Printf(16, "%i logical CPU%s reported\n", 1, &toastPopupTitle);
+        Com_Printf(16, "%i logical CPU%s reported\n", 1, "");
     else
         Com_Printf(16, "%i logical CPU%s reported\n", sys_info.logicalCpuCount, "s");
     if ( sys_info.physicalCpuCount == 1 )
-        Com_Printf(16, "%i physical CPU%s detected\n", 1, &toastPopupTitle);
+        Com_Printf(16, "%i physical CPU%s detected\n", 1, "");
     else
         Com_Printf(16, "%i physical CPU%s detected\n", sys_info.physicalCpuCount, "s");
     Com_Printf(16, "Measured CPU speed is %.2lf GHz\n", sys_info.cpuGHz);
@@ -461,7 +461,7 @@ void __cdecl Sys_Init()
     Com_Printf(16, "System memory is %i MB (capped at 1 GB)\n", sys_info.sysMB);
     Com_Printf(16, "Video card is \"%s\"\n", sys_info.gpuDescription);
     if ( sys_info.SSE )
-        Com_Printf(16, "Streaming SIMD Extensions (SSE) %ssupported\n", &toastPopupTitle);
+        Com_Printf(16, "Streaming SIMD Extensions (SSE) %ssupported\n", "");
     else
         Com_Printf(16, "Streaming SIMD Extensions (SSE) %ssupported\n", "not ");
     Com_Printf(16, "\n");
@@ -547,7 +547,7 @@ void    Sys_NoFreeFilesError()
     v1 = Win_LocalizeRef("WIN_DISK_FULL_BODY");
     ActiveWindow = GetActiveWindow();
     MessageBoxA(ActiveWindow, v1, v2, 0x10u);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     exit(-1);
 }
 

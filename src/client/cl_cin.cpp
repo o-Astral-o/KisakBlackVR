@@ -36,7 +36,7 @@ void __cdecl SCR_StopCinematic()
         {
             v0 = va("%s\n", nextmap->current.string);
             Cbuf_AddText(0, v0);
-            Dvar_SetString((dvar_s *)nextmap, &toastPopupTitle);
+            Dvar_SetString((dvar_s *)nextmap, "");
         }
     }
 }

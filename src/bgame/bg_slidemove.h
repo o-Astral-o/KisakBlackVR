@@ -118,7 +118,6 @@ char    gjk_push_out@<al>(
                 const gjkcc_input_t *gjkcc_in,
                 gjk_slide_move_input_t *input,
                 gjk_slide_move_output_t *output);
-phys_vec3 *__thiscall phys_vec3::operator=(phys_vec3 *this, const phys_vec3 *v);
 double __cdecl Abs(const float *v);
 void __cdecl Phys_NitrousVecToVec3(const phys_vec3 *inVector, float *outVector);
 gjk_query_input *__thiscall gjk_query_input::gjk_query_input(gjk_query_input *this);

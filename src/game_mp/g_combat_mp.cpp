@@ -643,11 +643,11 @@ void __cdecl G_DamageNotify(
     if ( partName )
         Scr_AddConstString(partName, SCRIPTINSTANCE_SERVER);
     else
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     if ( !modelIndex || targ->destructible )
     {
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
     else
     {

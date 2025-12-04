@@ -2816,7 +2816,7 @@ void __cdecl G_PlayerEvent(int clientNum, int event)
     if ( event >= 29 && (event <= 32 || event == 47) )
     {
         BG_WeaponFireRecoil(&client->ps, client->recoilSpeed, kickAVel);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
 }
 

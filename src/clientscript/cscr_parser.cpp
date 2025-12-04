@@ -996,7 +996,7 @@ void __cdecl Scr_AddSourceBufferInternal(
         NewSourceBuffer->len = len;
         NewSourceBuffer->sortedIndex = -1;
         NewSourceBuffer->archive = archive;
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         if ( v8 )
             gScrParserPub[inst].sourceBuf = v8;
     }
@@ -1209,7 +1209,7 @@ unsigned int __cdecl Scr_GetSourcePos(
             "%s // %s%s, line %d",
             line,
             gScrParserPub[inst].sourceBufferLookup[bufferIndex].buf,
-            &toastPopupTitle,
+            "",
             lineNum + 1);
     return lineNum;
 }
@@ -1226,7 +1226,7 @@ unsigned int __cdecl Scr_GetLineInfo(const char *buf, unsigned int sourcePos, in
     else
     {
         lineNum = 0;
-        startLine = &toastPopupTitle;
+        startLine = "";
         *col = 0;
     }
     Scr_CopyFormattedLine(line, startLine);
@@ -1358,7 +1358,7 @@ void __cdecl Scr_PrintSourcePos(
     if ( dword_9F7A82C[13 * inst] )
         v7 = " (savegame)";
     else
-        v7 = &toastPopupTitle;
+        v7 = "";
     v5 = va("(file '%s'%s, line %d)\n", filename, v7, lineNum + 1);
     Com_PrintMessage(channel, v5, 0);
     v6 = va("%s\n", line);
@@ -1531,7 +1531,7 @@ void __cdecl Scr_PrintSourcePosSpreadSheet(
     if ( dword_9F7A82C[13 * inst] )
         v6 = "(savegame)";
     else
-        v6 = &toastPopupTitle;
+        v6 = "";
     v5 = va("%s%s\t%d\t%s\t%d\n", filename, v6, lineNum + 1, line, col);
     Com_PrintMessage(channel, v5, 0);
 }
@@ -1557,7 +1557,7 @@ void __cdecl Scr_PrintFunctionPosSpreadSheet(
     if ( dword_9F7A82C[13 * inst] )
         v6 = "(savegame)";
     else
-        v6 = &toastPopupTitle;
+        v6 = "";
     v5 = va("%s%s\t%d\t%s\n", filename, v6, lineNum + 1, line);
     Com_PrintMessage(channel, v5, 0);
 }
@@ -1585,7 +1585,7 @@ void __cdecl Scr_PrintSourcePosSummary(scriptInstance_t inst, int channel, const
     if ( dword_9F7A82C[13 * inst] )
         v4 = "(savegame)";
     else
-        v4 = &toastPopupTitle;
+        v4 = "";
     v3 = va("%s%s\t\n", filename, v4);
     Com_PrintMessage(channel, v3, 0);
 }
@@ -1647,7 +1647,7 @@ void __cdecl Scr_GetFileAndLine(scriptInstance_t inst, const char *codePos, char
     else
     {
         *linenum = 0;
-        *filename = (char *)&toastPopupTitle;
+        *filename = (char *)"";
     }
 }
 
@@ -1833,11 +1833,11 @@ error:
             if ( dialogMessage )
                 v6 = dialogMessage;
             else
-                v6 = &toastPopupTitle;
+                v6 = "";
             if ( dialogMessage )
                 v5 = "\n";
             else
-                v5 = &toastPopupTitle;
+                v5 = "";
             if ( inst == SCRIPTINSTANCE_CLIENT )
                 Com_Error(
                     (errorParm_t)((MEMORY[0xA05EFC6] != 0) + 4),

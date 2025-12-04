@@ -14,7 +14,7 @@ parseInfo_t *__cdecl UI_GetMapRotationToken()
     }
     else
     {
-        Dvar_SetString((dvar_s *)sv_mapRotationCurrent, &toastPopupTitle);
+        Dvar_SetString((dvar_s *)sv_mapRotationCurrent, "");
         return 0;
     }
 }
@@ -24,7 +24,7 @@ void __cdecl UI_RegisterDvars_PC()
     ui_joinGameType = _Dvar_RegisterInt("ui_joinGametype", 0, 0, 0x7FFFFFFF, 1u, "Game join type");
     ui_netGameTypeName = _Dvar_RegisterString(
                                                  "ui_netGametypeName",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "Displayed game type name");
     ui_dedicated = _Dvar_RegisterInt("ui_dedicated", 0, 0, 2, 1u, "True if this is a dedicated server");
@@ -55,7 +55,7 @@ void __cdecl UI_RegisterDvars_PC()
                                                  "0",
                                                  1u,
                                                  "Game mode preferred in server browser filter.");
-    ui_friendNameNew = _Dvar_RegisterString("ui_friendNameNew", (char *)&toastPopupTitle, 0, "New friend name");
+    ui_friendNameNew = _Dvar_RegisterString("ui_friendNameNew", (char *)"", 0, "New friend name");
     ui_friendSelectedInd = _Dvar_RegisterInt(
                                                      "ui_friendSelectedInd",
                                                      0,
@@ -84,12 +84,12 @@ void __cdecl UI_RegisterDvars_PC()
                                             "Distinguishs between invite friend and manage friends screens in the UI.");
     ui_browserPlayerCount = _Dvar_RegisterString(
                                                         "ui_browserPlayerCount",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "Number of players currently online");
     ui_browserDedicatedServerCount = _Dvar_RegisterString(
                                                                          "ui_browserDedicatedServerCount",
-                                                                         (char *)&toastPopupTitle,
+                                                                         (char *)"",
                                                                          0,
                                                                          "Number of live dedicated servers");
     ui_browserShowToolTip = _Dvar_RegisterBool(
@@ -104,7 +104,7 @@ void __cdecl UI_RegisterDvars_PC()
                                                      "Whether or not to show the mouseover map tip for the server browser");
     ui_browserToolTip = _Dvar_RegisterString(
                                                 "ui_browserToolTip",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0,
                                                 "The content of the server browser toolip");
     ui_browserShowInfo = _Dvar_RegisterBool("ui_browserShowInfo", 0, 0, "Whether or not to show the server info");
@@ -710,7 +710,7 @@ void __cdecl UI_BuildFindPlayerList()
                         0x40u,
                         "%d server%s found with player %s",
                         uiInfo->numFoundPlayerServers - 1,
-                        &toastPopupTitle,
+                        "",
                         uiInfo->findPlayerName);
                 else
                     Com_sprintf(
@@ -775,7 +775,7 @@ char *__cdecl UI_SelectedMap(int index, int *actual)
             ++c;
         }
     }
-    return (char *)&toastPopupTitle;
+    return (char *)"";
 }
 
 int __cdecl UI_GameType_HandleKey(int flags, int key, int resetMap)
@@ -1249,7 +1249,7 @@ void __cdecl UI_LoadMods()
 
     sharedUiInfo.modList[63].modDescr = 0;
     sharedUiInfo.modCount = 0;
-    numdirs = FS_GetFileList("$modlist", (char *)&toastPopupTitle, FS_LIST_ALL, dirlist, 0x2000);
+    numdirs = FS_GetFileList("$modlist", (char *)"", FS_LIST_ALL, dirlist, 0x2000);
     dirptr = dirlist;
     for ( i = 0; i < numdirs; ++i )
     {
@@ -1282,7 +1282,7 @@ void __cdecl UI_AcceptFriend()
     {
         __debugbreak();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl UI_DeclineFriend()
@@ -1297,7 +1297,7 @@ void __cdecl UI_DeclineFriend()
     {
         __debugbreak();
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl UI_AcceptInvite()

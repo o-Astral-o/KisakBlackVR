@@ -1,40 +1,47 @@
 #include "db_stream_load.h"
+#include "db_stream.h"
+#include <universal/assertive.h>
+#include <string.h>
+#include "db_file_load.h"
+#include <clientscript/cscr_stringlist.h>
+
+StreamDelayInfo g_streamDelayArray[4096];
 
 void __cdecl Load_Stream(bool atStreamStart, unsigned __int8 *ptr, int size)
 {
-    if ( atStreamStart != (ptr == DB_GetStreamPos())
+    if (atStreamStart != (ptr == DB_GetStreamPos())
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\database\\db_stream_load.cpp",
-                    21,
-                    0,
-                    "%s",
-                    "atStreamStart == (ptr == DB_GetStreamPos())") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\database\\db_stream_load.cpp",
+            21,
+            0,
+            "%s",
+            "atStreamStart == (ptr == DB_GetStreamPos())"))
     {
         __debugbreak();
     }
-    if ( atStreamStart && size )
+    if (atStreamStart && size)
     {
-        if ( g_streamPosIndex - 1 < 3 )
+        if (g_streamPosIndex - 1 < 3)
         {
-            if ( g_streamPosIndex == 1 )
+            if (g_streamPosIndex == 1)
             {
                 memset(ptr, 0, size);
             }
             else
             {
-                if ( g_streamDelayIndex >= 0x1000
+                if (g_streamDelayIndex >= 0x1000
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\database\\db_stream_load.cpp",
-                                36,
-                                0,
-                                "g_streamDelayIndex doesn't index ARRAY_COUNT( g_streamDelayArray )\n\t%i not in [0, %i)",
-                                g_streamDelayIndex,
-                                4096) )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\database\\db_stream_load.cpp",
+                        36,
+                        0,
+                        "g_streamDelayIndex doesn't index ARRAY_COUNT( g_streamDelayArray )\n\t%i not in [0, %i)",
+                        g_streamDelayIndex,
+                        4096))
                 {
                     __debugbreak();
                 }
                 g_streamDelayArray[g_streamDelayIndex].ptr = ptr;
-                dword_330A3C4[2 * g_streamDelayIndex++] = size;
+                g_streamDelayArray[g_streamDelayIndex++].size = size;
             }
         }
         else
@@ -49,8 +56,8 @@ void __cdecl Load_DelayStream()
 {
     unsigned int index; // [esp+4h] [ebp-8h]
 
-    for ( index = 0; index < g_streamDelayIndex; ++index )
-        DB_LoadXFileData((unsigned __int8 *)g_streamDelayArray[index].ptr, dword_330A3C4[2 * index]);
+    for (index = 0; index < g_streamDelayIndex; ++index)
+        DB_LoadXFileData((unsigned __int8 *)g_streamDelayArray[index].ptr, g_streamDelayArray[index].size);
 }
 
 void __cdecl DB_ConvertOffsetToAlias(unsigned int *data)
@@ -74,7 +81,7 @@ void __cdecl DB_ConvertOffsetToAlias(unsigned int *data)
 
 void __cdecl DB_ConvertOffsetToPointer(unsigned int *data)
 {
-    *data = &g_streamBlocks[(unsigned int)(*data - 1) >> 29].data[(*data - 1) & 0x1FFFFFFF];
+    *data = (unsigned int)&g_streamBlocks[(unsigned int)(*data - 1) >> 29].data[(*data - 1) & 0x1FFFFFFF];
 }
 
 void __cdecl Load_XStringCustom(const char **str)

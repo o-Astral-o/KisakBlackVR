@@ -810,7 +810,7 @@ void __cdecl CG_RegisterDvars()
                                                                                 0.0,
                                                                                 1.0,
                                                                                 0,
-                                                                                &toastPopupTitle);
+                                                                                "");
     cg_hudGrenadeIndicatorStartColor = _Dvar_RegisterVec4(
                                                                              "cg_hudGrenadeIndicatorStartColor",
                                                                              COERCE_UNSIGNED_INT(1.0),
@@ -820,7 +820,7 @@ void __cdecl CG_RegisterDvars()
                                                                              0.0,
                                                                              1.0,
                                                                              0,
-                                                                             &toastPopupTitle);
+                                                                             "");
     cg_weaponCycleDelay = _Dvar_RegisterInt(
                                                     "cg_weaponCycleDelay",
                                                     0,
@@ -2422,7 +2422,7 @@ bool __cdecl CG_IsMature()
     return cg_mature->current.enabled;
 }
 
-char __cdecl CG_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles)
+bool __cdecl CG_GetEntityOriginAngles(int localClientNum, int entityNum, float *origin, float *angles)
 {
     centity_s *cent; // [esp+10h] [ebp-4h]
 
@@ -2903,7 +2903,7 @@ void __cdecl CG_Init(int localClientNum, int serverMessageNum, int serverCommand
     CG_InitBolt(localClientNum);
     cgameGlob->isLoading = 0;
     CG_SetConfigValues(localClientNum);
-    CG_LoadingString(localClientNum, &toastPopupTitle);
+    CG_LoadingString(localClientNum, "");
     CG_NorthDirectionChanged(localClientNum);
     CL_FinishLoadingModels();
     if ( !g_mapLoaded )
@@ -3741,7 +3741,7 @@ void __cdecl CG_ProcessTriggerDebug(centity_s *ent, trigger_info_t *trigger_info
                 return;
             }
             if ( trigger_info )
-                v2 = &toastPopupTitle;
+                v2 = "";
             else
                 v2 = "Immediate Notify Maxed!! ";
             Com_Printf(

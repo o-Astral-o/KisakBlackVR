@@ -1,5 +1,105 @@
 #include "bg_dog_animations_mp.h"
 
+#include <xanim/xanim.h>
+#include "bg_misc.h"
+#include <qcommon/common.h>
+#include "bg_dog.h"
+#include "bg_animation.h"
+#include "bg_local.h"
+
+XAnim_s *s_dogAnims;
+
+const char *s_dogAnimNames[38] =
+{
+  "root",
+  "german_shepherd_idle",
+  "german_shepherd_walk",
+  "german_shepherd_run_stop",
+  "german_shepherd_run_pain",
+  "german_shepherd_run_attack",
+  "german_shepard_run_turn_90_left",
+  "german_shepard_run_turn_90_right",
+  "german_shepard_turn_90_left",
+  "german_shepard_turn_90_right",
+  "german_shepard_run_turn_180_left",
+  "german_shepard_run_turn_180_right",
+  "german_shepherd_run_start_180_L",
+  "german_shepherd_run_start_180_R",
+  "german_shepard_run_pain_hit_front",
+  "german_shepard_run_pain_hit_front",
+  "german_shepard_run_pain_hit_front",
+  "german_shepard_run_pain_hit_front",
+  "german_shepard_pain_hit_front",
+  "german_shepard_pain_hit_back",
+  "german_shepard_pain_hit_left",
+  "german_shepard_pain_hit_right",
+  "german_shepherd_death_front",
+  "german_shepard_death_hit_back",
+  "german_shepard_death_hit_left",
+  "german_shepard_death_hit_right",
+  "german_shepherd_run_flashbang",
+  "german_shepherd_attack_player_miss",
+  "german_shepherd_attack_player_miss_turnL",
+  "german_shepherd_attack_player_miss_turnR",
+  "german_shepard_run_attack_low",
+  "german_shepherd_traverse_up_40",
+  "german_shepherd_traverse_up_80",
+  "german_shepherd_traverse_down_40",
+  "german_shepherd_traverse_down_80",
+  "german_shepherd_run_jump_40",
+  "german_shepherd_run_jump_window_40",
+  "german_shepherd_walk"
+};
+
+const char *s_dogAnimNamesRunStartKnob[2] =
+{ "german_shepherd_run_start_knob", "german_shepherd_run_start" };
+
+const char *s_dogAnimNamesRunKnob[4] =
+{
+  "german_shepherd_run_knob",
+  "german_shepherd_run",
+  "german_shepherd_run_lean_L",
+  "german_shepherd_run_lean_R"
+};
+
+const char *s_dogAnimNamesAttackIdleKnob[4] =
+{
+  "german_shepherd_attackidle_knob",
+  "german_shepherd_attackidle",
+  "german_shepherd_attackidle_bark",
+  "german_shepherd_attackidle_growl"
+};
+
+const char *s_dogAnimNamesLookDown[3] =
+{
+  "german_shepherd_look_2",
+  "german_shepherd_look_down",
+  "german_shepherd_attack_look_down"
+};
+
+const char *s_dogAnimNamesLookUp[3] =
+{
+  "german_shepherd_look_8",
+  "german_shepherd_look_up",
+  "german_shepherd_attack_look_up"
+};
+
+const char *s_dogAnimNamesLookRight[3] =
+{
+  "german_shepherd_look_4",
+  "german_shepherd_look_right",
+  "german_shepherd_attack_look_right"
+};
+
+const char *s_dogAnimNamesLookLeft[3] =
+{
+  "german_shepherd_look_6",
+  "german_shepherd_look_left",
+  "german_shepherd_attack_look_left"
+};
+
+static float s_animRate = 1.0f;
+
 XAnim_s *__cdecl Dog_GetAnims()
 {
     return s_dogAnims;
@@ -71,12 +171,9 @@ void __cdecl BG_Actor_FastForwardAnimState(int localClientNum, const entityState
 {
     unsigned int animationState; // [esp+0h] [ebp-4h]
 
-    animationState = es->un2.animState.state & 0xFFFFFFBF;
-    if ( dword_C60124[4 * animationState] )
-        ((void (__cdecl *)(int, const entityState_s *, actorInfo_t *))dword_C60124[4 * animationState])(
-            localClientNum,
-            es,
-            actorInfo);
+    animationState = es->animState.state & 0xFFFFFFBF;
+    if (AIAnimationFuncTable[animationState].pfnSetAtEnd)
+        AIAnimationFuncTable[animationState].pfnSetAtEnd(localClientNum, es, actorInfo);
 }
 
 void __cdecl BG_Dog_Look_At(int localClientNum, const entityState_s *es)
@@ -87,26 +184,21 @@ void __cdecl BG_Dog_Look_At(int localClientNum, const entityState_s *es)
     float leftWeight; // [esp+2Ch] [ebp-8h]
     float upWeight; // [esp+30h] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         upWeight = 0.0f;
         downWeight = 0.0f;
         leftWeight = 0.0f;
         rightWeight = 0.0f;
-        if ( es->un2.animState.fAimUpDown <= 0.0 )
-            downWeight = -1.0 * es->un2.animState.fAimUpDown;
+        if ( es->animState.fAimUpDown <= 0.0 )
+            downWeight = -1.0 * es->animState.fAimUpDown;
         else
-            upWeight = es->un2.animState.fAimUpDown;
-        if ( es->un2.animState.fAimLeftRight <= 0.0 )
-            rightWeight = -1.0 * es->un2.animState.fAimLeftRight;
+            upWeight = es->animState.fAimUpDown;
+        if ( es->animState.fAimLeftRight <= 0.0 )
+            rightWeight = -1.0 * es->animState.fAimLeftRight;
         else
-            leftWeight = es->un2.animState.fAimLeftRight;
+            leftWeight = es->animState.fAimLeftRight;
         XAnimSetGoalWeight(obj, 0x2Au, upWeight, 0.050000001, s_animRate, 0, 0, 0, -1);
         XAnimSetGoalWeight(obj, 0x29u, downWeight, 0.050000001, s_animRate, 0, 0, 0, -1);
         XAnimSetGoalWeight(obj, 0x2Cu, leftWeight, 0.050000001, s_animRate, 0, 0, 0, -1);
@@ -114,19 +206,14 @@ void __cdecl BG_Dog_Look_At(int localClientNum, const entityState_s *es)
     }
 }
 
-void __cdecl BG_Dog_Move_Start(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Start(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -139,26 +226,21 @@ void __cdecl BG_Dog_Move_Start(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Stop(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Stop(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0x2Du, 0.0, -1);
@@ -170,7 +252,7 @@ void __cdecl BG_Dog_Move_Stop(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -189,15 +271,10 @@ void __cdecl BG_Dog_Move_Run(int localClientNum, const entityState_s *es, ActorA
     float left; // [esp+24h] [ebp-8h] BYREF
     float center; // [esp+28h] [ebp-4h] BYREF
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
-        if ( prevState != ACTOR_ANIMATION_MOVE_WALK )
+        if (prevState != ACTOR_ANIMATION_MOVE_WALK)
         {
             Tree = DObjGetTree(obj);
             XAnimClearTreeGoalWeights(Tree, 0x2Du, 0.0, -1);
@@ -213,7 +290,7 @@ void __cdecl BG_Dog_Move_Run(int localClientNum, const entityState_s *es, ActorA
         center = 0.0f;
         left = 0.0f;
         right = 0.0f;
-        BG_Dog_GetRunAnimWeights(es->un2.animState.fLeanAmount, &center, &left, &right);
+        BG_Dog_GetRunAnimWeights(es->animState.fLeanAmount, &center, &left, &right);
         v7 = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(v7, 2u, 0.30000001, -1);
         XAnimSetCompleteGoalWeight(obj, 0x2Eu, center, 0.2, 1.0, 0, 0, 0, -1);
@@ -225,7 +302,7 @@ void __cdecl BG_Dog_Move_Run(int localClientNum, const entityState_s *es, ActorA
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             0,
             -1);
@@ -235,16 +312,7 @@ void __cdecl BG_Dog_Move_Run(int localClientNum, const entityState_s *es, ActorA
 
 void __cdecl BG_Dog_GetRunAnimWeights(float leanAmount, float *center, float *left, float *right)
 {
-    if ( (LODWORD(leanAmount) & 0x7F800000) == 0x7F800000
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_dog_animations_mp.cpp",
-                    713,
-                    0,
-                    "%s",
-                    "!IS_NAN(leanAmount)") )
-    {
-        __debugbreak();
-    }
+    iassert(!IS_NAN(leanAmount));
     if ( leanAmount <= 0.0 )
     {
         if ( leanAmount < 0.0 && leanAmount > -0.94999999 )
@@ -294,12 +362,7 @@ void __cdecl BG_Dog_Init_Normal_Look_At(int localClientNum, const entityState_s 
 {
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         BG_Dog_Clear_Look_At(localClientNum, es);
@@ -318,12 +381,7 @@ void __cdecl BG_Dog_Clear_Look_At(int localClientNum, const entityState_s *es)
     XAnimTree_s *v5; // eax
     DObj *obj; // [esp+8h] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -345,18 +403,13 @@ void __cdecl BG_Dog_Move_Run_Think(int localClientNum, const entityState_s *es)
     float left; // [esp+24h] [ebp-8h] BYREF
     float center; // [esp+28h] [ebp-4h] BYREF
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         center = 0.0f;
         left = 0.0f;
         right = 0.0f;
-        BG_Dog_GetRunAnimWeights(es->un2.animState.fLeanAmount, &center, &left, &right);
+        BG_Dog_GetRunAnimWeights(es->animState.fLeanAmount, &center, &left, &right);
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 2u, 0.30000001, -1);
         XAnimSetCompleteGoalWeight(obj, 0x2Eu, center, 0.2, 1.0, 0, 0, 0, -1);
@@ -368,7 +421,7 @@ void __cdecl BG_Dog_Move_Run_Think(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             0,
             -1);
@@ -384,12 +437,7 @@ void __cdecl BG_Dog_Move_Walk(int localClientNum, const entityState_s *es, Actor
     XAnimTree_s *v6; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         if ( prevState != ACTOR_ANIMATION_MOVE_RUN )
@@ -410,7 +458,7 @@ void __cdecl BG_Dog_Move_Walk(int localClientNum, const entityState_s *es, Actor
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -422,12 +470,7 @@ void __cdecl BG_Dog_Move_Walk_Think(int localClientNum, const entityState_s *es)
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -438,25 +481,20 @@ void __cdecl BG_Dog_Move_Walk_Think(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Turn_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Turn_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -470,7 +508,7 @@ void __cdecl BG_Dog_Move_Turn_Left(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -506,18 +544,13 @@ void __cdecl BG_Dog_Clear_All_Turns(DObj *obj)
     XAnimClearTreeGoalWeights(v8, 0xBu, 0.0, -1);
 }
 
-void __cdecl BG_Dog_Move_Turn_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Turn_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -531,25 +564,20 @@ void __cdecl BG_Dog_Move_Turn_Right(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Run_Turn_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Run_Turn_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -563,25 +591,20 @@ void __cdecl BG_Dog_Move_Run_Turn_Left(int localClientNum, const entityState_s *
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Run_Turn_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Run_Turn_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -595,25 +618,20 @@ void __cdecl BG_Dog_Move_Run_Turn_Right(int localClientNum, const entityState_s 
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Turn_Around_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Turn_Around_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -627,25 +645,20 @@ void __cdecl BG_Dog_Move_Turn_Around_Left(int localClientNum, const entityState_
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Turn_Around_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Turn_Around_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -659,25 +672,20 @@ void __cdecl BG_Dog_Move_Turn_Around_Right(int localClientNum, const entityState
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Run_Turn_Around_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Run_Turn_Around_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -691,25 +699,20 @@ void __cdecl BG_Dog_Move_Run_Turn_Around_Left(int localClientNum, const entitySt
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Move_Run_Turn_Around_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Move_Run_Turn_Around_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     XAnimTree_s *v3; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -723,7 +726,7 @@ void __cdecl BG_Dog_Move_Run_Turn_Around_Right(int localClientNum, const entityS
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -735,12 +738,7 @@ void __cdecl BG_Dog_Stop_Idle(int localClientNum, const entityState_s *es, Actor
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         if ( prevState < ACTOR_ANIMATION_STOP_IDLE || prevState > ACTOR_ANIMATION_STOP_ATTACKIDLE_GROWL )
@@ -753,7 +751,7 @@ void __cdecl BG_Dog_Stop_Idle(int localClientNum, const entityState_s *es, Actor
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -767,12 +765,7 @@ void __cdecl BG_Dog_Stop_Init(int localClientNum, const entityState_s *es)
     XAnimTree_s *v4; // eax
     DObj *obj; // [esp+8h] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -789,12 +782,8 @@ void __cdecl BG_Dog_Init_Attack_Look_At(int localClientNum, const entityState_s 
 {
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
+
     if ( obj )
     {
         BG_Dog_Clear_Look_At(localClientNum, es);
@@ -811,12 +800,7 @@ void __cdecl BG_Dog_Stop_AttackIdle(int localClientNum, const entityState_s *es,
     XAnimTree_s *v4; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         if ( prevState < ACTOR_ANIMATION_STOP_IDLE || prevState > ACTOR_ANIMATION_STOP_ATTACKIDLE_GROWL )
@@ -831,7 +815,7 @@ void __cdecl BG_Dog_Stop_AttackIdle(int localClientNum, const entityState_s *es,
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -844,12 +828,8 @@ void __cdecl BG_Dog_Stop_AttackIdle_Bark(int localClientNum, const entityState_s
     XAnimTree_s *v4; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
+
     if ( obj )
     {
         if ( prevState < ACTOR_ANIMATION_STOP_IDLE || prevState > ACTOR_ANIMATION_STOP_ATTACKIDLE_GROWL )
@@ -864,7 +844,7 @@ void __cdecl BG_Dog_Stop_AttackIdle_Bark(int localClientNum, const entityState_s
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -877,12 +857,8 @@ void __cdecl BG_Dog_Stop_AttackIdle_Growl(int localClientNum, const entityState_
     XAnimTree_s *v4; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
+
     if ( obj )
     {
         if ( prevState < ACTOR_ANIMATION_STOP_IDLE || prevState > ACTOR_ANIMATION_STOP_ATTACKIDLE_GROWL )
@@ -897,24 +873,20 @@ void __cdecl BG_Dog_Stop_AttackIdle_Growl(int localClientNum, const entityState_
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Pain_Main(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Pain_Main(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
+
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -925,24 +897,20 @@ void __cdecl BG_Dog_Pain_Main(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Pain_Front(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Pain_Front(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
+
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -953,24 +921,19 @@ void __cdecl BG_Dog_Pain_Front(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Pain_Back(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Pain_Back(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -981,24 +944,19 @@ void __cdecl BG_Dog_Pain_Back(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Pain_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Pain_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -1009,24 +967,20 @@ void __cdecl BG_Dog_Pain_Left(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Pain_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Pain_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
+
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -1037,24 +991,19 @@ void __cdecl BG_Dog_Pain_Right(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Run_Pain_Front(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Run_Pain_Front(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -1065,24 +1014,19 @@ void __cdecl BG_Dog_Run_Pain_Front(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Run_Pain_Back(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Run_Pain_Back(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -1093,24 +1037,19 @@ void __cdecl BG_Dog_Run_Pain_Back(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Run_Pain_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Run_Pain_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -1121,24 +1060,19 @@ void __cdecl BG_Dog_Run_Pain_Left(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Run_Pain_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Run_Pain_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
+    obj = bgs->GetDObj(es->number, localClientNum);
     if ( obj )
     {
         Tree = DObjGetTree(obj);
@@ -1149,25 +1083,20 @@ void __cdecl BG_Dog_Run_Pain_Right(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Death_Front(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Death_Front(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1177,25 +1106,20 @@ void __cdecl BG_Dog_Death_Front(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Death_Back(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Death_Back(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1205,25 +1129,20 @@ void __cdecl BG_Dog_Death_Back(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Death_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Death_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1233,25 +1152,20 @@ void __cdecl BG_Dog_Death_Left(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Death_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Death_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1261,7 +1175,7 @@ void __cdecl BG_Dog_Death_Right(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -1297,18 +1211,13 @@ void __cdecl BG_Dog_Death_Fast_Forward_Right(int localClientNum, const entitySta
     BG_Dog_FastForwardAnim(0x19u, actorInfo);
 }
 
-void __cdecl BG_Dog_Flashed(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Flashed(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1318,25 +1227,20 @@ void __cdecl BG_Dog_Flashed(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_AttackIdle(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_AttackIdle(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1346,25 +1250,20 @@ void __cdecl BG_Dog_Combat_AttackIdle(int localClientNum, const entityState_s *e
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_AttackIdle_Bark(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_AttackIdle_Bark(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1374,25 +1273,20 @@ void __cdecl BG_Dog_Combat_AttackIdle_Bark(int localClientNum, const entityState
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_AttackIdle_Growl(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_AttackIdle_Growl(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1402,25 +1296,20 @@ void __cdecl BG_Dog_Combat_AttackIdle_Growl(int localClientNum, const entityStat
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_Attack_Run(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_Attack_Run(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1430,25 +1319,20 @@ void __cdecl BG_Dog_Combat_Attack_Run(int localClientNum, const entityState_s *e
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_Attack_Player_Close_Range(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_Attack_Player_Close_Range(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.1, -1);
@@ -1458,25 +1342,20 @@ void __cdecl BG_Dog_Combat_Attack_Player_Close_Range(int localClientNum, const e
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_Attack_Miss(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_Attack_Miss(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.1, -1);
@@ -1486,7 +1365,7 @@ void __cdecl BG_Dog_Combat_Attack_Miss(int localClientNum, const entityState_s *
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -1494,18 +1373,13 @@ void __cdecl BG_Dog_Combat_Attack_Miss(int localClientNum, const entityState_s *
     }
 }
 
-void __cdecl BG_Dog_Combat_Attack_Miss_Left(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_Attack_Miss_Left(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.1, -1);
@@ -1515,25 +1389,20 @@ void __cdecl BG_Dog_Combat_Attack_Miss_Left(int localClientNum, const entityStat
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Combat_Attack_Miss_Right(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Combat_Attack_Miss_Right(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.1, -1);
@@ -1543,7 +1412,7 @@ void __cdecl BG_Dog_Combat_Attack_Miss_Right(int localClientNum, const entitySta
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
@@ -1560,20 +1429,15 @@ void __cdecl BG_Dog_Clear_Traverse_Anims(int localClientNum, const entityState_s
     XAnimTree_s *v8; // eax
     DObj *obj; // [esp+8h] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj
         && (prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_UP_40
-         || prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_UP_80
-         || prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_DOWN_40
-         || prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_DOWN_80
-         || prevState == ACTOR_ANIMATION_TRAVERSE_WALLHOP
-         || prevState == ACTOR_ANIMATION_TRAVERSE_WINDOW
-         || prevState == ACTOR_ANIMATION_TRAVERSE_THROUGH_HOLE_42) )
+            || prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_UP_80
+            || prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_DOWN_40
+            || prevState == ACTOR_ANIMATION_TRAVERSE_JUMP_DOWN_80
+            || prevState == ACTOR_ANIMATION_TRAVERSE_WALLHOP
+            || prevState == ACTOR_ANIMATION_TRAVERSE_WINDOW
+            || prevState == ACTOR_ANIMATION_TRAVERSE_THROUGH_HOLE_42))
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0x1Fu, 0.30000001, -1);
@@ -1590,18 +1454,13 @@ void __cdecl BG_Dog_Clear_Traverse_Anims(int localClientNum, const entityState_s
     }
 }
 
-void __cdecl BG_Dog_Traverse_Jump_Up_40(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Jump_Up_40(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1611,25 +1470,20 @@ void __cdecl BG_Dog_Traverse_Jump_Up_40(int localClientNum, const entityState_s 
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Traverse_Jump_Up_80(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Jump_Up_80(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1639,25 +1493,20 @@ void __cdecl BG_Dog_Traverse_Jump_Up_80(int localClientNum, const entityState_s 
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Traverse_Jump_Down_40(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Jump_Down_40(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1667,25 +1516,20 @@ void __cdecl BG_Dog_Traverse_Jump_Down_40(int localClientNum, const entityState_
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Traverse_Jump_Down_80(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Jump_Down_80(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1695,25 +1539,20 @@ void __cdecl BG_Dog_Traverse_Jump_Down_80(int localClientNum, const entityState_
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Traverse_Wallhop(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Wallhop(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1723,25 +1562,20 @@ void __cdecl BG_Dog_Traverse_Wallhop(int localClientNum, const entityState_s *es
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Traverse_Window(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Window(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1751,25 +1585,20 @@ void __cdecl BG_Dog_Traverse_Window(int localClientNum, const entityState_s *es)
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             1,
             -1);
     }
 }
 
-void __cdecl BG_Dog_Traverse_Through_Hole_42(int localClientNum, const entityState_s *es)
+void __cdecl BG_Dog_Traverse_Through_Hole_42(int localClientNum, const entityState_s *es, ActorAnimStates prevState)
 {
     XAnimTree_s *Tree; // eax
     DObj *obj; // [esp+1Ch] [ebp-4h]
 
-    obj = (DObj *)(*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                     + _tls_index)
-                                                                                                                 + 8)
-                                                                                         + 160))(
-                                    es->number,
-                                    localClientNum);
-    if ( obj )
+    obj = bgs->GetDObj(es->number, localClientNum);
+    if (obj)
     {
         Tree = DObjGetTree(obj);
         XAnimClearTreeGoalWeights(Tree, 0, 0.2, -1);
@@ -1780,10 +1609,9 @@ void __cdecl BG_Dog_Traverse_Through_Hole_42(int localClientNum, const entitySta
             1.0,
             0.2,
             s_animRate,
-            *(unsigned int *)(**(unsigned int **)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8) + 578468),
+            bgs->animData->done_notify,
             2u,
             0,
             -1);
     }
 }
-

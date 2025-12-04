@@ -1199,7 +1199,7 @@ void __cdecl CL_FirstSnapshot(int localClientNum)
         {
             Cbuf_AddText(localClientNum, cl_activeAction->current.string);
             Cbuf_AddText(localClientNum, "\n");
-            Dvar_SetString((dvar_s *)cl_activeAction, &toastPopupTitle);
+            Dvar_SetString((dvar_s *)cl_activeAction, "");
         }
     }
 }

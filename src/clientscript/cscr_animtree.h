@@ -6,7 +6,7 @@ struct XAnim_s;
 
 struct scr_animtree_t // sizeof=0x4
 {                                                                             // XREF: animScriptData_t/r
-        XAnim_s *anims;                                         // XREF: BG_FindAnimTree+1A/w
+    XAnim_s *anims;                                         // XREF: BG_FindAnimTree+1A/w
 };
 
 

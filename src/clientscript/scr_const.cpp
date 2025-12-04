@@ -4,6 +4,6 @@
 
 void __cdecl    GScr_LoadConsts()
 {
-    GScr_AllocString((char*)&toastPopupTitle);
+    GScr_AllocString((char*)"");
 }
 

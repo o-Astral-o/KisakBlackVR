@@ -1,4 +1,14 @@
 #include "db_stream.h"
+#include <universal/assertive.h>
+
+XBlock *g_streamBlocks;
+unsigned __int8 *g_streamPos;
+unsigned int g_streamPosIndex;
+unsigned int g_streamDelayIndex;
+unsigned __int8 *g_streamPosArray[7];
+unsigned int g_streamPosStackIndex;
+
+StreamPosInfo g_streamPosStack[64];
 
 void __cdecl DB_InitStreams(XBlock *blocks)
 {

@@ -797,7 +797,7 @@ XAssetHeader __cdecl DB_FindXAssetHeader(XAssetType type, char *name, bool error
             if ( !Sys_IsDatabaseReady2() )
             {
                 if ( Sys_IsMainThread() )
-                    BLOPS_NULLSUB();
+                    //BLOPS_NULLSUB();
                 break;
             }
         }
@@ -811,7 +811,7 @@ XAssetHeader __cdecl DB_FindXAssetHeader(XAssetType type, char *name, bool error
         else
         {
             if ( Sys_IsMainThread() )
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             if ( Sys_IsRenderThread() )
                 RB_Resource_Update(5);
             suspendedThread = Sys_HaveSuspendedDiscReads(THREAD_OWNER_DATABASE);
@@ -3127,7 +3127,7 @@ int __cdecl DB_TryLoadXFileInternal(const char *zoneName, int zoneFlags)
             _S1_4 |= 1u;
             zone_reorder = _Dvar_RegisterString(
                                              "zone_reorder",
-                                             (char *)&toastPopupTitle,
+                                             (char *)"",
                                              0,
                                              "Set to the name of the fast file you want to reorder");
         }
@@ -3871,7 +3871,7 @@ void DB_SyncExternalAssets()
         R_PushRemoteScreenUpdate(depth);
 }
 
-void __thiscall DB_ArchiveAssets(jpeg_decompress_struct *cinfo)
+void __thiscall DB_ArchiveAssets()
 {
     int depth; // [esp+0h] [ebp-4h]
 
@@ -3882,7 +3882,7 @@ void __thiscall DB_ArchiveAssets(jpeg_decompress_struct *cinfo)
         if ( Sys_IsMainThread() )
             depth = R_PopRemoteScreenUpdate();
         R_ClearAllStaticModelCacheRefs();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         DB_SaveDObjs();
         DB_RestartEffects_Begin();
         if ( Sys_IsMainThread() )
@@ -4042,7 +4042,7 @@ void DB_UnarchiveAssets()
         __debugbreak();
     }
     g_archiveBuf = 0;
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     DB_LoadDObjs();
     DB_RestartEffects_Finish();
     DB_ExternalInitAssets();
@@ -4058,7 +4058,7 @@ void DB_UnarchiveAssets()
         __debugbreak();
     }
     if ( Sys_IsMainThread() )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
 }
 
 void __cdecl DB_Cleanup()
@@ -4288,7 +4288,7 @@ void __cdecl DB_AddUserMapDir(char *zoneName)
 
     if ( DB_FileExists(zoneName, FFD_DEFAULT) || !DB_FileExists(zoneName, FFD_USER_MAP) )
     {
-        Dvar_SetStringByName("fs_usermapdir", (char *)&toastPopupTitle);
+        Dvar_SetStringByName("fs_usermapdir", (char *)"");
     }
     else
     {

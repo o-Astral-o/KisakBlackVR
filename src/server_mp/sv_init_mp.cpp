@@ -20,7 +20,7 @@ void __cdecl SV_SetConfigstring(int index, char *val)
     if ( sv.configstrings[index] )
     {
         if ( !val )
-            val = (char *)&toastPopupTitle;
+            val = (char *)"";
         if ( strcmp(val, SL_ConvertToString(sv.configstrings[index], SCRIPTINSTANCE_SERVER)) )
         {
             SL_RemoveRefToString(SCRIPTINSTANCE_SERVER, sv.configstrings[index]);
@@ -175,7 +175,7 @@ void __cdecl SV_SetUserinfo(int index, char *val)
     if ( index < 0 || index >= com_maxclients->current.integer )
         Com_Error(ERR_DROP, &byte_CEC370, index);
     if ( !val )
-        val = (char *)&toastPopupTitle;
+        val = (char *)"";
     I_strncpyz(svs.clients[index].userinfo, val, 1024);
     v2 = Info_ValueForKey(val, "name");
     I_strncpyz(svs.clients[index].name, v2, 32);
@@ -289,7 +289,7 @@ void __cdecl SV_Startup(int controllerIndex)
             Com_Error(ERR_DROP, "Dedicated server authentication failure.\n");
         Com_Printf(0, "should be logged in ok\n");
     }
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( com_maxclients->current.integer > 32
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\server_mp\\sv_init_mp.cpp",
@@ -562,10 +562,10 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
         }
     }
     R_BeginRemoteScreenUpdate();
-    sv.emptyConfigString = SL_GetString_(SCRIPTINSTANCE_SERVER, &toastPopupTitle, 0, 19);
+    sv.emptyConfigString = SL_GetString_(SCRIPTINSTANCE_SERVER, "", 0, 19);
     for ( i = 0; i < 3260; ++i )
     {
-        String = SL_GetString_(SCRIPTINSTANCE_SERVER, &toastPopupTitle, 0, 19);
+        String = SL_GetString_(SCRIPTINSTANCE_SERVER, "", 0, 19);
         sv.configstrings[i] = String;
     }
     Dvar_ResetScriptInfo();
@@ -757,7 +757,7 @@ void __cdecl SV_Init()
     SV_BotRegisterDvars();
     sv_gametype = _Dvar_RegisterString("g_gametype", "tdm", 0x24u, "Current game type");
     _Dvar_RegisterInt("protocol", 1044, 1044, 1044, 0x44u, "Protocol version");
-    sv_mapname = _Dvar_RegisterString("mapname", (char *)&toastPopupTitle, 0x44u, "Current map name");
+    sv_mapname = _Dvar_RegisterString("mapname", (char *)"", 0x44u, "Current map name");
     sv_privateClients = _Dvar_RegisterInt(
                                                 "sv_privateClients",
                                                 0,
@@ -771,7 +771,7 @@ void __cdecl SV_Init()
                                 "Unknown Soldier",
                                 0,
                                 "Player name assigned to players that fail name validation");
-    sv_geolocation = _Dvar_RegisterString("sv_geolocation", (char *)&toastPopupTitle, 0x10u, "geolocation");
+    sv_geolocation = _Dvar_RegisterString("sv_geolocation", (char *)"", 0x10u, "geolocation");
     sv_maxgrouperrors = _Dvar_RegisterInt(
                                                 "sv_maxgrouperrors",
                                                 5,
@@ -779,8 +779,8 @@ void __cdecl SV_Init()
                                                 0x7FFFFFFF,
                                                 0,
                                                 "Number of group errors before a sys_error");
-    sv_ownerid = _Dvar_RegisterString("sv_ownerid", (char *)&toastPopupTitle, 0, "SteamID of server owner");
-    sv_numreservedslots = _Dvar_RegisterInt("maxreservedslots", 6, 0, 6, 0x40u, &toastPopupTitle);
+    sv_ownerid = _Dvar_RegisterString("sv_ownerid", (char *)"", 0, "SteamID of server owner");
+    sv_numreservedslots = _Dvar_RegisterInt("maxreservedslots", 6, 0, 6, 0x40u, "");
     sv_clientSideBullets = _Dvar_RegisterBool(
                                                      "sv_clientSideBullets",
                                                      1,
@@ -864,7 +864,7 @@ void __cdecl SV_Init()
                                                          0,
                                                          0,
                                                          "Special script mode for writing config string files");
-    _Dvar_RegisterString("sv_keywords", (char *)&toastPopupTitle, 0, "Server keywords");
+    _Dvar_RegisterString("sv_keywords", (char *)"", 0, "Server keywords");
     sv_dwlsgerror = _Dvar_RegisterBool("sv_dwlsgerror", 0, 0, "Demonware LSG error");
     sv_allowAnonymous = _Dvar_RegisterBool("sv_allowAnonymous", 0, 0, "Allow anonymous access");
     sv_disableClientConsole = _Dvar_RegisterBool(
@@ -874,48 +874,48 @@ void __cdecl SV_Init()
                                                             "Disallow remote clients from accessing the console");
     sv_privatePassword = _Dvar_RegisterString(
                                                  "sv_privatePassword",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "password for the privateClient slots");
     sv_allowDownload = _Dvar_RegisterBool("sv_allowDownload", 1, 1u, "Allow auto download of files");
-    sv_iwds = _Dvar_RegisterString("sv_iwds", (char *)&toastPopupTitle, 0x48u, "IWD server checksums");
+    sv_iwds = _Dvar_RegisterString("sv_iwds", (char *)"", 0x48u, "IWD server checksums");
     sv_iwdNames = _Dvar_RegisterString(
                                     "sv_iwdNames",
-                                    (char *)&toastPopupTitle,
+                                    (char *)"",
                                     0x48u,
                                     "Names of IWD files used by the server");
     sv_referencedIwds = _Dvar_RegisterString(
                                                 "sv_referencedIwds",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0x48u,
                                                 "Checksum of all referenced IWD files");
     sv_referencedIwdNames = _Dvar_RegisterString(
                                                         "sv_referencedIwdNames",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0x48u,
                                                         "Names of all referenced IWD files");
-    sv_FFCheckSums = _Dvar_RegisterString("sv_FFCheckSums", (char *)&toastPopupTitle, 0x48u, "Fast File server checksums");
+    sv_FFCheckSums = _Dvar_RegisterString("sv_FFCheckSums", (char *)"", 0x48u, "Fast File server checksums");
     sv_FFNames = _Dvar_RegisterString(
                                  "sv_FFNames",
-                                 (char *)&toastPopupTitle,
+                                 (char *)"",
                                  0x48u,
                                  "Names of Fast Files used by the server");
     sv_referencedFFCheckSums = _Dvar_RegisterString(
                                                              "sv_referencedFFCheckSums",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              0x48u,
                                                              "Checksum of all referenced Fast Files");
     sv_referencedFFNames = _Dvar_RegisterString(
                                                      "sv_referencedFFNames",
-                                                     (char *)&toastPopupTitle,
+                                                     (char *)"",
                                                      0x48u,
                                                      "Names of all referenced Fast Files");
-    sv_authenticating = _Dvar_RegisterBool("sv_authenticating", 0, 0x40u, &toastPopupTitle);
+    sv_authenticating = _Dvar_RegisterBool("sv_authenticating", 0, 0x40u, "");
     sv_voice = _Dvar_RegisterBool("sv_voice", 0, 0x105u, "Use server side voice communications");
     sv_voiceQuality = _Dvar_RegisterInt("sv_voiceQuality", 3, 0, 9, 0x100u, "Voice quality");
     sv_cheats = _Dvar_RegisterBool("sv_cheats", 1, 0x18u, "Enable cheats on the server");
     sv_pure = _Dvar_RegisterBool("sv_pure", 0, 0x104u, "Cannot use modified IWD files");
-    rcon_password = _Dvar_RegisterString("rcon_password", (char *)&toastPopupTitle, 0, "Password for the rcon command");
+    rcon_password = _Dvar_RegisterString("rcon_password", (char *)"", 0, "Password for the rcon command");
     sv_fps = _Dvar_RegisterInt("sv_fps", 20, 10, 1000, 0, "Server frames per second");
     sv_showPingSpam = _Dvar_RegisterInt("sv_showPingSpam", 0, 0, 1, 0, "Turns on ping info spam.");
     sv_zombietime = _Dvar_RegisterInt("sv_zombietime", 2, 0, 1800, 0, "seconds to sync messages after disconnect");
@@ -923,12 +923,12 @@ void __cdecl SV_Init()
     sv_padPackets = _Dvar_RegisterInt("sv_padPackets", 0, 0, 0x7FFFFFFF, 0, "add nop bytes to messages");
     sv_allowedClan1 = _Dvar_RegisterString(
                                             "sv_allowedClan1",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0,
                                             "Allow this clan to join the server");
     sv_allowedClan2 = _Dvar_RegisterString(
                                             "sv_allowedClan2",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0,
                                             "Allow this clan to join the server");
     sv_packet_info = _Dvar_RegisterBool("sv_packet_info", 0, 0, "Enable packet info debugging information");
@@ -977,12 +977,12 @@ void __cdecl SV_Init()
     sv_printMessageSize = _Dvar_RegisterBool("sv_printMessageSize", 0, 0, "print out size of client messages");
     sv_mapRotation = _Dvar_RegisterString(
                                          "sv_mapRotation",
-                                         (char *)&toastPopupTitle,
+                                         (char *)"",
                                          0,
                                          "List of maps for the server to play");
     sv_mapRotationCurrent = _Dvar_RegisterString(
                                                         "sv_mapRotationCurrent",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "Current map in the map rotation");
     sv_debugRate = _Dvar_RegisterBool("sv_debugRate", 0, 0, "Enable snapshot rate debugging info");
@@ -991,12 +991,12 @@ void __cdecl SV_Init()
                                                      0,
                                                      0,
                                                      "Enable debugging information for 'reliable' commands");
-    nextmap = _Dvar_RegisterString("nextmap", (char *)&toastPopupTitle, 0, "Next map to play");
+    nextmap = _Dvar_RegisterString("nextmap", (char *)"", 0, "Next map to play");
     com_movieIsPlaying = _Dvar_RegisterBool("com_movieIsPlaying", 0, 0, "Is a movie playiner.");
     sv_wwwDownload = _Dvar_RegisterBool("sv_wwwDownload", 0, 1u, "Enable http downloads");
     sv_wwwBaseURL = _Dvar_RegisterString(
                                         "sv_wwwBaseURL",
-                                        (char *)&toastPopupTitle,
+                                        (char *)"",
                                         1u,
                                         "The base url for files downloaded via http");
     sv_wwwDlDisconnected = _Dvar_RegisterBool(
@@ -1059,7 +1059,7 @@ void __cdecl SV_Shutdown(const char *finalmsg)
         SV_FinalMessage(finalmsg);
         v1 = va("shutting down: %s", finalmsg);
         SV_SysLog_LogMessage(5, v1);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         SV_ShutdownGameProgs();
         SV_DropAllClients();
         LiveSteam_Server_Shutdown();

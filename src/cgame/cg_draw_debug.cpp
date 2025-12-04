@@ -167,7 +167,7 @@ double __cdecl CG_DrawViewpos(const ScreenPlacement *scrPlace, float y, int loca
         v5 = cgameGlob->refdef.vieworg[0];
         String = Dvar_GetString("mapname");
         s = va("%s (%.1f %.1f %.1f) %.1f %.1f", String, v5, v6, posX, labelWidth, v9);
-        return (float)(CG_CornerDebugPrint(scrPlace, farRight, y, 0.0, s, (char *)&toastPopupTitle, colorWhite) + y);
+        return (float)(CG_CornerDebugPrint(scrPlace, farRight, y, 0.0, s, (char *)"", colorWhite) + y);
     }
     return y;
 }
@@ -254,11 +254,11 @@ double __cdecl DrawEntityCounts(const ScreenPlacement *scrPlace, float posY)
         {
             if ( numUsedEntities > 900 )
                 color = colorYellow;
-            v2 = CG_CornerDebugPrint(scrPlace, posX, posY, v24, str, (char *)&toastPopupTitle, color);
+            v2 = CG_CornerDebugPrint(scrPlace, posX, posY, v24, str, (char *)"", color);
         }
         else
         {
-            v2 = CG_CornerDebugPrint(scrPlace, posX, posY, v24, str, (char *)&toastPopupTitle, colorRed);
+            v2 = CG_CornerDebugPrint(scrPlace, posX, posY, v24, str, (char *)"", colorRed);
         }
         posY = v2 + posY;
     }
@@ -271,11 +271,11 @@ double __cdecl DrawEntityCounts(const ScreenPlacement *scrPlace, float posY)
     {
         if ( g_maxEntsInSnapshot->current.integer > 900 )
             colora = colorYellow;
-        v4 = CG_CornerDebugPrint(scrPlace, posX, posY, v23, stra, (char *)&toastPopupTitle, colora);
+        v4 = CG_CornerDebugPrint(scrPlace, posX, posY, v23, stra, (char *)"", colora);
     }
     else
     {
-        v4 = CG_CornerDebugPrint(scrPlace, posX, posY, v23, stra, (char *)&toastPopupTitle, colorRed);
+        v4 = CG_CornerDebugPrint(scrPlace, posX, posY, v23, stra, (char *)"", colorRed);
     }
     posYa = v4 + posY;
     total = 0;
@@ -371,7 +371,7 @@ double __cdecl DrawEntityCounts(const ScreenPlacement *scrPlace, float posY)
                         {
                             v12 = va("%s: %d\n", "<unknown>", entity_counts[0]);
                         }
-                        posYa = CG_CornerDebugPrint(scrPlace, posX, posYa, v21, v12, (char *)&toastPopupTitle, colorWhite) + posYa;
+                        posYa = CG_CornerDebugPrint(scrPlace, posX, posYa, v21, v12, (char *)"", colorWhite) + posYa;
                     }
                 }
                 goto LABEL_79;
@@ -418,23 +418,23 @@ LABEL_58:
                 v17 = entity_counts[ic];
                 EntityTypeName = BG_GetEntityTypeName(ic);
                 strc = va("%s: %d\n", EntityTypeName, v17);
-                posYa = CG_CornerDebugPrint(scrPlace, posX, posYa, v20, strc, (char *)&toastPopupTitle, colorWhite) + posYa;
+                posYa = CG_CornerDebugPrint(scrPlace, posX, posYa, v20, strc, (char *)"", colorWhite) + posYa;
             }
         }
     }
 LABEL_79:
     labelWidth = (float)R_TextWidth(" ents in snapshot", 0, cgMedia.smallDevFont) * 1.0;
     v14 = va("ents in snapshot: %d\n", g_entsInSnapshot->current.integer);
-    posYi = CG_CornerDebugPrint(scrPlace, posX, posYa, labelWidth, v14, (char *)&toastPopupTitle, colorWhite) + posYa;
+    posYi = CG_CornerDebugPrint(scrPlace, posX, posYa, labelWidth, v14, (char *)"", colorWhite) + posYa;
     labelWidtha = (float)R_TextWidth(" ents client_once", 0, cgMedia.smallDevFont) * 1.0;
     v15 = va("ents client_once: %d\n", g_entsClientOnce);
-    posYj = CG_CornerDebugPrint(scrPlace, posX, posYi, labelWidtha, v15, (char *)&toastPopupTitle, colorWhite) + posYi;
+    posYj = CG_CornerDebugPrint(scrPlace, posX, posYi, labelWidtha, v15, (char *)"", colorWhite) + posYi;
     labelWidthb = (float)R_TextWidth(" ents delta xxxxx", 0, cgMedia.smallDevFont) * 1.0;
     v16 = va("ents delta compared: %d\n", g_entsDeltaCompared);
-    posYk = CG_CornerDebugPrint(scrPlace, posX, posYj, labelWidthb, v16, (char *)&toastPopupTitle, colorWhite) + posYj;
+    posYk = CG_CornerDebugPrint(scrPlace, posX, posYj, labelWidthb, v16, (char *)"", colorWhite) + posYj;
     v19 = (float)R_TextWidth(" ents transmitted", 0, cgMedia.smallDevFont) * 1.0;
     strd = va("ents transmitted: %d\n", g_entsTransmitted);
-    return (float)(CG_CornerDebugPrint(scrPlace, posX, posYk, v19, strd, (char *)&toastPopupTitle, colorWhite) + posYk);
+    return (float)(CG_CornerDebugPrint(scrPlace, posX, posYk, v19, strd, (char *)"", colorWhite) + posYk);
 }
 
 double __cdecl DrawSnapshotInfo(const ScreenPlacement *scrPlace, float posY)
@@ -823,7 +823,7 @@ void __cdecl CG_DrawSoundOverlay(const ScreenPlacement *scrPlace)
     string = va(
                          "%s sounds    reverb: %s    channels in use %d    sort by %s",
                          *(const char **)(snd_drawInfo->domain.integer.max + 4 * type),
-                         &toastPopupTitle,
+                         "",
                          v6,
                          *(const char **)(snd_drawSort->domain.integer.max + 4 * type));
     CG_DrawStringExt(scrPlace, x, y, string, colorWhite, 0, 1, 14.0);
@@ -1215,7 +1215,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yc,
                      (float)offs + labelWidth,
                      "                                     ",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorWhite)
              + yc;
         ys = CG_CornerDebugPrint(
@@ -1224,7 +1224,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yr,
                      (float)offs + labelWidth,
                      "** ENTITY BRUSHES *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorWhite)
              + yr;
         yt = CG_CornerDebugPrint(
@@ -1233,7 +1233,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      ys,
                      (float)offs + labelWidth,
                      "*                                 *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorWhite)
              + ys;
         yu = CG_CornerDebugPrint(
@@ -1242,7 +1242,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yt,
                      (float)offs + labelWidth,
                      "*    server ents        *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorCyan)
              + yt;
         yv = CG_CornerDebugPrint(
@@ -1251,7 +1251,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yu,
                      (float)offs + labelWidth,
                      "*    server trigs     *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorRed)
              + yu;
         yw = CG_CornerDebugPrint(
@@ -1260,7 +1260,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yv,
                      (float)offs + labelWidth,
                      "*    dyn ents             *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorGreen)
              + yv;
         yx = CG_CornerDebugPrint(
@@ -1269,7 +1269,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yw,
                      (float)offs + labelWidth,
                      "*    cl only ents     *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorYellow)
              + yw;
         yy = CG_CornerDebugPrint(
@@ -1278,7 +1278,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yx,
                      (float)offs + labelWidth,
                      "*    client trigs     *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorWhite)
              + yx;
         yz = CG_CornerDebugPrint(
@@ -1287,7 +1287,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                      yy,
                      (float)offs + labelWidth,
                      "*                                 *",
-                     (char *)&toastPopupTitle,
+                     (char *)"",
                      colorWhite)
              + yy;
         yba = CG_CornerDebugPrint(
@@ -1296,7 +1296,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                         yz,
                         (float)offs + labelWidth,
                         "*******************",
-                        (char *)&toastPopupTitle,
+                        (char *)"",
                         colorWhite)
                 + yz;
         return (float)(CG_CornerDebugPrint(
@@ -1305,7 +1305,7 @@ double __cdecl CG_DrawFPS(int localClientNum, const ScreenPlacement *scrPlace, f
                                          yba,
                                          (float)offs + labelWidth,
                                          "                                     ",
-                                         (char *)&toastPopupTitle,
+                                         (char *)"",
                                          colorWhite)
                                  + yba);
     }

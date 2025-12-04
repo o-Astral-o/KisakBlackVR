@@ -10,7 +10,7 @@ rigid_body_pair_key *__thiscall rigid_body_pair_key::rigid_body_pair_key(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  232,
                  "b1 != b2",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -19,7 +19,7 @@ rigid_body_pair_key *__thiscall rigid_body_pair_key::rigid_body_pair_key(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                  233,
                  "b1",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -29,7 +29,7 @@ rigid_body_pair_key *__thiscall rigid_body_pair_key::rigid_body_pair_key(
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
                      234,
                      "b2",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -182,7 +182,7 @@ phys_free_list<user_rigid_body>::T_internal_base *__cdecl phys_sys::get_user_rig
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rigid_body_internal.h",
                          31,
                          "rb->is_user_rigid_body()",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -780,7 +780,7 @@ void __cdecl phys_sys::destroy_all_unused_user_rigid_body()
                                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                      477,
                                      "data",
-                                     &toastPopupTitle) )
+                                     "") )
                         {
                             __debugbreak();
                         }
@@ -1105,7 +1105,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1142,7 +1142,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v14 = v9;
                 PMM_VALIDATE((char *)v9, 0xF0u, 0x10u);
                 if ( !v14
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1177,7 +1177,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v22 = (phys_free_list<broad_phase_group>::T_internal *)v17;
                 PMM_VALIDATE((char *)v17, 0x80u, 0x10u);
                 if ( !v22
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1211,7 +1211,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v30 = v25;
                 PMM_VALIDATE((char *)v25, 0x140u, 0x10u);
                 if ( !v30
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1245,7 +1245,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v38 = v33;
                 PMM_VALIDATE((char *)v33, 0xF0u, 0x10u);
                 if ( !v38
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1279,7 +1279,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v46 = v41;
                 PMM_VALIDATE((char *)v41, 0xE0u, 0x10u);
                 if ( !v46
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1313,7 +1313,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v54 = v49;
                 PMM_VALIDATE((char *)v49, 0xD0u, 0x10u);
                 if ( !v54
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1347,7 +1347,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v62 = v57;
                 PMM_VALIDATE((char *)v57, 0x3Cu, 4u);
                 if ( !v62
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1381,7 +1381,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v70 = v65;
                 PMM_VALIDATE((char *)v65, 0xA0u, 0x10u);
                 if ( !v70
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1415,7 +1415,7 @@ void __cdecl phys_sys::destroy_all_user_rigid_body()
                 v78 = v73;
                 PMM_VALIDATE((char *)v73, 0x38u, 4u);
                 if ( !v78
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1552,7 +1552,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1595,7 +1595,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1632,7 +1632,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                 v24 = (phys_free_list<broad_phase_group>::T_internal *)v19;
                 PMM_VALIDATE((char *)v19, 0x80u, 0x10u);
                 if ( !v24
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1671,7 +1671,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1708,7 +1708,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                 v40 = v35;
                 PMM_VALIDATE((char *)v35, 0xF0u, 0x10u);
                 if ( !v40
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1747,7 +1747,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1784,7 +1784,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                 v56 = v51;
                 PMM_VALIDATE((char *)v51, 0xD0u, 0x10u);
                 if ( !v56
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1823,7 +1823,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -1860,7 +1860,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                 v72 = v67;
                 PMM_VALIDATE((char *)v67, 0xA0u, 0x10u);
                 if ( !v72
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -1900,7 +1900,7 @@ void __cdecl phys_sys::destroy_all_constraint(rigid_body *const rb)
                                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                      477,
                                      "data",
-                                     &toastPopupTitle) )
+                                     "") )
                         {
                             __debugbreak();
                         }
@@ -2036,7 +2036,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -2080,7 +2080,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -2121,7 +2121,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v22 = (phys_free_list<broad_phase_group>::T_internal *)v17;
                 PMM_VALIDATE((char *)v17, 0x80u, 0x10u);
                 if ( !v22
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2159,7 +2159,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v30 = (phys_free_list<rigid_body_constraint_ragdoll>::T_internal *)v25;
                 PMM_VALIDATE((char *)v25, 0x140u, 0x10u);
                 if ( !v30
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2197,7 +2197,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v38 = (phys_free_list<rigid_body_constraint_wheel>::T_internal *)v33;
                 PMM_VALIDATE((char *)v33, 0xF0u, 0x10u);
                 if ( !v38
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2235,7 +2235,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v46 = (phys_free_list<rigid_body_constraint_angular_actuator>::T_internal *)v41;
                 PMM_VALIDATE((char *)v41, 0xE0u, 0x10u);
                 if ( !v46
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2273,7 +2273,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v54 = (phys_free_list<rigid_body_constraint_upright>::T_internal *)v49;
                 PMM_VALIDATE((char *)v49, 0xD0u, 0x10u);
                 if ( !v54
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2311,7 +2311,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v62 = (phys_free_list<rigid_body_constraint_custom_orientation>::T_internal *)v57;
                 PMM_VALIDATE((char *)v57, 0x3Cu, 4u);
                 if ( !v62
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2349,7 +2349,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                 v70 = (phys_free_list<rigid_body_constraint_custom_path>::T_internal *)v65;
                 PMM_VALIDATE((char *)v65, 0xA0u, 0x10u);
                 if ( !v70
-                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", &toastPopupTitle) )
+                    && _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 477, "data", "") )
                 {
                     __debugbreak();
                 }
@@ -2392,7 +2392,7 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
                                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
                                  477,
                                  "data",
-                                 &toastPopupTitle) )
+                                 "") )
                     {
                         __debugbreak();
                     }
@@ -2825,7 +2825,7 @@ void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                      103,
                      "cur_item + 1 - the_stack < 32",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -2850,7 +2850,7 @@ void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                          112,
                          "key > accessor::get_avl_key(root)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2884,7 +2884,7 @@ void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_
                              130,
                              "accessor::get_avl_node(accessor::get_avl_node(root)->m_left)->m_balance == -1 || accessor::get_avl_node(a"
                              "ccessor::get_avl_node(root)->m_left)->m_balance == 1",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -2919,7 +2919,7 @@ void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_
                                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                                 134,
                                 "accessor::get_avl_node(root)->m_balance == 0",
-                                &toastPopupTitle);
+                                "");
             }
             else
             {
@@ -2933,7 +2933,7 @@ void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_
                              138,
                              "accessor::get_avl_node(accessor::get_avl_node(root)->m_right)->m_balance == -1 || accessor::get_avl_node("
                              "accessor::get_avl_node(root)->m_right)->m_balance == 1",
-                             &toastPopupTitle) )
+                             "") )
                 {
                     __debugbreak();
                 }
@@ -2969,7 +2969,7 @@ void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_
                                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
                                 142,
                                 "accessor::get_avl_node(root)->m_balance == 0",
-                                &toastPopupTitle);
+                                "");
             }
             if ( v22 )
                 __debugbreak();

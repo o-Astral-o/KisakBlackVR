@@ -1,31 +1,12 @@
 #pragma once
 
 #include <qcommon/ent.h>
+#include <game/teams.h>
+#include <client_mp/client_mp.h>
+#include <sound/snd.h>
+#include "bg_animation.h"
 
-enum weapType_t : __int32
-{                                                                             // XREF: WeaponDef/r
-                                                                                // ?G_GetWeaponAttachBone@@YAGPAUclientInfo_t@@W4weapType_t@@W4weapInventoryType_t@@@Z/r ...
-        WEAPTYPE_BULLET = 0x0,
-        WEAPTYPE_GRENADE = 0x1,
-        WEAPTYPE_PROJECTILE = 0x2,
-        WEAPTYPE_BINOCULARS = 0x3,
-        WEAPTYPE_GAS = 0x4,
-        WEAPTYPE_BOMB = 0x5,
-        WEAPTYPE_MINE = 0x6,
-        WEAPTYPE_MELEE = 0x7,
-        WEAPTYPE_NUM = 0x8,
-};
 
-enum weapInventoryType_t : __int32
-{                                                                             // XREF: WeaponDef/r
-                                                                                // ?G_GetWeaponAttachBone@@YAGPAUclientInfo_t@@W4weapType_t@@W4weapInventoryType_t@@@Z/r ...
-        WEAPINVENTORY_PRIMARY = 0x0,
-        WEAPINVENTORY_OFFHAND = 0x1,
-        WEAPINVENTORY_ITEM        = 0x2,
-        WEAPINVENTORY_ALTMODE = 0x3,
-        WEAPINVENTORY_MELEE     = 0x4,
-        WEAPINVENTORYCOUNT        = 0x5,
-};
 
 struct GfxSkinCacheEntry // sizeof=0xC
 {                                                                             // XREF: cpose_t/r
@@ -159,16 +140,6 @@ struct CEntGeneral // sizeof=0x20
         float maxs[3];
 };
 
-union $251974A72D8ACF7EC8C19B3B5F3F224B // sizeof=0x90
-{                                                                             // XREF: cpose_t/r
-        CEntPlayerInfo player;
-        CEntTurretInfo turret;
-        CEntVehicleInfo vehicle;
-        CEntFx fx;
-        CEntActorInfo actor;
-        CEntGeneral general;
-};
-
 struct ShaderConstantSet // sizeof=0x78
 {                                                                             // XREF: cpose_t/r
                                                                                 // GfxBackEndData/r ...
@@ -207,7 +178,16 @@ struct cpose_t // sizeof=0x174
         float absmin[3];
         float absmax[3];
         GfxSkinCacheEntry skinCacheEntry;
-        $251974A72D8ACF7EC8C19B3B5F3F224B ___u19;
+        //$251974A72D8ACF7EC8C19B3B5F3F224B ___u19;
+        union //$251974A72D8ACF7EC8C19B3B5F3F224B // sizeof=0x90
+        {                                                                             // XREF: cpose_t/r
+            CEntPlayerInfo player;
+            CEntTurretInfo turret;
+            CEntVehicleInfo vehicle;
+            CEntFx fx;
+            CEntActorInfo actor;
+            CEntGeneral general;
+        };
         ShaderConstantSet constantSet;
 };
 
@@ -737,29 +717,6 @@ struct playerState_s // sizeof=0x26A4
         } hud;
 };
 
-struct __declspec(align(8)) animation_s // sizeof=0x78
-{                                                                             // XREF: animScriptData_t/r
-                                                                                // animation_t/r
-        char name[64];
-        int initialLerp;
-        int finalLerp;
-        float forceAnimRate;
-        float moveSpeed;
-        float rotSpeed;
-        int duration;
-        int nameHash;
-        int flags;
-        __int64 movetype;
-        int stance;
-        int movestatus;
-        int noteType;
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-};
-
-
 struct lerpFrame_t // sizeof=0x34
 {                                                                             // XREF: clientInfo_t/r
                                                                                 // clientInfo_t/r ...
@@ -769,7 +726,7 @@ struct lerpFrame_t // sizeof=0x34
         float pitchAngle;
         int pitching;
         int animationNumber;
-        animation_s *animation;
+        struct animation_s *animation;
         int animationTime;
         float oldFramePos[3];
         float oldFrameYaw;
@@ -921,4 +878,65 @@ struct actorInfo_t // sizeof=0x54
         animInfo_t animInfo;
         int dobjDirty;
         XAnimTree_s *pXAnimTree;
+};
+
+struct pml_t // sizeof=0x8C
+{                                       // XREF: ?Update@UIViewer@@QAEXM@Z/r
+                                        // PmoveSingle/r
+    float forward[3];
+    float right[3];                     // XREF: PmoveSingle+D4C/o
+                                        // PmoveSingle+DA4/o
+    float up[3];                        // XREF: PmoveSingle+D76/w
+                                        // PmoveSingle+D86/w ...
+    float frametime;                    // XREF: PmoveSingle+CE0/w
+                                        // PmoveSingle+157F/r ...
+    int msec;                           // XREF: PmoveSingle+C30/w
+                                        // PmoveSingle+C33/r ...
+    int walking;                        // XREF: PmoveSingle+1133/w
+                                        // PmoveSingle+132C/w ...
+    int groundPlane;                    // XREF: PmoveSingle+1125/w
+                                        // PmoveSingle+131E/w ...
+    int almostGroundPlane;              // XREF: PmoveSingle+112C/w
+                                        // PmoveSingle+1325/w
+    trace_t groundTrace;                // XREF: PmoveSingle+13/o
+                                        // UIViewer::Update(float)+5F2/o
+    float impactSpeed;
+    float previous_origin[3];           // XREF: PmoveSingle+C73/w
+                                        // PmoveSingle+C83/w ...
+    float previous_velocity[3];         // XREF: PmoveSingle+CAE/w
+                                        // PmoveSingle+CBE/w ...
+};
+
+struct bgs_t // sizeof=0xBF00
+{                                       // XREF: .data:bgs_t level_bgs/r
+                                        // cg_s/r ...
+    bgsAnim_s *animData;                // XREF: G_PlayerVehiclePositionAndBlend(gentity_s *,gentity_s *)+4F2/r
+                                        // G_InitGame(int,int,int,int,int)+127/w ...
+    int time;                           // XREF: G_RunFrame(int)+5A/w
+    int latestSnapshotTime;             // XREF: G_RunFrame(int)+66/w
+    int frametime;                      // XREF: G_RunFrame(int)+71/w
+    int anim_user;                      // XREF: G_InitGame(int,int,int,int,int)+16D/w
+    int proneTime[32];
+    struct XModel *(__cdecl *GetXModel)(const char *);
+                                        // XREF: G_InitGame(int,int,int,int,int)+131/w
+    void (__cdecl *CreateDObj)(struct DObjModel_s *, unsigned __int16, XAnimTree_s *, int, int, clientInfo_t *);
+                                        // XREF: G_InitGame(int,int,int,int,int)+13B/w
+    unsigned __int16 (__cdecl *AttachWeapon)(struct DObjModel_s *, unsigned __int16, clientInfo_t *);
+                                        // XREF: G_InitGame(int,int,int,int,int)+145/w
+    struct DObj *(__cdecl *GetDObj)(int, int); // XREF: G_InitGame(int,int,int,int,int)+14F/w
+    void (__cdecl *SafeDObjFree)(int, int);
+                                        // XREF: G_InitGame(int,int,int,int,int)+159/w
+    void *(__cdecl *AllocXAnim)(int);   // XREF: G_InitGame(int,int,int,int,int)+163/w
+    int (__cdecl *Rand)();              // XREF: G_InitGame(int,int,int,int,int)+177/w
+    float (__cdecl *Random)();          // XREF: G_InitGame(int,int,int,int,int)+181/w
+    void (__cdecl *AnimCmdRefCount)(__int16, __int16, int);
+    void (__cdecl *AnimCmdAddDependent)(__int16, __int16);
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    clientInfo_t clientinfo[32];        // XREF: G_PlayerVehiclePositionAndBlend(gentity_s *,gentity_s *)+A5/o
+                                        // G_PlayerController(gentity_s const *,int * const)+62/o ...
+    actorInfo_t actorinfo[16];          // XREF: Actor_PostThink(actor_s *)+81/o
+                                        // Actor_Negotiation_Think(actor_s *)+2EC/o
 };

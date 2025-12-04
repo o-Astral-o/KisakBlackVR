@@ -959,7 +959,7 @@ void __cdecl UI_UpdateServerToolTips(int localClientNum, listBoxDef_s *listPtr)
                                         {
                                             toolTipText = Info_ValueForKey(info_8, "friendsOnServer");
                                             if ( !toolTipText || !*toolTipText )
-                                                toolTipText = (char *)&toastPopupTitle;
+                                                toolTipText = (char *)"";
                                         }
                                         break;
                                     case 4:

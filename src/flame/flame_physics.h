@@ -11,6 +11,10 @@ struct flamePhysics_t // sizeof=0x34
         float rotVel;
 };
 
+struct col_context_t;
+struct trace_t;
+struct flameGeneric_s;
+
 //void __thiscall colgeom_visitor_inlined_t<500>::reset(colgeom_visitor_inlined_t<200> *this);
 void __cdecl Flame_ClipVelocity(const float *in, const float *normal, float *out);
 void __cdecl trace_sphere(trace_t *trace, const float *start, const float *end, float radius, col_context_t *context);
@@ -73,6 +77,7 @@ void __cdecl Flame_Phys_Update_Item_Drip(
                 flameGeneric_s *gen,
                 int time,
                 phys_static_array<flameGeneric_s *,1000> *flames);
+
 void __thiscall colgeom_visitor_inlined_t<500>::visit(
                 colgeom_visitor_inlined_t<500> *this,
                 const CollisionAabbTree *tree);

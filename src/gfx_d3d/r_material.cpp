@@ -872,7 +872,7 @@ void __cdecl R_MaterialEdit_f()
     int i; // [esp+6Ch] [ebp-8h]
     int count; // [esp+70h] [ebp-4h]
 
-    search = &toastPopupTitle;
+    search = "";
     if ( Cmd_Argc() >= 2 )
         search = Cmd_Argv(1);
     Current_Edit_Material = 0;

@@ -16,12 +16,12 @@ void __thiscall CStringEdPackage::Clear(CStringEdPackage *this)
     this->m_bEndMarkerFound_ParseOnly = 0;
     std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::assign(
         &this->m_strCurrentEntryRef_ParseOnly,
-        &toastPopupTitle,
-        strlen(&toastPopupTitle));
+        "",
+        strlen(""));
     std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::assign(
         &this->m_strCurrentEntryEnglish_ParseOnly,
-        &toastPopupTitle,
-        strlen(&toastPopupTitle));
+        "",
+        strlen(""));
 }
 
 char *__thiscall CStringEdPackage::Filename_WithoutExt(CStringEdPackage *this, const char *psFilename)
@@ -377,8 +377,8 @@ std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>
     std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::_Tidy(&str, 0, 0);
     std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::assign(
         &str,
-        &toastPopupTitle,
-        strlen(&toastPopupTitle));
+        "",
+        strlen(""));
     while ( *psLine == 32 || *psLine == 9 )
         ++psLine;
     if ( *psLine == 34 )

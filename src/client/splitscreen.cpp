@@ -82,7 +82,7 @@ void __cdecl CL_LocalClients_SetAllUsedActive()
     for ( localClientNum = 0; localClientNum < 1; ++localClientNum )
     {
         Com_LocalClient_IsBeingUsed(localClientNum);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
 }
 

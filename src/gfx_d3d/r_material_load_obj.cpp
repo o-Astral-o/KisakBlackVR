@@ -551,8 +551,8 @@ char __cdecl Material_LoadPass(
                                                      paramSet.varyingInputs,
                                                      paramSet.varyingInputCount,
                                                      pass);
-                BLOPS_NULLSUB();
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 Material_LoadDeclTypes((const char **)text, pass);
                 strstr((unsigned __int8 *)*text, "vertexDef");
                 if ( v5 )
@@ -565,8 +565,8 @@ char __cdecl Material_LoadPass(
             else
             {
 LABEL_8:
-                BLOPS_NULLSUB();
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 return 0;
             }
         }
@@ -578,7 +578,7 @@ LABEL_8:
     }
     else
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         return 0;
     }
 }
@@ -1428,7 +1428,7 @@ const char *__cdecl Material_NameForStreamDest(unsigned __int8 dest)
             v2 = va("unhandled case %i", dest);
             if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_material_load_obj.cpp", 3215, 0, v2) )
                 __debugbreak();
-            result = &toastPopupTitle;
+            result = "";
             break;
     }
     return result;
@@ -1816,7 +1816,7 @@ void __cdecl Material_AddShaderFile(GfxAssembledShaderText *prog, const char *sh
 {
     if ( prog->fileCount < 0x80 )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         I_strncpyz(prog->files[prog->fileCount].fileName, shaderFileName, 256);
         prog->files[prog->fileCount].srcLine = srcLine;
         prog->files[prog->fileCount++].destLine = prog->currentDestLine;
@@ -6346,12 +6346,12 @@ void __cdecl Material_PreLoadAllShaderText()
     for ( fileIndex = 0; fileIndex < fileCountLib2; ++fileIndex )
         Material_PreLoadSingleShaderText(
             shaderListLib2[fileIndex],
-            &toastPopupTitle,
+            "",
             &mtlLoadGlob.cachedShaderText[cachedIndex++]);
     for ( fileIndex = 0; fileIndex < fileCountLib3; ++fileIndex )
         Material_PreLoadSingleShaderText(
             shaderListLib3[fileIndex],
-            &toastPopupTitle,
+            "",
             &mtlLoadGlob.cachedShaderText[cachedIndex++]);
     std::_Sort<GfxCachedShaderText *,int,bool (__cdecl *)(GfxCachedShaderText const &,GfxCachedShaderText const &)>(
         mtlLoadGlob.cachedShaderText,

@@ -1422,11 +1422,11 @@ void __cdecl Menus_CloseAllBehindMain(int localClientNum, UiContext *dc)
 
 void __cdecl UI_ClearErrors()
 {
-    Dvar_SetStringByName("error_menu_info", (char *)&toastPopupTitle);
-    Dvar_SetStringByName("com_errorMessage", (char *)&toastPopupTitle);
+    Dvar_SetStringByName("error_menu_info", (char *)"");
+    Dvar_SetStringByName("com_errorMessage", (char *)"");
     Dvar_SetBoolByName("com_isNotice", 0);
-    Dvar_SetStringByName("com_errorTitle", (char *)&toastPopupTitle);
-    Dvar_SetStringByName("ui_onCloseArgs", (char *)&toastPopupTitle);
+    Dvar_SetStringByName("com_errorTitle", (char *)"");
+    Dvar_SetStringByName("ui_onCloseArgs", (char *)"");
 }
 
 void __cdecl Script_Show(int localClientNum, UiContext *dc, itemDef_s *item, const char **args)
@@ -3305,7 +3305,7 @@ void __cdecl UI_OpenToastPopup_f()
     v0 = Cmd_Argv(1);
     I_strncpyz(uiInfo->toastPopupIconName, v0, 256);
     v1 = Cmd_Argv(2);
-    I_strncpyz(uiInfo->toastPopupTitle, v1, 256);
+    I_strncpyz(uiInfo->GLOBAL_EMPTY_STRING, v1, 256);
     v2 = Cmd_Argv(3);
     I_strncpyz(uiInfo->toastPopupDesc, v2, 256);
     v3 = Cmd_Argv(4);
@@ -3651,7 +3651,7 @@ void __cdecl UI_RaiseFeederEvent_f()
         else
         {
             v1 = Cmd_ItemDef();
-            UI_RaiseFeederEvent(0, v1, &toastPopupTitle);
+            UI_RaiseFeederEvent(0, v1, "");
         }
     }
     else
@@ -7143,8 +7143,8 @@ int __cdecl Item_Bind_HandleKey(int localClientNum, UiContext *dc, itemDef_s *it
                 {
                     if ( key == 127 || bindCount == 2 )
                     {
-                        Key_SetBinding(localClientNum, boundKeys[0], (char *)&toastPopupTitle, 1);
-                        Key_SetBinding(localClientNum, boundKeys[1], (char *)&toastPopupTitle, 1);
+                        Key_SetBinding(localClientNum, boundKeys[0], (char *)"", 1);
+                        Key_SetBinding(localClientNum, boundKeys[1], (char *)"", 1);
                     }
                     if ( key != 127 )
                         Key_SetBinding(localClientNum, key, (char *)item->dvar, 1);
@@ -7153,8 +7153,8 @@ int __cdecl Item_Bind_HandleKey(int localClientNum, UiContext *dc, itemDef_s *it
                 {
                     if ( key == 127 || bindCount == 2 )
                     {
-                        Key_SetBinding(localClientNum, boundKeys[0], (char *)&toastPopupTitle, 0);
-                        Key_SetBinding(localClientNum, boundKeys[1], (char *)&toastPopupTitle, 0);
+                        Key_SetBinding(localClientNum, boundKeys[0], (char *)"", 0);
+                        Key_SetBinding(localClientNum, boundKeys[1], (char *)"", 0);
                     }
                     if ( key != 127 )
                         Key_SetBinding(localClientNum, key, (char *)item->dvar, 0);
@@ -8272,7 +8272,7 @@ void __cdecl Window_Paint(
                 }
                 break;
             case 2u:
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 break;
             case 3u:
                 if ( (Window_GetDynamicFlags(dc->contextIndex, &item->parent->window) & 0x2000) != 0 )
@@ -8579,8 +8579,8 @@ LABEL_42:
                     w->borderColor);
                 break;
             case 4u:
-                BLOPS_NULLSUB();
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 break;
             case 5u:
                 value = ui_borderLowLightScale->current.value;
@@ -9266,7 +9266,7 @@ const char *__cdecl Item_Multi_Setting(itemDef_s *item)
                 return multiPtr->dvarList[ia];
         }
     }
-    return &toastPopupTitle;
+    return "";
 }
 
 void __cdecl Item_DvarEnum_Paint(int localClientNum, UiContext *dc, itemDef_s *item)
@@ -9305,7 +9305,7 @@ const char *__cdecl Item_DvarEnum_Setting(itemDef_s *item)
     if ( enumDvar->type != DVAR_TYPE_ENUM )
         return "<not an enum dvar>";
     if ( !enumDvar->domain.enumeration.stringCount )
-        return &toastPopupTitle;
+        return "";
     enumIndex = Item_DvarEnum_EnumIndex(item);
     if ( enumIndex < 0 || enumIndex >= enumDvar->domain.enumeration.stringCount )
     {
@@ -9515,7 +9515,7 @@ void __cdecl Item_Bind_Paint(int localClientNum, UiContext *dc, itemDef_s *item)
         textDefPtr->text = nameBind;
     }
     Item_Text_Paint(localClientNum, dc, item);
-    textDefPtr->text = &toastPopupTitle;
+    textDefPtr->text = "";
 }
 
 void __cdecl Item_ListBox_Paint(int localClientNum, UiContext *dc, itemDef_s *item)
@@ -9838,7 +9838,7 @@ LABEL_89:
                         {
                             if ( !item->animInfo || !item->animInfo->animating )
                             {
-                                BLOPS_NULLSUB();
+                                //BLOPS_NULLSUB();
                                 listPtr->drawPadding = (int)(float)(listPtr->elementHeight - size);
                             }
                             break;

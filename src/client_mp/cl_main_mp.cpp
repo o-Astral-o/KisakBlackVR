@@ -183,7 +183,7 @@ void __cdecl CL_WriteDemoFromContinuousStateBuffer(int localClientNum, int conti
     index = *(unsigned int *)(v4 + 16);
     while ( index != *(unsigned int *)(v4 + 20) )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         memcpy((unsigned __int8 *)&dst, (unsigned __int8 *)(*(unsigned int *)(v4 + 12) + count * v8), count);
         CL_WriteDemoClientArchive(LocalClientConnection->demofile, 1u, &dst, index);
         index = (index + 1) % 256;
@@ -513,7 +513,7 @@ void __cdecl CL_WriteUncompressedDemoInfo(int localClientNum)
                         {
                             MSG_WriteBit0(&buf);
                             MSG_WriteBits(&buf, i, 0xCu);
-                            MSG_WriteBigString(&buf, (char *)&toastPopupTitle);
+                            MSG_WriteBigString(&buf, (char *)"");
                             lastStringIndex = i;
                             ++numConfigStringsWritten;
                         }
@@ -649,7 +649,7 @@ void __cdecl CL_WriteAllDemoClientArchive(int localClientNum)
     MSG_Init(&buf, data, 4096);
     for ( index = 0; index < 256; ++index )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         CL_WriteDemoClientArchive(LocalClientConnection->demofile, 1u, &LocalClientGlobals->clientArchive[index], index);
     }
 }
@@ -855,7 +855,7 @@ void __cdecl CL_NextDemo(int localClientNum)
     Com_DPrintf(14, "CL_NextDemo: %s\n", v);
     if ( v[0] )
     {
-        Dvar_SetString((dvar_s *)nextdemo, &toastPopupTitle);
+        Dvar_SetString((dvar_s *)nextdemo, "");
         Cbuf_AddText(localClientNum, v);
         Cbuf_AddText(localClientNum, "\n");
         Cbuf_Execute(localClientNum, 0);
@@ -881,7 +881,7 @@ void __cdecl CL_ShutdownHunkUsers()
     if ( cls.hunkUsersStarted )
     {
         CL_ShutdownAllClientsCGame();
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         if ( cls.devGuiStarted )
         {
             CL_ShutdownDevGui();
@@ -969,7 +969,7 @@ void __cdecl CL_MapLoading(const char *mapname)
             dword_FB2C38[4 * localClientNum] = 0;
             CL_LocalClient_ClearCUIFlag(localClientNum, 64);
         }
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         LiveStorage_UploadStats();
         UI_CloseAllMenus(0);
         cl_serverLoadingMap = 1;
@@ -1003,14 +1003,14 @@ void __cdecl CL_MapLoading(const char *mapname)
         }
         else
         {
-            Dvar_SetString((dvar_s *)nextmap, &toastPopupTitle);
+            Dvar_SetString((dvar_s *)nextmap, "");
             I_strncpyz(cls.servername, "localhost", 256);
             for ( localClientNumb = 0; localClientNumb < 1; ++localClientNumb )
             {
                 if ( CL_LocalClient_IsActive(localClientNumb) && Com_LocalClient_GetControllerIndex(localClientNumb) >= 0 )
                 {
                     CL_Disconnect(localClientNumb, 0);
-                    BLOPS_NULLSUB();
+                    //BLOPS_NULLSUB();
                     UI_CloseAll(localClientNumb);
                     dword_FB2C3C[4 * localClientNumb] = 5;
                     clca = CL_GetLocalClientConnection(localClientNumb);
@@ -1236,7 +1236,7 @@ void __cdecl CL_Disconnect(unsigned int localClientNum, bool deactivateClient)
         if ( wasConnected )
             clientUIActive->keyCatchers &= 1u;
         if ( !wasConnected && deactivateClient )
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
         if ( wasConnected )
         {
             v5 = Com_LocalClient_GetControllerIndex(localClientNum);
@@ -1255,7 +1255,7 @@ void __cdecl CL_Disconnect(unsigned int localClientNum, bool deactivateClient)
         }
         if ( !Demo_IsIdle() )
             Demo_End(0);
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     }
 }
 
@@ -1286,7 +1286,7 @@ void __cdecl CL_CanNotConnect(int localClientNum, const char *msg)
         Dvar_SetStringByName("notice_popmenuTitle", v2);
         v3 = UI_SafeTranslateString(msg);
         Dvar_SetStringByName("notice_popmenuMessage", v3);
-        Dvar_SetStringByName("notice_onEscArg", (char *)&toastPopupTitle);
+        Dvar_SetStringByName("notice_onEscArg", (char *)"");
         UI_OpenMenu(0, "code_notice_popmenu");
     }
 }
@@ -1608,7 +1608,7 @@ void __cdecl CL_DownloadsComplete(int localClientNum)
             }
             if ( cls.doVidRestart )
             {
-                UI_SetMap((char *)&toastPopupTitle, &toastPopupTitle);
+                UI_SetMap((char *)"", "");
                 CL_Vid_Restart_f();
             }
             if ( !g_waitingForServer )
@@ -1820,7 +1820,7 @@ void __cdecl CL_CheckForResend(int localClientNum)
                 if ( dwGetAddrHandleConnectionTaskStatus(clc->serverAddress.addrHandleIndex) )
                 {
                     if ( net_lanauthorize->current.enabled || !Sys_IsLANAddress(clc->serverAddress) )
-                        BLOPS_NULLSUB();
+                        //BLOPS_NULLSUB();
                     strcpy(pkt, "getchallenge");
                     pktlen = &pkt[strlen(pkt) + 1] - &pkt[1];
                     PbClientConnecting(1, pkt, &pktlen);
@@ -2312,11 +2312,11 @@ char    CL_DispatchConnectionlessPacket@<al>(int a1@<esi>, int localClientNum, n
                         v9 = Com_LocalClient_GetNetworkID(localClientNum);
                         Netchan_Setup(v9, p_netchan, v22, v23, netchanOutgoingBuffer, 2048, netchanIncomingBuffer, 0x10000);
                         if ( Cmd_Argc() <= 1 )
-                            v32 = &toastPopupTitle;
+                            v32 = "";
                         else
                             v32 = Cmd_Argv(1);
                         if ( I_stricmp(v32, fs_gameDirVar->current.string) )
-                            BLOPS_NULLSUB();
+                            //BLOPS_NULLSUB();
                         if ( isMigration )
                         {
                             dword_FB2C3C[4 * localClientNum] = 6;
@@ -2676,7 +2676,7 @@ void __cdecl CL_WriteNewDemoClientArchive(int localClientNum)
     MSG_Init(&buf, data, 4096);
     while ( LocalClientConnection->lastClientArchiveIndex != LocalClientGlobals->clientArchiveIndex )
     {
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
         CL_WriteDemoClientArchive(
             LocalClientConnection->demofile,
             1u,
@@ -3217,7 +3217,7 @@ void __cdecl CL_ShutdownRenderer(int destroyWindow)
     cls.consoleMaterial = 0;
     cls.consoleFont = 0;
     cls.spinnerMaterial = 0;
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl CL_StartHunkUsers()
@@ -3600,7 +3600,7 @@ void __cdecl CL_InitOnceForAllClients()
                                          0,
                                          "0 for no custom game mode, 1 if built in, 2 if user created custom game mode.");
     for ( i = 0; i < 10; ++i )
-        customclass[i] = _Dvar_RegisterString(customClassDvars[i], (char *)&toastPopupTitle, 1u, "Custom class name");
+        customclass[i] = _Dvar_RegisterString(customClassDvars[i], (char *)"", 1u, "Custom class name");
     cl_hudDrawsBehindUI = _Dvar_RegisterBool("cl_hudDrawsBehindUI", 1, 0, "Should the HUD draw when the UI is up?");
     cl_voice = _Dvar_RegisterBool("cl_voice", 1, 3u, "Use voice communications");
     cl_timeout = _Dvar_RegisterFloat(
@@ -3640,14 +3640,14 @@ void __cdecl CL_InitOnceForAllClients()
                                         "cl_freezeDemo is used to lock a demo in place for single frame advances");
     cl_activeAction = _Dvar_RegisterString(
                                             "activeAction",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0,
                                             "Action to execute in first frame");
     cl_avidemo = _Dvar_RegisterInt("cl_avidemo", 0, 0, 0x7FFFFFFF, 0, "AVI demo frames per second");
     cl_forceavidemo = _Dvar_RegisterBool("cl_forceavidemo", 0, 0, "Record AVI demo even if client is not active");
     cl_clientDemoName = _Dvar_RegisterString(
                                                 "cl_clientDemoName",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0,
                                                 "Current recording/playing demo name");
     cl_clientDemoUseMemoryBuffer = _Dvar_RegisterBool(
@@ -3746,7 +3746,7 @@ void __cdecl CL_InitOnceForAllClients()
     m_filter = _Dvar_RegisterBool("m_filter", 0, 1u, "Allow mouse movement smoothing");
     ui_custom_newname = _Dvar_RegisterString(
                                                 "ui_custom_newname",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0,
                                                 "New name of custom class entered by player.");
     cl_socketpool_enabled = _Dvar_RegisterBool("cl_socketpool_enabled", 0, 0, "True is socketpool technology is enabled");
@@ -3759,7 +3759,7 @@ void __cdecl CL_InitOnceForAllClients()
                                                  "Number of sockets to use for server browser socket pool");
     ui_clantag_new = _Dvar_RegisterString(
                                          "ui_clantag_new",
-                                         (char *)&toastPopupTitle,
+                                         (char *)"",
                                          0,
                                          "New name of clan tag entered by player.");
     cl_demoFFSpeed = _Dvar_RegisterInt("cl_demoFFSpeed", 0, 0, 0x7FFFFFFF, 0, "Timedemo playback speed");
@@ -3794,7 +3794,7 @@ void __cdecl CL_InitOnceForAllClients()
                                                 100,
                                                 0,
                                                 "To toggle the prestige of the player which is displayed in his overhead name");
-    cl_motdString = _Dvar_RegisterString("cl_motdString", (char *)&toastPopupTitle, 0x40u, "Message of the day");
+    cl_motdString = _Dvar_RegisterString("cl_motdString", (char *)"", 0x40u, "Message of the day");
     cl_ingame = _Dvar_RegisterBool("cl_ingame", 0, 0x40u, "True if the game is active");
     cl_wasconnected = _Dvar_RegisterBool(
                                             "cl_wasconnected",
@@ -3811,12 +3811,12 @@ void __cdecl CL_InitOnceForAllClients()
                                                      "Text size to draw the network profile data");
     cl_profileTextY = _Dvar_RegisterInt("cl_profileTextY", 110, 0, 800, 0, "Y position to draw the profile data");
     name = _Dvar_RegisterString("name", "Unknown Soldier", 3u, "Player name");
-    clanName = _Dvar_RegisterString("clanName", (char *)&toastPopupTitle, 3u, "Your clan abbreviation");
+    clanName = _Dvar_RegisterString("clanName", (char *)"", 3u, "Your clan abbreviation");
     _Dvar_RegisterInt("rate", 25000, 1000, 25000, 3u, "Player's preferred baud rate");
     _Dvar_RegisterInt("snaps", 20, 1, 30, 3u, "Snapshot rate");
     _Dvar_RegisterBool("cl_punkbuster", 0, 0x42u, "Determines whether PunkBuster is enabled");
-    _Dvar_RegisterString("password", (char *)&toastPopupTitle, 2u, "password");
-    nextdemo = _Dvar_RegisterString("nextdemo", (char *)&toastPopupTitle, 0, "The next demo to play");
+    _Dvar_RegisterString("password", (char *)"", 2u, "password");
+    nextdemo = _Dvar_RegisterString("nextdemo", (char *)"", 0, "The next demo to play");
     mortarStrikesLeft = _Dvar_RegisterInt("mortarStrikesLeft", 0, 0, 3, 0, "Mortar locations not positioned yet");
     _Dvar_RegisterBool("hud_enable", 1, 1u, "Enable the HUD display");
     _Dvar_RegisterBool("cg_blood", 1, 1u, "Show blood");
@@ -3827,7 +3827,7 @@ void __cdecl CL_InitOnceForAllClients()
         _Dvar_RegisterBool("cg_mature", 0, 0x41u, "Show Mature Content");
     cl_serverchallenge = _Dvar_RegisterInt64("cl_serverchallenge", 0, 0, 0x7FFFFFFF, 0, "Challenge sent to server");
     cl_debugMessageKey = _Dvar_RegisterBool("cl_debugMessageKey", 0, 0, "Enable message key debugging information");
-    motd = _Dvar_RegisterString("motd", (char *)&toastPopupTitle, 0, "Message of the day");
+    motd = _Dvar_RegisterString("motd", (char *)"", 0, "Message of the day");
     Cmd_AddCommandInternal("cmd", CL_ForwardToServer_f, &CL_ForwardToServer_f_VAR);
     Cmd_AddCommandInternal("configstrings", CL_Configstrings_f, &CL_Configstrings_f_VAR);
     Cmd_AddCommandInternal("clientinfo", CL_Clientinfo_f, &CL_Clientinfo_f_VAR);
@@ -3984,7 +3984,7 @@ void __cdecl CL_PlayDemo_f()
             v2 = Cmd_Argv(1);
             I_strncpyz(clc->demoName, v2, 64);
             Con_Close(localClientNum);
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
             dword_FB2C3C[4 * localClientNum] = 6;
             clc->demofile = demofile;
             clc->demoplaying = 1;
@@ -4181,7 +4181,7 @@ void __cdecl CL_CmdSetNewCustomName()
     String = (char *)Dvar_GetString("ui_custom_newname");
     v0 = Dvar_GetString("ui_custom_name");
     Dvar_SetStringByName(v0, String);
-    Dvar_SetString((dvar_s *)ui_custom_newname, &toastPopupTitle);
+    Dvar_SetString((dvar_s *)ui_custom_newname, "");
 }
 
 void __cdecl CL_ResetStats_f()
@@ -4531,7 +4531,7 @@ void    CL_SetupForNewServerMap(int a1@<esi>, int localClientNum, char *pszMapNa
         com_expectedHunkUsage = 0;
         g_waitingForServer = 1;
         FS_DisablePureCheck(1);
-        UI_SetMap((char *)&toastPopupTitle, &toastPopupTitle);
+        UI_SetMap((char *)"", "");
         LoadMapLoadscreen(pszMapName);
         UI_SetMap(pszMapName, pszGametype);
     }

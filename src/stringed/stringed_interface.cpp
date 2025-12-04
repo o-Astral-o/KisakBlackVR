@@ -31,8 +31,8 @@ int __cdecl SE_BuildFileList(
     giFilesFound = 0;
     std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::assign(
         strResults,
-        &toastPopupTitle,
-        &toastPopupTitle + strlen(&toastPopupTitle) + 1 - algn_C60BFA);
+        "",
+        "" + strlen("") + 1 - algn_C60BFA);
     SE_R_ListFiles("str", psStartDir, strResults);
     return giFilesFound;
 }

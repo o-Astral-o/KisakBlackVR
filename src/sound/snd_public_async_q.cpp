@@ -786,7 +786,7 @@ void __cdecl SND_NotifyProcess(const snd_notify *cmd)
             break;
         case SND_NOTIFY_LENGTH:
             //PIXBeginNamedEvent(-1, "CG_ScriptSndLengthNotify");
-            BLOPS_NULLSUB();
+            //BLOPS_NULLSUB();
             if ( g_DXDeviceThread == GetCurrentThreadId() )
                 goto LABEL_8;
             break;

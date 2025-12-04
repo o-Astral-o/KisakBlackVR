@@ -2,9 +2,14 @@
 
 #include <d3d9.h>
 #include "r_gfx.h"
+#include <database/db_registry.h>
 
-union XAssetHeader;
-
+struct dmaterial_t // sizeof=0x48
+{
+    char material[64];
+    int surfaceFlags;
+    int contentFlags;
+};
 
 struct __declspec(align(8)) MaterialInfo // sizeof=0x28
 {                                                                             // XREF: Material/r

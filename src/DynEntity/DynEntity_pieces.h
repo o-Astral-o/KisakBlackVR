@@ -1,5 +1,23 @@
 #pragma once
 
+struct XModel;
+struct XModelPieces;
+struct PhysPreset;
+struct PhysObjUserData;
+
+struct __declspec(align(2)) BreakablePiece // sizeof=0xC
+{                                       // XREF: .data:g_breakablePieces/r
+    const XModel *model;                // XREF: DynEntPieces_AddDrawSurfs(int)+8D/r
+                                        // DynEntPieces_SpawnPhysicsModel(int,XModel const *,float const * const,float const * const,float const (* const)[3],float const * const,float const * const,PhysPreset *)+268/w
+    int physObjId;                      // XREF: DynEntPieces_AddDrawSurfs(int)+4C/r
+                                        // DynEntPieces_SpawnPhysicsModel(int,XModel const *,float const * const,float const * const,float const (* const)[3],float const * const,float const * const,PhysPreset *)+256/w
+    unsigned __int16 lightingHandle;    // XREF: DynEntPieces_AddDrawSurfs(int)+7A/o
+                                        // DynEntPieces_SpawnPhysicsModel(int,XModel const *,float const * const,float const * const,float const (* const)[3],float const * const,float const * const,PhysPreset *)+278/w
+    bool active;                        // XREF: DynEntPieces_AddDrawSurfs(int)+29/r
+                                        // DynEntPieces_SpawnPhysicsModel(int,XModel const *,float const * const,float const * const,float const (* const)[3],float const * const,float const * const,PhysPreset *)+288/w
+    // padding byte
+};
+
 void __cdecl DynEntPieces_RegisterDvars();
 void __cdecl DynEntPieces_AddDrawSurfs();
 char __cdecl DynEntPieces_SpawnPhysicsModel(

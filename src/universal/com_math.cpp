@@ -3182,6 +3182,16 @@ float __cdecl Vec2Normalize(float *v)
         return length;
 }
 
+void __cdecl Vec3Cross(const float *v0, const float *v1, float *cross)
+{
+    iassert(v0 != cross);
+    iassert(v1 != cross);
+
+    *cross = (float)(v0[1] * v1[2]) - (float)(v0[2] * v1[1]);
+    cross[1] = (float)(v0[2] * *v1) - (float)(*v0 * v1[2]);
+    cross[2] = (float)(*v0 * v1[1]) - (float)(v0[1] * *v1);
+}
+
 float __cdecl Vec2Length(const float *v)
 {
         return sqrtf(v[1] * v[1] + v[0] * v[0]);

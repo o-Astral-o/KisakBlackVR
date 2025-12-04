@@ -45,9 +45,9 @@ PhysConstraints *__cdecl PhysConstraintsLoadFile(const char *name, void *(__cdec
                         memset(dst, 0, 0xA88u);
                         for ( i = 0; i < 16; ++i )
                         {
-                            *(unsigned int *)&dst[168 * i + 28] = &toastPopupTitle;
+                            *(unsigned int *)&dst[168 * i + 28] = "";
                             *(unsigned int *)&dst[168 * i + 16] = 3;
-                            *(unsigned int *)&dst[168 * i + 44] = &toastPopupTitle;
+                            *(unsigned int *)&dst[168 * i + 44] = "";
                             *(unsigned int *)&dst[168 * i + 32] = 3;
                         }
                         if ( ParseConfigStringToStruct(
@@ -122,7 +122,7 @@ void __cdecl PhysConstraints_Strcpy(unsigned __int8 *member, const char *keyValu
     }
     else
     {
-        *(unsigned int *)member = &toastPopupTitle;
+        *(unsigned int *)member = "";
     }
 }
 

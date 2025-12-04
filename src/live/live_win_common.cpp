@@ -112,13 +112,13 @@ void __cdecl Live_UpdateUiPopup(const char *popupname, bool reset)
     {
         Com_Printf(16, "Live_UpdateUiPopup: %s\n", popupname);
         if ( reset )
-            v2 = I_stricmp(dw_popup->current.string, &toastPopupTitle);
+            v2 = I_stricmp(dw_popup->current.string, "");
         else
             v2 = I_stricmp(dw_popup->current.string, popupname);
         if ( v2 )
         {
             if ( reset )
-                Dvar_SetString((dvar_s *)dw_popup, &toastPopupTitle);
+                Dvar_SetString((dvar_s *)dw_popup, "");
             else
                 Dvar_SetString((dvar_s *)dw_popup, popupname);
         }

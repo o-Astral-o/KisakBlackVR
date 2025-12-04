@@ -1,4 +1,48 @@
 #pragma once
+#include <gfx_d3d/fxprimitives.h>
+#include <xanim/xmodel.h>
+
+#include "DynEntity_gamestate.h"
+
+enum DynEntityType : __int32
+{                                       // XREF: DynEntityDef/r
+                                        // ?DynEnt_GetEntityProps@@YAPBUDynEntityProps@@W4DynEntityType@@@Z/r
+    DYNENT_TYPE_INVALID  = 0x0,
+    DYNENT_TYPE_CLUTTER  = 0x1,
+    DYNENT_TYPE_DESTRUCT = 0x2,
+    DYNENT_TYPE_COUNT    = 0x3,
+
+
+const struct DynEntityDef // sizeof=0x54
+{
+    DynEntityType type;
+    GfxPlacement pose;
+    XModel *xModel;
+    XModel *destroyedxModel;
+    unsigned __int16 brushModel;
+    unsigned __int16 physicsBrushModel;
+    const FxEffectDef *destroyFx;
+    unsigned int destroySound;
+    XModelPieces *destroyPieces;
+    PhysPreset *physPreset;
+    __int16 physConstraints[4];
+    int health;
+    int flags;
+    int contents;
+    unsigned __int16 targetname;
+    unsigned __int16 target;
+};
+
+struct DynEntityClient // sizeof=0x14
+{
+    int physObjId;
+    unsigned __int16 flags;
+    unsigned __int16 lightingHandle;
+    int health;
+    unsigned __int16 burnTime;
+    unsigned __int16 fadeTime;
+    int physicsStartTime;
+};
 
 void __cdecl DynEntCl_RegisterDvars();
 XModel *__cdecl DynEntCl_GetCurrentXModel(const DynEntityDef *dynEntDef, const DynEntityClient *dynEntClient);

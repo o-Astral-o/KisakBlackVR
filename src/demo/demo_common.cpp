@@ -30,12 +30,12 @@ void __cdecl Demo_RegisterDvars()
                                                                 "Used to draw debug information.");
     demo_errortitle = _Dvar_RegisterString(
                                             "demo_errortitle",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0x40u,
                                             "Most recent demo error's title.");
     demo_errormessage = _Dvar_RegisterString(
                                                 "demo_errormessage",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0x40u,
                                                 "Most recent demo error's message.");
     demo_client = _Dvar_RegisterInt("demo_client", 0, 0, 32, 0, "Current viewing player");
@@ -93,7 +93,7 @@ void __cdecl Demo_RegisterDvars()
                                                         "The number of the command sent from console/ingame menu. ");
     demo_defaultSegmentTag = _Dvar_RegisterString(
                                                          "demo_defaultSegmentTag",
-                                                         (char *)&toastPopupTitle,
+                                                         (char *)"",
                                                          0,
                                                          "The text to be displayed as the default tag for the segment in the UI (save prompt).");
     demo_selectedSegmentIndex = _Dvar_RegisterInt(
@@ -2133,7 +2133,7 @@ void __cdecl Demo_Keyboard_f()
                             demo.keyboard.currentProcessingSegmentIndex = demo.playback->segmentCount;
                         }
                         demo.keyboard.title = UI_SafeTranslateString("MENU_SEGMENT");
-                        demo.keyboard.defaultText = &toastPopupTitle;
+                        demo.keyboard.defaultText = "";
                         demo.keyboard.textSize = 22;
                         goto LABEL_28;
                     }
@@ -2147,7 +2147,7 @@ void __cdecl Demo_Keyboard_f()
                     {
 LABEL_19:
                         demo.keyboard.title = UI_SafeTranslateString("MENU_CLIP");
-                        demo.keyboard.defaultText = &toastPopupTitle;
+                        demo.keyboard.defaultText = "";
                         demo.keyboard.textSize = 22;
                         goto LABEL_28;
                     }
@@ -2161,19 +2161,19 @@ LABEL_19:
                     {
 LABEL_23:
                         demo.keyboard.title = UI_SafeTranslateString("MENU_SCREENSHOT");
-                        demo.keyboard.defaultText = &toastPopupTitle;
+                        demo.keyboard.defaultText = "";
                         demo.keyboard.textSize = 22;
                         goto LABEL_28;
                     }
                     break;
                 case 6:
                     demo.keyboard.title = UI_SafeTranslateString("MENU_FILESHARE_NEWNAME");
-                    demo.keyboard.defaultText = &toastPopupTitle;
+                    demo.keyboard.defaultText = "";
                     demo.keyboard.textSize = 22;
                     goto LABEL_28;
                 case 7:
                     demo.keyboard.title = UI_SafeTranslateString("MENU_FILESHARE_NEWDESCRIPTION");
-                    demo.keyboard.defaultText = &toastPopupTitle;
+                    demo.keyboard.defaultText = "";
                     demo.keyboard.textSize = 22;
 LABEL_28:
                     v2 = va("ui_keyboard_new %d\n", 1);

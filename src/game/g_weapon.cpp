@@ -934,7 +934,7 @@ void __cdecl Weapon_Flamethrower_Update(gentity_s *ent, weaponParms *wp)
     flameWeaponConfig.damageInterval = wp->weapDef->damageInterval;
     Time = G_GetTime();
     SV_Flame_Update_Source(ent->s.number, &flameWeaponConfig, Time);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl Weapon_Flamethrower_Fire(gentity_s *ent, weaponParms *wp)
@@ -1883,7 +1883,7 @@ unsigned int __cdecl G_PlayerTurretWeaponIdx(const playerState_s *ps)
     return g_entities[ps->viewlocked_entNum].s.weapon;
 }
 
-unsigned int __cdecl G_GetPlayerWeapon(const playerState_s *ps)
+int __cdecl G_GetPlayerWeapon(const playerState_s *ps, int localClientNum)
 {
     int weapon; // [esp+0h] [ebp-4h]
 

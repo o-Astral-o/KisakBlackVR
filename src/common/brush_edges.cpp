@@ -104,7 +104,7 @@ adjacencyWinding_t *__cdecl BuildBrushdAdjacencyWindingForSide(
             if ( name )
                 v9 = name;
             else
-                v9 = &toastPopupTitle;
+                v9 = "";
             Com_PrintError(
                 1,
                 "Brush face has too many edges. Approx pos(%7.2f,%7.2f,%7.2f). Map file %s.\n",

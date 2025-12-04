@@ -2,7 +2,7 @@
 
 void __cdecl CG_HudElemRegisterDvars()
 {
-    waypointDebugDraw = _Dvar_RegisterBool("waypointDebugDraw", 0, 0, &toastPopupTitle);
+    waypointDebugDraw = _Dvar_RegisterBool("waypointDebugDraw", 0, 0, "");
     waypointIconWidth = _Dvar_RegisterFloat(
                                                 "waypointIconWidth",
                                                 36.0,
@@ -141,7 +141,7 @@ void __cdecl CG_HudElemRegisterDvars()
                                                              3.4028235e38,
                                                              0,
                                                              "Scale applied to waypoint icons in splitscreen views.");
-    waypointTweakY = _Dvar_RegisterFloat("waypointTweakY", -17.0, -3.4028235e38, 3.4028235e38, 0, &toastPopupTitle);
+    waypointTweakY = _Dvar_RegisterFloat("waypointTweakY", -17.0, -3.4028235e38, 3.4028235e38, 0, "");
     hudElemPausedBrightness = _Dvar_RegisterFloat(
                                                             "hudElemPausedBrightness",
                                                             0.40000001,

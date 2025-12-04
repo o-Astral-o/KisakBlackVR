@@ -1,4 +1,22 @@
 #include "bg_emblems.h"
+#include <live/live_stats.h>
+#include <live/live_storage.h>
+#include <ddl/ddl_api.h>
+#include <qcommon/common.h>
+#include <live/live_counter.h>
+#include <ui/ui_main.h>
+
+const dvar_s *allEmblemsUnlocked;
+const dvar_s *allEmblemsPurchased;
+const dvar_s *bg_overridePlayerEmblemColor;
+const dvar_s *bg_overridePlayerEmblemIcon;
+
+EmblemSet *s_emblemSet;
+
+BackgroundPurchasedCount s_backgroundPurchasedCount[1];
+ResultCache s_resultCache[4];
+unsigned int s_flushCount;
+unsigned int s_useCount;
 
 int __cdecl BG_EmblemsGetColorCount()
 {
@@ -288,7 +306,7 @@ const char *__cdecl BG_EmblemsGetIconUnlockDesc(int controllerIndex, __int16 id)
             {
                 if ( unlockLevel <= rank )
                 {
-                    return &toastPopupTitle;
+                    return "";
                 }
                 else
                 {
@@ -298,7 +316,7 @@ const char *__cdecl BG_EmblemsGetIconUnlockDesc(int controllerIndex, __int16 id)
             }
             else
             {
-                return &toastPopupTitle;
+                return "";
             }
         }
         else
@@ -545,7 +563,7 @@ const char *__cdecl BG_EmblemsGetCategoryDesc(int index)
     if ( index >= 0 && index <= s_emblemSet->categoryCount )
         return s_emblemSet->categories[index].description;
     else
-        return &toastPopupTitle;
+        return "";
 }
 
 int __cdecl BG_EmblemsGetBackgroundCount()
@@ -639,7 +657,7 @@ const char *__cdecl BG_EmblemsGetBackgroundDesc(int controllerIndex, __int16 id)
         __debugbreak();
     }
     if ( id < 0 || id >= s_emblemSet->backgroundCount )
-        return &toastPopupTitle;
+        return "";
     unclassifyAt = BG_EmblemsGetBackgroundUnclassifyAt(id);
     if ( BG_EmblemsGetPurchasedBackgroundCount(controllerIndex) >= unclassifyAt )
         return s_emblemSet->backgrounds[id].description;
@@ -673,7 +691,7 @@ const char *__cdecl BG_EmblemsGetBackgroundUnlockDesc(int controllerIndex, __int
             {
                 if ( unlockLevel <= rank )
                 {
-                    return &toastPopupTitle;
+                    return "";
                 }
                 else
                 {
@@ -683,7 +701,7 @@ const char *__cdecl BG_EmblemsGetBackgroundUnlockDesc(int controllerIndex, __int
             }
             else
             {
-                return &toastPopupTitle;
+                return "";
             }
         }
         else
@@ -974,6 +992,11 @@ bool __cdecl BG_EmblemsReadString(const char *str, __int16 *background, Composit
     return msg.overflowed == 0;
 }
 
+cmd_function_s BG_EmblemsPurchaseLayer_f_VAR;
+cmd_function_s BG_EmblemsPurchaseIcon_f_VAR;
+cmd_function_s BG_EmblemsPurchaseBackgroundByID_f_VAR;
+cmd_function_s BG_EmblemsPurchaseBackgroundByIndex_f_VAR;
+cmd_function_s BG_EmblemsFlushResults_VAR;
 void __cdecl BG_EmblemsInit()
 {
     int i; // [esp+4h] [ebp-4h]
@@ -1016,7 +1039,7 @@ void __cdecl BG_EmblemsInit()
             &BG_EmblemsPurchaseBackgroundByIndex_f_VAR);
         Cmd_AddCommandInternal("emblemFlushResults", BG_EmblemsFlushResults, &BG_EmblemsFlushResults_VAR);
         BG_EmblemsClearDefaults();
-        Cmd_ExecuteSingleCommand(0, 0, "exec mp/default_emblems.cfg");
+        Cmd_ExecuteSingleCommand(0, 0, (char*)"exec mp/default_emblems.cfg");
     }
 }
 
@@ -1063,7 +1086,7 @@ const char *__cdecl Cmd_Argv(int argIndex)
         __debugbreak();
     }
     if ( argIndex >= cmd_args->argc[cmd_args->nesting] )
-        return &toastPopupTitle;
+        return "";
     else
         return cmd_args->argv[cmd_args->nesting][argIndex];
 }

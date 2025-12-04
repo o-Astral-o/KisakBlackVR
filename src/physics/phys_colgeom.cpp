@@ -615,7 +615,7 @@ void __cdecl gjk_obb_t::destroy(gjk_cylinder_t *geom)
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
                          102,
                          "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -884,7 +884,7 @@ void __cdecl gjk_brush_t::destroy(gjk_brush_t *geom)
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
                          135,
                          "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1091,7 +1091,7 @@ void __cdecl gjk_partition_t::destroy(gjk_partition_t *geom)
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
                          157,
                          "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1187,7 +1187,7 @@ void gjk_double_sphere_t::get_simplex(
                          "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                          477,
                          "ind >= 0 && ind < m_count",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1494,7 +1494,7 @@ void __cdecl gjk_double_sphere_t::destroy(gjk_double_sphere_t *geom)
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
                          254,
                          "!geom->get_flag( gjk_base_t::FLAG_TEMP_ALLOCATION )",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -1605,7 +1605,7 @@ void gjk_cylinder_t::support(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1616,7 +1616,7 @@ void gjk_cylinder_t::support(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1645,7 +1645,7 @@ void gjk_cylinder_t::support(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1696,7 +1696,7 @@ const phys_vec3 *gjk_cylinder_t::get_dims@<eax>(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1893,7 +1893,7 @@ void gjk_cylinder_t::get_feature(gjk_cylinder_t *this@<ecx>, int a2@<ebp>, phys_
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -1976,7 +1976,7 @@ void gjk_cylinder_t::get_feature(gjk_cylinder_t *this@<ecx>, int a2@<ebp>, phys_
                      "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                      34,
                      "i >= 0 && i < 3",
-                     &toastPopupTitle) )
+                     "") )
         {
             __debugbreak();
         }
@@ -1993,7 +1993,7 @@ void gjk_cylinder_t::get_feature(gjk_cylinder_t *this@<ecx>, int a2@<ebp>, phys_
                          "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                          34,
                          "i >= 0 && i < 3",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2041,7 +2041,7 @@ void gjk_cylinder_t::calc_aabb(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2053,7 +2053,7 @@ void gjk_cylinder_t::calc_aabb(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2087,7 +2087,7 @@ void __cdecl gjk_cylinder_t::destroy(gjk_cylinder_t *geom)
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
                          276,
                          "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2330,7 +2330,7 @@ void __cdecl gjk_polygon_cylinder_t::destroy(gjk_polygon_cylinder_t *geom)
                          "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
                          359,
                          "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         &toastPopupTitle) )
+                         "") )
             {
                 __debugbreak();
             }
@@ -2465,7 +2465,7 @@ gjk_double_sphere_t * create_capsule_gjk_geom@<eax>(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2475,7 +2475,7 @@ gjk_double_sphere_t * create_capsule_gjk_geom@<eax>(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
                  34,
                  "i >= 0 && i < 3",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }
@@ -2867,7 +2867,7 @@ void __cdecl create_xmodel_gjk_geom(
 
 void gjk_base_t::set_xform(gjk_base_t *this, const phys_mat44 *xform)
 {
-    if ( !xform && _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 104, "xform", &toastPopupTitle) )
+    if ( !xform && _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 104, "xform", "") )
         __debugbreak();
     this->m_flags |= 8u;
     this->m_xform_ = xform;
@@ -3312,7 +3312,7 @@ void __cdecl destroy_gjk_geom(gjk_geom_list_t *gjk_geom_list)
                  "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
                  1035,
                  "m_geom_count >= 0",
-                 &toastPopupTitle) )
+                 "") )
     {
         __debugbreak();
     }

@@ -340,7 +340,7 @@ void __cdecl FS_BuildOSPathForThread(char *base, char *game, char *qpath, char *
     }
     else
     {
-        game = (char *)&toastPopupTitle;
+        game = (char *)"";
     }
     v7 = strlen(base);
     v6 = strlen(game);
@@ -547,7 +547,7 @@ int __cdecl FS_GetHandleAndOpenFile(const char *filename, const char *ospath, Fs
 
 int __cdecl FS_FOpenFileWrite(char *filename)
 {
-    return FS_FOpenFileWriteToDirForThread(filename, fs_gamedir, &toastPopupTitle, FS_THREAD_MAIN);
+    return FS_FOpenFileWriteToDirForThread(filename, fs_gamedir, "", FS_THREAD_MAIN);
 }
 
 int __cdecl FS_FOpenFileWriteCurrentThread(char *filename, char *dir, const char *osbasepath)
@@ -1049,7 +1049,7 @@ char __cdecl FS_FilesAreLoadedGlobally(const char *filename)
     extensions[4] = ".menu";
     extensions[5] = ".arena";
     extensions[6] = ".str";
-    extensions[7] = &toastPopupTitle;
+    extensions[7] = "";
     filenameLen = strlen(filename);
     for ( extensionNum = 0; *extensions[extensionNum]; ++extensionNum )
     {
@@ -1463,7 +1463,7 @@ const char **__cdecl FS_ListFilteredFiles(
         return 0;
     }
     if ( !extension )
-        extension = (char *)&toastPopupTitle;
+        extension = (char *)"";
     if ( !FS_SanitizeFilename(path, sanitizedPath, 256) )
     {
         *numfiles = 0;
@@ -1952,7 +1952,7 @@ void __cdecl FS_AddIwdFilesForGameDirectory(char *path, char *pszGameFolder)
         }
     }
     v20 = v10;
-    FS_BuildOSPath(path, pszGameFolder, (char *)&toastPopupTitle, &ospath);
+    FS_BuildOSPath(path, pszGameFolder, (char *)"", &ospath);
     *((_BYTE *)&v12 + &v14[strlen(&ospath)] - v14 + 3) = 0;
     list = (char **)Sys_ListFiles(&ospath, "iwd", 0, &numfiles, 0);
     if ( numfiles > 1024 )
@@ -2361,7 +2361,7 @@ void __cdecl FS_Startup(const char *gameName, bool allow_devraw)
         FS_AddGameDirectory((char *)fs_basepath->current.integer, fs_gameDirVar->current.string, 0, 0);
     }
     Com_ReadCDKey();
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     FS_AddCommands();
     FS_Path_f();
     Dvar_ClearModified(fs_gameDirVar);
@@ -2421,7 +2421,7 @@ void __cdecl FS_AddGameDirectory(char *path, const char *dir, int bLanguageDirec
     }
     if ( bLanguageDirectory )
     {
-        FS_BuildOSPath(path, szGameFolder, (char *)&toastPopupTitle, ospath);
+        FS_BuildOSPath(path, szGameFolder, (char *)"", ospath);
         ospath[&ospath[strlen(ospath) + 1] - &ospath[1] - 1] = 0;
         if ( !Sys_DirectoryHasContents(ospath) )
             return;
@@ -2486,13 +2486,13 @@ const dvar_s *__thiscall FS_RegisterDvars(jpeg_common_struct *cinfo)
     fs_cdpath = _Dvar_RegisterString("fs_cdpath", v1, 0x10u, "CD path");
     v2 = Sys_Cwd();
     fs_basepath = _Dvar_RegisterString(aFsB, v2, 0x210u, "Base game path");
-    fs_basegame = _Dvar_RegisterString("fs_basegame", (char *)&toastPopupTitle, 0x10u, "Base game name");
+    fs_basegame = _Dvar_RegisterString("fs_basegame", (char *)"", 0x10u, "Base game name");
     fs_gameDirVar = _Dvar_RegisterString(
                                         "fs_game",
-                                        (char *)&toastPopupTitle,
+                                        (char *)"",
                                         0x114u,
                                         "Game data directory. Must be \"\" or a sub directory of 'mods/'.");
-    fs_usermapDir = _Dvar_RegisterString("fs_usermapdir", (char *)&toastPopupTitle, 0x144u, "Usermap data directory.");
+    fs_usermapDir = _Dvar_RegisterString("fs_usermapdir", (char *)"", 0x144u, "Usermap data directory.");
     fs_ignoreLocalized = _Dvar_RegisterBool("fs_ignoreLocalized", 0, 0xA0u, "Ignore localized files");
     homePath = (char *)jpeg_mem_init();
     if ( !homePath || !*homePath )
@@ -2670,7 +2670,7 @@ void __cdecl FS_Restart(int localClientNum, int checksumFeed)
     {
         if ( lastValidBase[0] )
         {
-            FS_PureServerSetLoadedIwds((char *)&toastPopupTitle, (char *)&toastPopupTitle);
+            FS_PureServerSetLoadedIwds((char *)"", (char *)"");
             Dvar_SetString((dvar_s *)fs_basepath, lastValidBase);
             Dvar_SetString((dvar_s *)fs_gameDirVar, lastValidGame);
             lastValidBase[0] = 0;

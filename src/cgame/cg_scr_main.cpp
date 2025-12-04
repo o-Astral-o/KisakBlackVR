@@ -1775,7 +1775,7 @@ void CScr_GetDebugDvar()
     }
     else
     {
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
     }
 }
 
@@ -5537,7 +5537,7 @@ void CScr_FGetArg()
                                 "FGetArg failed, there aren't %i arguments on this line, there are only %i arguments\n",
                                 arg + 1,
                                 i);
-                            Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+                            Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
                             return;
                         }
                     }
@@ -5546,25 +5546,25 @@ void CScr_FGetArg()
                 else
                 {
                     Com_Printf(24, "FGetArg failed, file number %i was not open for reading\n", filenum);
-                    Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+                    Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
                 }
             }
             else
             {
                 Com_Printf(24, "FGetArg failed, invalid argument number %i\n", arg);
-                Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+                Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
             }
         }
         else
         {
             Com_Printf(24, "FGetArg failed, invalid file number %i\n", filenum);
-            Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+            Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
         }
     }
     else
     {
         Com_Printf(24, "FGetArg requires at least 2 parameters (file, string)\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
     }
 }
 
@@ -5643,7 +5643,7 @@ void CScr_GetWeaponModel()
                 Com_Printf(24, v0);
             }
         }
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_CLIENT);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_CLIENT);
     }
 }
 
@@ -9863,7 +9863,7 @@ void __cdecl CScr_LoadStructs()
     G_ResetEntityParsePoint();
     while ( G_ParseSpawnVars(&cg_level.spawnVar) )
     {
-        G_SpawnString(&cg_level.spawnVar, "classname", &toastPopupTitle, &classname);
+        G_SpawnString(&cg_level.spawnVar, "classname", "", &classname);
         if ( !I_stricmp(classname, "script_struct") )
             goto LABEL_7;
         if ( I_stricmp(classname, "node_pathnode") )
@@ -9874,7 +9874,7 @@ void __cdecl CScr_LoadStructs()
                 {
                     if ( !I_stricmp(classname, "light") )
                     {
-                        G_SpawnString(&cg_level.spawnVar, "spawnflags", &toastPopupTitle, &spawnFlags);
+                        G_SpawnString(&cg_level.spawnVar, "spawnflags", "", &spawnFlags);
                         flags = atoi(spawnFlags);
                         if ( !flags || (flags & 0x10) == 0 )
                         {
@@ -9895,7 +9895,7 @@ LABEL_7:
             }
             else
             {
-                G_SpawnString(&cg_level.spawnVar, "script_label", &toastPopupTitle, &classname);
+                G_SpawnString(&cg_level.spawnVar, "script_label", "", &classname);
                 if ( I_stricmp(classname, "random") )
                 {
                     if ( !I_stricmp(classname, "looper") )

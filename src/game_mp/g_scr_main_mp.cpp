@@ -311,7 +311,7 @@ int GScr_LoadLevelScript()
     char filename[64]; // [esp+0h] [ebp-48h] BYREF
     const dvar_s *mapname; // [esp+44h] [ebp-4h]
 
-    mapname = _Dvar_RegisterString("mapname", (char *)&toastPopupTitle, 0x44u, "The current map name");
+    mapname = _Dvar_RegisterString("mapname", (char *)"", 0x44u, "The current map name");
     Com_sprintf(filename, 0x40u, "maps/mp/%s", mapname->current.string);
     result = GScr_LoadScriptAndLabel(SCRIPTINSTANCE_SERVER, filename, "main", 0);
     g_scr_data.levelscript = result;
@@ -357,7 +357,7 @@ void __cdecl ScrCmd_GetClanId()
 
 void __cdecl ScrCmd_GetClanName()
 {
-    Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+    Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
 }
 
 void GScr_CreatePrintChannel()
@@ -1467,7 +1467,7 @@ void Scr_GetWeaponModel()
                 Com_Printf(17, v0);
             }
         }
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -2072,7 +2072,7 @@ void __cdecl ScrCmd_attach(scr_entref_t entref)
     if ( (unsigned int)Scr_GetNumParam(SCRIPTINSTANCE_SERVER) >= 4 )
         Scr_GetInt(3u, SCRIPTINSTANCE_SERVER);
     if ( (unsigned int)Scr_GetNumParam(SCRIPTINSTANCE_SERVER) < 5 )
-        String = (char *)&toastPopupTitle;
+        String = (char *)"";
     else
         String = Scr_GetString(4u, SCRIPTINSTANCE_SERVER);
     if ( G_EntDetach(ent, modelName, v7.stringValue) )
@@ -4562,7 +4562,7 @@ void __cdecl GScr_SetHintString(scr_entref_t entref)
             0);
     }
     type = Scr_GetType(0, SCRIPTINSTANCE_SERVER);
-    if ( type != 2 || (String = Scr_GetString(0, SCRIPTINSTANCE_SERVER), I_stricmp(String, &toastPopupTitle)) )
+    if ( type != 2 || (String = Scr_GetString(0, SCRIPTINSTANCE_SERVER), I_stricmp(String, "")) )
     {
         NumParam = Scr_GetNumParam(SCRIPTINSTANCE_SERVER);
         Scr_ConstructMessageString(0, NumParam - 1, "Hint String", szHint, 0x400u);
@@ -4599,7 +4599,7 @@ void __cdecl GScr_SetHintStringForPerk(scr_entref_t entref)
     perkIndex = BG_GetPerkIndexForName(String);
     pEnt->s.eventParm &= 0xC000u;
     type = Scr_GetType(1u, SCRIPTINSTANCE_SERVER);
-    if ( type != 2 || (v2 = Scr_GetString(1u, SCRIPTINSTANCE_SERVER), I_stricmp(v2, &toastPopupTitle)) )
+    if ( type != 2 || (v2 = Scr_GetString(1u, SCRIPTINSTANCE_SERVER), I_stricmp(v2, "")) )
     {
         Scr_ConstructMessageString(1, 1, "Hint String", szHint, 0x400u);
         if ( !G_GetHintStringIndex(&hintIndex, szHint) )
@@ -4657,7 +4657,7 @@ void __cdecl GScr_SetReviveHintString(scr_entref_t entref)
         Scr_Error("The setHintString command only works on trigger_use, trigger_radius or trigger_use_touch entities.\n", 0);
     }
     type = Scr_GetType(0, SCRIPTINSTANCE_SERVER);
-    if ( type != 2 || (String = Scr_GetString(0, SCRIPTINSTANCE_SERVER), I_stricmp(String, &toastPopupTitle)) )
+    if ( type != 2 || (String = Scr_GetString(0, SCRIPTINSTANCE_SERVER), I_stricmp(String, "")) )
     {
         if ( pEnt->classname == scr_const.trigger_radius )
         {
@@ -5648,7 +5648,7 @@ void GScr_RecordUsedSpawnPoint()
     player = Scr_GetEntity(0);
     point_team = GScr_ReadTeamForSpawnPoints(1u);
     Scr_GetVector(2u, origin, SCRIPTINSTANCE_SERVER);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void GScr_getStartTime()
@@ -6006,7 +6006,7 @@ void GScr_GetWeaponFireSound()
     char *weaponFireSound; // [esp+0h] [ebp-8h]
     int weaponIndex; // [esp+4h] [ebp-4h]
 
-    weaponFireSound = (char *)&toastPopupTitle;
+    weaponFireSound = (char *)"";
     weaponIndex = Scr_GetInt(0, SCRIPTINSTANCE_SERVER).intValue;
     if ( weaponIndex && weaponIndex != -1 )
         weaponFireSound = (char *)BG_GetWeaponDef(weaponIndex)->fireSound;
@@ -6018,7 +6018,7 @@ void GScr_GetWeaponFireSoundPlayer()
     int weaponIndex; // [esp+0h] [ebp-8h]
     char *weaponFireSoundPlayer; // [esp+4h] [ebp-4h]
 
-    weaponFireSoundPlayer = (char *)&toastPopupTitle;
+    weaponFireSoundPlayer = (char *)"";
     weaponIndex = Scr_GetInt(0, SCRIPTINSTANCE_SERVER).intValue;
     if ( weaponIndex && weaponIndex != -1 )
         weaponFireSoundPlayer = (char *)BG_GetWeaponDef(weaponIndex)->fireSoundPlayer;
@@ -6030,7 +6030,7 @@ void GScr_GetWeaponPickupSound()
     int weaponIndex; // [esp+0h] [ebp-8h]
     char *weaponPickupSound; // [esp+4h] [ebp-4h]
 
-    weaponPickupSound = (char *)&toastPopupTitle;
+    weaponPickupSound = (char *)"";
     weaponIndex = Scr_GetInt(0, SCRIPTINSTANCE_SERVER).intValue;
     if ( weaponIndex && weaponIndex != -1 )
         weaponPickupSound = (char *)BG_GetWeaponDef(weaponIndex)->pickupSound;
@@ -6042,7 +6042,7 @@ void GScr_GetWeaponPickupSoundPlayer()
     int weaponIndex; // [esp+0h] [ebp-8h]
     char *weaponPickupSoundPlayer; // [esp+4h] [ebp-4h]
 
-    weaponPickupSoundPlayer = (char *)&toastPopupTitle;
+    weaponPickupSoundPlayer = (char *)"";
     weaponIndex = Scr_GetInt(0, SCRIPTINSTANCE_SERVER).intValue;
     if ( weaponIndex && weaponIndex != -1 )
         weaponPickupSoundPlayer = (char *)BG_GetWeaponDef(weaponIndex)->pickupSoundPlayer;
@@ -7474,7 +7474,7 @@ void __cdecl GScr_DisplayGameModeMessage(scr_entref_t entref)
     char *sound; // [esp+4h] [ebp-90h]
     char gameModeMessage[132]; // [esp+Ch] [ebp-88h] BYREF
 
-    sound = (char *)&toastPopupTitle;
+    sound = (char *)"";
     sentToClientNum = GetEntity(entref)->s.number;
     Scr_ConstructMessageString(0, 0, "Game Message", gameModeMessage, 0x80u);
     if ( Scr_GetNumParam(SCRIPTINSTANCE_SERVER) == 2 )
@@ -7495,7 +7495,7 @@ void __cdecl GScr_DisplayTeamMessage(scr_entref_t entref)
 
     sendToEntity = GetEntity(entref);
     playerEnt = Scr_GetEntity(1u);
-    sound = &toastPopupTitle;
+    sound = "";
     Scr_ConstructMessageString(0, 0, "Team Message String", message, 0x80u);
     if ( Scr_GetNumParam(SCRIPTINSTANCE_SERVER) == 3 )
         sound = Scr_GetString(2u, SCRIPTINSTANCE_SERVER);
@@ -9431,7 +9431,7 @@ void Scr_TableLookupRowNum()
     else
     {
         Com_Printf(16, "You cannot do table lookups without fastfiles.\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -9457,7 +9457,7 @@ void Scr_TableLookupColumnForRow()
     else
     {
         Com_Printf(16, "You cannot do table lookups without fastfiles.\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -9485,7 +9485,7 @@ void Scr_TableLookup()
     else
     {
         Com_Printf(16, "You cannot do table lookups without fastfiles.\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -9513,7 +9513,7 @@ void Scr_TableLookupIString()
     else
     {
         Com_Printf(16, "You cannot do table lookups without fastfiles.\n");
-        Scr_AddIString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddIString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -11137,7 +11137,7 @@ void GScr_FGetArg()
                                 "freadline failed, there aren't %i arguments on this line, there are only %i arguments\n",
                                 arg + 1,
                                 i);
-                            Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                            Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
                             return;
                         }
                     }
@@ -11146,25 +11146,25 @@ void GScr_FGetArg()
                 else
                 {
                     Com_Printf(24, "freadline failed, file number %i was not open for reading\n", filenum);
-                    Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                    Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
                 }
             }
             else
             {
                 Com_Printf(24, "freadline failed, invalid argument number %i\n", arg);
-                Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
             }
         }
         else
         {
             Com_Printf(24, "freadline failed, invalid file number %i\n", filenum);
-            Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+            Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
         }
     }
     else
     {
         Com_Printf(24, "freadline requires at least 2 parameters (file, string)\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -11345,7 +11345,7 @@ void GScr_GetRefFromItemIndex()
     if ( itemRef && *itemRef )
         Scr_AddString(itemRef, SCRIPTINSTANCE_SERVER);
     else
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
 }
 
 void GScr_GetItemGroupFromItemIndex()
@@ -11358,7 +11358,7 @@ void GScr_GetItemGroupFromItemIndex()
     if ( itemGroup && *itemGroup )
         Scr_AddString(itemGroup, SCRIPTINSTANCE_SERVER);
     else
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
 }
 
 void GScr_GetBaseWeaponItemIndex()
@@ -11678,7 +11678,7 @@ void GScr_GetContractRequirements()
                 if ( reqData )
                     Scr_AddString(reqData, SCRIPTINSTANCE_SERVER);
                 else
-                    Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                    Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
                 Scr_AddArray(SCRIPTINSTANCE_SERVER);
             }
         }
@@ -11735,7 +11735,7 @@ void GScr_GetContractResetConditions()
         if ( resetConditions )
             Scr_AddString(resetConditions, SCRIPTINSTANCE_SERVER);
         else
-            Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+            Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
     else
     {
@@ -15301,7 +15301,7 @@ void GScr_GetWeaponProjExplosionSound()
     if ( wp.weapDef->projExplosionSound )
         Scr_AddString((char *)wp.weapDef->projExplosionSound, SCRIPTINSTANCE_SERVER);
     else
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
 }
 
 void GScr_IsWeaponSpecificUse()
@@ -15574,14 +15574,14 @@ void GScr_GetCounterTotal()
         if ( counterId == -1 )
         {
             Com_PrintError(16, "Invalid counter string id: %s\n", counterType);
-            Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+            Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
         }
         else
         {
             LODWORD(v0) = LiveCounter_GetCounterTotalValue(counterId);
             if ( v0 == -1 )
             {
-                Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+                Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
             }
             else
             {
@@ -15593,7 +15593,7 @@ void GScr_GetCounterTotal()
     else
     {
         Com_PrintError(16, "Invalid param count. usage: <string returned> getCounterTotal( <counter id> ).\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -15621,7 +15621,7 @@ void GScr_SetScoreboardColumns()
         Com_PrintError(
             16,
             "Invalid param count. usage: setScoreboardColumns( <column1 name> <column2 name> <column3 name> <column4 name> ).\n");
-        Scr_AddString((char *)&toastPopupTitle, SCRIPTINSTANCE_SERVER);
+        Scr_AddString((char *)"", SCRIPTINSTANCE_SERVER);
     }
 }
 

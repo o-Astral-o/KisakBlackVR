@@ -86,7 +86,6 @@ bool __cdecl PM_SprintStartInterferingButtons(const playerState_s *ps, int forwa
 bool __cdecl PM_SprintEndingButtons(const pmove_t *pm);
 bool __cdecl PM_CanCrouch(playerState_s *ps, pmove_t *pm);
 void __cdecl PM_FlyMove(pmove_t *pm, pml_t *pml);
-void __cdecl Vec3Cross(const float *v0, const float *v1, float *cross);
 void __cdecl PM_Friction(playerState_s *ps, pml_t *pml, pmove_t *pm);
 void __cdecl PM_Accelerate(playerState_s *ps, const pml_t *pml, float *wishdir, float wishspeed, float accel);
 double __cdecl PM_MoveScale(playerState_s *ps, float fmove, float rmove, float umove);

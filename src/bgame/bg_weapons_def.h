@@ -1,5 +1,21 @@
 #pragma once
 
+enum eAttachmentPoint : __int32
+{                                       // XREF: WeaponComponent/r
+                                        // AttachmentTableEntry/r ...
+    ATTACHMENT_POINT_NONE    = 0x0,
+    ATTACHMENT_POINT_TOP     = 0x1,
+    ATTACHMENT_POINT_FIRST   = 0x1,
+    ATTACHMENT_POINT_BOTTOM  = 0x2,
+    ATTACHMENT_POINT_TRIGGER = 0x3,
+    ATTACHMENT_POINT_MUZZLE  = 0x4,
+    ATTACHMENT_POINT_COUNT   = 0x5,
+    ATTACHMENT_POINT_INVALID = 0x5,
+};
+
+struct WeaponDef;
+struct WeaponVariantDef;
+
 unsigned int __cdecl BG_GetNumWeapons();
 const WeaponVariantDef *__cdecl BG_GetWeaponVariantDef(unsigned int weaponIndex);
 const WeaponDef *__cdecl BG_GetWeaponDef(unsigned int weaponIndex);

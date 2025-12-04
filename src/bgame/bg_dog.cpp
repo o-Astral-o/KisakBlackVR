@@ -92,74 +92,6 @@ unsigned __int16 *s_animStateCategories[8] =
         &scr_const.traverse         // 0x3F392C6
 };
 
-enum ActorAnimStates : __int32
-{                                                                             // XREF: BG_Dog_Move_Start/r
-                                                                                // BG_Dog_Move_Stop/r ...
-        ACTOR_ANIMATION_IDLE                         = 0x0,
-        ACTOR_ANIMATION_MOVE_RUN                 = 0x1,
-        ACTOR_ANIMATION_MOVE_START             = 0x2,
-        ACTOR_ANIMATION_MOVE_STOP                = 0x3,
-        ACTOR_ANIMATION_MOVE_WALK                = 0x4,
-        ACTOR_ANIMATION_MOVE_TURN_LEFT     = 0x5,
-        ACTOR_ANIMATION_MOVE_TURN_RIGHT    = 0x6,
-        ACTOR_ANIMATION_MOVE_RUN_TURN_LEFT = 0x7,
-        ACTOR_ANIMATION_MOVE_RUN_TURN_RIGHT = 0x8,
-        ACTOR_ANIMATION_MOVE_TURN_AROUND_LEFT = 0x9,
-        ACTOR_ANIMATION_MOVE_TURN_AROUND_RIGHT = 0xA,
-        ACTOR_ANIMATION_MOVE_RUN_TURN_AROUND_LEFT = 0xB,
-        ACTOR_ANIMATION_MOVE_RUN_TURN_AROUND_RIGHT = 0xC,
-        ACTOR_ANIMATION_ATTACK                     = 0xD,
-        ACTOR_ANIMATION_STOP_IDLE                = 0xE,
-        ACTOR_ANIMATION_STOP_ATTACKIDLE    = 0xF,
-        ACTOR_ANIMATION_STOP_ATTACKIDLE_BARK = 0x10,
-        ACTOR_ANIMATION_STOP_ATTACKIDLE_GROWL = 0x11,
-        ACTOR_ANIMATION_PAIN_MAIN                = 0x12,
-        ACTOR_ANIMATION_PAIN_FRONT             = 0x13,
-        ACTOR_ANIMATION_PAIN_BACK                = 0x14,
-        ACTOR_ANIMATION_PAIN_LEFT                = 0x15,
-        ACTOR_ANIMATION_PAIN_RIGHT             = 0x16,
-        ACTOR_ANIMATION_RUN_PAIN_FRONT     = 0x17,
-        ACTOR_ANIMATION_RUN_PAIN_BACK        = 0x18,
-        ACTOR_ANIMATION_RUN_PAIN_LEFT        = 0x19,
-        ACTOR_ANIMATION_RUN_PAIN_RIGHT     = 0x1A,
-        ACTOR_ANIMATION_DEATH_FRONT            = 0x1B,
-        ACTOR_ANIMATION_DEATH_BACK             = 0x1C,
-        ACTOR_ANIMATION_DEATH_LEFT             = 0x1D,
-        ACTOR_ANIMATION_DEATH_RIGHT            = 0x1E,
-        ACTOR_ANIMATION_FLASHED                    = 0x1F,
-        ACTOR_ANIMATION_ATTACK_ATTACKIDLE = 0x20,
-        ACTOR_ANIMATION_ATTACK_ATTACKIDLE_BARK = 0x21,
-        ACTOR_ANIMATION_ATTACK_ATTACKIDLE_GROWL = 0x22,
-        ACTOR_ANIMATION_ATTACK_RUN             = 0x23,
-        ACTOR_ANIMATION_ATTACK_PLAYER_CLOSE_RANGE = 0x24,
-        ACTOR_ANIMATION_ATTACK_MISS            = 0x25,
-        ACTOR_ANIMATION_ATTACK_MISS_LEFT = 0x26,
-        ACTOR_ANIMATION_ATTACK_MISS_RIGHT = 0x27,
-        ACTOR_ANIMATION_TRAVERSE_JUMP_UP_40 = 0x28,
-        ACTOR_ANIMATION_TRAVERSE_JUMP_UP_80 = 0x29,
-        ACTOR_ANIMATION_TRAVERSE_JUMP_DOWN_40 = 0x2A,
-        ACTOR_ANIMATION_TRAVERSE_JUMP_DOWN_80 = 0x2B,
-        ACTOR_ANIMATION_TRAVERSE_WALLHOP = 0x2C,
-        ACTOR_ANIMATION_TRAVERSE_WINDOW    = 0x2D,
-        ACTOR_ANIMATION_TRAVERSE_THROUGH_HOLE_42 = 0x2E,
-        ACTOR_ANIMATION_COUNT                        = 0x2F,
-};
-
-
-struct ai_animation_funcs_t // sizeof=0x10
-{                                                                             // XREF: .rdata:ai_animation_funcs_t const * const AIAnimationFuncTable/r
-        void (__cdecl *pfnStart)(int, const entityState_s *, ActorAnimStates);
-                                                                                // XREF: BG_Dog_SetNewAnimationState+56/r
-                                                                                // BG_Dog_SetNewAnimationState+77/r
-        void (__cdecl *pfnThink)(int, const entityState_s *);
-                                                                                // XREF: BG_Dog_UpdateAnimationState(int,entityState_s const *,actorInfo_t *)+AE/r
-                                                                                // BG_Dog_UpdateAnimationState(int,entityState_s const *,actorInfo_t *)+C5/r
-        int (__cdecl *pfnLength)(int, const entityState_s *);
-        void (__cdecl *pfnSetAtEnd)(int, const entityState_s *, actorInfo_t *);
-                                                                                // XREF: BG_Actor_FastForwardAnimState(int,entityState_s const *,actorInfo_t *)+19/r
-                                                                                // BG_Actor_FastForwardAnimState(int,entityState_s const *,actorInfo_t *)+34/r
-};
-
 const ai_animation_funcs_t AIAnimationFuncTable[47] =
 {
     { NULL, NULL, NULL, NULL },
@@ -307,21 +239,14 @@ void __cdecl BG_Dog_UpdateAnimationState(int localClientNum, const entityState_s
 
     lf = &actorInfo->animInfo;
     newAnimationState = es->animState.state;
-    if ( ApplyNewAnimState(actorInfo->pXAnimTree, &actorInfo->animInfo.lerp, newAnimationState) )
+    if (ApplyNewAnimState(actorInfo->pXAnimTree, &actorInfo->animInfo.lerp, newAnimationState))
     {
         BG_Dog_SetNewAnimationState(localClientNum, &actorInfo->animInfo, &lf->lerp, newAnimationState, es);
     }
-    else if ( lf->lerp.bAnimating
-                 && (*(int (__cdecl **)(int, int))(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index)
-                                                                                                         + 8)
-                                                                                 + 160))(
-                            es->number,
-                            localClientNum) )
+    else if (lf->lerp.bAnimating && bgs->GetDObj(es->number, localClientNum))
     {
-        if ( dword_C6011C[4 * (newAnimationState & 0xFFFFFFBF)] )
-            ((void (__cdecl *)(int, const entityState_s *))dword_C6011C[4 * (newAnimationState & 0xFFFFFFBF)])(
-                localClientNum,
-                es);
+        if (AIAnimationFuncTable[newAnimationState & 0xFFFFFFBF].pfnThink)
+            AIAnimationFuncTable[newAnimationState & 0xFFFFFFBF].pfnThink(localClientNum, es);
     }
 }
 
@@ -333,11 +258,7 @@ void __cdecl BG_Dog_SetNewAnimationState(
                 const entityState_s *es)
 {
     BG_CheckThread();
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8)
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_dog.cpp", 172, 0, "%s", "bgs") )
-    {
-        __debugbreak();
-    }
+    iassert(bgs);
     if ( AIAnimationFuncTable[newAnimationState & 0xFFFFFFBF].pfnStart )
     {
         AIAnimationFuncTable[newAnimationState & 0xFFFFFFBF].pfnStart(

@@ -1444,7 +1444,7 @@ void __cdecl DrawViewmodelInfo(int localClientNum)
                 fov);
         }
         len = &buffer[strlen(buffer) + 1] - &buffer[1];
-        DObjDisplayAnimToBuffer(viewModelInfo->viewModelDObj, &toastPopupTitle, &buffer[len], 2048 - len);
+        DObjDisplayAnimToBuffer(viewModelInfo->viewModelDObj, "", &buffer[len], 2048 - len);
         UI_DrawText(scrPlace, buffer, 2048, font, 0.0, 20.0, 1, 1, 0.25, colorWhite, 3);
     }
 }
@@ -1537,7 +1537,7 @@ void __cdecl CG_GenerateSceneCodeMeshes(int localClientNum)
     ropeVertsCmd.refdef_tanHalfFovX = clientGlobals->refdef.tanHalfFovX;
     ropeVertsCmd.refdef_tanHalfFovY = clientGlobals->refdef.tanHalfFovY;
     R_Rope_GenerateVerts_Camera(&ropeVertsCmd);
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
     if ( GetCurrentThreadId() == g_DXDeviceThread )
         D3DPERF_EndEvent();
     Flame_Generate_Verts(localClientNum);

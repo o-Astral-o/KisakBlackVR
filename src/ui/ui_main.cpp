@@ -1404,7 +1404,7 @@ void __cdecl UI_RunMenuScript(int localClientNum, int contextIndex, __int64 args
             else
             {
 LABEL_25:
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
             }
         }
         else if ( String_Parse((const char **)args, v40, 1024) )
@@ -3126,7 +3126,7 @@ void __cdecl UI_InitOnceForAllClients()
     if ( useFastFile->current.enabled )
         DB_ResetZoneSize(0);
     if ( !G_ExitAfterConnectPaths() && !useFastFile->current.enabled )
-        BLOPS_NULLSUB();
+        //BLOPS_NULLSUB();
     String_Init();
     UI_RegisterDvars();
     UI_AssetCache();
@@ -3192,42 +3192,42 @@ void UI_RegisterDvars()
                                                  32,
                                                  0,
                                                  "Custom game mode selected index into sharedUiInfo.customGameTypes");
-    ui_customModeName = _Dvar_RegisterString("ui_customModeName", (char *)&toastPopupTitle, 0, "Custom game mode name");
+    ui_customModeName = _Dvar_RegisterString("ui_customModeName", (char *)"", 0, "Custom game mode name");
     ui_customModeEditName = _Dvar_RegisterString(
                                                         "ui_customModeEditName",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "Name to give the currently edited custom game mode when editing is complete");
     ui_customModeDesc = _Dvar_RegisterString(
                                                 "ui_customModeDesc",
-                                                (char *)&toastPopupTitle,
+                                                (char *)"",
                                                 0,
                                                 "Description for the custom game mode.");
     ui_customModeEditDesc = _Dvar_RegisterString(
                                                         "ui_customModeEditDesc",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "Description for the custom game mode while editing.");
-    ui_customClassName = _Dvar_RegisterString("ui_customClassName", (char *)&toastPopupTitle, 0, "Custom Class name");
+    ui_customClassName = _Dvar_RegisterString("ui_customClassName", (char *)"", 0, "Custom Class name");
     _Dvar_RegisterBool("g_allowvote", 1, 1u, 0);
     _Dvar_RegisterBool("cg_brass", 1, 1u, 0);
     _Dvar_RegisterBool("fx_marks", 1, 1u, 0);
-    _Dvar_RegisterString("server1", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server2", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server3", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server4", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server5", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server6", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server7", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server8", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server9", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server10", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server11", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server12", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server13", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server14", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server15", (char *)&toastPopupTitle, 1u, "Server display");
-    _Dvar_RegisterString("server16", (char *)&toastPopupTitle, 1u, "Server display");
+    _Dvar_RegisterString("server1", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server2", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server3", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server4", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server5", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server6", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server7", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server8", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server9", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server10", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server11", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server12", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server13", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server14", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server15", (char *)"", 1u, "Server display");
+    _Dvar_RegisterString("server16", (char *)"", 1u, "Server display");
     ui_netSource = _Dvar_RegisterInt(
                                      "ui_netSource",
                                      1,
@@ -3239,9 +3239,9 @@ void UI_RegisterDvars()
     ui_bigFont = _Dvar_RegisterFloat("ui_bigFont", 0.40000001, 0.0, 1.0, 1u, "Big font scale");
     ui_extraBigFont = 0;
     ui_currentMap = _Dvar_RegisterInt("ui_currentMap", 0, 0, 0x7FFFFFFF, 1u, "Current map index");
-    ui_gametype = _Dvar_RegisterString("ui_gametype", (char *)&toastPopupTitle, 0, "Current game type");
-    ui_mapname = _Dvar_RegisterString("ui_mapname", (char *)&toastPopupTitle, 0, "Current map name");
-    ui_demoname = _Dvar_RegisterString("ui_demoname", (char *)&toastPopupTitle, 0, "Current selected demo name");
+    ui_gametype = _Dvar_RegisterString("ui_gametype", (char *)"", 0, "Current game type");
+    ui_mapname = _Dvar_RegisterString("ui_mapname", (char *)"", 0, "Current map name");
+    ui_demoname = _Dvar_RegisterString("ui_demoname", (char *)"", 0, "Current selected demo name");
     ui_currentRecentPlayer = _Dvar_RegisterInt("ui_currentRecentPlayer", 0, 0, 100, 0, "Selected recent player");
     ui_serverStatusTimeOut = _Dvar_RegisterInt(
                                                          "ui_serverStatusTimeOut",
@@ -3262,7 +3262,7 @@ void UI_RegisterDvars()
     ui_showList = _Dvar_RegisterBool("ui_showList", 0, 0, "Show onscreen list of currently visible menus");
     ui_showMenuOnly = _Dvar_RegisterString(
                                             "ui_showMenuOnly",
-                                            (char *)&toastPopupTitle,
+                                            (char *)"",
                                             0,
                                             "If set, only menus using this name will draw.");
     ui_menuLvlNotify = _Dvar_RegisterBool(
@@ -3272,17 +3272,17 @@ void UI_RegisterDvars()
                                              "If set, send code notification to script; default off");
     selectedFriendName = _Dvar_RegisterString(
                                                  "selectedFriendName",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "The name of the currently selected friend.");
     selectedFriendClanTag = _Dvar_RegisterString(
                                                         "selectedFriendClanTag",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "The clan tag of the currently selected friend.");
     selectedPlayerClanName = _Dvar_RegisterString(
                                                          "selectedPlayerClanName",
-                                                         (char *)&toastPopupTitle,
+                                                         (char *)"",
                                                          0,
                                                          "The name of the selected player clan name");
     selectedFriendIndex = _Dvar_RegisterInt(
@@ -3308,7 +3308,7 @@ void UI_RegisterDvars()
                                                  "Currently selected group index");
     selectedPlayerXuid = _Dvar_RegisterString(
                                                  "selectedPlayerXuid",
-                                                 (char *)&toastPopupTitle,
+                                                 (char *)"",
                                                  0,
                                                  "Currently selected player xuid.");
     selectedMenuItemIndex = _Dvar_RegisterInt(
@@ -3320,27 +3320,27 @@ void UI_RegisterDvars()
                                                         "Current selected event index.");
     highlightedPlayerXuid = _Dvar_RegisterString(
                                                         "highlightedPlayerXuid",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "Currently highlighted player xuid.");
     highlightedPlayerName = _Dvar_RegisterString(
                                                         "highlightedPlayerName",
-                                                        (char *)&toastPopupTitle,
+                                                        (char *)"",
                                                         0,
                                                         "Currently highlighted player name.");
     highlightedPlayerClanTag = _Dvar_RegisterString(
                                                              "highlightedPlayerClanTag",
-                                                             (char *)&toastPopupTitle,
+                                                             (char *)"",
                                                              0,
                                                              "Currently highlighted player clan tag.");
     splitscreen_lobbyPlayerCount = _Dvar_RegisterString(
                                                                      "splitscreen_lobbyPlayerCount",
-                                                                     (char *)&toastPopupTitle,
+                                                                     (char *)"",
                                                                      0,
                                                                      "Splitscreen lobby player count string.");
     splitscreen_partyPlayerCount = _Dvar_RegisterString(
                                                                      "splitscreen_partyPlayerCount",
-                                                                     (char *)&toastPopupTitle,
+                                                                     (char *)"",
                                                                      0,
                                                                      "Splitscreen lobby party player count string.");
     tickerHeaderWidth = _Dvar_RegisterInt(
@@ -3375,11 +3375,11 @@ void UI_RegisterDvars()
     ui_drawCrosshair = _Dvar_RegisterBool("ui_drawCrosshair", 1, 1u, "Whether to draw crosshairs.");
     ui_onCloseArgs = _Dvar_RegisterString(
                                          "ui_onCloseArgs",
-                                         (char *)&toastPopupTitle,
+                                         (char *)"",
                                          0x40u,
                                          "Passes on close arguments to a menu.");
-    _Dvar_RegisterString("notice_onEscArg", (char *)&toastPopupTitle, 0x40u, "UI Notice EscArg");
-    _Dvar_RegisterString("statusinfo_onEscArg", (char *)&toastPopupTitle, 0x40u, "UI Statusinfo EscArg");
+    _Dvar_RegisterString("notice_onEscArg", (char *)"", 0x40u, "UI Notice EscArg");
+    _Dvar_RegisterString("statusinfo_onEscArg", (char *)"", 0x40u, "UI Statusinfo EscArg");
     ui_ethernetLinkActive = _Dvar_RegisterBool(
                                                         "ui_ethernetLinkActive",
                                                         1,
@@ -3580,7 +3580,7 @@ void __cdecl UI_UIContext_CloseMenuImmediate(int localClientNum, int contextInde
 void __cdecl UI_UIContext_OpenToastPopup(
                 int contextIndex,
                 const char *toastPopupIconName,
-                const char *toastPopupTitle,
+                const char *GLOBAL_EMPTY_STRING,
                 const char *toastPopupDesc,
                 int toastPopupDuration)
 {
@@ -3591,7 +3591,7 @@ void __cdecl UI_UIContext_OpenToastPopup(
 
     uiInfo = UI_UIContext_GetInfo(contextIndex);
     I_strncpyz(uiInfo->toastPopupIconName, toastPopupIconName, 256);
-    I_strncpyz(uiInfo->toastPopupTitle, toastPopupTitle, 256);
+    I_strncpyz(uiInfo->GLOBAL_EMPTY_STRING, GLOBAL_EMPTY_STRING, 256);
     I_strncpyz(uiInfo->toastPopupDesc, toastPopupDesc, 256);
     uiInfo->toastPopupDuration = toastPopupDuration;
     uiInfo->toastPopupOpened = 1;
@@ -3655,14 +3655,14 @@ void __cdecl UI_CloseMenuImmediate(int localClientNum, const char *menuName)
 void __cdecl UI_OpenToastPopup(
                 int localClientNum,
                 const char *toastPopupIconName,
-                const char *toastPopupTitle,
+                const char *GLOBAL_EMPTY_STRING,
                 const char *toastPopupDesc,
                 int toastPopupDuration)
 {
     int UIContextIndex; // eax
 
     UIContextIndex = Com_LocalClient_GetUIContextIndex(localClientNum);
-    UI_UIContext_OpenToastPopup(UIContextIndex, toastPopupIconName, toastPopupTitle, toastPopupDesc, toastPopupDuration);
+    UI_UIContext_OpenToastPopup(UIContextIndex, toastPopupIconName, GLOBAL_EMPTY_STRING, toastPopupDesc, toastPopupDuration);
 }
 
 void __cdecl UI_DrawMapLevelshot(int localClientNum)

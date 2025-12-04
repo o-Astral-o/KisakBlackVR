@@ -1,5 +1,10 @@
 #include "DynEntity_coll.h"
 
+#include <string.h>
+#include <qcommon/cm_load.h>
+
+DynEntityCollWorld dynEntCollWorlds[4];
+
 DynEntityCollSector *__cdecl DynEnt_GetCollSector(DynEntityCollType collType, unsigned int sectorIndex)
 {
     if ( !sectorIndex

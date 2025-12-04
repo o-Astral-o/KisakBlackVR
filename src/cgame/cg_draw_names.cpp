@@ -80,7 +80,7 @@ void __cdecl CG_DrawOverheadNames(int localClientNum, const centity_s *cent, flo
 
     material = 0;
     drawRank = 1;
-    text = &toastPopupTitle;
+    text = "";
     if ( alpha > 0.001 )
     {
         entnum = cent->nextState.number;
@@ -133,7 +133,7 @@ void __cdecl CG_DrawOverheadNames(int localClientNum, const centity_s *cent, flo
                             text = (const char *)currentPlayerDetails;
                             break;
                         case 5:
-                            text = &toastPopupTitle;
+                            text = "";
                             break;
                         default:
                             Com_PrintError(14, "Bad Overhead Display Mode for client num: %i\n", entnum);
@@ -782,7 +782,7 @@ void __cdecl CG_DrawCrosshairNames(int localClientNum)
             if ( CG_IsValidCrosshairEntity(localClientNum, cgameGlob, cent, entnum) )
             {
                 myTeam = cgameGlob->bgs.clientinfo[cgameGlob->nextSnap->ps.clientNum].team;
-                BLOPS_NULLSUB();
+                //BLOPS_NULLSUB();
                 if ( myTeam == 3 || myTeam && myTeam == cgameGlob->bgs.clientinfo[cgameGlob->crosshairClientNum].team )
                     alpha = CG_FadeCrosshairNameAlpha(
                                         cgameGlob->time,

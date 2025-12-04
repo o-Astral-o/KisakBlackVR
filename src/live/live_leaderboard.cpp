@@ -982,7 +982,7 @@ void __cdecl LB_ReportUser()
 
     Com_DPrintf(14, "Implement me\n");
     v0 = UI_SafeTranslateString("MENU_SENT_CAPS");
-    UI_OpenToastPopup(0, "menu_mp_killstreak_select", &toastPopupTitle, v0, 2700);
+    UI_OpenToastPopup(0, "menu_mp_killstreak_select", "", v0, 2700);
 }
 
 void __cdecl LB_IncrementEscrow()
@@ -2148,7 +2148,7 @@ char *__cdecl LB_FeederItemText(int localClientNum, unsigned int index, int colu
             break;
         case 1:
             LB_GetRankIconForXp(row, lbType, material);
-            result = (char *)&toastPopupTitle;
+            result = (char *)"";
             break;
         case 2:
             XUserCol = LB_GetXUserCol(&g_LbLookup, row, lbType, LB_STAT_XP);

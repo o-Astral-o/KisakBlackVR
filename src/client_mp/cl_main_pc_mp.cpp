@@ -309,7 +309,7 @@ void __cdecl CL_Connect_f()
                 }
                 else
                 {
-                    _Dvar_RegisterBool("dw_connectafterlogin", 1, 0x40u, &toastPopupTitle);
+                    _Dvar_RegisterBool("dw_connectafterlogin", 1, 0x40u, "");
                     CL_SetLocalClientConnectionState(0, CA_DISCONNECTED);
                 }
             }
@@ -333,7 +333,7 @@ void __cdecl CL_Connect_f()
 
 void __cdecl CL_PC_SignInLive()
 {
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
 void __cdecl CL_InitServerInfo(serverInfo_t *server, netadr_t adr)
@@ -1157,7 +1157,7 @@ void __cdecl CL_WWWDownload()
             }
             cls.downloadName[0] = 0;
             cls.downloadTempName[0] = 0;
-            I_strncpyz(legacyHacks.cl_downloadName, &toastPopupTitle, 64);
+            I_strncpyz(legacyHacks.cl_downloadName, "", 64);
             if ( !cls.wwwDlDisconnected )
                 CL_AddReliableCommand(0, "wwwdl done");
             cls.wwwDlInProgress = 0;
@@ -2116,7 +2116,7 @@ void __cdecl CL_QuickMatch_Frame()
             break;
         case QM_FAILED:
             v1 = UI_SafeTranslateString("PLATFORM_QUICKMATCH_FAILED");
-            v0 = UI_SafeTranslateString(&toastPopupTitle);
+            v0 = UI_SafeTranslateString("");
             UI_OpenToastPopup(0, "menu_mp_killstreak_select", v0, v1, 2700);
             s_quickmatchstate = QM_DORMANT;
             break;
@@ -2246,6 +2246,6 @@ void __thiscall bdReference<bdCommonAddr>::operator=(bdReference<bdRemoteTask> *
 
 void __cdecl CL_PC_SignIn()
 {
-    BLOPS_NULLSUB();
+    //BLOPS_NULLSUB();
 }
 
