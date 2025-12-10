@@ -2,6 +2,7 @@
 #include "phys_local.h"
 #include "phys_gjk.h"
 #include "rigid_body.h"
+#include "phys_main.h"
 
 struct __declspec(align(16)) gjk_trace_output_t // sizeof=0x50
 {
@@ -253,13 +254,27 @@ struct gjk_collision_visitor // sizeof=0x4
         //gjk_collision_visitor_vtbl *__vftable;
                                                                                 // XREF: DynEntCl_CreatePhysObj(DynEntityDef const *,DynEntityClient *,GfxPlacement const *)+D7/w
                                                                                 // DynEntCl_CreatePhysObj(DynEntityDef const *,DynEntityClient *,GfxPlacement const *)+DE/w ...
-    virtual void *allocate(const int, const int, const bool);
-    virtual bool is_query();
-    virtual void get_local_query_aabb(float *, float *);
-    virtual bool query_create_prolog(const void *);
-    virtual void query_create_epilog(gjk_base_t *);
-    virtual bool query_create_prolog_1(const float *, const float *, const void *);
-    virtual void query_create_epilog_1(gjk_base_t *);
+    virtual void *allocate(const int, const int, const bool) = 0;
+    virtual bool is_query()
+    {
+        return false;
+    }
+    virtual void get_local_query_aabb(float *, float *)
+    {
+        //if (!Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 35, 0, "%s", "0"))
+        //    __debugbreak();
+        iassert(0);
+    }
+    virtual bool query_create_prolog(const void *) = 0;
+    virtual void query_create_epilog(gjk_base_t *) = 0;
+    virtual bool query_create_prolog_1(const float *, const float *, const void *)
+    {
+        return true;
+    }
+    virtual void query_create_epilog_1(gjk_base_t *)
+    {
+        ;
+    }
 };
 
 struct create_gjk_geom_collision_visitor : gjk_collision_visitor // sizeof=0x8
@@ -267,6 +282,28 @@ struct create_gjk_geom_collision_visitor : gjk_collision_visitor // sizeof=0x8
                                         // XDoll_CreatePhysObj/r ...
     gjk_geom_list_t *gjk_geom_list;     // XREF: DynEntCl_CreatePhysObj(DynEntityDef const *,DynEntityClient *,GfxPlacement const *)+E8/w
     // FX_SpawnModelPhysics+5D6/w ...
+};
+
+struct phys_auto_activate_callback // sizeof=0x4
+{                                       // XREF: destructible_ent_aa/r
+                                        // dynamic_ent_aa/r
+    //phys_auto_activate_callback_vtbl *__vftable;00000000 struct /*VFT*/ phys_auto_activate_callback_vtbl // sizeof=0x8
+
+    virtual bool has_auto_activated() = 0;
+    virtual void auto_activate(broad_phase_info *) = 0;
+};
+
+struct destructible_ent_aa : phys_auto_activate_callback // sizeof=0xC
+{
+    bool m_has_auto_activated;
+    // padding byte
+    // padding byte
+    // padding byte
+    centity_s *m_cent;
+
+
+    bool has_auto_activated();
+    void auto_activate(broad_phase_info *bpi_impactor);
 };
 
 struct gjk_physics_collision_visitor : gjk_collision_visitor // sizeof=0x80

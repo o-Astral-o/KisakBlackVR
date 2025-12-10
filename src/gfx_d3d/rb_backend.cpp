@@ -1,5 +1,7 @@
 #include "rb_backend.h"
 
+GfxRenderTarget gfxRenderTargets[44];
+
 bool __cdecl ValidGamePadButtonIcon(unsigned int letter)
 {
     if ( letter && letter <= 6 )

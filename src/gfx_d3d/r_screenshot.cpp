@@ -1,4 +1,16 @@
 #include "r_screenshot.h"
+#include "r_init.h"
+#include <universal/com_memory.h>
+#include <qcommon/common.h>
+#include "r_dvars.h"
+#include "rb_logfile.h"
+#include "r_utils.h"
+#include <d3dx9.h>
+#include <universal/com_files.h>
+#include <qcommon/cmd.h>
+#include "rb_resource.h"
+#include "r_jpeg.h"
+#include "r_state.h"
 
 unsigned __int8 *__cdecl R_TakeResampledScreenshot(int width, int height, int bytesPerPixel, int headerSize)
 {
@@ -255,15 +267,16 @@ char __cdecl R_GetFrontBufferData(int x, int y, int width, int height, int bytes
         pt.x -= monitorInfo.rcMonitor.left;
         pt.y -= monitorInfo.rcMonitor.top;
     }
-    hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, int, int, int, IDirect3DSurface9 **, unsigned int))dx.device->CreateOffscreenPlainSurface)(
-                 dx.device,
-                 dx.device,
-                 surfWidth,
-                 surfHeight,
-                 21,
-                 3,
-                 &surface,
-                 0);
+    //hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, int, int, int, IDirect3DSurface9 **, unsigned int))dx.device->CreateOffscreenPlainSurface)(
+    //             dx.device,
+    //             dx.device,
+    //             surfWidth,
+    //             surfHeight,
+    //             21,
+    //             3,
+    //             &surface,
+    //             0);
+    hr = dx.device->CreateOffscreenPlainSurface(surfWidth, surfHeight, D3DFMT_A8R8G8B8, D3DPOOL_SCRATCH, &surface, NULL);
     if ( hr < 0 )
         goto LABEL_12;
     hr = (*(int (__stdcall **)(int, IDirect3DSurface9 *))(*(unsigned int *)dx.windows[0].width + 16))(
@@ -297,7 +310,7 @@ LABEL_12:
     sourceRect.right = width + pt.x;
     sourceRect.top = pt.y;
     sourceRect.bottom = height + pt.y;
-    hr = surface->LockRect(surface, &lockedRect, &sourceRect, 16u);
+    hr = surface->LockRect(&lockedRect, &sourceRect, 16u);
     if ( hr >= 0 )
     {
         srcPixel = (const unsigned __int8 *)lockedRect.pBits;
@@ -330,7 +343,7 @@ LABEL_12:
                 srcPixel += lockedRect.Pitch;
             }
         }
-        surface->UnlockRect(surface);
+        surface->UnlockRect();
         do
         {
             if ( r_logFile && r_logFile->current.integer )
@@ -373,7 +386,7 @@ void __cdecl R_TakeScreenshotJpgCallback(char *param)
     R_TakeScreenshot(param, D3DXIFF_JPG);
 }
 
-char __cdecl R_TakeScreenshot(char *filename, _D3DXIMAGE_FILEFORMAT format)
+char __cdecl R_TakeScreenshot(char *filename, int format)
 {
     const char *v3; // eax
     HRESULT v4; // [esp-4h] [ebp-170h]
@@ -424,15 +437,16 @@ char __cdecl R_TakeScreenshot(char *filename, _D3DXIMAGE_FILEFORMAT format)
         pt.x -= monitorInfo.rcMonitor.left;
         pt.y -= monitorInfo.rcMonitor.top;
     }
-    hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, int, int, int, IDirect3DSurface9 **, unsigned int))dx.device->CreateOffscreenPlainSurface)(
-                 dx.device,
-                 dx.device,
-                 surfWidth,
-                 surfHeight,
-                 21,
-                 3,
-                 &surface,
-                 0);
+    //hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, int, int, int, IDirect3DSurface9 **, unsigned int))dx.device->CreateOffscreenPlainSurface)(
+    //             dx.device,
+    //             dx.device,
+    //             surfWidth,
+    //             surfHeight,
+    //             21,
+    //             3,
+    //             &surface,
+    //             0);
+    hr = dx.device->CreateOffscreenPlainSurface(surfWidth, surfHeight, D3DFMT_A8R8G8B8, D3DPOOL_SCRATCH, &surface, NULL);
     if ( hr < 0 )
         goto LABEL_12;
     hr = (*(int (__stdcall **)(int, IDirect3DSurface9 *))(*(unsigned int *)dx.windows[0].width + 16))(
@@ -468,7 +482,7 @@ LABEL_12:
     sourceRect.bottom = height + pt.y;
     FS_BuildOSPath(fs_gamedir, 0, filename, ospath);
     if ( !FS_CreatePath(ospath) )
-        D3DXSaveSurfaceToFileA(ospath, format, surface, 0, &sourceRect);
+        D3DXSaveSurfaceToFileA(ospath, (D3DXIMAGE_FILEFORMAT)format, surface, 0, &sourceRect);
     do
     {
         if ( r_logFile && r_logFile->current.integer )
@@ -490,6 +504,8 @@ void __cdecl R_TakeScreenshotTgaCallback(char *param)
     R_TakeScreenshot(param, D3DXIFF_TGA);
 }
 
+static char filename[256];
+static int lastNumber = 0;
 void __cdecl R_ScreenshotCommand(GfxScreenshotType type)
 {
     const char *v2; // eax

@@ -1,4 +1,5 @@
 #include "r_outdoor.h"
+#include <universal/assertive.h>
 
 void __cdecl R_RegisterOutdoorImage(GfxWorld *world, const float *outdoorMin, const float *outdoorMax)
 {

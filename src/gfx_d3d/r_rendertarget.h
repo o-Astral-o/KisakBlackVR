@@ -1,5 +1,53 @@
 #pragma once
 
+enum FullscreenType : __int32
+{                                       // XREF: R_InitFullscreenRenderTargetImage/r
+                                        // R_GetFullScreenRes/r ...
+    FULLSCREEN_DISPLAY = 0x0,
+    FULLSCREEN_MIXED   = 0x1,
+    FULLSCREEN_SCENE   = 0x2,
+};
+
+enum RenderTargetUsage : __int32
+{                                       // XREF: R_InitFullscreenRenderTargetImage/r
+                                        // R_InitRenderTargetImage/r ...
+    RENDERTARGET_USAGE_DEPTH   = 0x0,
+    RENDERTARGET_USAGE_RENDER  = 0x1,
+    RENDERTARGET_USAGE_RENDER_SHARE_SCENE = 0x2,
+    RENDERTARGET_USAGE_TEXTURE = 0x3,
+};
+
+enum ShadowmapRTTiling : __int32
+{                                       // XREF: R_InitShadowmapRenderTarget/r
+    SHADOWMAP_RT_TILE_VERTICAL = 0x0,
+    SHADOWMAP_RT_TILE_GRID     = 0x1,
+};
+
+struct GfxRenderTargetSurface // sizeof=0x8
+{                                       // XREF: GfxRenderTarget/r
+    IDirect3DSurface9 *color;           // XREF: yuv_encode_frame(void)+3F/r
+    IDirect3DSurface9 *depthStencil;    // XREF: R_Resolve(GfxCmdBufContext,GfxImage *)+1C8/r
+};
+
+struct __declspec(align(4)) GfxRenderTarget // sizeof=0x14
+{                                       // XREF: RB_SaveScreen_BlendBlurred(GfxBlendSaveScreenBlurredParam const *,GfxViewInfo const *):loc_AB807E/r
+                                        // RB_SaveScreen_BlendFlashed(GfxBlendSaveScreenFlashedParam const *,GfxViewInfo const *):loc_AB8345/r ...
+    GfxImage *image;                    // XREF: R_GenerateSortedDrawSurfs+689/r
+                                        // R_GenerateSortedDrawSurfs+715/r ...
+    GfxRenderTargetSurface surface;     // XREF: yuv_encode_frame(void)+3F/r
+                                        // R_SetDepthOfField+762/r ...
+    unsigned __int16 width;             // XREF: RB_StandardDrawCommandsCommon+198/r
+                                        // R_UI3D_CheckRenderTarget(void):loc_A8B0BD/r ...
+    unsigned __int16 height;            // XREF: RB_StandardDrawCommandsCommon+1A3/r
+                                        // RB_UI3D_RenderToTexture(void const *,GfxUI3DBackend const *,GfxCmdBufInput const *)+3F2/r ...
+    bool cleared;                       // XREF: RB_BeginFrame(void const *)+58/w
+                                        // R_ClearRenderTargetForMultiGpu(GfxCmdBufContext,uchar)+1B/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+
 int __cdecl R_GetDepthStencilFormat(_D3DFORMAT renderTargetFormat);
 bool __cdecl R_IsDepthStencilFormatOk(_D3DFORMAT renderTargetFormat, _D3DFORMAT depthStencilFormat);
 void __cdecl R_InitRenderTargets();

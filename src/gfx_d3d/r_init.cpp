@@ -15,10 +15,42 @@
 #include "r_staticmodelcache.h"
 #include "r_utils.h"
 #include "r_rendercmds.h"
+#include "rb_superflare.h"
+#include "rb_sky.h"
+#include "rb_corona.h"
+#include <win32/win_net.h>
+#include <qcommon/threads.h>
+#include <win32/win_workercmds.h>
+#include "r_draw_method.h"
+#include "r_water.h"
+#include "r_image.h"
+#include "r_font.h"
+#include "r_water_load_obj.h"
+#include "r_light.h"
+#include "r_fog.h"
+#include "r_wind.h"
+#include "r_water_sim.h"
+#include "r_debug.h"
+#include "r_caps.h"
+#include "rb_state.h"
+#include "r_scene.h"
+#include "rb_stream.h"
+#include "r_stream.h"
+#include <universal/com_buildinfo.h>
+#include "r_cmds.h"
+#include "r_state.h"
 
 GfxConfiguration gfxCfg;
 vidConfig_t vidConfig;
 DxGlobals dx;
+r_global_permanent_t rgp;
+r_globals_t rg;
+GfxMetrics gfxMetrics;
+GfxGlobals r_glob;
+GfxDrawConsts g_drawConsts;
+
+bool g_allocateMinimalResources;
+GfxAssets gfxAssets;
 
 const dvar_t *r_mode;
 const dvar_t *r_displayRefresh;
@@ -288,7 +320,7 @@ char __cdecl R_CreateDevice(const GfxWindowParms *wndParms)
     {
         __debugbreak();
     }
-    dx.depthStencilFormat = R_GetDepthStencilFormat(D3DFMT_A8R8G8B8);
+    dx.depthStencilFormat = (D3DFORMAT)R_GetDepthStencilFormat(D3DFMT_A8R8G8B8);
     R_SetD3DPresentParameters(&d3dpp, wndParms);
     behavior = 64;
     if ( r_multithreaded_device->current.enabled )
@@ -354,7 +386,7 @@ void __cdecl R_SetD3DPresentParameters(_D3DPRESENT_PARAMETERS_ *d3dpp, const Gfx
 void __cdecl R_SetupAntiAliasing(const GfxWindowParms *wndParms)
 {
     _D3DMULTISAMPLE_TYPE multiSampleCount; // [esp+0h] [ebp-Ch]
-    unsigned int qualityLevels; // [esp+8h] [ebp-4h] BYREF
+    DWORD qualityLevels; // [esp+8h] [ebp-4h] BYREF
 
     if ( !wndParms
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp", 295, 0, "%s", "wndParms") )
@@ -376,25 +408,28 @@ void __cdecl R_SetupAntiAliasing(const GfxWindowParms *wndParms)
     if ( r_reflectionProbeGenerate->current.enabled )
         multiSampleCount = D3DMULTISAMPLE_NONMASKABLE;
     else
-        multiSampleCount = wndParms->aaSamples;
+        multiSampleCount = (_D3DMULTISAMPLE_TYPE)wndParms->aaSamples;
     while ( multiSampleCount > D3DMULTISAMPLE_NONMASKABLE )
     {
         dx.multiSampleType = multiSampleCount;
-        if ( ((int (__thiscall *)(IDirect3D9 *, IDirect3D9 *, unsigned int, int, int, bool, _D3DMULTISAMPLE_TYPE, unsigned int *))dx.d3d9->CheckDeviceMultiSampleType)(
-                     dx.d3d9,
-                     dx.d3d9,
-                     0,
-                     1,
-                     21,
-                     !wndParms->fullscreen,
-                     multiSampleCount,
-                     &qualityLevels) >= 0 )
+        //if ( ((int (__thiscall *)(IDirect3D9 *, IDirect3D9 *, unsigned int, int, int, bool, _D3DMULTISAMPLE_TYPE, unsigned int *))dx.d3d9->CheckDeviceMultiSampleType)(
+        //             dx.d3d9,
+        //             dx.d3d9,
+        //             0,
+        //             1,
+        //             21,
+        //             !wndParms->fullscreen,
+        //             multiSampleCount,
+        //             &qualityLevels) >= 0 )
+        if (dx.d3d9->CheckDeviceMultiSampleType(0, D3DDEVTYPE_HAL, D3DFMT_A8R8G8B8, !wndParms->fullscreen, multiSampleCount, &qualityLevels) >= 0)
         {
             Com_Printf(8, "Using %ix anti-aliasing\n", multiSampleCount);
             dx.multiSampleQuality = 0;
             return;
         }
-        --multiSampleCount;
+
+        //--multiSampleCount;
+        multiSampleCount = (_D3DMULTISAMPLE_TYPE)((int)multiSampleCount - 1);
     }
     dx.multiSampleType = D3DMULTISAMPLE_NONE;
     dx.multiSampleQuality = 0;
@@ -416,15 +451,16 @@ HRESULT __cdecl R_CreateDeviceInternal(HWND__ *hwnd, unsigned int behavior, _D3D
         dx.adapterNativeIsValid = R_GetMonitorDimensions(&dx.adapterNativeWidth, &dx.adapterNativeHeight);
         d3dpp->hDeviceWindow = 0;
         DeviceType = R_GetDeviceType();
-        hr = ((int (__thiscall *)(IDirect3D9 *, IDirect3D9 *, unsigned int, int, HWND__ *, unsigned int, _D3DPRESENT_PARAMETERS_ *, IDirect3DDevice9 **))dx.d3d9->CreateDevice)(
-                     dx.d3d9,
-                     dx.d3d9,
-                     dx.adapterIndex,
-                     DeviceType,
-                     hwnd,
-                     behavior,
-                     d3dpp,
-                     &dx.device);
+        //hr = ((int (__thiscall *)(IDirect3D9 *, IDirect3D9 *, unsigned int, int, HWND__ *, unsigned int, _D3DPRESENT_PARAMETERS_ *, IDirect3DDevice9 **))dx.d3d9->CreateDevice)(
+        //             dx.d3d9,
+        //             dx.d3d9,
+        //             dx.adapterIndex,
+        //             DeviceType,
+        //             hwnd,
+        //             behavior,
+        //             d3dpp,
+        //             &dx.device);
+        hr = dx.d3d9->CreateDevice(dx.adapterIndex, (D3DDEVTYPE)DeviceType, hwnd, behavior, d3dpp, &dx.device);
         if ( hr >= 0 )
             break;
         Sleep(0x64u);
@@ -445,7 +481,7 @@ HRESULT __cdecl R_CreateDeviceInternal(HWND__ *hwnd, unsigned int behavior, _D3D
         NvAPI_Stereo_IsActivated(dx.nvStereoHandle, &res);
         dx.nvStereoActivated = res != 0;
     }
-    getModeSuccessCode = dx.d3d9->GetAdapterDisplayMode(dx.d3d9, dx.adapterIndex, &getModeResult);
+    getModeSuccessCode = dx.d3d9->GetAdapterDisplayMode(dx.adapterIndex, &getModeResult);
     if ( getModeSuccessCode < 0 )
     {
         dx.adapterFullscreenWidth = d3dpp->BackBufferWidth;
@@ -525,30 +561,30 @@ void __cdecl R_CheckResizeWindow()
 void __cdecl R_ResizeWindow()
 {
     HWND__ *hwnd; // [esp+0h] [ebp-44h]
-    unsigned intexStyle; // [esp+4h] [ebp-40h]
+    DWORD exStyle; // [esp+4h] [ebp-40h]
     unsigned int style; // [esp+8h] [ebp-3Ch]
     GfxWindowParms wndParms; // [esp+Ch] [ebp-38h] BYREF
     tagRECT rc; // [esp+34h] [ebp-10h] BYREF
 
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_aspectRatio);
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_mode);
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_fullscreen);
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_aaSamples);
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_vsync);
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_fullscreen);
-    Dvar_MakeLatchedValueCurrent((dvar_s *)r_displayRefresh);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_aspectRatio);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_mode);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_fullscreen);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_aaSamples);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_vsync);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_fullscreen);
+    Dvar_MakeLatchedValueCurrent((dvar_s*)r_displayRefresh);
     R_SetWndParms(&wndParms);
     R_StoreWindowSettings(&wndParms);
     hwnd = (HWND__ *)dx.windows[0].swapChain;
-    if ( !dx.windows[0].swapChain
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp", 2739, 0, "%s", "hwnd") )
+    if (!dx.windows[0].swapChain
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp", 2739, 0, "%s", "hwnd"))
     {
         __debugbreak();
     }
     R_SetWndParms(&wndParms);
     dx.windows[0].height = wndParms.displayWidth;
     dx.flushGpuQuery = (IDirect3DQuery9 *)wndParms.displayHeight;
-    if ( wndParms.fullscreen )
+    if (wndParms.fullscreen)
     {
         exStyle = 8;
         style = 0x80000000;
@@ -572,7 +608,7 @@ void __cdecl R_ResizeWindow()
         rc.right - rc.left,
         rc.bottom - rc.top,
         0x60u);
-    if ( wndParms.fullscreen )
+    if (wndParms.fullscreen)
         Com_Printf(
             8,
             "Resizing %i x %i fullscreen at (%i, %i)\n",
@@ -625,25 +661,26 @@ void __cdecl R_StoreWindowSettings(const GfxWindowParms *wndParms)
             aspectHeight = (int)((float)((float)((float)monitorHeight * 16.0) / (float)monitorWidth) + 9.313225746154785e-10);
             if ( aspectHeight == 10 )
             {
-                vidConfig.aspectRatioWindow = FLOAT_1_6;
+                vidConfig.aspectRatioWindow = 1.6f;
             }
             else if ( aspectHeight >= 10 )
             {
-                vidConfig.aspectRatioWindow = FLOAT_1_3333334;
+                vidConfig.aspectRatioWindow = (1.0f + (1.0f / 3.0f));
             }
             else
             {
-                vidConfig.aspectRatioWindow = FLOAT_1_7777778;
+                //vidConfig.aspectRatioWindow = FLOAT_1_7777778;
+                vidConfig.aspectRatioWindow = 1.7777778f;
             }
             break;
         case 1:
-            vidConfig.aspectRatioWindow = FLOAT_1_3333334;
+            vidConfig.aspectRatioWindow = (1.0f + (1.0f / 3.0f));
             break;
         case 2:
-            vidConfig.aspectRatioWindow = FLOAT_1_6;
+            vidConfig.aspectRatioWindow = 1.6f;
             break;
         case 3:
-            vidConfig.aspectRatioWindow = FLOAT_1_7777778;
+            vidConfig.aspectRatioWindow = 1.7777778f;
             break;
         default:
             unitScaleValue = va("unhandled case, aspectRatio = %i\n", r_aspectRatio->current.integer);
@@ -920,7 +957,7 @@ char __cdecl R_PreCreateWindow()
     R_StoreDirect3DCaps(dx.adapterIndex);
     R_EnumDisplayModes(dx.adapterIndex);
     dx.nvInitialized = 0;
-    if ( !dx.d3d9->GetAdapterIdentifier(dx.d3d9, dx.adapterIndex, 0, &adapterId) )
+    if ( !dx.d3d9->GetAdapterIdentifier(dx.adapterIndex, 0, &adapterId) )
     {
         dx.vendorId = adapterId.VendorId;
         if ( adapterId.VendorId == 4318 )
@@ -970,7 +1007,7 @@ void __cdecl R_GetDirect3DCaps(unsigned int adapterIndex, _D3DCAPS9 *caps)
     attempt = 0;
     while ( 1 )
     {
-        hr = dx.d3d9->GetDeviceCaps(dx.d3d9, adapterIndex, D3DDEVTYPE_HAL, caps);
+        hr = dx.d3d9->GetDeviceCaps(adapterIndex, D3DDEVTYPE_HAL, caps);
         if ( hr >= 0 )
             break;
         Sleep(0x64u);
@@ -1002,7 +1039,6 @@ bool __cdecl R_CheckTransparencyMsaa(unsigned int adapterIndex)
 {
     return r_aaSamples->current.integer != 1
             && dx.d3d9->CheckDeviceFormat(
-                     dx.d3d9,
                      adapterIndex,
                      D3DDEVTYPE_HAL,
                      D3DFMT_X8R8G8B8,
@@ -1022,38 +1058,30 @@ void __cdecl R_SetShadowmapFormats_DX(unsigned int adapterIndex)
     *(_QWORD *)&formats[1][0] = 0x170000004BLL;
     *(_QWORD *)&formats[2][0] = 0x160000004BLL;
     *(_QWORD *)&formats[3][0] = 0x150000004BLL;
+
     if ( NV_UseShadowNullColorRenderTarget() )
-        formats[0][0] = 1280070990;
+        formats[0][0] = (_D3DFORMAT)1280070990;
+
     for ( formatIndex = 0; formatIndex < 4; ++formatIndex )
     {
         depthFormat = formats[formatIndex][0];
         colorFormat = formats[formatIndex][1];
         if ( (!NV_UseShadowNullColorRenderTarget()
              || colorFormat != 1280070990
-             || !((int (__thiscall *)(IDirect3D9 *, IDirect3D9 *, unsigned int, int, int, int, int, int))dx.d3d9->CheckDeviceFormat)(
-                         dx.d3d9,
-                         dx.d3d9,
-                         adapterIndex,
-                         1,
-                         22,
-                         1,
-                         1,
-                         1280070990))
+             || !(dx.d3d9->CheckDeviceFormat(adapterIndex, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, 1, (D3DRESOURCETYPE)1, (D3DFORMAT)1280070990))
             && !dx.d3d9->CheckDepthStencilMatch(
-                        dx.d3d9,
                         adapterIndex,
                         D3DDEVTYPE_HAL,
                         D3DFMT_X8R8G8B8,
                         colorFormat,
                         depthFormat)
             && !dx.d3d9->CheckDeviceFormat(
-                        dx.d3d9,
                         adapterIndex,
                         D3DDEVTYPE_HAL,
                         D3DFMT_X8R8G8B8,
                         2u,
                         D3DRTYPE_TEXTURE,
-                        depthFormat) )
+                        depthFormat) ))
         {
             gfxMetrics.shadowmapFormatPrimary = depthFormat;
             gfxMetrics.shadowmapFormatSecondary = colorFormat;
@@ -1252,6 +1280,11 @@ unsigned int __cdecl R_ChooseAdapter()
     return foundAdapterIndex;
 }
 
+struct GfxEnumMonitors // sizeof=0x8
+{                                       // XREF: R_ChooseMonitor/r
+    int monitorIndex;                   // XREF: R_ChooseMonitor+23/w
+    HMONITOR__ *foundMonitor;           // XREF: R_ChooseMonitor+26/w
+};
 HMONITOR__ *__cdecl R_ChooseMonitor()
 {
     POINT pt; // [esp+0h] [ebp-10h]
@@ -1278,7 +1311,7 @@ int __stdcall R_MonitorEnumCallback(HMONITOR__ *monitorHandle, HDC__ *hdc, tagRE
     }
     else
     {
-        userData[1] = monitorHandle;
+        userData[1] = (unsigned int)monitorHandle;
         return 0;
     }
 }
@@ -1436,19 +1469,24 @@ char __cdecl R_CreateForInitOrReset()
     Com_Printf(8, "Creating Direct3D queries...\n");
     dx.nextFence = 0;
     semaphore = R_AcquireDXDeviceOwnership(0);
-    hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned __int64 *))dx.device->CreateQuery)(
-                 dx.device,
-                 dx.device,
-                 8,
-                 &dx.gpuSyncDelay);
+    hr = dx.device->CreateQuery(D3DQUERYTYPE_EVENT, &dx.gpuSyncDelay);
+    //hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned __int64 *))dx.device->CreateQuery)(
+    //             dx.device,
+    //             dx.device,
+    //             8,
+    //             &dx.gpuSyncDelay);
     if ( hr >= 0 )
     {
-        for ( fenceIter = 0; fenceIter < 8; ++fenceIter )
-            ((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int))dx.device->CreateQuery)(
-                dx.device,
-                dx.device,
-                8,
-                4 * fenceIter + 176501732);
+        for (fenceIter = 0; fenceIter < 8; ++fenceIter)
+        {
+            dx.device->CreateQuery(D3DQUERYTYPE_EVENT, &dx.fencePool[fenceIter]);
+            //((void(__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, IDirect3DQuery9 **))dx.device->CreateQuery)(
+            //    dx.device,
+            //    dx.device,
+            //    8,
+            //    &dx.fencePool[fenceIter]);
+        }
+            
         if ( semaphore )
             R_ReleaseDXDeviceOwnership();
         if ( !g_allocateMinimalResources )
@@ -1476,11 +1514,13 @@ IDirect3DQuery9 *__cdecl RB_HW_AllocOcclusionQuery()
     IDirect3DQuery9 *query; // [esp+4h] [ebp-4h] BYREF
 
     R_AssertDXDeviceOwnership();
-    hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, IDirect3DQuery9 **))dx.device->CreateQuery)(
-                 dx.device,
-                 dx.device,
-                 9,
-                 &query);
+
+    hr = dx.device->CreateQuery(D3DQUERYTYPE_OCCLUSION, &query);
+    //hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, IDirect3DQuery9 **))dx.device->CreateQuery)(
+    //             dx.device,
+    //             dx.device,
+    //             9,
+    //             &query);
     if ( hr >= 0 )
         return query;
     v0 = R_ErrorDescription(hr);
@@ -1495,27 +1535,27 @@ char __cdecl R_CreateWindow(GfxWindowParms *wndParms)
     int y; // [esp-1Ch] [ebp-38h]
     int v5; // [esp-18h] [ebp-34h]
     int v6; // [esp-14h] [ebp-30h]
-    unsigned intexStyle; // [esp+0h] [ebp-1Ch]
-    unsigned intstyle; // [esp+4h] [ebp-18h]
+    DWORD exStyle; // [esp+0h] [ebp-1Ch]
+    DWORD style; // [esp+4h] [ebp-18h]
     HINSTANCE__ *hinst; // [esp+8h] [ebp-14h]
     tagRECT rc; // [esp+Ch] [ebp-10h] BYREF
 
-    if ( !wndParms
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp", 2230, 0, "%s", "wndParms") )
+    if (!wndParms
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp", 2230, 0, "%s", "wndParms"))
     {
         __debugbreak();
     }
-    if ( wndParms->hwnd
+    if (wndParms->hwnd
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp",
-                    2231,
-                    0,
-                    "%s",
-                    "wndParms->hwnd == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp",
+            2231,
+            0,
+            "%s",
+            "wndParms->hwnd == NULL"))
     {
         __debugbreak();
     }
-    if ( wndParms->fullscreen )
+    if (wndParms->fullscreen)
     {
         Com_Printf(
             8,
@@ -1550,9 +1590,9 @@ char __cdecl R_CreateWindow(GfxWindowParms *wndParms)
     x = wndParms->x;
     BuildOfficialNameR = Com_GetBuildOfficialNameR();
     wndParms->hwnd = CreateWindowExA(exStyle, "CoDBlackOps", BuildOfficialNameR, style, x, y, v5, v6, 0, 0, hinst, 0);
-    if ( wndParms->hwnd )
+    if (wndParms->hwnd)
     {
-        if ( !wndParms->fullscreen )
+        if (!wndParms->fullscreen)
         {
             SetWindowPos(wndParms->hwnd, (HWND)0xFFFFFFFE, 0, 0, 0, 0, 3u);
             SetFocus(wndParms->hwnd);

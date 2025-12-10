@@ -1,4 +1,15 @@
 #include "r_pointlights.h"
+#include <universal/com_math.h>
+#include "r_dvars.h"
+
+#include <cstring>
+
+float gridBasisDirs[56][3];
+
+unsigned int g_heroLightCount;
+unsigned int g_heroLightTreeCount;
+GfxHeroLight *g_heroLights;
+GfxHeroLightTree *g_heroLightTree;
 
 void __cdecl GenerateLightGridBasisDirs()
 {
@@ -145,59 +156,38 @@ char __cdecl EvaluateHeroLightForGrid(
     return 1;
 }
 
-void __cdecl R_AdjustLightColorSamples(GfxDecodedLightGridColors *colors)
+// (aislop)
+void R_AdjustLightColorSamples(GfxDecodedLightGridColors *colors)
 {
-    double v1; // xmm0_8
-    double v2; // xmm0_8
-    double v3; // xmm0_8
-    long double v4; // [esp+0h] [ebp-2Ch]
-    long double v5; // [esp+0h] [ebp-2Ch]
-    long double v6; // [esp+0h] [ebp-2Ch]
-    long double v7; // [esp+8h] [ebp-24h]
-    long double v8; // [esp+8h] [ebp-24h]
-    long double v9; // [esp+8h] [ebp-24h]
-    int v10; // [esp+Ch] [ebp-20h]
-    float *dest; // [esp+10h] [ebp-1Ch]
-    float meanSample; // [esp+14h] [ebp-18h]
-    float meanSamplea; // [esp+14h] [ebp-18h]
-    float meanSampleb; // [esp+14h] [ebp-18h]
-    unsigned int sampleIter; // [esp+1Ch] [ebp-10h]
-    unsigned int sampleItera; // [esp+1Ch] [ebp-10h]
-    float intensity; // [esp+20h] [ebp-Ch]
+    const float intensity = r_lightGridIntensity->current.value;
 
-    intensity = r_lightGridIntensity->current.value;
-    meanSample = 0.0f;
-    for ( sampleIter = 0; sampleIter < 0x38; ++sampleIter )
+    float meanSample = 0.0f;
+    for (unsigned int i = 0; i < 0x38; ++i)
     {
-        dest = colors->rgb[sampleIter];
-        *dest = *dest * intensity;
-        meanSamplea = meanSample + *dest;
-        dest[1] = dest[1] * intensity;
-        meanSampleb = meanSamplea + dest[1];
-        dest[2] = dest[2] * intensity;
-        meanSample = meanSampleb + dest[2];
+        float *rgb = colors->rgb[i];
+
+        rgb[0] *= intensity;
+        rgb[1] *= intensity;
+        rgb[2] *= intensity;
+
+        meanSample += rgb[0] + rgb[1] + rgb[2];
     }
-    for ( sampleItera = 0; sampleItera < 0x38; ++sampleItera )
+
+    meanSample /= (0x38 * 3);
+
+    const float exponent = r_lightGridIntensity->current.value;
+
+    for (unsigned int i = 0; i < 0x38; ++i)
     {
-        HIDWORD(v7) = (char *)colors + 16 * sampleItera;
-        LODWORD(v7) = *(unsigned int *)HIDWORD(v7);
-        v1 = *(float *)HIDWORD(v7);
-        __libm_sse2_pow(v4, v7);
-        *(float *)&v1 = v1;
-        *(unsigned int *)HIDWORD(v8) = LODWORD(v1);
-        HIDWORD(v5) = *(unsigned int *)(HIDWORD(v8) + 4);
-        v2 = *((float *)&v5 + 1);
-        __libm_sse2_pow(v5, v8);
-        *(float *)&v2 = v2;
-        *(unsigned int *)(HIDWORD(v9) + 4) = LODWORD(v2);
-        LODWORD(v6) = *(unsigned int *)(HIDWORD(v9) + 8);
-        v3 = *(float *)&v6;
-        __libm_sse2_pow(v6, v9);
-        *(float *)&v3 = v3;
-        *(unsigned int *)(v10 + 8) = LODWORD(v3);
+        float *rgb = colors->rgb[i];
+
+        rgb[0] = powf(rgb[0], exponent);
+        rgb[1] = powf(rgb[1], exponent);
+        rgb[2] = powf(rgb[2], exponent);
     }
 }
 
+bool g_initialized;
 void __cdecl R_AddHeroOnlyLightsToGridColors(GfxDecodedLightGridColors *packed, const float *heroPos)
 {
     GfxHeroLightTree *tree; // [esp+0h] [ebp-354h]
@@ -271,15 +261,10 @@ void __cdecl R_AddHeroOnlyLightsToGridColors(GfxDecodedLightGridColors *packed, 
     }
 }
 
-GfxWorld *R_InitHeroLights()
+void R_InitHeroLights()
 {
-    GfxWorld *result; // eax
-
     g_heroLightCount = rgp.world->heroLightCount;
     g_heroLightTreeCount = rgp.world->heroLightTreeCount;
     g_heroLights = rgp.world->heroLights;
-    result = rgp.world;
     g_heroLightTree = rgp.world->heroLightTree;
-    return result;
 }
-

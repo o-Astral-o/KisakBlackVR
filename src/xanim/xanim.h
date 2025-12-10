@@ -223,12 +223,6 @@ struct XRigidVertList // sizeof=0xC
         XSurfaceCollisionTree *collisionTree;
 };
 
-union GfxColor // sizeof=0x4
-{                                                                             // XREF: RB_AddWaypoint+286/w
-        unsigned int packed;
-        unsigned __int8 array[4];
-};
-
 struct GfxPackedVertex // sizeof=0x20
 {                                                                             // XREF: GfxPackedVertex0/r
                                                                                 // GfxPackedVertex1/r ...

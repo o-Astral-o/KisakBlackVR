@@ -2,6 +2,8 @@
 
 #include "r_gfx.h"
 #include "r_buffers.h"
+#include <cgame/cg_visionsets.h>
+#include <client_mp/cl_main_mp.h>
 
 enum GfxProjectionTypes : __int32
 {                                       // XREF: GfxCmdProjectionSet/r
@@ -1247,7 +1249,7 @@ void __cdecl R_AddCmdSetScissorValues(bool enabled, int x, int y, int width, int
 void __cdecl R_AddCmdResolveComposite(void (__cdecl *callback)(GfxImage *));
 void __cdecl R_AddCmdPCCopyImageGenMIP(void (__cdecl *callback)(void *), GfxImage *image, void *job);
 void __cdecl R_BeginFrame();
-const dvar_s *R_UpdateFrontEndDvarOptions();
+void R_UpdateFrontEndDvarOptions();
 bool __cdecl R_LightTweaksModified();
 bool __cdecl R_GpuSyncModified();
 void R_SetTestLods();
@@ -1283,3 +1285,7 @@ void __cdecl R_PushRemoteScreenUpdate(int remoteScreenUpdateNesting);
 int __cdecl R_PopRemoteScreenUpdate();
 bool __cdecl R_IsInRemoteScreenUpdate();
 bool __cdecl R_IsRemoteScreenUpdateActive();
+
+
+
+extern GfxBackEndData *frontEndDataOut;

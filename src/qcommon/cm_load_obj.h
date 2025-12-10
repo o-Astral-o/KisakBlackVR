@@ -1,5 +1,67 @@
 #pragma once
 
+struct MapEnts // sizeof=0xC
+{                                       // XREF: XAssetPoolEntry<MapEnts>/r
+    const char *name;
+    char *entityString;
+    int numEntityChars;
+};
+
+struct DiskCollBorder // sizeof=0x1C
+{
+    float distEq[3];
+    float zBase;
+    float zSlope;
+    float start;
+    float length;
+};
+
+struct DiskBrushModel // sizeof=0x2C
+{
+    float mins[3];
+    float maxs[3];
+    unsigned __int16 firstTriSoup;
+    unsigned __int16 triSoupCount;
+    int firstSurface;
+    int numSurfaces;
+    int firstBrush;
+    int numBrushes;
+};
+
+struct dbrush_t // sizeof=0x4
+{
+    __int16 numSides;
+    __int16 materialNum;
+};
+
+struct DiskLeaf_Version14 // sizeof=0x24
+{
+    int cluster;
+    int unused0;
+    int firstCollAabbIndex;
+    int collAabbCount;
+    int firstLeafBrush;
+    int numLeafBrushes;
+    int cellNum;
+    int unused1;
+    int unused2;
+};
+
+struct dbrushside_t // sizeof=0x8
+{
+    //dbrushside_t::<unnamed_type_u> u;
+    union //dbrushside_t::<unnamed_type_u> // sizeof=0x4
+    {                                       // XREF: dbrushside_t/r
+        int planeNum;
+        float bound;
+    } u;
+    int materialNum;
+};
+
+struct cLeafBrushNode_s;
+struct cLeaf_s;
+struct cplane_s;
+
 void __cdecl CMod_LoadPlanes();
 MapEnts *__cdecl MapEnts_VirtualLoad(char *name);
 bool __cdecl MapEnts_CanPurgeEntity(

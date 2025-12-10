@@ -21,10 +21,24 @@ struct flameAge_t // sizeof=0xC
 struct flameList_t // sizeof=0x8
 {                                                                             // XREF: flameGeneric_s/r
                                                                                 // flameGeneric_s/r ...
-        flameGeneric_s *prev;                             // XREF: Flame_Item_Init(flameGeneric_s *,int)+F/w
+        struct flameGeneric_s *prev;                             // XREF: Flame_Item_Init(flameGeneric_s *,int)+F/w
                                                                                 // Flame_Item_Init(flameGeneric_s *,int)+1E/w ...
-        flameGeneric_s *next;                             // XREF: Flame_Item_Init(flameGeneric_s *,int)+12/w
+        struct flameGeneric_s *next;                             // XREF: Flame_Item_Init(flameGeneric_s *,int)+12/w
                                                                                 // Flame_Item_Init(flameGeneric_s *,int)+21/w ...
+};
+
+struct flameGeneric_s // sizeof=0x60
+{                                                                             // XREF: .data:flameChunk_s * sv_flameChunks/r
+                                                                                // .data:flameChunk_s * flameChunks/r ...
+    flamePhysics_t phys;
+    flameSize_t size;
+    flameAge_t age;
+    flameList_t listGlobal;
+    flameList_t listLocal;
+    flameStream_s *stream;
+    unsigned __int32 type : 3;
+    unsigned __int32 delete_chunk : 1;
+    unsigned __int32 id : 28;
 };
 
 struct flameRender_s // sizeof=0x88
@@ -65,20 +79,6 @@ struct flameStream_s // sizeof=0x8C
         float damageInterval;
         int isKillcamFlame;
         int firingThroughGeo;
-};
-
-struct flameGeneric_s // sizeof=0x60
-{                                                                             // XREF: .data:flameChunk_s * sv_flameChunks/r
-                                                                                // .data:flameChunk_s * flameChunks/r ...
-        flamePhysics_t phys;
-        flameSize_t size;
-        flameAge_t age;
-        flameList_t listGlobal;
-        flameList_t listLocal;
-        flameStream_s *stream;
-        unsigned __int32 type : 3;
-        unsigned __int32 delete_chunk : 1;
-        unsigned __int32 id : 28;
 };
 
 struct __declspec(align(4)) flameSource_t // sizeof=0x58

@@ -1,4 +1,79 @@
 #pragma once
+#include "r_rendercmds.h"
+#include <DynEntity/DynEntity_gamestate.h>
+
+struct ComPrimaryLight // sizeof=0xDC
+{
+    unsigned __int8 type;
+    unsigned __int8 canUseShadowMap;
+    unsigned __int8 exponent;
+    char priority;
+    __int16 cullDist;
+    unsigned __int8 _pad[2];
+    float color[3];
+    float dir[3];
+    float origin[3];
+    float radius;
+    float cosHalfFovOuter;
+    float cosHalfFovInner;
+    float cosHalfFovExpanded;
+    float rotationLimit;
+    float translationLimit;
+    float mipDistance;
+    float diffuseColor[4];
+    float specularColor[4];
+    float attenuation[4];
+    float falloff[4];
+    float angle[4];
+    float aAbB[4];
+    float cookieControl0[4];
+    float cookieControl1[4];
+    float cookieControl2[4];
+    const char *defName;
+};
+
+struct GfxShadowedLightEntry // sizeof=0x8
+{                                       // XREF: GfxShadowedLightHistory/r
+    unsigned __int8 shadowableLightIndex;
+    bool isFadingOut;
+    // padding byte
+    // padding byte
+    float fade;
+};
+
+struct GfxShadowedLightHistory // sizeof=0x28
+{                                       // XREF: .data:s_shadowHistory/r
+    GfxShadowedLightEntry entries[4];
+    unsigned int entryCount;
+    unsigned int lastUpdateTime;
+};
+
+struct GfxCandidateShadowedLight // sizeof=0x8
+{                                       // XREF: ?R_ChooseShadowedLights@@YAXPAUGfxViewInfo@@@Z/r
+    unsigned int shadowableLightIndex;  // XREF: R_ChooseShadowedLights(GfxViewInfo *)+339/r
+    float score;
+};
+
+struct GfxLightRegionAxis // sizeof=0x14
+{
+    float dir[3];
+    float midPoint;
+    float halfSize;
+};
+
+struct GfxLightRegionHull // sizeof=0x50
+{
+    float kdopMidPoint[9];
+    float kdopHalfSize[9];
+    unsigned int axisCount;
+    GfxLightRegionAxis *axis;
+};
+
+struct GfxLightRegion // sizeof=0x8
+{
+    unsigned int hullCount;
+    GfxLightRegionHull *hulls;
+};
 
 void __cdecl R_ClearShadowedPrimaryLightHistory(int localClientNum);
 void __cdecl R_AddDynamicShadowableLight(GfxViewInfo *viewInfo, const GfxLight *visibleLight);

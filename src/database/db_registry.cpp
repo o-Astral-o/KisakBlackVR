@@ -2674,34 +2674,25 @@ LABEL_85:
         R_StreamPopSyncDisable();
 }
 
-const dvar_s *DB_Init()
+void DB_Init()
 {
-    const dvar_s *result; // eax
     XAssetType type; // [esp+0h] [ebp-8h]
     unsigned int i; // [esp+4h] [ebp-4h]
 
     db_xassetdebug = _Dvar_RegisterBool("db_xassetdebug", 0, 0, "debug assets loading");
-    result = _Dvar_RegisterInt(
-                         "db_xassetdebugtype",
-                         -1,
-                         -2,
-                         43,
-                         0,
-                         "debug assets loading type: -1 all; indexes start at 0");
-    db_xassetdebugtype = result;
-    for ( type = ASSET_TYPE_XMODELPIECES; type < ASSET_TYPE_COUNT; ++type )
-    {
-        DB_InitPoolHeader(type);
-        result = (const dvar_s *)(type + 1);
-    }
+    db_xassetdebugtype = _Dvar_RegisterInt(
+        "db_xassetdebugtype",
+        -1,
+        -2,
+        43,
+        0,
+        "debug assets loading type: -1 all; indexes start at 0");
+    for (type = ASSET_TYPE_XMODELPIECES; type < ASSET_TYPE_COUNT; ++type)
+        DB_InitPoolHeader(type, g_poolSize[type]);
     g_freeAssetEntryHead = g_assetEntryPool + 16;
-    for ( i = 1; i < 0x7FFF; ++i )
-    {
-        result = (const dvar_s *)(16 * i);
+    for (i = 1; i < 0x7FFF; ++i)
         g_assetEntryPool[i].entry.asset.type = (XAssetType)&g_assetEntryPool[i + 1];
-    }
     g_assetEntryPool[0x7FFF].entry.asset.type = ASSET_TYPE_XMODELPIECES;
-    return result;
 }
 
 void __cdecl DB_InitPoolHeader(XAssetType type)

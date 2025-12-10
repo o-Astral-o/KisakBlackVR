@@ -2542,20 +2542,6 @@ LABEL_38:
     return 1;
 }
 
-void __cdecl Vec3Avg(const float *a, const float *b, float *sum)
-{
-    *sum = (float)(*a + *b) * 0.5;
-    sum[1] = (float)(a[1] + b[1]) * 0.5;
-    sum[2] = (float)(a[2] + b[2]) * 0.5;
-}
-
-void __cdecl Vec3Mul(const float *a, const float *b, float *product)
-{
-    *product = *a * *b;
-    product[1] = a[1] * b[1];
-    product[2] = a[2] * b[2];
-}
-
 void __thiscall GlassShard::GetLocalBBox(GlassShard *this, float *mins, float *maxs)
 {
     float v4; // [esp+20h] [ebp-34h]

@@ -237,3 +237,5 @@ extern const dvar_t *fs_homepath;
 extern const dvar_t *fs_userDocuments;
 extern const dvar_t *fs_restrict;
 extern const dvar_t *fs_usedevdir;
+
+extern char fs_gamedir[256];

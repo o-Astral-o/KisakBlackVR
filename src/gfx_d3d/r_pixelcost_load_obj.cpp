@@ -1,4 +1,17 @@
 #include "r_pixelcost_load_obj.h"
+#include <universal/assertive.h>
+#include <qcommon/common.h>
+
+const GfxPixelCostColorCode s_pixelCostColorCodeTable[6] =
+{
+  { 0u, 0u, 0u, 0u, "black" },
+  { 40u, 0u, 255u, 0u, "green" },
+  { 56u, 255u, 255u, 0u, "yellow" },
+  { 72u, 255u, 128u, 0u, "orange" },
+  { 128u, 255u, 0u, 0u, "red" },
+  { 255u, 255u, 255u, 255u, "white" }
+};
+
 
 void __cdecl RB_PixelCost_BuildColorCodeMap(unsigned __int8 (*pixels)[4], int pixelCount)
 {

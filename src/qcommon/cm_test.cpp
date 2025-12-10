@@ -1,4 +1,7 @@
 #include "cm_test.h"
+#include "cm_trace.h"
+#include "cm_load.h"
+#include <universal/com_math_anglevectors.h>
 
 int __cdecl CM_PointLeafnum_r(const float *p, int num)
 {
@@ -52,11 +55,7 @@ void __cdecl CM_BoxLeafnums_r(leafList_s *ll, int nodenum)
         s = BoxOnPlaneSide(
                     ll->bounds[0],
                     ll->bounds[1],
-                    cm.nodes[nodenum].plane,
-                    v2,
-                    COERCE_FLOAT((int)&cm.nodes[nodenum]),
-                    *(float *)&cm.nodes[nodenum].plane,
-                    *(float *)&s);
+                    cm.nodes[nodenum].plane);
         if ( s == 1 )
         {
             nodenum = node->children[0];

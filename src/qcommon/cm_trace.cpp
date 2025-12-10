@@ -4006,20 +4006,6 @@ void __cdecl calc_closest(const float *v0, const float *v1, const float *v2, con
     }
 }
 
-void __cdecl Vec3Mad(const float *start, float scale, const float *dir, float *result)
-{
-    *result = (float)(scale * *dir) + *start;
-    result[1] = (float)(scale * dir[1]) + start[1];
-    result[2] = (float)(scale * dir[2]) + start[2];
-}
-
-void __cdecl Vec3ScaleMad(float scale0, const float *dir0, float scale1, const float *dir1, float *result)
-{
-    *result = (float)(scale0 * *dir0) + (float)(scale1 * *dir1);
-    result[1] = (float)(scale0 * dir0[1]) + (float)(scale1 * dir1[1]);
-    result[2] = (float)(scale0 * dir0[2]) + (float)(scale1 * dir1[2]);
-}
-
 bool __cdecl is_inside(const float *a, const float *b, const float *n, const float *p)
 {
     int v5; // [esp+8h] [ebp-58h]

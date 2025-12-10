@@ -1,4 +1,28 @@
 #include "cm_load_obj.h"
+#include <universal/com_math.h>
+#include "com_bsp_load_obj.h"
+#include "common.h"
+#include "cm_load.h"
+#include <game/g_load_utils.h>
+#include "com_profilemapload.h"
+#include <universal/mem_userhunk.h>
+#include <clientscript/cscr_tempmemory.h>
+
+const char *g_purgeableEnts[12] =
+{
+  "misc_model",
+  "misc_prefab",
+  "dyn_brushmodel",
+  "dyn_model",
+  "dyn_pointconstraint",
+  "dyn_distanceconstraint",
+  "dyn_hingeconstraint",
+  "dyn_lightconstraint",
+  "reflection_probe",
+  "info_corona",
+  "info_null",
+  "func_group"
+};
 
 void __cdecl CMod_LoadPlanes()
 {
@@ -14,9 +38,9 @@ void __cdecl CMod_LoadPlanes()
 
     in = Com_GetBspLump(LUMP_PLANES, 0x10u, &count);
     if ( !count )
-        Com_Error(ERR_DROP, &byte_CD0370);
+        Com_Error(ERR_DROP, "Map with no planes");
     if ( count > 0x10000 )
-        Com_Error(ERR_DROP, &byte_CD0350);
+        Com_Error(ERR_DROP, "Number of planes exceeds 65536");
     cm.planes = (cplane_s *)CM_Hunk_Alloc(20 * count, "CMod_LoadPlanes", 26);
     cm.planeCount = count;
     out = cm.planes;
@@ -88,59 +112,59 @@ MapEnts *__cdecl MapEnts_RealLoad(char *name)
 
 MapEnts *__cdecl MapEnts_GetFromString(char *name, const char *entityString, int numEntityChars)
 {
-    unsigned __int8 *mapEnts; // [esp+10h] [ebp-A2Ch]
+    MapEnts *mapEnts; // [esp+10h] [ebp-A2Ch]
     SpawnVar spawnVar; // [esp+14h] [ebp-A28h] BYREF
     const char *end; // [esp+A28h] [ebp-14h]
     int size; // [esp+A2Ch] [ebp-10h]
     int nameLen; // [esp+A30h] [ebp-Ch]
     const char *classname; // [esp+A34h] [ebp-8h] BYREF
     const char *begin; // [esp+A38h] [ebp-4h]
-    char *entityStringa; // [esp+A48h] [ebp+Ch]
+    const char *entityStringa; // [esp+A48h] [ebp+Ch]
 
-    mapEnts = CM_Hunk_Alloc(0xCu, "CMod_LoadEntityString", 31);
+    mapEnts = (MapEnts *)CM_Hunk_Alloc(12, "CMod_LoadEntityString", 31);
     nameLen = strlen(name);
-    *(unsigned int *)mapEnts = CM_Hunk_Alloc(nameLen + 1, "CMod_LoadEntityString", 31);
-    memcpy(*(unsigned __int8 **)mapEnts, (unsigned __int8 *)name, nameLen + 1);
+    mapEnts->name = (const char *)CM_Hunk_Alloc(nameLen + 1, "CMod_LoadEntityString", 31);
+    memcpy((unsigned __int8 *)mapEnts->name, (unsigned __int8 *)name, nameLen + 1);
     entityStringa = Com_EntityString(&numEntityChars);
-    *((unsigned int *)mapEnts + 1) = CM_Hunk_Alloc(numEntityChars, "CMod_LoadEntityString", 31);
-    *((unsigned int *)mapEnts + 2) = 0;
+    mapEnts->entityString = (char *)CM_Hunk_Alloc(numEntityChars, "CMod_LoadEntityString", 31);
+    mapEnts->numEntityChars = 0;
     G_SetEntityParsePoint(entityStringa);
-    while ( 1 )
+    while (1)
     {
         begin = G_GetEntityParsePoint();
-        if ( !G_ParseSpawnVars(&spawnVar) )
+        if (!G_ParseSpawnVars(&spawnVar))
             break;
         G_SpawnString(&spawnVar, "classname", "", &classname);
-        if ( !MapEnts_CanPurgeEntity(classname, &spawnVar, (bool (__cdecl *)(void *, const char *))CMod_HasSpawnString) )
+        if (!MapEnts_CanPurgeEntity(classname, &spawnVar, CMod_HasSpawnString))
         {
             end = G_GetEntityParsePoint();
             size = end - begin;
-            if ( end - begin + *((unsigned int *)mapEnts + 2) > numEntityChars
+            if (end - begin + mapEnts->numEntityChars > numEntityChars
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_load_obj.cpp",
-                            1212,
-                            0,
-                            "%s",
-                            "mapEnts->numEntityChars + size <= numEntityChars") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_load_obj.cpp",
+                    1212,
+                    0,
+                    "%s",
+                    "mapEnts->numEntityChars + size <= numEntityChars"))
             {
                 __debugbreak();
             }
-            memcpy((unsigned __int8 *)(*((unsigned int *)mapEnts + 2) + *((unsigned int *)mapEnts + 1)), (unsigned __int8 *)begin, size);
-            *((unsigned int *)mapEnts + 2) += size;
+            memcpy((unsigned __int8 *)&mapEnts->entityString[mapEnts->numEntityChars], (unsigned __int8 *)begin, size);
+            mapEnts->numEntityChars += size;
         }
     }
-    if ( *((unsigned int *)mapEnts + 2) >= numEntityChars
+    if (mapEnts->numEntityChars >= numEntityChars
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_load_obj.cpp",
-                    1217,
-                    0,
-                    "%s",
-                    "mapEnts->numEntityChars < numEntityChars") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_load_obj.cpp",
+            1217,
+            0,
+            "%s",
+            "mapEnts->numEntityChars < numEntityChars"))
     {
         __debugbreak();
     }
-    *(_BYTE *)(*((unsigned int *)mapEnts + 1) + (*((unsigned int *)mapEnts + 2))++) = 0;
-    return (MapEnts *)mapEnts;
+    mapEnts->entityString[mapEnts->numEntityChars++] = 0;
+    return mapEnts;
 }
 
 bool __cdecl CMod_HasSpawnString(const SpawnVar *userData, const char *key)
@@ -200,7 +224,7 @@ void CMod_LoadMaterials()
 
     in = (const dmaterial_t *)Com_GetBspLump(LUMP_MATERIALS, 0x48u, &count);
     if ( !count )
-        Com_Error(ERR_DROP, &byte_CD04AC);
+        Com_Error(ERR_DROP, "Map with no materials");
     cm.materials = (dmaterial_t *)(CM_Hunk_Alloc(72 * (count + 1), "CMod_LoadMaterials", 26) + 72);
     cm.numMaterials = count;
     Com_Memcpy(cm.materials, in, 72 * count);
@@ -220,7 +244,7 @@ unsigned int CMod_LoadNodes()
 
     in = Com_GetBspLump(LUMP_NODES, 0x24u, &count);
     if ( !count )
-        Com_Error(ERR_DROP, &byte_CD04F8);
+        Com_Error(ERR_DROP, "Map has no nodes");
     cm.nodes = (cNode_t *)CM_Hunk_Alloc(8 * count, "CMod_LoadNodes", 26);
     result = count;
     cm.numNodes = count;
@@ -234,7 +258,7 @@ unsigned int CMod_LoadNodes()
             child = *(unsigned int *)&in[4 * j + 4];
             out->children[j] = child;
             if ( out->children[j] != child )
-                Com_Error(ERR_DROP, &byte_CD04C4);
+                Com_Error(ERR_DROP, "CMod_LoadNodes: children exceeded");
         }
         ++nodeIter;
         result = (unsigned int)&out[1];
@@ -473,11 +497,11 @@ unsigned int CMod_LoadSubmodels()
 
     in = Com_GetBspLump(LUMP_MODELS, 0x2Cu, &count);
     if ( !count )
-        Com_Error(ERR_DROP, &byte_CD0738);
+        Com_Error(ERR_DROP, "Map with no brush models (should at least have the world model)");
     cm.cmodels = (cmodel_t *)CM_Hunk_Alloc(72 * count, "CMod_LoadSubmodels", 27);
     cm.numSubModels = count;
     if ( count > 0x3FFF )
-        Com_Error(ERR_DROP, &byte_CD070C);
+        Com_Error(ERR_DROP, "MAX_SUBMODELS exceeded");
     for ( bmodelIndex = 0; ; ++bmodelIndex )
     {
         result = bmodelIndex;
@@ -501,11 +525,11 @@ unsigned int CMod_LoadSubmodels()
             collAabbCount = *((unsigned int *)in + 8);
             out->leaf.collAabbCount = collAabbCount;
             if ( out->leaf.collAabbCount != collAabbCount )
-                Com_Error(ERR_DROP, &byte_CD06E0);
+                Com_Error(ERR_DROP, "CMod_LoadSubmodels: collAabbCount exceeded");
             firstCollAabbIndex = *((unsigned int *)in + 7);
             out->leaf.firstCollAabbIndex = firstCollAabbIndex;
             if ( out->leaf.firstCollAabbIndex != firstCollAabbIndex )
-                Com_Error(ERR_DROP, &byte_CD06AC);
+                Com_Error(ERR_DROP, "CMod_LoadSubmodels: firstCollAabbIndex exceeded");
         }
         in += 44;
     }
@@ -553,7 +577,7 @@ unsigned int CMod_LoadSubmodelBrushNodes()
             firstBrush = leafBrushIndex + ina->firstBrush;
             indexes[leafBrushIndex] = firstBrush;
             if ( indexes[leafBrushIndex] != firstBrush )
-                Com_Error(ERR_DROP, &byte_CD077C);
+                Com_Error(ERR_DROP, "CMod_LoadSubmodelBrushNodes: leafBrushes exceeded");
             contents |= cm.brushes[firstBrush].contents;
         }
         out->leaf.brushContents = contents;
@@ -754,7 +778,7 @@ LABEL_36:
                 nodeOffset = childNode - node;
                 node->data.children.childOffset[side] = nodeOffset;
                 if ( node->data.children.childOffset[side] != nodeOffset )
-                    Com_Error(ERR_DROP, &byte_CD0808);
+                    Com_Error(ERR_DROP, "CMod_PartionLeafBrushes_r: child exceeded");
                 node->contents |= childNode->contents;
                 leafBrushes += numLeafBrushesChild;
                 ++side;
@@ -787,7 +811,7 @@ LABEL_36:
     }
     node->leafBrushCount = numLeafBrushes;
     if ( node->leafBrushCount != numLeafBrushes )
-        Com_Error(ERR_DROP, &byte_CD088C);
+        Com_Error(ERR_DROP, "CMod_PartionLeafBrushes_r: leafBrushCount exceeded");
     for ( k = 0; k < numLeafBrushes; ++k )
     {
         brushnum = leafBrushes[k];
@@ -930,7 +954,7 @@ const unsigned __int8 *CMod_LoadBrushes()
     inVerts = (unsigned __int8 *)Com_GetBspLump(LUMP_BRUSHVERTS, 0xCu, &vertsCount);
     inVertsCounts = (const unsigned __int8 *)Com_GetBspLump(LUMP_BRUSHVERTSCOUNTS, 1u, &brushVertsCounts);
     if ( brushVertsCounts != brushCount )
-        Com_Error(ERR_DROP, &byte_CD0974, brushVertsCounts, brushCount);
+        Com_Error(ERR_DROP, "CMod_LoadBrushes: bad number of brush verts counts: %i != %i", brushVertsCounts, brushCount);
     sidesCount -= 6 * brushCount;
     allocSizeSides = 12 * sidesCount;
     if ( sidesCount )
@@ -945,7 +969,7 @@ const unsigned __int8 *CMod_LoadBrushes()
     cm.brushes = (cbrush_t *)CM_Hunk_Alloc(allocSizeBrushes, "CMod_LoadBrushes", 27);
     cm.numBrushes = brushCount;
     if ( (unsigned __int16)brushCount != brushCount )
-        Com_Error(ERR_DROP, &byte_CD0920);
+        Com_Error(ERR_DROP, "CMod_LoadBrushes: cm.numBrushes exceeded");
     allocSizeBrushVerts = 12 * vertsCount;
     cm.brushVerts = (float (*)[3])CM_Hunk_Alloc(12 * vertsCount, "CMod_LoadBrushes", 27);
     memcpy((unsigned __int8 *)cm.brushVerts, inVerts, allocSizeBrushVerts);
@@ -1011,7 +1035,7 @@ void __cdecl CMod_LoadLeafs(bool usePvs)
 
     in = Com_GetBspLump(LUMP_LEAFS, 0x18u, &count);
     if ( !count )
-        Com_Error(ERR_DROP, &byte_CD0A40);
+        Com_Error(ERR_DROP, "Map with no leafs");
     cm.leafs = (cLeaf_s *)CM_Hunk_Alloc(44 * count, "CMod_LoadLeafs", 26);
     cm.numLeafs = count;
     cluster = 0;
@@ -1023,16 +1047,16 @@ void __cdecl CMod_LoadLeafs(bool usePvs)
             cluster = *(unsigned int *)in;
             out->cluster = *(unsigned int *)in;
             if ( out->cluster != cluster )
-                Com_Error(ERR_DROP, &byte_CD0A0C);
+                Com_Error(ERR_DROP, "CMod_LoadLeafs: cluster exceeded");
         }
         firstCollAabbIndex = *((unsigned int *)in + 1);
         out->firstCollAabbIndex = firstCollAabbIndex;
         if ( out->firstCollAabbIndex != firstCollAabbIndex )
-            Com_Error(ERR_DROP, &byte_CD09DC);
+            Com_Error(ERR_DROP, "CMod_LoadLeafs: firstCollAabbIndex exceeded");
         collAabbCount = *((unsigned int *)in + 2);
         out->collAabbCount = collAabbCount;
         if ( out->collAabbCount != collAabbCount )
-            Com_Error(ERR_DROP, &byte_CD09B4);
+            Com_Error(ERR_DROP, "CMod_LoadLeafs: collAabbCount exceeded");
         if ( usePvs && cluster >= cm.numClusters )
             cm.numClusters = cluster + 1;
         in += 24;
@@ -1052,7 +1076,7 @@ void __cdecl CMod_LoadLeafs_Version14(bool usePvs)
 
     in = Com_GetBspLump(LUMP_LEAFS, 0x24u, &count);
     if ( !count )
-        Com_Error(ERR_DROP, &byte_CD0A40);
+        Com_Error(ERR_DROP, "Map with no leafs");
     cm.leafs = (cLeaf_s *)CM_Hunk_Alloc(44 * count, "CMod_LoadLeafs", 26);
     cm.numLeafs = count;
     cluster = 0;
@@ -1064,16 +1088,16 @@ void __cdecl CMod_LoadLeafs_Version14(bool usePvs)
             cluster = *(unsigned int *)in;
             out->cluster = *(unsigned int *)in;
             if ( out->cluster != cluster )
-                Com_Error(ERR_DROP, &byte_CD0A0C);
+                Com_Error(ERR_DROP, "CMod_LoadLeafs: cluster exceeded");
         }
         firstCollAabbIndex = *((unsigned int *)in + 2);
         out->firstCollAabbIndex = firstCollAabbIndex;
         if ( out->firstCollAabbIndex != firstCollAabbIndex )
-            Com_Error(ERR_DROP, &byte_CD09DC);
+            Com_Error(ERR_DROP, "CMod_LoadLeafs: firstCollAabbIndex exceeded");
         collAabbCount = *((unsigned int *)in + 3);
         out->collAabbCount = collAabbCount;
         if ( out->collAabbCount != collAabbCount )
-            Com_Error(ERR_DROP, &byte_CD09B4);
+            Com_Error(ERR_DROP, "CMod_LoadLeafs: collAabbCount exceeded");
         if ( usePvs && cluster >= cm.numClusters )
             cm.numClusters = cluster + 1;
         in += 36;
@@ -1201,7 +1225,7 @@ unsigned int CMod_LoadLeafBrushes()
         brushIndex = *(unsigned int *)in;
         *out = *(unsigned int *)in;
         if ( *out != brushIndex )
-            Com_Error(ERR_DROP, &byte_CD0AAC);
+            Com_Error(ERR_DROP, "CMod_LoadLeafBrushes: brushIndex exceeded");
         if ( *out >= (int)cm.numBrushes
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_load_obj.cpp",

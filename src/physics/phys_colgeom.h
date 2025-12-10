@@ -1,10 +1,12 @@
 #pragma once
 
 #include "phys_local.h"
+#include "phys_traverse.h"
 #include <xanim/xanim.h>
 #include <universal/q_shared.h>
 #include <qcommon/cm_trace.h>
 #include <qcommon/statmonitor.h>
+#include "phys_gjk_collision_detection.h"
 
 #define SURF_TYPECOUNT 31
 

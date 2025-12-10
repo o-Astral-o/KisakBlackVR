@@ -1,4 +1,5 @@
 #pragma once
+#include "r_rendercmds.h"
 
 void __cdecl R_InitDrawSurfListInfo(GfxDrawSurfListInfo *info);
 void __cdecl R_EmitDrawSurfList(const GfxDrawSurf *drawSurfs, unsigned int drawSurfCount, GfxBackEndData *data);

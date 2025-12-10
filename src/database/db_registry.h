@@ -343,7 +343,7 @@ void __cdecl DB_SyncXAssets();
 bool __cdecl DB_IsZoneLoaded(const char *name);
 char __cdecl DB_IsZoneTypeLoaded(int zoneType);
 void __cdecl DB_LoadXAssets(XZoneInfo *zoneInfo, unsigned int zoneCount, int sync);
-const dvar_s *DB_Init();
+void DB_Init();
 void __cdecl DB_InitPoolHeader(XAssetType type);
 void __cdecl DB_ListDefaultEntries_f();
 void __cdecl DB_ListAssetPool_f();

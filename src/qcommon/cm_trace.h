@@ -465,8 +465,6 @@ int __cdecl CM_TracePointDown(
                 float *normal);
 double __cdecl CM_GetWaterHeight(const float *pos, float z_up, float z_down);
 void __cdecl calc_closest(const float *v0, const float *v1, const float *v2, const float *p, float *res);
-void __cdecl Vec3Mad(const float *start, float scale, const float *dir, float *result);
-void __cdecl Vec3ScaleMad(float scale0, const float *dir0, float scale1, const float *dir1, float *result);
 bool __cdecl is_inside(const float *a, const float *b, const float *n, const float *p);
 bool __cdecl point_in_triangle(const float *p, const float *v0, const float *v1, const float *v2, const float *n);
 char __cdecl trace_sphere_through_triangle(

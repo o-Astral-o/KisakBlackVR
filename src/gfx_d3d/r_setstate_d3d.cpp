@@ -1,4 +1,5 @@
 #include "r_setstate_d3d.h"
+#include "r_init.h"
 
 void __cdecl R_FinishGpuFence()
 {

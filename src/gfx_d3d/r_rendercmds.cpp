@@ -1938,26 +1938,26 @@ void __cdecl R_BeginFrame()
     }
 }
 
-const dvar_s *R_UpdateFrontEndDvarOptions()
+void R_UpdateFrontEndDvarOptions()
 {
-    const dvar_s *result; // eax
+    int v0; // [esp+0h] [ebp-10h]
     bool v1; // [esp+0h] [ebp-10h]
     const GfxImage *v2; // [esp+4h] [ebp-Ch]
 
-    if ( R_LightTweaksModified() )
+    if (R_LightTweaksModified())
         R_UpdateLightsFromDvars();
-    if ( r_sun_from_dvars->current.enabled && rgp.world )
+    if (r_sun_from_dvars->current.enabled && rgp.world)
         R_SetSunFromDvars(&rgp.world->sun);
-    if ( R_GpuSyncModified() )
+    if (R_GpuSyncModified())
         R_UpdateGpuSyncType();
     R_SetTestLods();
     rg.hasAnyImageOverrides = R_AreAnyImageOverridesActive();
-    if ( R_CheckDvarModified(r_showMissingLightGrid) )
+    if (R_CheckDvarModified(r_showMissingLightGrid))
     {
         R_SyncRenderThread();
         R_ResetModelLighting();
     }
-    if ( r_fullbright->modified || r_debugShader->modified || r_lightConflicts->modified )
+    if (r_fullbright->modified || r_debugShader->modified || r_lightConflicts->modified)
     {
         Dvar_ClearModified(r_fullbright);
         Dvar_ClearModified(r_debugShader);
@@ -1965,24 +1965,24 @@ const dvar_s *R_UpdateFrontEndDvarOptions()
         R_SyncRenderThread();
         R_InitDrawMethod();
     }
-    if ( R_CheckDvarModified(r_outdoorFeather) )
+    if (R_CheckDvarModified(r_outdoorFeather))
         R_SetOutdoorFeatherConst();
-    R_SetInputCodeConstantFromVec4(&gfxCmdBufInput, 0x36u, (float *)s_debugShaderConsts[r_debugShader->current.integer]);
-    if ( R_CheckDvarModified(r_envMapOverride)
+    R_SetInputCodeConstantFromVec4(&gfxCmdBufInput, 0x36u, s_debugShaderConsts[r_debugShader->current.integer]);
+    if (R_CheckDvarModified(r_envMapOverride)
         || R_CheckDvarModified(r_envMapMinIntensity)
         || R_CheckDvarModified(r_envMapMaxIntensity)
         || R_CheckDvarModified(r_envMapExponent)
-        || R_CheckDvarModified(r_envMapSunIntensity) )
+        || R_CheckDvarModified(r_envMapSunIntensity))
     {
         R_EnvMapOverrideConstants();
     }
-    v1 = r_distortion->current.enabled && CL_LocalClient_GetActiveCount() == 1;
-    if ( rg.distortion != v1 )
+    v1 = r_distortion->current.enabled && CL_LocalClient_GetActiveCount(v0) == 1;
+    if (rg.distortion != v1)
         R_SyncRenderThread();
     rg.distortion = v1;
     v2 = (const GfxImage *)dword_B50E894;
-    if ( !&gfxCmdBufInput
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_state.h", 1850, 0, "%s", "input") )
+    if (!&gfxCmdBufInput
+        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_state.h", 1850, 0, "%s", "input"))
     {
         __debugbreak();
     }
@@ -1990,9 +1990,7 @@ const dvar_s *R_UpdateFrontEndDvarOptions()
     rg.drawWorld = r_drawWorld->current.enabled;
     rg.drawBModels = r_drawBModels->current.enabled;
     rg.drawSModels = r_drawSModels->current.enabled;
-    result = r_drawXModels;
     rg.drawXModels = r_drawXModels->current.enabled;
-    return result;
 }
 
 bool __cdecl R_LightTweaksModified()

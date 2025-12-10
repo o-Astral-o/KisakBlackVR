@@ -1,4 +1,61 @@
 #pragma once
+#include "r_rendercmds.h"
+
+enum DpvsClipChildren : __int32
+{                                       // XREF: R_VisitPortals/r
+                                        // R_VisitPortalsForCell/r
+    DPVS_DONT_CLIP_CHILDREN = 0x0,
+    DPVS_CLIP_CHILDREN      = 0x1,
+};
+
+enum DpvsForceBevels : __int32
+{                                       // XREF: R_PortalClipPlanes/r
+                                        // R_AddBevelPlanes/r
+    DPVS_DONT_FORCE_BEVELS = 0x0,
+    DPVS_FORCE_BEVELS      = 0x1,
+};
+
+struct DpvsPlane // sizeof=0x14
+{                                       // XREF: GfxPortal/r GfxScene/r ...
+    float coeffs[4];                    // XREF: R_GenerateShadowMapCasterCells(void)+190/w
+                                        // R_GenerateShadowMapCasterCells(void)+1A0/w ...
+    unsigned __int8 side[3];            // XREF: R_SetupWorldSurfacesDpvs(GfxViewParms const *,uint)+304/r
+                                        // R_SetupWorldSurfacesDpvs(GfxViewParms const *,uint)+420/r ...
+    unsigned __int8 pad;
+};
+
+struct GfxPortalWritable // sizeof=0xC
+{                                       // XREF: GfxPortal/r
+    bool isQueued;
+    bool isAncestor;
+    unsigned __int8 recursionDepth;
+    unsigned __int8 hullPointCount;
+    float (*hullPoints)[2];
+    struct GfxPortal *queuedParent;
+};
+
+struct GfxPortal // sizeof=0x44
+{
+    GfxPortalWritable writable;
+    DpvsPlane plane;
+    struct GfxCell *cell;
+    float (*vertices)[3];
+    unsigned __int8 vertexCount;
+    // padding byte
+    // padding byte
+    // padding byte
+    float hullAxis[2][3];
+};
+
+struct GfxWorldDraw;
+struct GfxLightingInfo;
+struct BModelDrawInfo;
+struct FilterEntInfo;
+struct mnode_t;
+struct GfxAabbTree;
+struct GfxPortal;
+struct GfxHullPointsPool;
+struct GfxWorld;
 
 void __cdecl R_FrustumClipPlanes(
                 const GfxMatrix *viewProjMtx,

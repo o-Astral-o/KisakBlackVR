@@ -1,5 +1,12 @@
 #pragma once
 
+#include "r_material.h"
+#include "r_rendercmds.h"
+#include "rb_state.h"
+#include "r_init.h"
+#include "r_font.h"
+#include "r_rendertarget.h"
+
 //enum $93E05B02D75CB8D5BD679C8A761DAE10 : __int32
 enum ThreadContext_t : __int32 // not a real enum name
 {
@@ -22,6 +29,61 @@ enum ThreadContext_t : __int32 // not a real enum name
     THREAD_CONTEXT_STREAM       = 0xE,
     THREAD_CONTEXT_COUNT        = 0xF,
     THREAD_CONTEXT_INVALID      = 0xFFFFFFFF,
+};
+
+enum GfxPrimStatsTarget : __int32
+{                                       // XREF: ?RB_DrawFullSceneQuad@@YAXPBUMaterial@@EMMMMW4GfxPrimStatsTarget@@@Z/r
+                                        // ?RB_DrawStretchPic@@YAXPBUMaterial@@MMMMMMMMKW4GfxPrimStatsTarget@@@Z/r ...
+    GFX_PRIM_STATS_WORLD         = 0x0,
+    GFX_PRIM_STATS_SMODELCACHED  = 0x1,
+    GFX_PRIM_STATS_SMODELRIGID   = 0x2,
+    GFX_PRIM_STATS_XMODELRIGID   = 0x3,
+    GFX_PRIM_STATS_XMODELSKINNED = 0x4,
+    GFX_PRIM_STATS_BMODEL        = 0x5,
+    GFX_PRIM_STATS_FX            = 0x6,
+    GFX_PRIM_STATS_HUD           = 0x7,
+    GFX_PRIM_STATS_DEBUG         = 0x8,
+    GFX_PRIM_STATS_CODE          = 0x9,
+    GFX_PRIM_STATS_COUNT         = 0xA,
+};
+
+struct GfxRenderCommandExecState // sizeof=0x4
+{                                       // XREF: ?RB_ExecuteRenderCommandsLoop@@YAXPBXPAH@Z/r
+    const void *cmd;                    // XREF: RB_ExecuteRenderCommandsLoop(void const *,int *)+C1/w
+};
+
+struct GfxVertex // sizeof=0x20
+{                                       // XREF: materialCommands_t/r
+    float xyzw[4];                      // XREF: RB_SetPolyVert(float const * const,GfxColor,int)+44/w
+    GfxColor color;                     // XREF: RB_SetPolyVert(float const * const,GfxColor,int)+65/w
+                                        // RB_DrawDebugSphere+EAF/w
+    float texCoord[2];                  // XREF: RB_SetPolyVert(float const * const,GfxColor,int)+71/o
+                                        // RB_DrawDebugSphere+EBE/o
+    PackedUnitVec normal;               // XREF: RB_SetPolyVert(float const * const,GfxColor,int)+52/w
+};
+
+struct GfxDrawSurfListArgs // sizeof=0x10
+{                                       // XREF: ?R_DrawSurfs@@YAXUGfxCmdBufContext@@PAUGfxCmdBufState@@PBUGfxDrawSurfListInfo@@@Z/r
+    GfxCmdBufContext context;           // XREF: R_DrawSurfs(GfxCmdBufContext,GfxCmdBufState *,GfxDrawSurfListInfo const *)+4FE/w
+                                        // R_DrawSurfs(GfxCmdBufContext,GfxCmdBufState *,GfxDrawSurfListInfo const *)+504/w
+    unsigned int firstDrawSurfIndex;    // XREF: R_DrawSurfs(GfxCmdBufContext,GfxCmdBufState *,GfxDrawSurfListInfo const *)+507/w
+                                        // R_DrawSurfs(GfxCmdBufContext,GfxCmdBufState *,GfxDrawSurfListInfo const *):loc_AAF03B/r ...
+    const GfxDrawSurfListInfo *info;    // XREF: R_DrawSurfs(GfxCmdBufContext,GfxCmdBufState *,GfxDrawSurfListInfo const *)+511/w
+};
+
+struct GfxPointVertex // sizeof=0x10
+{                                       // XREF: .data:g_debugExternLineVerts/r
+    float xyz[3];
+    unsigned __int8 color[4];           // XREF: RB_DrawSunShadowOverlay(void)+32F/w
+};
+
+struct GfxCmdDrawPoints // sizeof=0x18
+{
+    GfxCmdHeader header;
+    __int16 pointCount;
+    unsigned __int8 size;
+    unsigned __int8 dimensions;
+    GfxPointVertex verts[1];
 };
 
 bool __cdecl ValidGamePadButtonIcon(unsigned int letter);
@@ -378,7 +440,7 @@ void __cdecl RB_ExecuteRenderCommandsLoop(const void *cmds, int *ui3dTextureWind
 void __cdecl RB_Draw3D();
 void __cdecl RB_CallExecuteRenderCommands();
 void __cdecl RB_UpdateDynamicBuffers(GfxBackEndData *backendData);
-void     RB_RenderThread(int a1@<esi>, unsigned int threadContext);
+void     RB_RenderThread(unsigned int threadContext);
 void __cdecl RB_RenderCommandFrame(const GfxBackEndData *data);
 bool __cdecl RB_BackendTimeout(int gpuIndex);
 void __cdecl RB_InitBackendGlobalStructs();
@@ -394,3 +456,6 @@ void __cdecl RB_SaveScreen_BlendBlurred(const GfxBlendSaveScreenBlurredParam *p,
 void __cdecl RB_SaveScreen_BlendFlashed(const GfxBlendSaveScreenFlashedParam *p, const GfxViewInfo *viewInfo);
 void __cdecl RB_SaveScreen(const GfxSaveScreenParam *p, const GfxViewInfo *viewInfo);
 void __cdecl R_ResolveSection(GfxCmdBufContext context, GfxImage *image);
+
+
+extern GfxRenderTarget gfxRenderTargets[44];

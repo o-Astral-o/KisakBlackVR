@@ -1,6 +1,9 @@
 #pragma once
-#include <qcommon/msg_mp.h>
 #include "rigid_body.h"
+#include <qcommon/ent.h>
+
+struct XModel;
+struct msg_t;
 
 struct DestructibleStage // sizeof=0x30
 {                                       // XREF: DestructiblePiece/r
@@ -67,16 +70,6 @@ struct DESTRUCTIBLE_PIECE_INFO // sizeof=0x18
     int xdollHandle;
     unsigned int fx;
     DestructibleBurnData burnData;
-};
-
-struct LerpEntityStateDestructibleHit // sizeof=0x18
-{                                       // XREF: LerpEntityStateTypeUnion/r
-    int modelState0;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+60/w
-    int modelState1;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+66/w
-    int modelState2;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+6C/w
-    int dummy;                          // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+72/w
-    int modelState3;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+78/w
-    int modelState4;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+7E/w
 };
 
 struct DestructibleState // sizeof=0x1C

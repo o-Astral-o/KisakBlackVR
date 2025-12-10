@@ -1,4 +1,6 @@
 #include "r_pretess.h"
+#include <universal/q_shared.h>
+#include "r_warn.h"
 
 void __cdecl R_InitDrawSurfListInfo(GfxDrawSurfListInfo *info)
 {

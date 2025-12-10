@@ -4,6 +4,10 @@
 #include <math.h>
 #include "com_pack.h"
 
+#define EQUAL_EPSILON 0.001f
+#define ZERO_EPSILON 0.000001f
+#define WEIGHT_EPSILON EQUAL_EPSILON
+
 #define MAX_11BIT_FLT 0.99951172f // not a real name
 
 struct cplane_s // sizeof=0x14
@@ -158,11 +162,7 @@ int __cdecl ProjectedWindingContainsCoplanarPoint(
 int __cdecl PlaneFromPoints(float *plane, const float *v0, const float *v1, const float *v2);
 void __cdecl ProjectPointOnPlane(const float *p, const float *normal, float *dst);
 void __cdecl SetPlaneSignbits(cplane_s *out);
-int __cdecl BoxOnPlaneSide(
-        const float *emins,
-        const float *emaxs,
-        const cplane_s *p,
-        const cplane_s *pa);
+int __cdecl BoxOnPlaneSide(const float *emins, const float *emaxs, const cplane_s *p);
 int __cdecl IsPosInsideArc(
                 const float *pos,
                 float posRadius,
@@ -222,6 +222,10 @@ void __cdecl Vec3Max(const float *a, const float *b, float *result);
 void __cdecl Vec3Abs(const float *a, float *res);
 bool __cdecl Vec3IsNormalized(const float *v);
 void __cdecl Vec3Scale(const float *v, float scale, float *result);
+void __cdecl Vec3Avg(const float *a, const float *b, float *sum);
+void __cdecl Vec3Mul(const float *a, const float *b, float *product);
+void __cdecl Vec3Mad(const float *start, float scale, const float *dir, float *result);
+void __cdecl Vec3ScaleMad(float scale0, const float *dir0, float scale1, const float *dir1, float *result);
 
 void __cdecl Vec4Lerp(const float *from, const float *to, float frac, float *result);
 float __cdecl Vec4Normalize(float *v);

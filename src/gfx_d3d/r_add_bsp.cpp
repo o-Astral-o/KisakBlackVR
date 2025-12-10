@@ -1,5 +1,9 @@
 #include "r_add_bsp.h"
 #include "r_add_cmdbuf.h"
+#include "r_dvars.h"
+#include <qcommon/threads.h>
+#include "r_light.h"
+#include "r_add_staticmodel.h"
 
 void __cdecl R_InitBspDrawSurf(GfxSModelDrawSurfLightingData *surfData)
 {

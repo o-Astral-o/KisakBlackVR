@@ -319,6 +319,12 @@ struct GfxScaledPlacement // sizeof=0x20
     float scale;                        // XREF: CG_Player(int,centity_s *)+DD9/w
 };
 
+union GfxColor // sizeof=0x4
+{                                                                             // XREF: RB_AddWaypoint+286/w
+    unsigned int packed;
+    unsigned __int8 array[4];
+};
+
 struct GfxWorldVertex // sizeof=0x2C
 {                                       // XREF: GfxWorldVertex0/r
                                         // GfxWorldVertex1/r

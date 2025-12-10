@@ -1,4 +1,14 @@
 #include "rb_state.h"
+#include "r_rendercmds.h"
+#include "r_state_utils.h"
+#include "r_init.h"
+#include "r_state.h"
+#include "r_rendertarget.h"
+
+GfxCmdBufState gfxCmdBufState;
+GfxCmdBufInput gfxCmdBufInput;
+GfxCmdBufSourceState gfxCmdBufSourceState;
+GfxCmdBufContext gfxCmdBufContext;
 
 void __cdecl RB_SetInitialState()
 {
@@ -9,187 +19,187 @@ void __cdecl RB_SetInitialState()
     R_SetTexFilter();
     R_InitCmdBufState(&gfxCmdBufState);
     RB_InitSceneViewport();
-    if ( !stru_B50E858.surface.color
+    if (!gfxRenderTargets[2].surface.color
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    81,
-                    0,
-                    "%s",
-                    "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].surface.color") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            81,
+            0,
+            "%s",
+            "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].surface.color"))
     {
         __debugbreak();
     }
-    if ( !g_allocateMinimalResources
-        && !stru_B50E858.surface.depthStencil
+    if (!g_allocateMinimalResources
+        && !gfxRenderTargets[2].surface.depthStencil
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    83,
-                    0,
-                    "%s",
-                    "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].surface.depthStencil") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            83,
+            0,
+            "%s",
+            "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].surface.depthStencil"))
     {
         __debugbreak();
     }
-    if ( !stru_B50E858.width
+    if (!gfxRenderTargets[2].width
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    91,
-                    0,
-                    "%s",
-                    "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].width") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            91,
+            0,
+            "%s",
+            "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].width"))
     {
         __debugbreak();
     }
-    if ( !stru_B50E858.height
+    if (!gfxRenderTargets[2].height
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    92,
-                    0,
-                    "%s",
-                    "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].height") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            92,
+            0,
+            "%s",
+            "gfxRenderTargets[R_RENDERTARGET_FRAME_BUFFER].height"))
     {
         __debugbreak();
     }
-    if ( dword_B473FD0
+    if (gfxCmdBufSourceState.renderTargetWidth
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    94,
-                    1,
-                    "%s",
-                    "gfxCmdBufSourceState.renderTargetWidth == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            94,
+            1,
+            "%s",
+            "gfxCmdBufSourceState.renderTargetWidth == 0"))
     {
         __debugbreak();
     }
-    if ( dword_B473FD4
+    if (gfxCmdBufSourceState.renderTargetHeight
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    95,
-                    1,
-                    "%s",
-                    "gfxCmdBufSourceState.renderTargetHeight == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            95,
+            1,
+            "%s",
+            "gfxCmdBufSourceState.renderTargetHeight == 0"))
     {
         __debugbreak();
     }
-    if ( dword_B473FCC
+    if (gfxCmdBufSourceState.viewportBehavior
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    96,
-                    1,
-                    "%s",
-                    "gfxCmdBufSourceState.viewportBehavior == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            96,
+            1,
+            "%s",
+            "gfxCmdBufSourceState.viewportBehavior == 0"))
     {
         __debugbreak();
     }
     R_SetRenderTargetSize(&gfxCmdBufSourceState, 2u);
     R_SetRenderTarget(gfxCmdBufContext, 2u);
-    if ( gfxCmdBufState.prim.indexBuffer
+    if (gfxCmdBufState.prim.indexBuffer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    104,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.indexBuffer == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            104,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.indexBuffer == NULL"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.prim.streams[0].vb
+    if (gfxCmdBufState.prim.streams[0].vb
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    105,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.streams[0].vb == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            105,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.streams[0].vb == NULL"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.prim.streams[0].offset
+    if (gfxCmdBufState.prim.streams[0].offset
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    106,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.streams[0].offset == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            106,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.streams[0].offset == 0"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.prim.streams[0].stride
+    if (gfxCmdBufState.prim.streams[0].stride
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    107,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.streams[0].stride == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            107,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.streams[0].stride == 0"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.prim.streams[1].vb
+    if (gfxCmdBufState.prim.streams[1].vb
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    108,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.streams[1].vb == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            108,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.streams[1].vb == NULL"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.prim.streams[1].offset
+    if (gfxCmdBufState.prim.streams[1].offset
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    109,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.streams[1].offset == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            109,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.streams[1].offset == 0"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.prim.streams[1].stride
+    if (gfxCmdBufState.prim.streams[1].stride
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    110,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.prim.streams[1].stride == 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            110,
+            1,
+            "%s",
+            "gfxCmdBufState.prim.streams[1].stride == 0"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.vertexShader
+    if (gfxCmdBufState.vertexShader
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    114,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.vertexShader == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            114,
+            1,
+            "%s",
+            "gfxCmdBufState.vertexShader == NULL"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.material
+    if (gfxCmdBufState.material
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    116,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.material == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            116,
+            1,
+            "%s",
+            "gfxCmdBufState.material == NULL"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.technique
+    if (gfxCmdBufState.technique
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                    117,
-                    1,
-                    "%s",
-                    "gfxCmdBufState.technique == NULL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            117,
+            1,
+            "%s",
+            "gfxCmdBufState.technique == NULL"))
     {
         __debugbreak();
     }
-    if ( gfxCmdBufState.alphaRef )
+    if (gfxCmdBufState.alphaRef)
     {
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
-                        120,
-                        1,
-                        "%s",
-                        "gfxCmdBufState.alphaRef == 0") )
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_state.cpp",
+            120,
+            1,
+            "%s",
+            "gfxCmdBufState.alphaRef == 0"))
             __debugbreak();
     }
 }

@@ -1,4 +1,6 @@
 #pragma once
+#include "r_dpvs.h"
+#include <DynEntity/DynEntity_client.h>
 
 void __cdecl R_AddCellDynModelSurfacesInFrustumCmd(const DpvsPlane **data);
 void __cdecl R_CullDynModelInCell(

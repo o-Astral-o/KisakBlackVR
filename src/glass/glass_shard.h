@@ -267,8 +267,6 @@ char __thiscall GlassShard::TracePoint(
                 float length,
                 const float *mins,
                 float *maxs);
-void __cdecl Vec3Avg(const float *a, const float *b, float *sum);
-void __cdecl Vec3Mul(const float *a, const float *b, float *product);
 void __thiscall GlassShard::GetLocalBBox(GlassShard *this, float *mins, float *maxs);
 void __thiscall GlassShard::UpdateBBox(GlassShard *this);
 void __thiscall GlassShard::Update(GlassShard *this, float deltaTime);

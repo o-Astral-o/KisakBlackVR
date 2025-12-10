@@ -1,7 +1,6 @@
 #pragma once
 
 #include <universal/q_shared.h>
-#include <physics/destructible.h>
 
 struct LerpEntityStateTurret // sizeof=0x20
 {                                                                             // XREF: LerpEntityStateTypeUnion/r
@@ -165,6 +164,16 @@ struct LerpEntityStateStreamerHint // sizeof=0x4
 struct LerpEntityStateAnonymous // sizeof=0x20
 {                                                                             // XREF: LerpEntityStateTypeUnion/r
         int data[8];
+};
+
+struct LerpEntityStateDestructibleHit // sizeof=0x18
+{                                       // XREF: LerpEntityStateTypeUnion/r
+    int modelState0;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+60/w
+    int modelState1;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+66/w
+    int modelState2;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+6C/w
+    int dummy;                          // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+72/w
+    int modelState3;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+78/w
+    int modelState4;                    // XREF: CG_DestructibleRewindToTime(int,Destructible *,int)+7E/w
 };
 
 union LerpEntityStateTypeUnion // sizeof=0x20

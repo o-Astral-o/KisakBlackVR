@@ -1,5 +1,8 @@
 #pragma once
 
+struct GfxWorld;
+struct GfxImage;
+
 void __cdecl R_RegisterOutdoorImage(GfxWorld *world, const float *outdoorMin, const float *outdoorMax);
 void __cdecl Outdoor_ApplyBoundingBox(const float *outdoorMin, const float *outdoorMax);
 int Outdoor_UpdateTransforms();
