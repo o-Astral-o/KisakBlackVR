@@ -1,4 +1,15 @@
 #pragma once
+#include <qcommon/common.h>
+#include <bgame/bg_public.h>
+#include <game/g_items.h>
+#include <game/g_hudelem.h>
+
+struct SpawnFuncEntry // sizeof=0x8
+{                                       // XREF: .rdata:s_bspOnlySpawns/r
+                                        // .rdata:s_bspOrDynamicSpawns/r
+    const char *classname;
+    void (__cdecl *callback)(gentity_s *, SpawnVar *);
+};
 
 int __cdecl G_SpawnFloat(const SpawnVar *spawnVar, const char *key, const char *defaultString, float *out);
 int __cdecl G_SpawnInt(const SpawnVar *spawnVar, const char *key, const char *defaultString, int *out);

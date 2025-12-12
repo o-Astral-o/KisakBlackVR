@@ -1,4 +1,9 @@
 #include "actor_corpse.h"
+#include <game_mp/g_utils_mp.h>
+#include <clientscript/scr_const.h>
+#include "sentient.h"
+#include <client_mp/g_client_mp.h>
+#include <game_mp/g_main_mp.h>
 
 int __cdecl G_GetActorCorpseIndex(gentity_s *ent)
 {

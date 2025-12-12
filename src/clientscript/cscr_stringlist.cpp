@@ -1,4 +1,7 @@
 #include "cscr_stringlist.h"
+#include <universal/assertive.h>
+
+scrStringDebugGlob_t *gScrStringDebugGlob[2];
 
 char *__cdecl SL_ConvertToString(unsigned int stringValue, scriptInstance_t inst)
 {
@@ -1223,7 +1226,7 @@ void __cdecl Scr_SetStringFromCharString(unsigned __int16 *to, char *from, scrip
     *to = SL_GetString(from, 0, SCRIPTINSTANCE_SERVER);
 }
 
-unsigned int __cdecl Scr_AllocString(char *s, int sys, scriptInstance_t inst)
+unsigned int __cdecl Scr_AllocString(const char *s, int sys, scriptInstance_t inst)
 {
     if ( sys != 1
         && !Assert_MyHandler(
@@ -1235,7 +1238,7 @@ unsigned int __cdecl Scr_AllocString(char *s, int sys, scriptInstance_t inst)
     {
         __debugbreak();
     }
-    return SL_GetString(s, 1u, inst);
+    return SL_GetString((char*)s, 1u, inst);
 }
 
 unsigned int __cdecl SL_GetStringForFloat(float f, scriptInstance_t inst)

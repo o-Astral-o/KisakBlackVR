@@ -1323,6 +1323,7 @@
     <ClInclude Include="src\flame\flame_physics.h" />
     <ClInclude Include="src\flame\flame_sound.h" />
     <ClInclude Include="src\flame\flame_system.h" />
+    <ClInclude Include="src\game\actor.h" />
     <ClInclude Include="src\game\actor_aim.h" />
     <ClInclude Include="src\game\actor_animapi.h" />
     <ClInclude Include="src\game\actor_badplace.h" />
@@ -1348,6 +1349,7 @@
     <ClInclude Include="src\game\actor_threat.h" />
     <ClInclude Include="src\game\bullet.h" />
     <ClInclude Include="src\game\enthandle.h" />
+    <ClInclude Include="src\game\game_public.h" />
     <ClInclude Include="src\game\g_actor_prone.h" />
     <ClInclude Include="src\game\g_client_fields.h" />
     <ClInclude Include="src\game\g_debug.h" />

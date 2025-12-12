@@ -1,4 +1,26 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <bgame/bg_local.h>
+
+struct corpseInfo_t // sizeof=0x5E0
+{
+    XAnimTree_s *tree;
+    int entnum;
+    int time;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    clientInfo_t ci;
+    bool falling;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
 
 int __cdecl G_GetPlayerCorpseIndex(gentity_s *ent, const char *error_msg);
 int __cdecl G_GetFreePlayerCorpseIndex();

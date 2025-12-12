@@ -1,4 +1,5 @@
 #pragma once
+#include <bgame/bg_weapons.h>
 
 char __cdecl G_ParseWeaponAccurayGraphs(WeaponDef *weaponDef);
 char __cdecl G_ParseWeaponAccurayGraphInternal(

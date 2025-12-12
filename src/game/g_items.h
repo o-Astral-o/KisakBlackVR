@@ -1,4 +1,18 @@
 #pragma once
+#include <bgame/bg_local.h>
+#include <bgame/bg_public.h>
+#include <bgame/bg_weapons.h>
+
+enum itemType_t : __int32
+{                                       // XREF: gitem_s/r
+    IT_BAD = 0x0,
+    IT_WEAPON = 0x1,
+};
+
+struct gitem_s // sizeof=0x4
+{                                       // XREF: gitem_t/r
+    itemType_t giType;
+};
 
 void __cdecl Fill_Clip(playerState_s *ps, unsigned int weapon);
 int __cdecl Add_Ammo(gentity_s *ent, unsigned int weaponIndex, unsigned __int8 weaponModel, int count, int fillClip);

@@ -1,4 +1,5 @@
 #pragma once
+#include "actor.h"
 
 void __fastcall Actor_Generic_Suspend(actor_s *self, ai_state_t eNextState);
 int __fastcall Actor_Generic_Resume(actor_s *self, ai_state_t ePrevState);

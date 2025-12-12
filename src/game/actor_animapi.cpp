@@ -1,4 +1,13 @@
 #include "actor_animapi.h"
+#include <clientscript/cscr_variable.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include "actor_orientation.h"
+#include <clientscript/cscr_stringlist.h>
+#include <game_mp/actor_mp.h>
+
+AnimScriptList *g_animScriptTable[1];
 
 void __fastcall Actor_InitAnim(actor_s *self)
 {
@@ -84,15 +93,15 @@ void __fastcall Actor_SetAnimScript(
             self->eAnimMode = animMode;
         if ( self->moveMode == moveMode )
         {
-            if ( g_DXDeviceThread != GetCurrentThreadId() )
-                return;
+            //if ( g_DXDeviceThread != GetCurrentThreadId() )
+            //    return;
         }
         else
         {
             self->moveMode = moveMode;
             Scr_Notify(self->ent, scr_const.movemode, 0);
-            if ( g_DXDeviceThread != GetCurrentThreadId() )
-                return;
+            //if ( g_DXDeviceThread != GetCurrentThreadId() )
+            //    return;
         }
         goto LABEL_20;
     }
@@ -124,9 +133,10 @@ void __fastcall Actor_SetAnimScript(
     }
     G_XAnimUpdateEnt(self->ent);
     Scr_IncTime(SCRIPTINSTANCE_SERVER);
-    if ( GetCurrentThreadId() == g_DXDeviceThread )
+    //if ( GetCurrentThreadId() == g_DXDeviceThread )
 LABEL_20:
-        D3DPERF_EndEvent();
+    ;
+        //D3DPERF_EndEvent();
 }
 
 void __fastcall Actor_AnimStop(actor_s *self, scr_animscript_t *pAnimScriptFunc)
@@ -137,7 +147,7 @@ void __fastcall Actor_AnimStop(actor_s *self, scr_animscript_t *pAnimScriptFunc)
         __debugbreak();
     }
     Actor_CheckCollisions(self);
-    if ( EntHandle::isDefined(&self->pCloseEnt) )
+    if ( self->pCloseEnt.isDefined() )
     {
         Actor_AnimMoveAway(self, pAnimScriptFunc);
     }
@@ -182,7 +192,7 @@ void __fastcall Actor_AnimTryWalk(actor_s *self)
 {
     scr_animscript_t *StopAnim; // eax
 
-    if ( EntHandle::isDefined(&self->pCloseEnt) )
+    if ( self->pCloseEnt.isDefined() )
     {
         Actor_AnimMoveAway(self, &g_animScriptTable[self->species]->stop);
     }
@@ -215,7 +225,7 @@ void __fastcall Actor_AnimTryRun(actor_s *self)
 {
     scr_animscript_t *StopAnim; // eax
 
-    if ( EntHandle::isDefined(&self->pCloseEnt) )
+    if ( self->pCloseEnt.isDefined() )
     {
         Actor_AnimMoveAway(self, &g_animScriptTable[self->species]->stop);
     }

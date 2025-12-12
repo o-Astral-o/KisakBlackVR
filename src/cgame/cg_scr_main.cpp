@@ -1,4 +1,8 @@
 #include "cg_scr_main.h"
+#include <clientscript/cscr_stringlist.h>
+#include <clientscript/scr_const.h>
+
+cg_level_locals_t cg_level;
 
 void __cdecl CScr_AddStruct()
 {

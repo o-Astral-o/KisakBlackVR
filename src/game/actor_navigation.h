@@ -1,4 +1,73 @@
 #pragma once
+#include "pathnode.h"
+#include "actor.h"
+
+struct CustomSearchInfo_FindCloseNode // sizeof=0x14
+{                                       // XREF: ?Path_FindCloseNode@@YIPAUpathnode_t@@W4team_t@@PAU1@QBMH@Z/r
+    float goalPos[3];                   // XREF: Path_FindCloseNode(team_t,pathnode_t *,float const * const,int)+9D/w
+                                        // Path_FindCloseNode(team_t,pathnode_t *,float const * const,int)+AA/w ...
+    pathnode_t *closestNode;            // XREF: Path_FindCloseNode(team_t,pathnode_t *,float const * const,int)+BF/w
+                                        // Path_FindCloseNode(team_t,pathnode_t *,float const * const,int)+139/r
+    float closestDistSq;                // XREF: Path_FindCloseNode(team_t,pathnode_t *,float const * const,int)+10B/w
+
+    char IgnoreNode(pathnode_t *pNode);
+};
+
+struct CustomSearchInfo_FindPath // sizeof=0x14
+{                                       // XREF: CustomSearchInfo_FindPathNotCrossPlanes/r
+                                        // ?Path_FindPathFromTo@@YI?BHPAUpath_t@@W4team_t@@PAUpathnode_t@@QBM23HH@Z/r
+    pathnode_t *m_pNodeTo;              // XREF: Path_FindPathFromTo(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,int)+E3/w
+                                        // Path_FindPathFromToNotCrossPlanes(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,float (* const)[2],float * const,int,int,int)+DA/w
+    float startPos[3];                  // XREF: Path_FindPathFromTo(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,int)+ED/w
+                                        // Path_FindPathFromTo(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,int)+FA/w ...
+    float negotiationOverlapCost;       // XREF: Path_FindPathFromTo(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,int)+1F/w
+                                        // Path_FindPathFromToNotCrossPlanes(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,float (* const)[2],float * const,int,int,int)+16/w
+
+    double __thiscall EvaluateHeuristic(pathnode_t *pSuccessor, const float *vGoalPos);
+};
+
+struct CustomSearchInfo_FindPathNotCrossPlanes : CustomSearchInfo_FindPath // sizeof=0x20
+{                                       // XREF: ?Path_FindPathFromToNotCrossPlanes@@YI?BHPAUpath_t@@W4team_t@@PAUpathnode_t@@QBM23QAY01MQAMHHH@Z/r
+    int m_iPlaneCount;                  // XREF: Path_FindPathFromToNotCrossPlanes(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,float (* const)[2],float * const,int,int,int)+E0/w
+    float (*m_vNormal)[2];              // XREF: Path_FindPathFromToNotCrossPlanes(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,float (* const)[2],float * const,int,int,int)+E6/w
+    float *m_fDist;                     // XREF: Path_FindPathFromToNotCrossPlanes(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,float (* const)[2],float * const,int,int,int)+EC/w
+
+    char IgnoreNode(pathnode_t *pNode);
+};
+
+struct CustomSearchInfo_FindPathWithWidth // sizeof=0x10
+{                                       // XREF: ?Path_FindPathFromToWithWidth@@YI?BHPAUpath_t@@W4team_t@@PAUpathnode_t@@QBM23HMQAM@Z/r
+    pathnode_t *m_pNodeTo;              // XREF: Path_FindPathFromToWithWidth(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,float,float * const)+D4/w
+    float width;                        // XREF: Path_FindPathFromToWithWidth(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,float,float * const)+DC/w
+    float perp[2];                      // XREF: Path_FindPathFromToWithWidth(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,float,float * const)+E8/w
+                                        // Path_FindPathFromToWithWidth(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int,float,float * const)+F5/w
+
+    double EvaluateHeuristic(pathnode_t *pSuccessor, const float *vGoalPos);
+};
+
+struct CustomSearchInfo_FindPathWithLOS // sizeof=0x18
+{                                       // XREF: CustomSearchInfo_FindPathInCylinderWithLOSNotCrossPlanes/r
+                                        // CustomSearchInfo_FindPathInCylinderWithLOS/r
+    pathnode_t *m_pNodeTo;              // XREF: Path_FindPathInCylinderWithLOS(path_t *,team_t,float const * const,float const * const,actor_goal_s const *,float,int)+4E/w
+                                        // Path_FindPathInCylinderWithLOS(path_t *,team_t,float const * const,float const * const,actor_goal_s const *,float,int)+54/r
+    float m_fWithinDistSqrd;            // XREF: Path_FindPathInCylinderWithLOS(path_t *,team_t,float const * const,float const * const,actor_goal_s const *,float,int)+9D/w
+    float startPos[3];                  // XREF: Path_FindPathInCylinderWithLOS(path_t *,team_t,float const * const,float const * const,actor_goal_s const *,float,int)+AE/o
+    float negotiationOverlapCost;       // XREF: Path_FindPathInCylinderWithLOS(path_t *,team_t,float const * const,float const * const,actor_goal_s const *,float,int)+1F/w
+
+    double EvaluateHeuristic(pathnode_t *pSuccessor, const float *vGoalPos);
+};
+
+struct CustomSearchInfo_FindPathClosestPossible // sizeof=0x10
+{                                       // XREF: ?Path_FindPathGetCloseAsPossible@@YI?BHPAUpath_t@@W4team_t@@PAUpathnode_t@@QBM23H@Z/r
+    float m_fBestScore;                 // XREF: Path_FindPathGetCloseAsPossible(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int)+2C/w
+    pathnode_t *m_pBestNode;            // XREF: Path_FindPathGetCloseAsPossible(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int)+31/w
+                                        // Path_FindPathGetCloseAsPossible(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int):loc_905794/r ...
+    pathnode_t *m_pNodeTo;              // XREF: Path_FindPathGetCloseAsPossible(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int)+C5/w
+    float negotiationOverlapCost;       // XREF: Path_FindPathGetCloseAsPossible(path_t *,team_t,pathnode_t *,float const * const,pathnode_t *,float const * const,int)+1F/w
+
+    double EvaluateHeuristic(pathnode_t *pSuccessor, const float *vGoalPos);
+};
+
 
 double __fastcall Path_GetPathDir(float *delta, const float *vFrom, const float *vTo);
 pathnode_t *__fastcall Path_GetNegotiationNode(const path_t *pPath);
@@ -74,9 +143,7 @@ int __fastcall Path_FindPathFromToNotCrossPlanes(
                 int iPlaneCount,
                 int bAllowNegotiationLinks,
                 int bIgnoreBadplaces);
-char __thiscall CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(
-                CustomSearchInfo_FindPathNotCrossPlanes *this,
-                pathnode_t *pNode);
+
 int __fastcall Path_GeneratePath(
                 path_t *pPath,
                 team_t eTeam,
@@ -208,21 +275,3 @@ void __cdecl Path_CheckNodeCountForDodge(path_t *pPath, int numNeeded, pathpoint
 void __cdecl Path_DodgeDrawRaisedLine(const float *start, const float *end, const float *color);
 bool __fastcall Path_MayFaceEnemy(path_t *pPath, float *vEnemyDir, float *vOrg);
 void __fastcall Path_TrimToBadPlaceLink(path_t *pPath, team_t eTeam);
-char __thiscall CustomSearchInfo_FindCloseNode::IgnoreNode(CustomSearchInfo_FindCloseNode *this, pathnode_t *pNode);
-double __thiscall CustomSearchInfo_FindPath::EvaluateHeuristic(
-                CustomSearchInfo_FindPath *this,
-                pathnode_t *pSuccessor,
-                const float *vGoalPos);
-double __userpurge CustomSearchInfo_FindPathWithWidth::EvaluateHeuristic@<st0>(
-                CustomSearchInfo_FindPathWithWidth *this@<ecx>,
-                float a2@<ebp>,
-                pathnode_t *pSuccessor,
-                const float *vGoalPos);
-double __thiscall CustomSearchInfo_FindPathWithLOS::EvaluateHeuristic(
-                CustomSearchInfo_FindPathWithLOS *this,
-                pathnode_t *pSuccessor,
-                const float *vGoalPos);
-double __thiscall CustomSearchInfo_FindPathClosestPossible::EvaluateHeuristic(
-                CustomSearchInfo_FindPathClosestPossible *this,
-                pathnode_t *pSuccessor,
-                const float *vGoalPos);

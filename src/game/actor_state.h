@@ -1,4 +1,5 @@
 #pragma once
+#include "actor.h"
 
 void __cdecl Actor_SetDefaultState(actor_s *actor);
 void __fastcall Actor_ThinkStateTransitions(actor_s *self);

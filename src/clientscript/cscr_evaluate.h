@@ -1,4 +1,33 @@
 #pragma once
+#include "cscr_main.h"
+#include "cscr_variable.h"
+#include "cscr_debugger.h"
+
+struct ArchivedCanonicalStringInfo // sizeof=0x8
+{
+    unsigned __int16 canonicalStr;
+    // padding byte
+    // padding byte
+    const char *value;
+};
+
+struct __declspec(align(2)) scrEvaluateGlob_t // sizeof=0x10
+{                                       // XREF: .data:scrEvaluateGlob_t * gScrEvaluateGlob/r
+    char *archivedCanonicalStringsBuf;  // XREF: Scr_ArchiveCanonicalStrings(scriptInstance_t)+AE/w
+                                        // Scr_ArchiveCanonicalStrings(scriptInstance_t)+1BF/r ...
+    ArchivedCanonicalStringInfo *archivedCanonicalStrings;
+                                        // XREF: Scr_ArchiveCanonicalStrings(scriptInstance_t)+E1/w
+                                        // Scr_ArchiveCanonicalStrings(scriptInstance_t)+20F/r ...
+    int *canonicalStringLookup;         // XREF: Scr_CompareCanonicalStrings(void const *,void const *)+11/r
+                                        // Scr_CompareCanonicalStrings(void const *,void const *)+25/r ...
+    bool freezeScope;                   // XREF: Scr_EvalScriptExpression(scriptInstance_t,ScriptExpression_t *,uint,VariableValue *,bool,bool)+38/w
+                                        // Scr_EvalExpression+163/r ...
+    bool freezeObjects;                 // XREF: Scr_EvalScriptExpression(scriptInstance_t,ScriptExpression_t *,uint,VariableValue *,bool,bool)+47/w
+                                        // Scr_EvalExpression+1DF/r ...
+    bool objectChanged;                 // XREF: Scr_EvalScriptExpression(scriptInstance_t,ScriptExpression_t *,uint,VariableValue *,bool,bool)+53/w
+                                        // Scr_EvalScriptExpression(scriptInstance_t,ScriptExpression_t *,uint,VariableValue *,bool,bool)+7A/r ...
+    // padding byte
+};
 
 int __cdecl Scr_CompareCanonicalStrings(unsigned int *arg1, unsigned int *arg2);
 void __cdecl Scr_ArchiveCanonicalStrings(scriptInstance_t inst);
@@ -39,7 +68,7 @@ void __cdecl Scr_CompileCallExpressionList(scriptInstance_t inst, sval_u *exprli
 char __cdecl Scr_CompileMethod(scriptInstance_t inst, sval_u *expr, sval_u *func_name, sval_u *params);
 void __cdecl Scr_CompileText(scriptInstance_t inst, const char *text, ScriptExpression_t *scriptExpr);
 void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, ScriptExpression_t *scriptExpr);
-char __cdecl Scr_EvalScriptExpression(
+bool __cdecl Scr_EvalScriptExpression(
                 scriptInstance_t inst,
                 ScriptExpression_t *expr,
                 unsigned int localId,

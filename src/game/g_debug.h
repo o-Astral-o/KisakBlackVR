@@ -1,5 +1,8 @@
 #pragma once
 
+struct gentity_s;
+struct cLeafBrushNode_s;
+
 void __cdecl G_DebugStar(const float *point, const float *color, int duration);
 void __cdecl G_DebugCircleEx(
                 const float *center,

@@ -1,5 +1,7 @@
 #include "cscr_compiler.h"
 
+scrCompilePub_t gScrCompilePub[2];
+
 void (__cdecl *__cdecl GetFunction(scriptInstance_t inst, const char **pName, int *type))()
 {
     if ( inst )

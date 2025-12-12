@@ -1,4 +1,9 @@
 #include "cscr_instance.h"
+#include "cscr_variable.h"
+#include "cscr_stringlist.h"
+
+scrVarDebugPub_t gScrVarDebugPubBuff[2];
+scrStringDebugGlob_t gScrStringDebugGlobBuff[2];
 
 void __cdecl Scr_ClearScrVarDebugPub(scriptInstance_t inst)
 {

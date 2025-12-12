@@ -1,6 +1,57 @@
 #pragma once
 
 #include "cscr_main.h"
+#include <universal/mem_userhunk.h>
+
+#undef GetObject // windows aids
+
+#define VAR_MASK 0x1F
+#define CLASS_NUM_COUNT 5
+#define VAR_NAME_BITS 8
+
+#define VARIABLELIST_PARENT_BEGIN 1
+
+enum $DC39398868F8F7F398F8DA27178506AD : __int32
+{
+    VAR_UNDEFINED         = 0x0,
+    VAR_BEGIN_REF         = 0x1,
+    VAR_POINTER           = 0x1,
+    VAR_STRING            = 0x2,
+    VAR_ISTRING           = 0x3,
+    VAR_VECTOR            = 0x4,
+    VAR_END_REF           = 0x5,
+    VAR_FLOAT             = 0x5,
+    VAR_INTEGER           = 0x6,
+    VAR_CODEPOS           = 0x7,
+    VAR_PRECODEPOS        = 0x8,
+    VAR_FUNCTION          = 0x9,
+    VAR_STACK             = 0xA,
+    VAR_ANIMATION         = 0xB,
+    VAR_DEVELOPER_CODEPOS = 0xC,
+    VAR_THREAD            = 0xD,
+    VAR_NOTIFY_THREAD     = 0xE,
+    VAR_TIME_THREAD       = 0xF,
+    VAR_CHILD_THREAD      = 0x10,
+    VAR_OBJECT            = 0x11,
+    VAR_DEAD_ENTITY       = 0x12,
+    VAR_ENTITY            = 0x13,
+    VAR_ARRAY             = 0x14,
+    VAR_DEAD_THREAD       = 0x15,
+    VAR_COUNT             = 0x16,
+    VAR_THREAD_LIST       = 0x17,
+    VAR_ENDON_LIST        = 0x18,
+};
+
+struct scr_classStruct_t // sizeof=0x10
+{                                       // XREF: .data:scr_classStruct_t * gServerClassMap/r
+    unsigned int id;
+    unsigned int entArrayId;
+    char charId;
+    // padding byte
+    // padding byte
+    // padding byte
+    const char *name;
+};
 
 union ObjectInfo_u // sizeof=0x4
 {                                                                             // XREF: ObjectInfo/r
@@ -104,6 +155,240 @@ struct scr_entref_t // sizeof=0x6
         unsigned __int16 client;                        // XREF: CScr_PlaySoundOnEntity:loc_4EB534/r
 };
 
+struct scrVarPub_t // sizeof=0x74
+{                                       // XREF: .data:scrVarPub_t * gScrVarPub/r
+    //const char *fieldBuffer;            // XREF: Scr_BeginLoadScripts(scriptInstance_t,int)+4D6/w
+    char *fieldBuffer;            // XREF: Scr_BeginLoadScripts(scriptInstance_t,int)+4D6/w
+                                        // Scr_FindField(char const *,int *,scriptInstance_t)+C/r ...
+    unsigned __int16 canonicalStrCount; // XREF: Scr_ArchiveCanonicalStrings(scriptInstance_t)+C1/r
+                                        // Scr_ArchiveCanonicalStrings(scriptInstance_t)+F4/r ...
+    bool developer;                     // XREF: EmitPreAssignmentPos+9/r
+                                        // EmitAssignmentPos+9/r ...
+    bool developer_script;              // XREF: LinkThread+13F/r
+                                        // SpecifyThread+DF/r ...
+    bool evaluate;                      // XREF: CheckThreadPosition+C/r
+                                        // Scr_ScriptWatch::EvaluateWatchChildren(scriptInstance_t,Scr_WatchElement_s *)+5F/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    const char *error_message;          // XREF: EvalBinaryOperatorExpression+90/r
+                                        // EvalBinaryOperatorExpression+9F/r ...
+    int error_index;                    // XREF: Scr_EvalMethod+DA/w
+                                        // Scr_EvalMethod+14F/w ...
+    unsigned int time;                  // XREF: VM_Notify+676/r
+                                        // VM_Notify+745/r ...
+    unsigned int timeArrayId;           // XREF: CG_ParseClientSystemStateChange(int,int,char const *):loc_5003B1/r
+                                        // Scr_IsThreadAlive(uint,scriptInstance_t)+A/r ...
+    unsigned int pauseArrayId;          // XREF: Scr_KillThread(scriptInstance_t,uint)+E7/r
+                                        // Scr_KillThread(scriptInstance_t,uint)+2A2/r ...
+    unsigned int levelId;               // XREF: Scr_HitAssignmentBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int)+5FE/r
+                                        // Scr_GetValueString(scriptInstance_t,uint,VariableValue *,int,char *)+22D/r ...
+    unsigned int gameId;                // XREF: Scr_HitAssignmentBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int)+661/r
+                                        // Scr_EvalPrimitiveExpression+2CC/r ...
+    unsigned int animId;                // XREF: Scr_HitAssignmentBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int)+62E/r
+                                        // Scr_GetValueString(scriptInstance_t,uint,VariableValue *,int,char *)+24A/r ...
+    unsigned int freeEntList;           // XREF: Scr_FreeEntityNum(int,uint,scriptInstance_t)+1D6/r
+                                        // Scr_FreeEntityNum(int,uint,scriptInstance_t)+1FC/r ...
+    unsigned int tempVariable;          // XREF: Scr_VM_Init+10D/w
+                                        // VM_Shutdown+9/r ...
+    bool bInited;                       // XREF: Scr_FreeEntityNum(int,uint,scriptInstance_t)+C/r
+                                        // Scr_RemoveClassMap(scriptInstance_t,uint)+A/r ...
+    // padding byte
+    unsigned __int16 savecount;
+    unsigned int checksum;              // XREF: Scr_CreateAnimationTree+11C/r
+                                        // Scr_CreateAnimationTree+125/w ...
+    unsigned int entId;                 // XREF: Scr_GetVariableFieldIndex(scriptInstance_t,uint,uint)+144/w
+                                        // SetVariableFieldValue(scriptInstance_t,uint,VariableValue *)+39/r ...
+    unsigned int entFieldName;          // XREF: Scr_GetVariableFieldIndex(scriptInstance_t,uint,uint)+153/w
+                                        // SetVariableFieldValue(scriptInstance_t,uint,VariableValue *)+2C/r ...
+    HunkUser *programHunkUser;          // XREF: Scr_BeginLoadScripts(scriptInstance_t,int)+420/w
+                                        // Scr_BeginLoadScripts(scriptInstance_t,int)+42C/r ...
+    const char *programBuffer;          // XREF: ScriptCompile(scriptInstance_t,sval_u,uint,uint,uint,PrecacheEntry *,int)+10D/r
+                                        // Scr_FindBreakpointInfo+39/r ...
+    const char *endScriptBuffer;        // XREF: Scr_BeginLoadScripts(scriptInstance_t,int)+4AE/w
+                                        // Scr_EndLoadAnimTrees(scriptInstance_t)+128/r ...
+    unsigned __int16 *saveIdMap;        // XREF: Scr_InitVariables(scriptInstance_t)+85/w
+    unsigned __int16 *saveIdMapRev;     // XREF: Scr_InitVariables(scriptInstance_t)+C7/w
+    unsigned int numScriptThreads;      // XREF: Scr_VM_Init+1E5/w
+                                        // Scr_GetNumScriptThreads(scriptInstance_t)+9/r ...
+    unsigned int numScriptValues;       // XREF: Scr_LoadScriptInternal(scriptInstance_t,char const *,PrecacheEntry *,int)+547/r
+                                        // Scr_LoadScriptInternal(scriptInstance_t,char const *,PrecacheEntry *,int)+56A/r ...
+    unsigned int numScriptObjects;      // XREF: Scr_InitVariables(scriptInstance_t)+21A/w
+                                        // Scr_ShutdownVariables(scriptInstance_t)+A7/r ...
+    const char *varUsagePos;            // XREF: Scr_DisplayDebuggerRemote+3B/r
+                                        // Scr_DisplayDebuggerRemote+4A/w ...
+    int ext_threadcount;                // XREF: Scr_CheckLeaks+FD/r
+                                        // Scr_VM_Init+1D5/w ...
+    int totalObjectRefCount;            // XREF: AddRefToObject(scriptInstance_t,uint)+4D/r
+                                        // AddRefToObject(scriptInstance_t,uint)+5C/w ...
+    //volatile int totalVectorRefCount;   // XREF: RemoveRefToVector(scriptInstance_t,float const *)+1A/o
+    volatile unsigned int totalVectorRefCount;   // XREF: RemoveRefToVector(scriptInstance_t,float const *)+1A/o
+                                        // AddRefToVector(scriptInstance_t,float const *)+1A/o ...
+};
+
+struct __declspec(align(4)) scrVarDebugPub_t // sizeof=0x10
+{                                       // XREF: .data:scrVarDebugPub_t * gScrVarDebugPubBuff/r
+                                        // scrVarDebugPubArray_t/r
+    const char **varUsage;
+    unsigned __int16 *extRefCount;
+    int *leakCount;
+    bool dummy;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct __declspec(align(128)) scrVarGlob_t // sizeof=0x80
+{                                       // XREF: .data:scrVarGlob_t * gScrVarGlob/r
+    VariableValueInternal *variableList;
+                                        // XREF: Scr_GetArrayValues_Vector(long,long,float (*)[3],long,char const *)+114/r
+                                        // GScr_AddSpawnPoints(void)+109/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct ThreadDebugInfo // sizeof=0x8C
+{                                       // XREF: ?Scr_DumpScriptThreads@@YAXW4scriptInstance_t@@@Z/r
+    const char *pos[32];                // XREF: Scr_DumpScriptThreads(scriptInstance_t)+1CA/w
+                                        // Scr_DumpScriptThreads(scriptInstance_t)+1E5/w ...
+    int posSize;                        // XREF: Scr_DumpScriptThreads(scriptInstance_t)+15C/w
+                                        // Scr_DumpScriptThreads(scriptInstance_t)+1C4/r ...
+    float varUsage;                     // XREF: Scr_DumpScriptThreads(scriptInstance_t)+2F0/w
+                                        // Scr_DumpScriptThreads(scriptInstance_t)+317/r ...
+    float endonUsage;                   // XREF: Scr_DumpScriptThreads(scriptInstance_t)+2FD/w
+                                        // Scr_DumpScriptThreads(scriptInstance_t)+336/r ...
+};
+
+struct VariableDebugInfo // sizeof=0x10
+{
+    const char *pos;
+    const char *fileName;
+    const char *functionName;
+    int varUsage;
+};
+
 
 void __cdecl Scr_DumpScriptThreads(scriptInstance_t inst);
 int __cdecl ThreadInfoCompare(unsigned int *info1, unsigned int *info2);
@@ -128,9 +413,9 @@ void __cdecl Scr_InitClassMap(scriptInstance_t inst);
 void __cdecl Scr_ShutdownVariables(scriptInstance_t inst);
 void __cdecl Scr_CheckLeaks(scriptInstance_t inst);
 void __cdecl Scr_CheckLeakRange(scriptInstance_t inst, unsigned int begin, unsigned int end);
-int __cdecl Scr_GetNumScriptVars(scriptInstance_t inst);
-int __cdecl Scr_GetNumScriptVarsParent(scriptInstance_t inst);
-int __cdecl Scr_GetNumScriptVarsChild(scriptInstance_t inst);
+unsigned int __cdecl Scr_GetNumScriptVars(scriptInstance_t inst);
+unsigned int __cdecl Scr_GetNumScriptVarsParent(scriptInstance_t inst);
+unsigned int __cdecl Scr_GetNumScriptVarsChild(scriptInstance_t inst);
 unsigned int __cdecl GetVariableKeyObject(scriptInstance_t inst, unsigned int id);
 unsigned int __cdecl GetVariableIndexInternal(scriptInstance_t inst, unsigned int parentId, unsigned int name);
 unsigned int __cdecl GetNewVariableIndexInternal2(
@@ -182,7 +467,7 @@ unsigned int __cdecl FindVariable(scriptInstance_t inst, unsigned int parentId, 
 unsigned int __cdecl FindObjectVariable(scriptInstance_t inst, unsigned int parentId, unsigned int id);
 unsigned int __cdecl GetArrayVariableIndex(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue);
 unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, int parentId, int name);
-VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name);
+VariableValue __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name);
 unsigned int __cdecl Scr_FindAllVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int *names);
 void __cdecl ClearVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name, VariableValue *value);
 unsigned int __cdecl GetArrayVariable(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue);
@@ -219,7 +504,7 @@ void __cdecl SetVariableEntityFieldValue(
 void __cdecl ClearVariableValue(scriptInstance_t inst, unsigned int id);
 void __cdecl SetVariableFieldValue(scriptInstance_t inst, unsigned int id, VariableValue *value);
 unsigned int __cdecl Scr_EvalVariableObject(scriptInstance_t inst, unsigned int id);
-VariableUnion __cdecl Scr_EvalVariableEntityField(scriptInstance_t inst, unsigned int entId, unsigned int fieldName);
+VariableValue __cdecl Scr_EvalVariableEntityField(scriptInstance_t inst, unsigned int entId, unsigned int fieldName);
 VariableValue __cdecl Scr_EvalVariableField(scriptInstance_t inst, unsigned int id);
 void __cdecl Scr_EvalSizeValue(scriptInstance_t inst, VariableValue *value);
 unsigned int __cdecl GetArraySize(scriptInstance_t inst, unsigned int id);
@@ -237,7 +522,7 @@ char __cdecl Scr_GetEntClassId(scriptInstance_t inst, unsigned int id);
 int __cdecl Scr_GetEntNum(scriptInstance_t inst, unsigned int id);
 void __cdecl Scr_ClearVector(scriptInstance_t inst, VariableValue *value);
 void __cdecl Scr_CastVector(scriptInstance_t inst, VariableValue *value);
-VariableUnion __cdecl Scr_EvalFieldObject(scriptInstance_t inst, unsigned int tempVariable, VariableValue *value);
+unsigned int __cdecl Scr_EvalFieldObject(scriptInstance_t inst, unsigned int tempVariable, VariableValue *value);
 void __cdecl Scr_UnmatchingTypesError(scriptInstance_t inst, VariableValue *value1, VariableValue *value2);
 void __cdecl Scr_EvalOr(scriptInstance_t inst, VariableValue *value1, VariableValue *value2);
 void __cdecl Scr_EvalExOr(scriptInstance_t inst, VariableValue *value1, VariableValue *value2);
@@ -308,3 +593,33 @@ int __cdecl Scr_MakeValuePrimitive(scriptInstance_t inst, unsigned int parentId)
 int __cdecl Scr_GetClassnumForCharId(scriptInstance_t inst, char charId);
 int __cdecl Scr_FindAllThreads(scriptInstance_t inst, unsigned int selfId, unsigned int *threads, unsigned int localId);
 unsigned int __cdecl Scr_FindAllEndons(scriptInstance_t inst, unsigned int threadId, unsigned int *names);
+
+static constexpr const char *var_typename[] =
+{
+  "undefined",
+  "object",
+  "string",
+  "localized string",
+  "vector",
+  "float",
+  "int",
+  "codepos",
+  "precodepos",
+  "function",
+  "stack",
+  "animation",
+  "developer codepos",
+  "thread",
+  "thread",
+  "thread",
+  "thread",
+  "struct",
+  "removed entity",
+  "entity",
+  "array",
+  "removed thread"
+};
+
+extern scrVarGlob_t gScrVarGlob[2];
+extern scrVarPub_t gScrVarPub[2];
+extern scrVarDebugPub_t *gScrVarDebugPub[2];

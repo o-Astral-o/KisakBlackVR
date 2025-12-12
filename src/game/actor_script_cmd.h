@@ -1,4 +1,12 @@
 #pragma once
+#include <clientscript/cscr_variable.h>
+#include "actor.h"
+
+enum DEBUGMAYMOVE_LIFT_ENUM : __int32
+{                                       // XREF: DEBUGMAYMOVE/r
+    DEBUGMAYMOVE_NOT_LIFTED = 0x0,
+    DEBUGMAYMOVE_LIFTED     = 0x1,
+};
 
 void __cdecl ActorCmd_StartCoverArrival(scr_entref_t entref);
 actor_s *__fastcall Actor_Get(scr_entref_t entref);

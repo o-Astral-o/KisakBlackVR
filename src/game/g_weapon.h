@@ -1,4 +1,7 @@
 #pragma once
+#include <bgame/bg_weapons.h>
+#include <bgame/bg_public.h>
+#include "game_public.h"
 
 void __cdecl Weapon_SetWeaponParamsWeapon(weaponParms *wp, unsigned int weapon);
 void __cdecl G_AntiLagRewindClientPos(int gameTime, AntilagClientStore *antilagStore);
@@ -20,8 +23,7 @@ gentity_s *__cdecl Weapon_GrenadeLauncher_Fire(
                 int grenType,
                 unsigned __int8 grenModel,
                 weaponParms *wp);
-gentity_s * Weapon_RocketLauncher_Fire@<eax>(
-                float a1@<ebp>,
+gentity_s *Weapon_RocketLauncher_Fire(
                 gentity_s *ent,
                 unsigned int weaponIndex,
                 float spread,
@@ -38,7 +40,7 @@ gentity_s *__cdecl Weapon_BombDrop_Fire(
                 const float *gunVel,
                 gentity_s *target,
                 const float *targetOffset);
-void    Weapon_Overheat_Update(__m128 amount@<xmm0>, gentity_s *ent);
+void    Weapon_Overheat_Update(gentity_s *ent);
 void __cdecl Weapon_Flamethrower_Update(gentity_s *ent, weaponParms *wp);
 void __cdecl Weapon_Flamethrower_Fire(gentity_s *ent, weaponParms *wp);
 void __cdecl Weapon_Napalm_Flame(gentity_s *ent, trace_t *trace, int count);

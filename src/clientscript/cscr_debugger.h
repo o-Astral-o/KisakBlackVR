@@ -1,40 +1,6 @@
 #pragma once
 #include "cscr_main.h"
 
-struct __declspec(align(4)) VariableStackBuffer // sizeof=0x10
-{
-    const char *pos;
-    unsigned __int16 size;
-    unsigned __int16 bufLen;
-    unsigned int localId;
-    unsigned __int8 time;
-    char buf[1];
-    // padding byte
-    // padding byte
-};
-
-union VariableUnion // sizeof=0x4
-{                                       // XREF: Scr_EmitAnimationInternal+8E/w
-                                        // RemoveRefToValue(scriptInstance_t,int,VariableUnion)+1D/r ...
-    int intValue;
-    float floatValue;
-    unsigned int stringValue;
-    const float *vectorValue;
-    const char *codePosValue;
-    unsigned int pointerValue;
-    VariableStackBuffer *stackValue;
-    unsigned int entityOffset;
-};
-
-struct VariableValue // sizeof=0x8
-{                                       // XREF: CompareArrayIndices+79/r
-                                        // CompareArrayIndices+11F/r ...
-    VariableUnion u;                    // XREF: Scr_EmitAnimationInternal+8E/w
-                                        // SetIntVariable+38/w ...
-    int type;                           // XREF: Scr_EmitAnimationInternal+84/w
-                                        // SetIntVariable+2E/w ...
-};
-
 struct scr_localVar_t // sizeof=0x8
 {                                       // XREF: scr_block_s/r
                                         // Scr_MergeChildBlocks/r ...
@@ -57,6 +23,14 @@ struct scr_block_s // sizeof=0x218
 union sval_u // sizeof=0x4
 {                                       // XREF: GetExpressionCount(sval_u)+D/r
                                         // Scr_GetBuiltin(scriptInstance_t,sval_u)+3/r ...
+    sval_u()
+    {
+        intValue = 0;
+    }
+    sval_u(int val)
+    {
+        intValue = val;
+    }
     unsigned __int8 type;
     unsigned int stringValue;
     unsigned int idValue;
@@ -132,6 +106,46 @@ struct Scr_Breakpoint // sizeof=0x1C
     Scr_Breakpoint *next;               // XREF: Scr_InitBreakpoints+31/w
                                         // Scr_InitBreakpoints:loc_8AF469/r
     Scr_Breakpoint **prev;
+};
+
+struct Scr_OpenScriptList : Scr_AbstractScriptList // sizeof=0xC
+{                                       // XREF: scrDebuggerGlob_t/r
+};
+
+struct UI_VerticalDivider : UI_Component // sizeof=0x0
+{                                       // XREF: scrDebuggerGlob_t/r
+};
+
+struct UI_ScrollPane : UI_Component // sizeof=0x0
+{                                       // XREF: scrDebuggerGlob_t/r
+};
+
+struct Scr_SourcePos_t // sizeof=0xC
+{                                       // XREF: scrDebuggerGlob_t/r
+                                        // ?Scr_GetCodePos@@YAXW4scriptInstance_t@@PBDIPADH@Z/r ...
+    unsigned int bufferIndex;           // XREF: Scr_ResumeBreakpoints+1D/w
+                                        // Scr_ScriptWindow::EnterCallInternal(scriptInstance_t)+179/r ...
+    int lineNum;                        // XREF: Scr_SetTempBreakpoint+86/r
+                                        // Scr_ScriptWindow::EnterCallInternal(scriptInstance_t)+185/r ...
+    unsigned int sourcePos;             // XREF: Scr_GetCodePos(scriptInstance_t,char const *,uint,char *,int)+96/r
+};
+
+struct Scr_OpcodeList_s // sizeof=0x8
+{                                       // XREF: Scr_OpcodeList_t/r
+    char *codePos;
+    Scr_OpcodeList_s *next;
+};
+
+struct Scr_WatchElementNode_s // sizeof=0x8
+{                                       // XREF: Scr_WatchElementNode_t/r
+    Scr_WatchElement_s *element;
+    Scr_WatchElementNode_s *next;
+};
+
+struct Scr_WatchElementDoubleNode_t // sizeof=0x8
+{
+    Scr_WatchElementNode_s *list;
+    Scr_WatchElementNode_s *removedList;
 };
 
 struct scrDebuggerGlob_t // sizeof=0x1C4
@@ -239,7 +253,7 @@ class UI_Component
 {
 };
 
-class UI_LinesComponent : UI_Component // sizeof=0x8
+class UI_LinesComponent : public UI_Component // sizeof=0x8
 {                                       // XREF: Scr_ScriptWindow/r
 public:
                                         // Scr_AbstractScriptList/r ...
@@ -307,7 +321,7 @@ public:
     void UpdateStack(scriptInstance_t inst);
 };
 
-class Scr_AbstractScriptList : UI_LinesComponent // sizeof=0xC
+class Scr_AbstractScriptList : public UI_LinesComponent // sizeof=0xC
 {
 public:
     Scr_ScriptWindow **scriptWindows;   // XREF: Scr_ToggleBreakpointRemote+17/r
@@ -324,7 +338,7 @@ struct Scr_AddFileInfo // sizeof=0xC
     int from;                           // XREF: Scr_ScriptList::Init(scriptInstance_t)+18D/w
 };
 
-class Scr_ScriptList : Scr_AbstractScriptList // sizeof=0xC
+class Scr_ScriptList : public Scr_AbstractScriptList // sizeof=0xC
 {                                       // XREF: scrDebuggerGlob_t/r
 public:
     void AddFile(
@@ -563,3 +577,7 @@ int __cdecl Scr_HitAssignmentBreakpoint(
                 int forceBreak);
 bool __cdecl Scr_IgnoreErrors(scriptInstance_t inst);
 int __cdecl CompareThreadIndices(unsigned int *arg1, unsigned int *arg2);
+
+
+extern scrDebuggerGlob_t gScrDebuggerGlob[2];
+extern scriptInstance_t gDebuggerInstance;

@@ -1,4 +1,31 @@
 #include "cscr_main.h"
+#include "cscr_variable.h"
+#include <universal/assertive.h>
+#include "cscr_compiler.h"
+#include <universal/q_shared.h>
+#include <string.h>
+#include "cscr_stringlist.h"
+#include "cscr_animtree.h"
+#include "cscr_parser.h"
+#include "cscr_vm.h"
+#include "cscr_tempmemory.h"
+#include "cscr_evaluate.h"
+#include <universal/com_memory.h>
+#include <qcommon/com_profilemapload.h>
+#include <qcommon/common.h>
+#include "cscr_parsetree.h"
+#include "cscr_yacc.h"
+
+#undef GetObject
+
+scrStringGlob_t gScrStringGlob[2];
+
+thread_local unsigned int gScriptHighRefMark;
+thread_local unsigned int gScriptIndentLevel;
+thread_local unsigned int gScriptHighIndentMark;
+
+int scrShowStrUsageStringCount;
+int oldNum;
 
 bool __cdecl Scr_IsInOpcodeMemory(scriptInstance_t inst, const char *pos)
 {
@@ -99,16 +126,16 @@ int __cdecl Scr_GetFunctionHandle(scriptInstance_t inst, const char *filename, c
 
 unsigned int __cdecl SL_TransferToCanonicalString(scriptInstance_t inst, unsigned int stringValue)
 {
-    if ( !stringValue
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp", 126, 0, "%s", "stringValue") )
+    if (!stringValue
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp", 126, 0, "%s", "stringValue"))
     {
         __debugbreak();
     }
     SL_TransferRefToUser(inst, stringValue, 2u);
-    if ( gScrCompilePub[inst].canonicalStrings[stringValue] )
+    if (gScrCompilePub[inst].canonicalStrings[stringValue])
         return gScrCompilePub[inst].canonicalStrings[stringValue];
-    gScrCompilePub[inst].canonicalStrings[stringValue] = ++MEMORY[0xA05AB84][58 * inst];
-    return (unsigned __int16)MEMORY[0xA05AB84][58 * inst];
+    gScrCompilePub[inst].canonicalStrings[stringValue] = ++gScrVarPub[inst].canonicalStrCount;
+    return gScrVarPub[inst].canonicalStrCount;
 }
 
 unsigned int __cdecl SL_GetCanonicalString(scriptInstance_t inst, char *str)
@@ -126,8 +153,10 @@ unsigned int __cdecl SL_GetCanonicalString(scriptInstance_t inst, char *str)
 void __cdecl Scr_BeginLoadScripts(scriptInstance_t inst, int user)
 {
     gScrVarPub[inst].varUsagePos = "<script compile variable>";
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260) = 0;
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8256) = 0;
+
+    gScriptIndentLevel = 0;
+    gScriptHighRefMark = 0;
+
     if ( gScrCompilePub[inst].script_loading
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
@@ -239,39 +268,39 @@ void __cdecl Scr_BeginLoadScripts(scriptInstance_t inst, int user)
 void __cdecl SL_BeginLoadScripts(scriptInstance_t inst)
 {
     memset((unsigned __int8 *)gScrCompilePub[inst].canonicalStrings, 0, sizeof(gScrCompilePub[inst].canonicalStrings));
-    MEMORY[0xA05AB84][58 * inst] = 0;
+    gScrVarPub[inst].canonicalStrCount = 0;
 }
 
 void __cdecl Scr_BeginLoadAnimTrees(scriptInstance_t inst, int user)
 {
-    MEMORY[0xA05ABE4][29 * inst] = (int)"<script compile variable>";
-    if ( MEMORY[0x9CF6648][1052 * inst]
+    gScrVarPub[inst].varUsagePos = "<script compile variable>";
+    if (gScrAnimPub[inst].animtree_loading
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    294,
-                    0,
-                    "%s",
-                    "!gScrAnimPub[inst].animtree_loading") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            294,
+            0,
+            "%s",
+            "!gScrAnimPub[inst].animtree_loading"))
     {
         __debugbreak();
     }
-    MEMORY[0x9CF6648][1052 * inst] = 1;
-    MEMORY[0x9CF663C][263 * inst + user] = 0;
-    MEMORY[0x9CF623C][263 * inst + 128 * user] = 0;
-    if ( gScrAnimPub[inst].animtrees
+    gScrAnimPub[inst].animtree_loading = 1;
+    gScrAnimPub[inst].xanim_num[user] = 0;
+    gScrAnimPub[inst].xanim_lookup[user][0].anims = 0;
+    if (gScrAnimPub[inst].animtrees
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    300,
-                    0,
-                    "%s",
-                    "!gScrAnimPub[inst].animtrees") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            300,
+            0,
+            "%s",
+            "!gScrAnimPub[inst].animtrees"))
     {
         __debugbreak();
     }
     gScrAnimPub[inst].animtrees = Scr_AllocArray(inst);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         ++gScrVarDebugPub[inst]->extRefCount[gScrAnimPub[inst].animtrees];
-    MEMORY[0x9CF6234][263 * inst] = 0;
+    gScrAnimPub[inst].animtree_node = 0;
     gScrCompilePub[inst].developer_statement = 0;
 }
 
@@ -308,10 +337,10 @@ int __cdecl Scr_ScanFile(scriptInstance_t inst, char *buf, int max_size)
 }
 
 unsigned int __cdecl Scr_LoadScriptInternal(
-                scriptInstance_t inst,
-                const char *filename,
-                PrecacheEntry *entries,
-                int entriesCount)
+    scriptInstance_t inst,
+    const char *filename,
+    PrecacheEntry *entries,
+    int entriesCount)
 {
     char *v5; // eax
     char *v6; // eax
@@ -333,33 +362,33 @@ unsigned int __cdecl Scr_LoadScriptInternal(
     sval_u parseData; // [esp+88h] [ebp-4h] BYREF
 
     oldStrCount = 0;
-    if ( !gScrCompilePub[inst].script_loading
+    if (!gScrCompilePub[inst].script_loading
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    360,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].script_loading") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            360,
+            0,
+            "%s",
+            "gScrCompilePub[inst].script_loading"))
     {
         __debugbreak();
     }
-    if ( strlen(filename) >= 0x40
+    if (strlen(filename) >= 0x40
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    361,
-                    0,
-                    "%s",
-                    "strlen( filename ) < MAX_QPATH") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            361,
+            0,
+            "%s",
+            "strlen( filename ) < MAX_QPATH"))
     {
         __debugbreak();
     }
     Hunk_CheckTempMemoryHighClear();
     name = Scr_CreateCanonicalFilename(inst, filename);
-    if ( FindVariable(inst, gScrCompilePub[inst].loadedscripts, name) )
+    if (FindVariable(inst, gScrCompilePub[inst].loadedscripts, name))
     {
         SL_RemoveRefToString(inst, name);
         filePosPtr = FindVariable(inst, gScrCompilePub[inst].scriptsPos, name);
-        if ( filePosPtr )
+        if (filePosPtr)
             return FindObject(inst, filePosPtr);
         else
             return 0;
@@ -369,36 +398,41 @@ unsigned int __cdecl Scr_LoadScriptInternal(
         scriptId = GetNewVariable(inst, gScrCompilePub[inst].loadedscripts, name);
         SL_RemoveRefToString(inst, name);
         formatExtString = "%s.gsc";
-        if ( inst == SCRIPTINSTANCE_CLIENT
-            && (!I_strncmp(filename, "clientscripts", 13) || !I_strncmp(filename, "character/clientscripts", 23)) )
+        if (inst == SCRIPTINSTANCE_CLIENT
+            && (!I_strncmp(filename, "clientscripts", 13) || !I_strncmp(filename, "character/clientscripts", 23)))
         {
             formatExtString = "%s.csc";
         }
         v5 = SL_ConvertToString(name, inst);
         Com_sprintf(extFilename, 0x40u, formatExtString, v5);
         oldSourceBuf = gScrParserPub[inst].sourceBuf;
-        if ( scrShowStrUsage->current.enabled )
-        {
-            ++dword_E13A0C[64 * inst];
-            oldStrCount = dword_E13A10[64 * inst + dword_E13A0C[64 * inst]];
-        }
+        if (scrShowStrUsage->current.enabled)
+            oldStrCount = gScrStringGlob[inst].stringsUsed[++gScrStringGlob[inst].indentLevel];
         ProfLoad_Begin("Scr_AddSourceBuffer");
         v9 = TempMallocAlignStrict(0);
         v6 = SL_ConvertToString(name, inst);
         sourceBuffer = Scr_AddSourceBuffer(inst, v6, extFilename, v9, 1);
         ProfLoad_End();
-        if ( sourceBuffer )
+        if (sourceBuffer)
         {
-            *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260) = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260)
-                                                                                                                                                                                            + 1;
-            if ( *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260) > *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8252) )
-                *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8252) = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260);
-            if ( scrShowVarUseage->current.enabled )
+            //NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel = NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel + 1;
+            gScriptIndentLevel++;
+
+            //if (NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel > NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptHighIndentMark)
+            //    NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptHighIndentMark = NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel;
+
+            if (gScriptIndentLevel > gScriptHighIndentMark)
+            {
+                gScriptHighIndentMark = gScriptIndentLevel;
+            }
+
+            if (scrShowVarUseage->current.enabled)
                 Com_Printf(
                     25,
                     "Entering file %s (%i)\n",
                     filename,
-                    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260));
+                    gScriptIndentLevel);
+
             oldAnimTreeNames = gScrAnimPub[inst].animTreeNames;
             gScrAnimPub[inst].animTreeNames = 0;
             gScrCompilePub[inst].far_function_count = 0;
@@ -415,27 +449,30 @@ unsigned int __cdecl Scr_LoadScriptInternal(
             ProfLoad_Begin("ScriptCompile");
             ScriptCompile(inst, parseData, filePosId, fileCountId, scriptId, entries, entriesCount);
             ProfLoad_End();
-            if ( scrShowStrUsage->current.enabled )
+            if (scrShowStrUsage->current.enabled)
             {
                 Com_Printf(
                     0,
                     "---Script File (%i) : %s -> %i\n",
-                    dword_E13A0C[64 * inst],
+                    gScrStringGlob[inst].indentLevel,
                     filename,
-                    dword_E13A10[64 * inst + dword_E13A0C[64 * inst]] - oldStrCount);
-                scrShowStrUsageStringCount += dword_E13A10[64 * inst + dword_E13A0C[64 * inst]--] - oldStrCount;
-                if ( !dword_E13A0C[64 * inst] )
+                    gScrStringGlob[inst].stringsUsed[gScrStringGlob[inst].indentLevel] - oldStrCount);
+                scrShowStrUsageStringCount += gScrStringGlob[inst].stringsUsed[gScrStringGlob[inst].indentLevel--] - oldStrCount;
+                if (!gScrStringGlob[inst].indentLevel)
                     Com_Printf(0, "******Current compilation string total: %i\n", scrShowStrUsageStringCount);
             }
-            if ( gScrVarPub[inst].numScriptValues > *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer
-                                                                                                                    + _tls_index)
-                                                                                                                + 8256) )
-                *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8256) = gScrVarPub[inst].numScriptValues;
-            if ( scrShowVarUseage->current.enabled )
+            //if (gScrVarPub[inst].numScriptValues > NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptHighRefMark)
+            //    NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptHighRefMark = gScrVarPub[inst].numScriptValues;
+            if (gScrVarPub[inst].numScriptValues > gScriptHighRefMark)
+            {
+                gScriptHighRefMark = gScrVarPub[inst].numScriptValues;
+            }
+            if (scrShowVarUseage->current.enabled)
                 Com_Printf(
                     25,
                     "---\nScript File (%i) : %s\nCur var useage %i\nChange %i\n---\n",
-                    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260),
+                    //NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel,
+                    gScriptIndentLevel,
                     filename,
                     gScrVarPub[inst].numScriptValues,
                     gScrVarPub[inst].numScriptValues - oldNum);
@@ -444,14 +481,15 @@ unsigned int __cdecl Scr_LoadScriptInternal(
             gScrParserPub[inst].sourceBuf = oldSourceBuf;
             gScrAnimPub[inst].animTreeNames = oldAnimTreeNames;
             Hunk_CheckTempMemoryHighClear();
-            if ( scrShowVarUseage->current.enabled )
+            if (scrShowVarUseage->current.enabled)
                 Com_Printf(
                     19,
                     "Leaving file %s (%i)\n",
                     filename,
-                    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260));
-            *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260) = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8260)
-                                                                                                                                                                                            - 1;
+                    //NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel);
+                    gScriptIndentLevel);
+            //NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel = NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index]->gScriptIndentLevel - 1;
+            gScriptIndentLevel = gScriptIndentLevel - 1;
             return filePosId;
         }
         else
@@ -460,6 +498,7 @@ unsigned int __cdecl Scr_LoadScriptInternal(
         }
     }
 }
+
 
 unsigned int __cdecl Scr_LoadScript(scriptInstance_t inst, char *filename)
 {
@@ -470,117 +509,117 @@ unsigned int __cdecl Scr_LoadScript(scriptInstance_t inst, char *filename)
 
 void __cdecl Scr_PostCompileScripts(scriptInstance_t inst)
 {
-    if ( (char *)gScrCompilePub[inst].programLen != &TempMallocAlignStrict(0)[-MEMORY[0xA05ABC8][29 * inst]]
+    if (gScrCompilePub[inst].programLen != TempMallocAlignStrict(0) - gScrVarPub[inst].programBuffer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    489,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].programLen == static_cast< uint >( TempMalloc( 0 ) - gScrVarPub[inst].programBuffer )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            489,
+            0,
+            "%s",
+            "gScrCompilePub[inst].programLen == static_cast< uint >( TempMalloc( 0 ) - gScrVarPub[inst].programBuffer )"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0x9CF6238][263 * inst] )
+    if (gScrAnimPub[inst].animTreeNames)
     {
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                        490,
-                        0,
-                        "%s",
-                        "!gScrAnimPub[inst].animTreeNames") )
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            490,
+            0,
+            "%s",
+            "!gScrAnimPub[inst].animTreeNames"))
             __debugbreak();
     }
 }
 
 void __cdecl Scr_EndLoadScripts(scriptInstance_t inst)
 {
-    if ( scrShowVarUseage->current.enabled )
+    if (scrShowVarUseage->current.enabled)
         Com_Printf(
             25,
             "---\nHigh ref count : %i\nDeepest include level %i\n",
-            *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8256),
-            *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8252));
+            gScriptHighRefMark,
+            gScriptHighIndentMark);
     Scr_EndLoadEvaluate(inst);
-    //BLOPS_NULLSUB();
+    //BG_EvalVehicleName();
     SL_ShutdownSystem(inst, 2u);
-    if ( com_sv_running->current.enabled )
+    if (com_sv_running->current.enabled)
         Scr_InitDebugger(inst);
     gScrCompilePub[inst].script_loading = 0;
-    if ( !gScrCompilePub[inst].loadedscripts
+    if (!gScrCompilePub[inst].loadedscripts
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    523,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].loadedscripts") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            523,
+            0,
+            "%s",
+            "gScrCompilePub[inst].loadedscripts"))
     {
         __debugbreak();
     }
     ClearObject(inst, gScrCompilePub[inst].loadedscripts);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         --gScrVarDebugPub[inst]->extRefCount[gScrCompilePub[inst].loadedscripts];
     RemoveRefToObject(inst, gScrCompilePub[inst].loadedscripts);
     gScrCompilePub[inst].loadedscripts = 0;
 
-    if ( !gScrCompilePub[inst].scriptsPos
+    if (!gScrCompilePub[inst].scriptsPos
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    537,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].scriptsPos") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            537,
+            0,
+            "%s",
+            "gScrCompilePub[inst].scriptsPos"))
     {
         __debugbreak();
     }
     ClearObject(inst, gScrCompilePub[inst].scriptsPos);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         --gScrVarDebugPub[inst]->extRefCount[gScrCompilePub[inst].scriptsPos];
     RemoveRefToObject(inst, gScrCompilePub[inst].scriptsPos);
     gScrCompilePub[inst].scriptsPos = 0;
 
-    if ( !gScrCompilePub[inst].scriptsCount
+    if (!gScrCompilePub[inst].scriptsCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    547,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].scriptsCount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            547,
+            0,
+            "%s",
+            "gScrCompilePub[inst].scriptsCount"))
     {
         __debugbreak();
     }
     ClearObject(inst, gScrCompilePub[inst].scriptsCount);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         --gScrVarDebugPub[inst]->extRefCount[gScrCompilePub[inst].scriptsCount];
     RemoveRefToObject(inst, gScrCompilePub[inst].scriptsCount);
     gScrCompilePub[inst].scriptsCount = 0;
 
-    if ( !gScrCompilePub[inst].builtinFunc
+    if (!gScrCompilePub[inst].builtinFunc
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    556,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].builtinFunc") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            556,
+            0,
+            "%s",
+            "gScrCompilePub[inst].builtinFunc"))
     {
         __debugbreak();
     }
     ClearObject(inst, gScrCompilePub[inst].builtinFunc);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         --gScrVarDebugPub[inst]->extRefCount[gScrCompilePub[inst].builtinFunc];
     RemoveRefToObject(inst, gScrCompilePub[inst].builtinFunc);
     gScrCompilePub[inst].builtinFunc = 0;
-    if ( !gScrCompilePub[inst].builtinMeth
+    if (!gScrCompilePub[inst].builtinMeth
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    565,
-                    0,
-                    "%s",
-                    "gScrCompilePub[inst].builtinMeth") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            565,
+            0,
+            "%s",
+            "gScrCompilePub[inst].builtinMeth"))
     {
         __debugbreak();
     }
     ClearObject(inst, gScrCompilePub[inst].builtinMeth);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         --gScrVarDebugPub[inst]->extRefCount[gScrCompilePub[inst].builtinMeth];
     RemoveRefToObject(inst, gScrCompilePub[inst].builtinMeth);
     gScrCompilePub[inst].builtinMeth = 0;
@@ -590,59 +629,59 @@ void __cdecl Scr_PrecacheAnimTrees(scriptInstance_t inst, void *(__cdecl *Alloc)
 {
     unsigned int i; // [esp+0h] [ebp-4h]
 
-    for ( i = 1; i <= MEMORY[0x9CF663C][263 * inst + user]; ++i )
+    for (i = 1; i <= gScrAnimPub[inst].xanim_num[user]; ++i)
         Scr_LoadAnimTreeAtIndex(inst, i, Alloc, user, modChecksum);
 }
 
 void __cdecl Scr_EndLoadAnimTrees(scriptInstance_t inst)
 {
-    if ( !gScrAnimPub[inst].animtrees
+    if (!gScrAnimPub[inst].animtrees
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    589,
-                    0,
-                    "%s",
-                    "gScrAnimPub[inst].animtrees") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            589,
+            0,
+            "%s",
+            "gScrAnimPub[inst].animtrees"))
     {
         __debugbreak();
     }
     ClearObject(inst, gScrAnimPub[inst].animtrees);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
         --gScrVarDebugPub[inst]->extRefCount[gScrAnimPub[inst].animtrees];
     RemoveRefToObject(inst, gScrAnimPub[inst].animtrees);
     gScrAnimPub[inst].animtrees = 0;
-    if ( MEMORY[0x9CF6234][263 * inst] )
-        RemoveRefToObject(inst, MEMORY[0x9CF6234][263 * inst]);
+    if (gScrAnimPub[inst].animtree_node)
+        RemoveRefToObject(inst, gScrAnimPub[inst].animtree_node);
     SL_ShutdownSystem(inst, 2u);
-    if ( MEMORY[0xA05ABC8][29 * inst] && !MEMORY[0xA05ABCC][29 * inst] )
-        MEMORY[0xA05ABCC][29 * inst] = (int)TempMallocAlignStrict(0);
-    MEMORY[0x9CF6648][1052 * inst] = 0;
-    MEMORY[0xA05ABE4][29 * inst] = 0;
+    if (gScrVarPub[inst].programBuffer && !gScrVarPub[inst].endScriptBuffer)
+        gScrVarPub[inst].endScriptBuffer = TempMallocAlignStrict(0);
+    gScrAnimPub[inst].animtree_loading = 0;
+    gScrVarPub[inst].varUsagePos = 0;
 }
 
 void __cdecl Scr_FreeScripts(scriptInstance_t inst, unsigned __int8 sys)
 {
-    int *v2; // ecx
+    unsigned int *xanim_num; // ecx
 
-    if ( sys != 1
+    if (sys != 1
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
-                    616,
-                    0,
-                    "%s",
-                    "sys == SCR_SYS_GAME") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_main.cpp",
+            616,
+            0,
+            "%s",
+            "sys == SCR_SYS_GAME"))
     {
         __debugbreak();
     }
     Hunk_CheckTempMemoryClear();
-    if ( gScrCompilePub[inst].script_loading )
+    if (gScrCompilePub[inst].script_loading)
     {
         gScrCompilePub[inst].script_loading = 0;
         Scr_EndLoadScripts(inst);
     }
-    if ( MEMORY[0x9CF6648][1052 * inst] )
+    if (gScrAnimPub[inst].animtree_loading)
     {
-        MEMORY[0x9CF6648][1052 * inst] = 0;
+        gScrAnimPub[inst].animtree_loading = 0;
         Scr_EndLoadAnimTrees(inst);
     }
     Scr_ShutdownDebugger(inst);
@@ -650,18 +689,18 @@ void __cdecl Scr_FreeScripts(scriptInstance_t inst, unsigned __int8 sys)
     Scr_ShutdownEvaluate(inst);
     SL_ShutdownSystem(inst, 1u);
     Scr_ShutdownOpcodeLookup(inst);
-    if ( MEMORY[0xA05ABC4][29 * inst] )
+    if (gScrVarPub[inst].programHunkUser)
     {
-        Hunk_UserDestroy((HunkUser *)MEMORY[0xA05ABC4][29 * inst]);
-        MEMORY[0xA05ABC4][29 * inst] = 0;
+        Hunk_UserDestroy(gScrVarPub[inst].programHunkUser);
+        gScrVarPub[inst].programHunkUser = 0;
     }
-    MEMORY[0xA05ABC8][29 * inst] = 0;
+    gScrVarPub[inst].programBuffer = 0;
     gScrCompilePub[inst].programLen = 0;
-    MEMORY[0xA05ABCC][29 * inst] = 0;
-    MEMORY[0xA05ABB8][29 * inst] = 0;
-    v2 = &MEMORY[0x9CF663C][263 * inst];
-    *v2 = 0;
-    v2[1] = 0;
+    gScrVarPub[inst].endScriptBuffer = 0;
+    gScrVarPub[inst].checksum = 0;
+    xanim_num = gScrAnimPub[inst].xanim_num;
+    *xanim_num = 0;
+    xanim_num[1] = 0;
 }
 
 void __cdecl Scr_GetGenericField(

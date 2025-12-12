@@ -1,4 +1,15 @@
 #include "cscr_animtree.h"
+#include <universal/q_shared.h>
+#include <universal/q_parse.h>
+#include "cscr_parser.h"
+#include "cscr_variable.h"
+
+scrAnimGlob_t gScrAnimGlob[2];
+scrAnimPub_t gScrAnimPub[2];
+
+static int iFoo_0;
+static int iFoo_1;
+static int iFoo_2;
 
 XExpr::MathTypes __cdecl EqualTypeSameResult(const ParseValue *params, int iNumParams, scriptInstance_t inst)
 {
@@ -9,13 +20,13 @@ XExpr::MathTypes __cdecl EqualTypeSameResult(const ParseValue *params, int iNumP
         if ( params->exprType == params[1].exprType )
             return params->exprType;
         else
-            return 3;
+            return XExpr::MAX_MATH_TYPES;
     }
     else
     {
         v3 = va("Cannot determine type due to parameter number. Expected %i, received %i.", 2, iNumParams);
         AnimTreeCompileError(inst, v3);
-        return 3;
+        return XExpr::MAX_MATH_TYPES;
     }
 }
 
@@ -36,7 +47,7 @@ XExpr::MathTypes __cdecl EqualTypeAllowScalar(const ParseValue *params, int iNum
     {
         if ( params->exprType != params[1].exprType && params->exprType && params[1].exprType )
         {
-            return 3;
+            return XExpr::MAX_MATH_TYPES;
         }
         else if ( params->exprType == params[1].exprType )
         {
@@ -55,7 +66,7 @@ XExpr::MathTypes __cdecl EqualTypeAllowScalar(const ParseValue *params, int iNum
     {
         v3 = va("Cannot determine type due to parameter number. Expected %i, received %i.", 2, iNumParams);
         AnimTreeCompileError(inst, v3);
-        return 3;
+        return XExpr::MAX_MATH_TYPES;
     }
 }
 
@@ -133,9 +144,9 @@ int __cdecl Vec3ToVec3(const ParseValue *params, int iNumParams, scriptInstance_
 
     if ( iNumParams == 2 )
     {
-        if ( params->exprType == VECTOR_3D )
+        if ( params->exprType == XExpr::VECTOR_3D )
         {
-            if ( params[1].exprType == VECTOR_3D )
+            if ( params[1].exprType == XExpr::VECTOR_3D )
             {
                 return 2;
             }
@@ -161,13 +172,13 @@ int __cdecl Vec3ToVec3(const ParseValue *params, int iNumParams, scriptInstance_
 
 void __cdecl SetAnimCheck(int bAnimCheck, scriptInstance_t inst)
 {
-    dword_9CF4E20[259 * inst] = bAnimCheck;
+    gScrAnimGlob[inst].bAnimCheck = bAnimCheck;
 }
 
 void __cdecl Scr_EmitAnimation(scriptInstance_t inst, char *pos, unsigned int animName, unsigned int sourcePos)
 {
-    if ( MEMORY[0x9CF6238][263 * inst] )
-        Scr_EmitAnimationInternal(inst, pos, animName, MEMORY[0x9CF6238][263 * inst]);
+    if (gScrAnimPub[inst].animTreeNames)
+        Scr_EmitAnimationInternal(inst, pos, animName, gScrAnimPub[inst].animTreeNames);
     else
         CompileError(inst, sourcePos, "#using_animtree was not specified");
 }

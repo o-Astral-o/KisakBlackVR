@@ -11,17 +11,6 @@ struct GfxScaledPlacement;
 struct refdef_s;
 struct localEntity_s;
 
-enum itemType_t : __int32
-{                                       // XREF: gitem_s/r
-    IT_BAD    = 0x0,
-    IT_WEAPON = 0x1,
-};
-
-struct gitem_s // sizeof=0x4
-{                                       // XREF: gitem_t/r
-    itemType_t giType;
-};
-
 struct weaponInfo_s // sizeof=0x24
 {                                       // XREF: weaponInfo_t/r
     XModel *handModel;
@@ -32,7 +21,7 @@ struct weaponInfo_s // sizeof=0x24
     // padding byte
     // padding byte
     int registered;
-    const gitem_s *item;
+    const struct gitem_s *item;
     const char *translatedDisplayName;
     const char *translatedModename;
     const char *translatedAIOverlayDescription;

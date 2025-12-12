@@ -1,4 +1,30 @@
 #pragma once
+#include "sentient.h"
+
+enum ThreatDebugStringCategory : __int32
+{                                       // XREF: DebugSetThreatString/r
+                                        // DebugSetThreatStringFromString/r
+    TDS_TOTAL_THREAT     = 0x0,
+    TDS_FLASHED          = 0x1,
+    TDS_SUPPRESSED       = 0x2,
+    TDS_THREATBIAS       = 0x3,
+    TDS_THREATBIAS_GROUP = 0x4,
+    TDS_ATTACKER_COUNT   = 0x5,
+    TDS_CUR_ENEMY_BONUS  = 0x6,
+    TDS_AWARENESS        = 0x7,
+    TDS_DIST_THREAT      = 0x8,
+    TDS_SCARINESS_THREAT = 0x9,
+    NUM_TDS              = 0xA,
+};
+
+struct potential_threat_t // sizeof=0xC
+{                                       // XREF: actor_s/r
+    bool isEnabled;
+    // padding byte
+    // padding byte
+    // padding byte
+    float direction[2];
+};
 
 bool __fastcall Actor_CheckIgnore(sentient_s *self, sentient_s *enemy);
 void __cdecl Actor_InitThreatBiasGroups();

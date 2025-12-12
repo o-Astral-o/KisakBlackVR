@@ -1,12 +1,66 @@
 #pragma once
 
 #include "cscr_main.h"
+#include "cscr_variable.h"
 
 struct XAnim_s;
 
 struct scr_animtree_t // sizeof=0x4
 {                                                                             // XREF: animScriptData_t/r
     XAnim_s *anims;                                         // XREF: BG_FindAnimTree+1A/w
+};
+
+struct __declspec(align(4)) scr_animscript_t // sizeof=0x8
+{                                       // XREF: actor_s/r
+                                        // AnimScriptList/r ...
+    int func;
+    unsigned __int16 name;
+    // padding byte
+    // padding byte
+};
+
+struct scrAnimGlob_t // sizeof=0x40C
+{
+    const char *start;
+    const char *pos;
+    unsigned int using_xanim_lookup[2][128];
+    int bAnimCheck;
+};
+
+struct __declspec(align(4)) scrAnimPub_t // sizeof=0x41C
+{                                       // XREF: .data:scrAnimPub_t * gScrAnimPub/r
+    unsigned int animtrees;             // XREF: Scr_UsingTreeInternal+99/r
+                                        // Scr_UsingTreeInternal+C6/r ...
+    unsigned int animtree_node;         // XREF: Scr_LoadAnimTreeAtIndex(scriptInstance_t,uint,void * (*)(int),int,bool)+284/r
+                                        // Scr_LoadAnimTreeAtIndex(scriptInstance_t,uint,void * (*)(int),int,bool)+2C8/w ...
+    unsigned int animTreeNames;         // XREF: Scr_EmitAnimation(scriptInstance_t,char *,uint,uint)+C/r
+                                        // Scr_EmitAnimation(scriptInstance_t,char *,uint,uint)+39/r ...
+    scr_animtree_t xanim_lookup[2][128];
+                                        // XREF: GScr_GetAnimTreesLoaded+3D/r
+                                        // GScr_FindAnimByName+D0/r ...
+    unsigned int xanim_num[2];          // XREF: GScr_GetAnimTreesLoaded+31/r
+                                        // GScr_FindAnimByName+BE/r ...
+    unsigned int animTreeIndex;         // XREF: Scr_UsingTree(scriptInstance_t,char const *,uint)+6F/o
+                                        // Scr_ClientUsingTree(scriptInstance_t,char const *)+23/o ...
+    bool animtree_loading;              // XREF: Scr_UsingTreeInternal+F/r
+                                        // Scr_LoadAnimTreeAtIndex(scriptInstance_t,uint,void * (*)(int),int,bool)+33/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct ScriptTokenizer // sizeof=0x2808
+{                                       // XREF: AnimTreeParseInternal/r
+    scriptInstance_t inst;              // XREF: AnimTreeParseInternal+10/w
+    int m_iNumInStack;                  // XREF: AnimTreeParseInternal+16/w
+    char m_stack[40][256];
+
+    char *__thiscall PopToken();
+    void __thiscall  PushNextToken();
+    char *__thiscall GetAndRemoveToken();
+    void __thiscall  ParseIntoTokens(char *strString);
+    char *__thiscall PeekToken();
+    bool __thiscall  IsAtEnd();
 };
 
 
@@ -28,13 +82,8 @@ void __cdecl SetIntVariable(scriptInstance_t inst, unsigned int theArray, int in
 void __cdecl SetPtrVariable(scriptInstance_t inst, unsigned int theArray, unsigned int arrayData, char *strVarName);
 unsigned int __cdecl StoreValueInList(scriptInstance_t inst, unsigned int valueDataArray, unsigned int valueData);
 unsigned int __cdecl ParseValueFromValueList(ScriptTokenizer *tokenizer, scriptInstance_t inst, unsigned int valueName);
-char *__thiscall ScriptTokenizer::PopToken(ScriptTokenizer *this);
-void __thiscall ScriptTokenizer::PushNextToken(ScriptTokenizer *this);
-char *__thiscall ScriptTokenizer::GetAndRemoveToken(ScriptTokenizer *this);
-void __thiscall ScriptTokenizer::ParseIntoTokens(ScriptTokenizer *this, char *strString);
 void __cdecl SetFloatVariable(scriptInstance_t inst, unsigned int theArray, float floatValue, char *strVarName);
 int __cdecl DetermineValueType(ScriptTokenizer *tokenizer);
-char *__thiscall ScriptTokenizer::PeekToken(ScriptTokenizer *this);
 int __cdecl Scr_GetAnimsIndex(const XAnim_s *anims, scriptInstance_t inst);
 XAnim_s *__cdecl Scr_GetClientAnims(unsigned int index, scriptInstance_t inst);
 XAnim_s *__cdecl Scr_GetAnims(unsigned int index, scriptInstance_t inst);
@@ -75,7 +124,6 @@ char __cdecl AnimTreeParseInternal(
                 bool bIncludeParent,
                 bool bLoop,
                 bool bComplete);
-bool __thiscall ScriptTokenizer::IsAtEnd(ScriptTokenizer *this);
 char __cdecl ParseNode(
                 ScriptTokenizer *tokenizer,
                 scriptInstance_t inst,
@@ -164,3 +212,6 @@ void __cdecl Scr_FindAnim(
                 int user);
 void __cdecl Scr_ShutdownAnimTrees(int user);
 void __cdecl RemoveRefToValue(scriptInstance_t inst, VariableValue *value);
+
+extern scrAnimGlob_t gScrAnimGlob[2];
+extern scrAnimPub_t gScrAnimPub[2];

@@ -2,6 +2,16 @@
 
 #include "cscr_main.h"
 
+struct scrStringDebugGlob_t // sizeof=0x40008
+{                                       // XREF: .data:scrStringDebugGlob_t * gScrStringDebugGlobBuff/r
+                                        // scrStringDebugGlobArray_t/r
+    //volatile int refCount[65536];
+    volatile unsigned int refCount[65536];
+    //volatile int totalRefCount;
+    volatile unsigned int totalRefCount;
+    int ignoreLeaks;
+};
+
 char *__cdecl SL_ConvertToString(unsigned int stringValue, scriptInstance_t inst);
 RefString *__cdecl GetRefString(scriptInstance_t inst, unsigned int stringValue);
 char *__cdecl SL_DebugConvertToString(unsigned int stringValue, scriptInstance_t inst);
@@ -52,7 +62,7 @@ void __cdecl SL_FreeString(scriptInstance_t inst, unsigned int stringValue, RefS
 void __cdecl Scr_SetStringLiveUpdateSafe(unsigned __int16 *to, char *value, scriptInstance_t inst);
 void __cdecl Scr_SetString(unsigned __int16 *to, unsigned int from, scriptInstance_t inst);
 void __cdecl Scr_SetStringFromCharString(unsigned __int16 *to, char *from, scriptInstance_t inst);
-unsigned int __cdecl Scr_AllocString(char *s, int sys, scriptInstance_t inst);
+unsigned int __cdecl Scr_AllocString(const char *s, int sys, scriptInstance_t inst);
 unsigned int __cdecl SL_GetStringForFloat(float f, scriptInstance_t inst);
 unsigned int __cdecl SL_GetStringForInt(scriptInstance_t inst, int i);
 unsigned int __cdecl SL_GetStringForVector(scriptInstance_t inst, const float *v);
@@ -61,3 +71,6 @@ void __cdecl Scr_ShutdownGameStrings(scriptInstance_t inst);
 void __cdecl SL_TransferSystem(unsigned int from, unsigned int to, scriptInstance_t inst);
 unsigned int __cdecl Scr_CreateCanonicalFilename(scriptInstance_t inst, const char *filename);
 void __cdecl CreateCanonicalFilename(char *newFilename, const char *filename, int count);
+
+
+extern scrStringDebugGlob_t *gScrStringDebugGlob[2];

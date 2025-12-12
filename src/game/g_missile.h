@@ -1,4 +1,7 @@
 #pragma once
+#include <qcommon/cm_trace.h>
+#include <bgame/bg_weapons.h>
+#include <qcommon/common.h>
 
 void __cdecl G_RegisterMissileDvars();
 void __cdecl G_RegisterMissileDebugDvars();
@@ -12,7 +15,7 @@ void __cdecl G_MissileTrace(
                 unsigned int weapon);
 void __cdecl G_TimedObjectThink(gentity_s *ent);
 // local variable allocation has failed, the output may be wrong!
-void    G_ExplodeMissile(cStaticModel_s *a1@<ebp>, gentity_s *ent);
+void    G_ExplodeMissile(gentity_s *ent);
 int __cdecl ForcedDud(gentity_s *ent);
 int __cdecl GetSplashMethodOfDeath(gentity_s *ent);
 void __cdecl G_UnlinkPlayerToRocket(gentity_s *ent);
@@ -26,11 +29,10 @@ void __cdecl Scr_MissileCreateRepulsorOrigin();
 void __cdecl Scr_MissileDeleteAttractor();
 void __cdecl G_MakeMissilePickupItem(gentity_s *ent);
 void __cdecl G_RunMissileInternal(gentity_s *ent);
-// local variable allocation has failed, the output may be wrong!
-void    MissileImpact(int a1@<ebp>, gentity_s *ent, trace_t *trace, float *dir, float *endpos);
+void    MissileImpact(gentity_s *ent, trace_t *trace, float *dir, float *endpos);
 bool __cdecl CheckCrumpleMissile(gentity_s *ent, trace_t *trace);
 // local variable allocation has failed, the output may be wrong!
-bool    BounceMissile@<eax>(cStaticModel_s *a1@<ebp>, gentity_s *ent, trace_t *trace);
+bool    BounceMissile(gentity_s *ent, trace_t *trace);
 void __cdecl MissileLandAngles(gentity_s *ent, trace_t *trace, float *vAngles, int bForceAlign, int bKeepSpeed);
 void __cdecl MissileLandAnglesFlat(gentity_s *ent, trace_t *trace, float *angles);
 void __cdecl MissileLandAnglesFlatMaintainingDirection(gentity_s *ent, trace_t *trace, float *angles);
@@ -83,7 +85,7 @@ void __cdecl Missile_PenetrateGlass(
 void __cdecl DrawMissileDebug(float *start, float *end);
 void __cdecl RunMissile_Destabilize(gentity_s *missile);
 double __cdecl RunMissile_GetPerturbation(float destabilizationCurvatureMax);
-void    Missile_ApplyAttractorsRepulsors(float a1@<ebp>, gentity_s *missile);
+void    Missile_ApplyAttractorsRepulsors(gentity_s *missile);
 void __cdecl RunMissile_CreateWaterSplash(const gentity_s *missile, const float *hitPos, const trace_t *trace);
 void __cdecl RunMissile_BroadcastActorEvents(gentity_s *missile);
 void __cdecl MissileTrajectory(gentity_s *ent, float *result);
@@ -125,7 +127,7 @@ double __cdecl JavelinMaxDPS(gentity_s *ent);
 void __cdecl VecToQuat(const float *vec, float *quat);
 double __cdecl JavelinClimbCeiling(gentity_s *ent);
 bool __cdecl JavelinClimbEnd(gentity_s *ent, const float *targetPos);
-char    JavelinClimbExceededAngle@<al>(float a1@<ebp>, gentity_s *ent, const float *targetPos);
+char    JavelinClimbExceededAngle(gentity_s *ent, const float *targetPos);
 char __cdecl JavelinClimbWithinDistance(gentity_s *ent, const float *targetPos);
 bool __cdecl JavelinClimbIsAboveCeiling(gentity_s *ent, const float *targetPos);
 bool __cdecl CheckForMissileClientControlledDetonation(gentity_s *ent);

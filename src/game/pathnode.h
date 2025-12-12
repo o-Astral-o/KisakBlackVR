@@ -5,6 +5,7 @@
 #include <qcommon/common.h>
 #include "teams.h"
 #include "actor_badplace.h"
+#include <qcommon/radiant_remote.h>
 
 enum nearestNodeHeightCheck : __int32
 {                                       // XREF: ?Path_NearestNode@@YAPAUpathnode_t@@QBMPAUpathsort_t@@HMPAHHW4nearestNodeHeightCheck@@@Z/r
@@ -173,6 +174,48 @@ struct pathnode_tree_t // sizeof=0x10
     int axis;
     float dist;
     pathnode_tree_info_t u;
+};
+
+struct path_trim_t // sizeof=0x8
+{                                       // XREF: actor_s/r
+    int iIndex;
+    int iDelta;
+};
+
+struct pathpoint_t // sizeof=0x1C
+{                                       // XREF: path_t/r
+    float vOrigPoint[3];
+    float fDir2D[2];
+    float fOrigLength;
+    int iNodeNum;
+};
+
+struct path_t // sizeof=0x3E8
+{                                       // XREF: .data:pathBackup/r
+    pathpoint_t pts[32];
+    __int16 wPathLen;
+    __int16 wOrigPathLen;
+    __int16 wDodgeCount;
+    __int16 wNegotiationStartNode;
+    __int16 lookaheadNextNode;
+    __int16 wDodgeEntity;
+    float vFinalGoal[3];
+    float lookaheadDir[3];
+    float forwardLookaheadDir2D[2];
+    float fLookaheadDist;
+    float fLookaheadAmount;
+    float fLookaheadDistToNextNode;
+    int minLookAheadNodes;
+    int flags;
+    int iPathTime;
+    team_t eTeam;
+    float fCurrLength;
+    float vCurrPoint[3];
+    int iPathEndTime;
+    float pathEndAnimDistSq;
+    int pathEndAnimNotified;
+    __int16 numIncreases;
+    __int16 numReductions;
 };
 
 void __cdecl Path_GetType(pathnode_t *node);

@@ -1,6 +1,7 @@
 #pragma once
 #include <xanim/dobj.h>
 #include <xanim/xanim.h>
+#include "r_scene.h"
 
 struct __declspec(align(2)) GfxModelSurfaceInfo // sizeof=0xC
 {                                       // XREF: GfxModelSkinnedSurface/r
@@ -44,15 +45,12 @@ void __cdecl R_SkinSceneDObj(
                 const DObj *obj,
                 DObjAnimMat *boneMatrix,
                 int waitForCullState);
-unsigned int    R_SkinSceneDObjModels@<eax>(
-                int a1@<ebp>,
+unsigned int    R_SkinSceneDObjModels(
                 GfxSceneEntity *sceneEnt,
                 const DObj *obj,
                 DObjAnimMat *boneMatrix);
 int __cdecl R_AllocSkinnedCachedVerts(int vertCount, bool highPriority);
-// local variable allocation has failed, the output may be wrong!
-int    R_PreSkinXSurface@<eax>(
-                GfxModelRigidSurface *a1@<ebp>,
+int    R_PreSkinXSurface(
                 const DObj *obj,
                 XSurface *surf,
                 const GfxModelSurfaceInfo *surfaceInfo,

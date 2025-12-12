@@ -13,6 +13,8 @@ struct EntHandle // sizeof=0x4
     bool isDefined();
     gentity_s *ent();
 
+    int entnum();
+
     unsigned __int16 number;
     unsigned __int16 infoIndex;
 };

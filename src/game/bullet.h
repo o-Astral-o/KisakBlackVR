@@ -1,4 +1,7 @@
 #pragma once
+#include <bgame/bg_weapons.h>
+#include <bgame/bg_local.h>
+#include <bgame/bg_public.h>
 
 char __cdecl BulletTrace(
                 int localClientNum,
@@ -58,7 +61,7 @@ void __cdecl Bullet_ImpactEffect(
                 const float *normal,
                 const WeaponVariantDef *weapVariantDef,
                 gentity_s *attacker,
-                entityState_s::<unnamed_type_un1> impactEffectFlags,
+                entityState_s::unnamed_type_un1 impactEffectFlags,
                 gentity_s **outTempEnt);
 void __cdecl Bullet_ImpactEffect_SetAdditionalFlags(gentity_s *tempEnt, char impactEffectFlags);
 void __cdecl Bullet_FirePenetrate(

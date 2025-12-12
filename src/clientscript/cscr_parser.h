@@ -1,4 +1,74 @@
 #pragma once
+#include "cscr_main.h"
+
+struct OpcodeLookup // sizeof=0xC
+{
+    const char *codePos;
+    unsigned int sourcePosIndex;
+    unsigned int sourcePosCount;
+};
+
+struct SourceLookup // sizeof=0x8
+{
+    unsigned int sourcePos;
+    int type;
+};
+
+struct SaveSourceBufferInfo // sizeof=0x8
+{
+    char *sourceBuf;
+    int len;
+};
+
+struct Scr_SourcePos_t // sizeof=0xC
+{                                       // XREF: scrDebuggerGlob_t/r
+    unsigned int bufferIndex;           // XREF: Scr_ResumeBreakpoints+1D/w
+    int lineNum;                        // XREF: Scr_SetTempBreakpoint+86/r
+    unsigned int sourcePos;             // XREF: Scr_GetCodePos(scriptInstance_t,char const *,uint,char *,int)+96/r
+};
+
+struct __declspec(align(4)) SourceBufferInfo // sizeof=0x18
+{
+    const char *codePos;
+    char *buf;
+    const char *sourceBuf;
+    int len;
+    int sortedIndex;
+    bool archive;
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct scrParserPub_t // sizeof=0x10
+{                                       // XREF: .data:scrParserPub_t * gScrParserPub/r
+    SourceBufferInfo *sourceBufferLookup;
+                                        // XREF: CheckThreadPosition+8C/r
+                                        // Scr_ScriptWindow::SetScriptFile(scriptInstance_t,char const *)+38/r ...
+    unsigned int sourceBufferLookupLen; // XREF: Scr_ScriptWindow::SetScriptFile(scriptInstance_t,char const *)+24/r
+                                        // Scr_ScriptWindow::Init(scriptInstance_t)+41/r ...
+    const char *scriptfilename;         // XREF: Scr_LoadAnimTreeInternal+D8/r
+                                        // Scr_LoadAnimTreeInternal+EA/w ...
+    const char *sourceBuf;              // XREF: Scr_LoadAnimTreeInternal+A3/r
+                                        // Scr_LoadAnimTreeInternal+120/w ...
+};
+
+struct scrParserGlob_t // sizeof=0x34
+{
+    OpcodeLookup *opcodeLookup;
+    unsigned int opcodeLookupMaxLen;
+    unsigned int opcodeLookupLen;
+    SourceLookup *sourcePosLookup;
+    unsigned int sourcePosLookupMaxLen;
+    unsigned int sourcePosLookupLen;
+    unsigned int sourceBufferLookupMaxLen;
+    const unsigned __int8 *currentCodePos;
+    unsigned int currentSourcePosCount;
+    SaveSourceBufferInfo *saveSourceBufferLookup;
+    unsigned int saveSourceBufferLookupLen;
+    int delayedSourceIndex;
+    int threadStartSourceIndex;
+};
 
 void __cdecl Scr_InitOpcodeLookup(scriptInstance_t inst);
 void __cdecl Scr_ShutdownOpcodeLookup(scriptInstance_t inst);
@@ -121,3 +191,9 @@ void __cdecl RuntimeErrorInternal(
                 unsigned int index,
                 const char *msg);
 void __cdecl Scr_SetLoadedImpureScript(bool loadedImpureScript);
+
+
+extern scrParserPub_t gScrParserPub[2];
+extern scrParserGlob_t gScrParserGlob[2];
+
+extern char g_EndPos;

@@ -1,5 +1,32 @@
 #include "actor_badplace.h"
 #include <universal/assertive.h>
+#include "pathnode.h"
+#include <game_mp/actor_mp.h>
+#include <game_mp/g_main_mp.h>
+#include <clientscript/cscr_stringlist.h>
+#include <clientscript/cscr_vm.h>
+#include "actor_events.h"
+#include "g_debug.h"
+#include <game_mp/g_utils_mp.h>
+#include <server/sv_game.h>
+#include "actor_state.h"
+#include "actor_orientation.h"
+#include "actor_team_move.h"
+#include "actor_animapi.h"
+
+struct _pendedBadPlace // sizeof=0x2C
+{                                       // XREF: .data:_pendedBadPlace * gPendendBadPlaces/r
+    badplace_parms_t params;
+    unsigned int name;
+    int duration;
+    int teamflags;
+    int type;
+};
+
+char gFreePendingBadPlaces[256];
+badplace_t g_badplaces[256];
+_pendedBadPlace gPendendBadPlaces[256];
+int gPendedBadPlaceCount;
 
 void __cdecl Path_UpdateBadPlaceCount(badplace_t *place, int delta)
 {
@@ -24,14 +51,13 @@ void __cdecl Path_UpdateBadPlaceCount(badplace_t *place, int delta)
     {
         case 1u:
         case 3u:
-            Path_UpdateArcBadPlaceCount(COERCE_FLOAT(&savedregs), &place->parms.arc, place->teamflags, delta);
+            Path_UpdateArcBadPlaceCount(&place->parms.arc, place->teamflags, delta);
             break;
         case 2u:
             Path_UpdateBrushBadPlaceCount(place->parms.brush.volume, place->teamflags, delta);
             break;
         case 4u:
             Path_UpdateLimitedDepthArcBadPlaceCount(
-                COERCE_FLOAT(&savedregs),
                 &place->parms.arc,
                 place->teamflags,
                 delta,
@@ -54,44 +80,44 @@ void __cdecl Path_UpdateBadPlaces()
     _pendedBadPlace *pendedBP; // [esp+8h] [ebp-4h]
 
     updateFlee = 0;
-    for ( i = 0; i < 256; ++i )
+    for (i = 0; i < 256; ++i)
     {
-        if ( gFreePendingBadPlaces[i] )
+        if (gFreePendingBadPlaces[i])
         {
             Path_UpdateBadPlaceCount(&g_badplaces[i], -1);
-            byte_A071A32[44 * i] = 0;
-            Scr_SetString((unsigned __int16 *)&word_A071A30[22 * i], 0, SCRIPTINSTANCE_SERVER);
+            g_badplaces[i].type = 0;
+            Scr_SetString(&g_badplaces[i].name, 0, SCRIPTINSTANCE_SERVER);
             updateFlee = 1;
         }
     }
     memset((unsigned __int8 *)gFreePendingBadPlaces, 0, sizeof(gFreePendingBadPlaces));
     pendedBP = gPendendBadPlaces;
-    for ( ia = 0; ia < gPendedBadPlaceCount; ++ia )
+    for (ia = 0; ia < gPendedBadPlaceCount; ++ia)
     {
-        if ( pendedBP->type != 3
+        if (pendedBP->type != 3
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp",
-                        167,
-                        0,
-                        "%s",
-                        "pendedBP->type == BADPLACE_REALLY_BAD") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp",
+                167,
+                0,
+                "%s",
+                "pendedBP->type == BADPLACE_REALLY_BAD"))
         {
             __debugbreak();
         }
         Path_MakeBadPlaceEx(pendedBP->name, pendedBP->duration, pendedBP->teamflags, pendedBP->type, &pendedBP->params);
         ++pendedBP;
     }
-    if ( gPendedBadPlaceCount )
+    if (gPendedBadPlaceCount)
     {
         Actor_BadPlacesChanged();
         gPendedBadPlaceCount = 0;
     }
-    for ( ib = 0; ib < 256; ++ib )
+    for (ib = 0; ib < 256; ++ib)
     {
-        if ( byte_A071A32[44 * ib] && g_badplaces[ib].endtime < level.time )
+        if (g_badplaces[ib].type && g_badplaces[ib].endtime < level.time)
             Path_FreeBadPlace(ib);
     }
-    if ( updateFlee )
+    if (updateFlee)
         Actor_BadPlace_UpdateFleeingActors();
 }
 
@@ -105,9 +131,9 @@ int __cdecl Path_FindBadPlace(unsigned int name)
 {
     int i; // [esp+0h] [ebp-4h]
 
-    for ( i = 0; i < 256; ++i )
+    for (i = 0; i < 256; ++i)
     {
-        if ( (unsigned __int16)word_A071A30[22 * i] == name )
+        if (g_badplaces[i].name == name)
             return i;
     }
     return -1;
@@ -181,15 +207,15 @@ badplace_t *__cdecl Path_AllocBadPlace(unsigned int name, int duration)
     int i; // [esp+1Ch] [ebp-4h]
     int ia; // [esp+1Ch] [ebp-4h]
 
-    if ( name )
+    if (name)
     {
         BadPlace = Path_FindBadPlace(name);
         Path_FreeBadPlace(BadPlace);
     }
     endtime = duration + level.time;
-    if ( duration > 0 )
+    if (duration > 0)
     {
-        if ( duration < 250 )
+        if (duration < 250)
             Com_PrintWarning(
                 18,
                 "WARNING: A badplace was created with duration [%.2f second], which is less than the ping time [%.2f second]\n",
@@ -198,34 +224,34 @@ badplace_t *__cdecl Path_AllocBadPlace(unsigned int name, int duration)
     }
     else
     {
-        if ( !name )
+        if (!name)
         {
             Scr_Error("anonymous bad places must have a duration", 0);
             return 0;
         }
         endtime = 0x7FFFFFFF;
     }
-    for ( i = 0; i < 256; ++i )
+    for (i = 0; i < 256; ++i)
     {
-        if ( !byte_A071A32[44 * i] )
+        if (!g_badplaces[i].type)
         {
-            Scr_SetString((unsigned __int16 *)&word_A071A30[22 * i], name, SCRIPTINSTANCE_SERVER);
+            Scr_SetString(&g_badplaces[i].name, name, SCRIPTINSTANCE_SERVER);
             g_badplaces[i].endtime = endtime;
             return &g_badplaces[i];
         }
     }
     best = 0;
     lowest = 0x7FFFFFFF;
-    for ( ia = 0; ia < 256; ++ia )
+    for (ia = 0; ia < 256; ++ia)
     {
-        if ( g_badplaces[ia].endtime - level.time < lowest && byte_A071A32[44 * ia] == 3 )
+        if (g_badplaces[ia].endtime - level.time < lowest && g_badplaces[ia].type == 3)
         {
             best = ia;
             lowest = g_badplaces[ia].endtime - level.time;
         }
     }
     Path_FreeBadPlace(best);
-    Scr_SetString((unsigned __int16 *)&word_A071A30[22 * best], name, SCRIPTINSTANCE_SERVER);
+    Scr_SetString(&g_badplaces[best].name, name, SCRIPTINSTANCE_SERVER);
     g_badplaces[best].endtime = endtime;
     return &g_badplaces[best];
 }
@@ -234,9 +260,9 @@ void __cdecl Path_DrawBadPlaces()
 {
     unsigned int i; // [esp+0h] [ebp-4h]
 
-    for ( i = 0; i < 0x100; ++i )
+    for (i = 0; i < 0x100; ++i)
     {
-        if ( byte_A071A32[44 * i] )
+        if (g_badplaces[i].type)
             Path_DrawBadPlace(&g_badplaces[i]);
     }
 }
@@ -327,8 +353,8 @@ void __cdecl Path_ShutdownBadPlaces()
 {
     unsigned int i; // [esp+0h] [ebp-4h]
 
-    for ( i = 0; i < 0x100; ++i )
-        Scr_SetString((unsigned __int16 *)&word_A071A30[22 * i], 0, SCRIPTINSTANCE_SERVER);
+    for (i = 0; i < 0x100; ++i)
+        Scr_SetString(&g_badplaces[i].name, 0, SCRIPTINSTANCE_SERVER);
     memset((unsigned __int8 *)g_badplaces, 0, sizeof(g_badplaces));
 }
 
@@ -338,42 +364,42 @@ bool __cdecl Actor_IsInAnyBadPlace(actor_s *self)
     const char *v2; // eax
     unsigned int badPlaceIndex; // [esp+14h] [ebp-8h]
 
-    if ( (float)G_rand() > (float)(32767.0 * self->badPlaceAwareness) )
+    if ((float)G_rand() > (float)(32767.0 * self->badPlaceAwareness))
         return 0;
-    for ( badPlaceIndex = 0; ; ++badPlaceIndex )
+    for (badPlaceIndex = 0; ; ++badPlaceIndex)
     {
-        if ( badPlaceIndex >= 0x100 )
+        if (badPlaceIndex >= 0x100)
             return 0;
-        if ( byte_A071A32[44 * badPlaceIndex] )
+        if (g_badplaces[badPlaceIndex].type)
             break;
-LABEL_4:
+    LABEL_4:
         ;
     }
-    switch ( byte_A071A32[44 * badPlaceIndex] )
+    switch (g_badplaces[badPlaceIndex].type)
     {
-        case 1:
-        case 3:
-        case 4:
-            if ( !Actor_IsInsideArc(
-                            self,
-                            (const float *)&dword_A071A38[11 * badPlaceIndex],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 3],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 5],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 6],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 4]) )
-                goto LABEL_4;
-            result = 1;
-            break;
-        case 2:
-            if ( !SV_EntityContact(self->ent->r.mins, self->ent->r.maxs, (const gentity_s *)dword_A071A38[11 * badPlaceIndex]) )
-                goto LABEL_4;
-            result = 1;
-            break;
-        default:
-            v2 = va("unhandled bad place type %i", (unsigned __int8)byte_A071A32[44 * badPlaceIndex]);
-            if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 637, 0, v2) )
-                __debugbreak();
+    case 1u:
+    case 3u:
+    case 4u:
+        if (!Actor_IsInsideArc(
+            self,
+            g_badplaces[badPlaceIndex].parms.arc.origin,
+            g_badplaces[badPlaceIndex].parms.arc.radius,
+            g_badplaces[badPlaceIndex].parms.arc.angle0,
+            g_badplaces[badPlaceIndex].parms.arc.angle1,
+            g_badplaces[badPlaceIndex].parms.arc.halfheight))
             goto LABEL_4;
+        result = 1;
+        break;
+    case 2u:
+        if (!SV_EntityContact(self->ent->r.mins, self->ent->r.maxs, g_badplaces[badPlaceIndex].parms.brush.volume))
+            goto LABEL_4;
+        result = 1;
+        break;
+    default:
+        v2 = va("unhandled bad place type %i", g_badplaces[badPlaceIndex].type);
+        if (!Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 637, 0, v2))
+            __debugbreak();
+        goto LABEL_4;
     }
     return result;
 }
@@ -457,27 +483,27 @@ double __cdecl Actor_BadPlace_GetMaximumFleeRadius()
     float maxRadius; // [esp+8h] [ebp-4h]
 
     maxRadius = -1.0f;
-    for ( badPlaceIndex = 0; badPlaceIndex < 0x100; ++badPlaceIndex )
+    for (badPlaceIndex = 0; badPlaceIndex < 0x100; ++badPlaceIndex)
     {
-        if ( byte_A071A32[44 * badPlaceIndex] )
+        if (g_badplaces[badPlaceIndex].type)
         {
-            switch ( byte_A071A32[44 * badPlaceIndex] )
+            switch (g_badplaces[badPlaceIndex].type)
             {
-                case 1:
-                case 3:
-                case 4:
-                    if ( dword_A071A44[11 * badPlaceIndex] > maxRadius )
-                        maxRadius = dword_A071A44[11 * badPlaceIndex];
-                    break;
-                case 2:
-                    if ( *(float *)&dword_A071A3C[11 * badPlaceIndex] > maxRadius )
-                        maxRadius = *(float *)&dword_A071A3C[11 * badPlaceIndex];
-                    break;
-                default:
-                    v0 = va("unhandled bad place type %i", (unsigned __int8)byte_A071A32[44 * badPlaceIndex]);
-                    if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 700, 0, v0) )
-                        __debugbreak();
-                    break;
+            case 1u:
+            case 3u:
+            case 4u:
+                if (g_badplaces[badPlaceIndex].parms.arc.radius > maxRadius)
+                    maxRadius = g_badplaces[badPlaceIndex].parms.arc.radius;
+                break;
+            case 2u:
+                if (g_badplaces[badPlaceIndex].parms.arc.origin[1] > maxRadius)
+                    maxRadius = g_badplaces[badPlaceIndex].parms.arc.origin[1];
+                break;
+            default:
+                v0 = va("unhandled bad place type %i", g_badplaces[badPlaceIndex].type);
+                if (!Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 700, 0, v0))
+                    __debugbreak();
+                break;
             }
         }
     }
@@ -578,48 +604,48 @@ bool __cdecl Actor_BadPlace_IsNodeInAnyBadPlace(pathnode_t *node)
     const char *v2; // eax
     unsigned int badPlaceIndex; // [esp+14h] [ebp-8h]
 
-    if ( !node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 780, 0, "%s", "node") )
+    if (!node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 780, 0, "%s", "node"))
         __debugbreak();
-    for ( badPlaceIndex = 0; ; ++badPlaceIndex )
+    for (badPlaceIndex = 0; ; ++badPlaceIndex)
     {
-        if ( badPlaceIndex >= 0x100 )
+        if (badPlaceIndex >= 0x100)
             return 0;
-        if ( byte_A071A32[44 * badPlaceIndex] )
+        if (g_badplaces[badPlaceIndex].type)
             break;
-LABEL_5:
+    LABEL_5:
         ;
     }
-    switch ( byte_A071A32[44 * badPlaceIndex] )
+    switch (g_badplaces[badPlaceIndex].type)
     {
-        case 1:
-        case 3:
-        case 4:
-            if ( !&dword_A071A38[11 * badPlaceIndex]
-                || !Path_IsNodeInArc(
-                            node,
-                            (const float *)&dword_A071A38[11 * badPlaceIndex],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 3],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 5],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 6],
-                            *(float *)&dword_A071A38[11 * badPlaceIndex + 4]) )
-            {
-                goto LABEL_5;
-            }
-            result = 1;
-            break;
-        case 2:
-            if ( !SV_EntityContact(
-                            node->constant.vOrigin,
-                            node->constant.vOrigin,
-                            (const gentity_s *)dword_A071A38[11 * badPlaceIndex]) )
-                goto LABEL_5;
-            result = 1;
-            break;
-        default:
-            v2 = va("unhandled bad place type %i", (unsigned __int8)byte_A071A32[44 * badPlaceIndex]);
-            if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 803, 0, v2) )
-                __debugbreak();
+    case 1u:
+    case 3u:
+    case 4u:
+        if (!&g_badplaces[badPlaceIndex].parms
+            || !Path_IsNodeInArc(
+                node,
+                g_badplaces[badPlaceIndex].parms.arc.origin,
+                g_badplaces[badPlaceIndex].parms.arc.radius,
+                g_badplaces[badPlaceIndex].parms.arc.angle0,
+                g_badplaces[badPlaceIndex].parms.arc.angle1,
+                g_badplaces[badPlaceIndex].parms.arc.halfheight))
+        {
             goto LABEL_5;
+        }
+        result = 1;
+        break;
+    case 2u:
+        if (!SV_EntityContact(
+            node->constant.vOrigin,
+            node->constant.vOrigin,
+            g_badplaces[badPlaceIndex].parms.brush.volume))
+            goto LABEL_5;
+        result = 1;
+        break;
+    default:
+        v2 = va("unhandled bad place type %i", g_badplaces[badPlaceIndex].type);
+        if (!Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 803, 0, v2))
+            __debugbreak();
+        goto LABEL_5;
     }
     return result;
 }
@@ -658,8 +684,8 @@ int __fastcall Actor_BadPlace_Flee_Think(actor_s *self)
     if ( self->aiBadPlace == AI_BADPLACE_NONE )
     {
         Actor_SetState(self, AIS_EXPOSED);
-        if ( GetCurrentThreadId() == g_DXDeviceThread )
-            D3DPERF_EndEvent();
+        //if ( GetCurrentThreadId() == g_DXDeviceThread )
+        //    D3DPERF_EndEvent();
         return 1;
     }
     Actor_PreThink(self);
@@ -669,7 +695,7 @@ int __fastcall Actor_BadPlace_Flee_Think(actor_s *self)
         Actor_SetOrientMode(self, AI_ORIENT_TO_ENEMY_OR_MOTION);
         Actor_TeamMoveBlockedClear(self);
         Actor_MoveAlongPathWithTeam(self, 1, 0, 0);
-        if ( EntHandle::isDefined(&self->pCloseEnt) || self->pPileUpActor )
+        if ( self->pCloseEnt.isDefined() || self->pPileUpActor )
             Actor_ClearPath(self);
         goto LABEL_22;
     }
@@ -681,14 +707,14 @@ int __fastcall Actor_BadPlace_Flee_Think(actor_s *self)
         Actor_AnimStop(self, &g_animScriptTable[self->species]->stop);
 LABEL_22:
         Actor_PostThink(self);
-        if ( GetCurrentThreadId() == g_DXDeviceThread )
-            D3DPERF_EndEvent();
+        //if ( GetCurrentThreadId() == g_DXDeviceThread )
+        //    D3DPERF_EndEvent();
         return 0;
     }
     self->aiBadPlace = AI_BADPLACE_NONE;
     Actor_SetState(self, AIS_EXPOSED);
-    if ( GetCurrentThreadId() == g_DXDeviceThread )
-        D3DPERF_EndEvent();
+    //if ( GetCurrentThreadId() == g_DXDeviceThread )
+    //    D3DPERF_EndEvent();
     return 1;
 }
 

@@ -1,4 +1,81 @@
 #pragma once
+#include <qcommon/common.h>
+#include <qcommon/radiant_remote.h>
+
+struct vehicle_spline_node_t // sizeof=0x14
+{                                       // XREF: $D7144489F720B3BEDA1018D511D72833/r
+    __int16 nextIdx;
+    __int16 prevIdx;
+    float length;
+    float dir[3];
+};
+
+struct vehicle_path_node_t // sizeof=0x8
+{                                       // XREF: $D7144489F720B3BEDA1018D511D72833/r
+    __int16 numLinks;
+    __int16 firstLinkIndex;
+    float radius;
+};
+
+union $D7144489F720B3BEDA1018D511D72833 // sizeof=0x14
+{                                       // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+34D/r
+    vehicle_spline_node_t splineNode;
+    vehicle_path_node_t pathNode;
+};
+
+struct vehicle_node_t // sizeof=0x44
+{                                       // XREF: .data:s_nodes/r
+                                        // vehicle_pathpos_t/r ...
+    unsigned __int16 name;              // XREF: G_FindVehicleNode(SpawnVar const *)+C0/r
+    unsigned __int16 target;            // XREF: G_SetupSplinePaths(void)+C2/r
+                                        // G_FindVehicleNode(SpawnVar const *)+E3/r
+    unsigned __int16 target2;           // XREF: G_FindVehicleNode(SpawnVar const *)+106/r
+    unsigned __int16 script_linkname;   // XREF: G_FindVehicleNode(SpawnVar const *)+129/r
+    unsigned __int16 script_noteworthy; // XREF: G_FindVehicleNode(SpawnVar const *)+14C/r
+    __int16 index;
+    int flags;                          // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+7D7/r
+    float speed;                        // XREF: VP_GetSpeed+85/r
+    float lookAhead;                    // XREF: VP_GetLookAhead+88/r
+    float origin[3];                    // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+8F/o
+                                        // VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+9D/o ...
+    float angles[3];
+    $D7144489F720B3BEDA1018D511D72833 ___u11;
+                                        // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+34D/r
+                                        // VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+365/r ...
+};
+
+struct __declspec(align(2)) vehicle_custom_path_t // sizeof=0x202
+{                                       // XREF: .data:vehicle_custom_path_t * gCustomPaths/r
+    __int16 pathOrder[128];
+    __int16 pathLinkIdx[128];
+    unsigned __int8 inUse;              // XREF: VP_GetFreeCustomPath(void)+39/w
+                                        // VP_GetFreeCustomPath(void)+63/r ...
+    // padding byte
+};
+
+struct vehicle_pathpos_t // sizeof=0xDC
+{                                       // XREF: scr_vehicle_s/r
+                                        // VehiclePhysicsBackup/r ...
+    __int16 nodeIdx;                    // XREF: VP_DrawPath(vehicle_pathpos_t const *)+81/r
+    __int16 lastNodeIdx;
+    __int16 endOfPath;                  // XREF: VP_DrawPath(vehicle_pathpos_t const *)+C6/r
+    // padding byte
+    // padding byte
+    float frac;
+    float speed;
+    float lookAhead;
+    float slide;
+    float origin[3];                    // XREF: CMD_VEH_GetAttachPos(scr_entref_t)+99/r
+                                        // CMD_VEH_GetAttachPos(scr_entref_t)+A9/r ...
+    float angles[3];                    // XREF: CMD_VEH_GetAttachPos(scr_entref_t)+C9/r
+                                        // CMD_VEH_GetAttachPos(scr_entref_t)+D9/r ...
+    float lookPos[3];
+    vehicle_node_t switchNode[2];
+    int flags;
+    vehicle_custom_path_t *customPath;
+    float customGoalLength;
+    float customGoalDir[3];
+};
 
 void __cdecl VP_ResetLinks();
 __int16 __cdecl VP_GetNextFreePathNode();

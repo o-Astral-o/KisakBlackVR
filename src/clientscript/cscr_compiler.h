@@ -1,4 +1,54 @@
 #pragma once
+#include "cscr_main.h"
+#include "cscr_debugger.h"
+#include "cscr_variable.h"
+
+struct VariableCompileValue // sizeof=0xC
+{                                       // XREF: scrCompileGlob_t/r
+    VariableValue value;                // XREF: Scr_CalcLocalVarsWhileStatement+25/r
+    sval_u sourcePos;
+};
+
+struct scrCompilePub_t // sizeof=0x21038
+{                                       // XREF: .data:_gScrCompilePub/r
+    int value_count;                    // XREF: EmitOpcode+54/r
+                                        // EmitOpcode+66/r ...
+    int far_function_count;             // XREF: ScriptCompile(scriptInstance_t,sval_u,uint,uint,uint,PrecacheEntry *,int)+6C/r
+                                        // ScriptCompile(scriptInstance_t,sval_u,uint,uint,uint,PrecacheEntry *,int)+A5/r ...
+    unsigned int loadedscripts;         // XREF: EmitFunction+168/r
+                                        // Scr_ScriptList::Init(scriptInstance_t)+49/r ...
+    unsigned int scriptsPos;            // XREF: AddFilePrecache+D3/r
+                                        // Scr_GetFunctionHandle(scriptInstance_t,char const *,char const *)+F/r ...
+    unsigned int scriptsCount;          // XREF: AddFilePrecache+105/r
+                                        // Scr_BeginLoadScripts(scriptInstance_t,int)+21D/r ...
+    unsigned int builtinFunc;           // XREF: EmitCall+69/r
+                                        // EmitCall+E9/r ...
+    unsigned int builtinMeth;           // XREF: EmitMethod+69/r
+                                        // EmitMethod+E9/r ...
+    unsigned __int16 canonicalStrings[65536];
+                                        // XREF: Scr_ArchiveCanonicalStrings(scriptInstance_t)+35/r
+                                        // Scr_ArchiveCanonicalStrings(scriptInstance_t)+155/r ...
+    const char *in_ptr;                 // XREF: Scr_CompileTextInternal+A2/w
+                                        // Scr_ScanFile(scriptInstance_t,char *,int)+2D/r ...
+    const char *parseBuf;               // XREF: Scr_CompileTextInternal+B8/w
+                                        // Scr_ScanFile(scriptInstance_t,char *,int)+A7/r ...
+    bool script_loading;                // XREF: EmitVariableExpression+D0/r
+                                        // EmitObject+F/r ...
+    bool allowedBreakpoint;             // XREF: EmitOpcode+FB/w
+                                        // AddOpcodePos(scriptInstance_t,uint,int)+8A/r
+    // padding byte
+    // padding byte
+    int developer_statement;            // XREF: Scr_GetBuiltin(scriptInstance_t,sval_u)+4B/r
+                                        // ScriptCompile(scriptInstance_t,sval_u,uint,uint,uint,PrecacheEntry *,int)+59/w ...
+    unsigned __int8 *opcodePos;         // XREF: EmitPreAssignmentPos+33/r
+                                        // EmitOpcode+1E3/r ...
+    unsigned int programLen;            // XREF: ScriptCompile(scriptInstance_t,sval_u,uint,uint,uint,PrecacheEntry *,int)+11C/w
+                                        // Scr_FindBreakpointInfo+4E/r ...
+    int func_table_size;                // XREF: AddFunction+22/r
+                                        // AddFunction+58/r ...
+    int func_table[1024];               // XREF: AddFunction+36/r
+                                        // AddFunction+C5/w ...
+};
 
 void (__cdecl *__cdecl GetFunction(scriptInstance_t inst, const char **pName, int *type))();
 void (__cdecl *__cdecl GetMethod(scriptInstance_t inst, const char **pName, int *type))(scr_entref_t);
@@ -475,3 +525,6 @@ void __cdecl EmitDeveloperThread(scriptInstance_t inst, sval_u val, sval_u *stmt
 void __cdecl EmitIncludeList(scriptInstance_t inst, sval_u val);
 void __cdecl EmitInclude(scriptInstance_t inst, sval_u val);
 void __cdecl Scr_CompileStatement(scriptInstance_t inst, sval_u parseData);
+
+
+extern scrCompilePub_t gScrCompilePub[2];

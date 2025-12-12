@@ -295,6 +295,8 @@ struct NitrousVehicle // sizeof=0x440
         struct centity_s *owner,
         const VehicleParameter *parameter);
 
+    void update_script_target(float *goal_position);
+
     void set_throttle(float throttle);
 
     void set_hand_brake(float braking);

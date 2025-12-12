@@ -1,4 +1,9 @@
 #include "actor_aim.h"
+#include "actor_senses.h"
+#include "g_weapon.h"
+#include <clientscript/cscr_stringlist.h>
+#include <game_mp/g_main_mp.h>
+#include <game_mp/actor_mp.h>
 
 void __cdecl Actor_FillWeaponParms(actor_s *self, weaponParms *wp)
 {

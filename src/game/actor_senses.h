@@ -1,4 +1,5 @@
 #pragma once
+#include "actor.h"
 
 char __fastcall Actor_CanSeePointFrom(
                 actor_s *self,

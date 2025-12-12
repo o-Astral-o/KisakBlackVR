@@ -1,4 +1,108 @@
 #pragma once
+#include "cscr_variable.h"
+#include <bgame/bg_local.h>
+#include <universal/dvar.h>
+
+struct function_stack_t // sizeof=0x14
+{                                       // XREF: .data:gFs/r
+                                        // function_frame_t/r ...
+    const char *pos;                    // XREF: Scr_DebugTerminateThread(scriptInstance_t,int)+12/r
+                                        // Scr_DebugTerminateThread(scriptInstance_t,int)+60/w ...
+    unsigned int localId;               // XREF: Scr_ScriptWatch::EvaluateWatchChildren(scriptInstance_t,Scr_WatchElement_s *)+2F1/r
+                                        // Scr_ScriptWatch::EvaluateWatchChildren(scriptInstance_t,Scr_WatchElement_s *)+31F/r ...
+    unsigned int localVarCount;         // XREF: VM_Execute+219/w
+                                        // VM_Execute_0+39/w ...
+    VariableValue *top;                 // XREF: VM_Execute+1FE/w
+                                        // VM_Execute_0+3F/w ...
+    VariableValue *startTop;            // XREF: VM_Execute+E8/w
+                                        // VM_Execute_0+45/w ...
+};
+
+struct scrVmGlob_t // sizeof=0x2028
+{                                       // XREF: .data:scrVmGlob_t * gScrVmGlob/r
+    VariableValue eval_stack[2];        // XREF: IncInParam+155/o
+                                        // GetEntityFieldValue(scriptInstance_t,uint,int,ushort,int)+9A/w ...
+    const char *dialog_error_message;   // XREF: Scr_ClearErrorMessage(scriptInstance_t)+1C/w
+                                        // VM_Notify+597/r ...
+    int loading;                        // XREF: Scr_VM_Init+18F/w
+                                        // Scr_SetLoading(int,scriptInstance_t)+F/w ...
+    int starttime;                      // XREF: Scr_VM_Init+87/o
+                                        // Scr_ExecThread(scriptInstance_t,int,uint)+48/o ...
+    unsigned int localVarsStack[2048];
+    bool recordPlace;                   // XREF: Scr_VM_Init+1A2/w
+                                        // VM_Execute_0+3144/r
+    // padding byte
+    // padding byte
+    // padding byte
+    const char *lastFileName;           // XREF: Scr_VM_Init+1B2/w
+                                        // VM_Execute_0+3168/o
+    int lastLine;                       // XREF: Scr_VM_Init+1C5/w
+                                        // VM_Execute_0+3158/o
+};
+
+struct function_frame_t // sizeof=0x18
+{                                       // XREF: scrVmPub_t/r
+    function_stack_t fs;                // XREF: Scr_ScriptWatch::EvaluateWatchChildren(scriptInstance_t,Scr_WatchElement_s *)+2F1/r
+                                        // Scr_ScriptWatch::EvaluateWatchChildren(scriptInstance_t,Scr_WatchElement_s *)+31F/r ...
+    int topType;
+};
+
+struct scrVmPub_t // sizeof=0x4328
+{                                       // XREF: .data:scrVmPub_t * gScrVmPub/r
+    unsigned int *localVars;            // XREF: Scr_HitAssignmentBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int)+6D1/r
+                                        // Scr_VM_Init+96/w ...
+    VariableValue *maxstack;            // XREF: Scr_PreEvalBuiltin+E3/r
+                                        // Scr_PreEvalBuiltin+14D/r ...
+    int function_count;                 // XREF: Scr_ScriptWindow::RunToCursor(scriptInstance_t)+3B/r
+                                        // Scr_ScriptCallStack::UpdateStack(scriptInstance_t)+12/r ...
+    function_frame_t *function_frame;   // XREF: Scr_HitBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int)+4B6/r
+                                        // Scr_DebugKillThread(scriptInstance_t,uint,char const *)+1A8/r ...
+    VariableValue *top;                 // XREF: Scr_CheckBreakonNotify(scriptInstance_t,uint,uint,VariableValue *,char const *,uint)+4A/w
+                                        // Scr_HitBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int)+252/w ...
+    bool debugCode;                     // XREF: Scr_PreEvalBuiltin+233/r
+                                        // Scr_PreEvalBuiltin+26D/w ...
+    bool abort_on_error;                // XREF: RuntimeError(scriptInstance_t,char const *,uint,char const *,char const *)+CA/r
+                                        // Scr_Settings(int,int,int,scriptInstance_t)+71/w ...
+    bool terminal_error;                // XREF: RuntimeError(scriptInstance_t,char const *,uint,char const *,char const *)+67/r
+                                        // RuntimeError(scriptInstance_t,char const *,uint,char const *,char const *)+A7/r ...
+    // padding byte
+    unsigned int inparamcount;          // XREF: Scr_ScriptWatch::Evaluate(scriptInstance_t)+81/r
+                                        // Scr_CheckBreakonNotify(scriptInstance_t,uint,uint,VariableValue *,char const *,uint)+F/r ...
+    unsigned int outparamcount;         // XREF: Scr_ScriptWatch::Evaluate(scriptInstance_t)+49/r
+                                        // Scr_SpecialBreakpoint+73/w ...
+    unsigned int breakpointOutparamcount;
+                                        // XREF: Scr_HitBuiltinBreakpoint(scriptInstance_t,VariableValue *,char const *,uint,int,int,uint)+120/w
+                                        // Scr_GetValue+12/r
+    bool showError;                     // XREF: Scr_BeginLoadScripts(scriptInstance_t,int)+16A/w
+                                        // VM_Execute_0+2929/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    function_frame_t function_frame_start[32];
+                                        // XREF: Scr_ScriptCallStack::UpdateStack(scriptInstance_t)+AE/o
+                                        // Scr_ScriptWatch::EvaluateWatchChildren(scriptInstance_t,Scr_WatchElement_s *)+2F1/r ...
+    VariableValue stack[2048];          // XREF: Scr_PreEvalBuiltin+97/o
+                                        // Scr_VM_Init+1C/o ...
+};
+
+struct FuncDebugData // sizeof=0x4
+{                                       // XREF: scrVmDebugPub_t/r
+    int breakpointCount;                // XREF: AddFunction+E4/w
+};
+
+struct scrVmDebugPub_t // sizeof=0x120C
+{                                       // XREF: .data:scrVmDebugPub_t * gScrVmDebugPub/r
+                                        // scrVmDebugPubArray_t/r
+    FuncDebugData func_table[1024];     // XREF: AddFunction+E4/w
+                                        // Scr_ScriptWindow::AddBreakpointAtSourcePos(scriptInstance_t,Scr_WatchElement_s *,uchar,bool,Scr_Breakpoint * *,uint,uint)+170/r ...
+    int checkBreakon;                   // XREF: Scr_CompilePrimitiveExpression+222/r
+                                        // Scr_CompilePrimitiveExpression+234/w ...
+    const char *jumpbackHistory[128];   // XREF: VM_Execute_0+4514/w
+                                        // VM_PrintJumpHistory+58/r ...
+    int jumpbackHistoryIndex;           // XREF: VM_Execute_0+450B/r
+                                        // VM_Execute_0+4524/r ...
+    int dummy;
+};
 
 void __cdecl Scr_AddStruct();
 void __cdecl Scr_ResetTimeout();
@@ -119,7 +223,7 @@ VariableUnion __cdecl Scr_GetConstIString(unsigned int index, scriptInstance_t i
 char *__cdecl Scr_GetIString(unsigned int index, scriptInstance_t inst);
 void __cdecl Scr_GetVector(unsigned int index, float *vectorValue, scriptInstance_t inst);
 int __cdecl Scr_GetFunc(unsigned int index, scriptInstance_t inst);
-scr_entref_t *__cdecl Scr_GetEntityRef(scr_entref_t *__return_ptr retstr, unsigned int index, scriptInstance_t inst);
+scr_entref_t *__cdecl Scr_GetEntityRef(unsigned int index, scriptInstance_t inst);
 VariableUnion __cdecl Scr_GetObject(unsigned int index, scriptInstance_t inst);
 int __cdecl Scr_GetType(unsigned int index, scriptInstance_t inst);
 const char *__cdecl Scr_GetTypeName(unsigned int index, scriptInstance_t inst);
@@ -155,7 +259,7 @@ char __cdecl SetEntityFieldValue(
                 unsigned __int16 clientNum,
                 unsigned int offset,
                 VariableValue *value);
-VariableUnion __cdecl GetEntityFieldValue(
+VariableValue __cdecl GetEntityFieldValue(
                 scriptInstance_t inst,
                 unsigned int classnum,
                 unsigned int entnum,
@@ -178,3 +282,13 @@ int __cdecl Scr_AddLocalVars(scriptInstance_t inst, unsigned int localId);
 void __cdecl Scr_ResetTimeout(scriptInstance_t inst);
 bool __cdecl Scr_IsStackClear(scriptInstance_t inst);
 void __cdecl Scr_StackClear(scriptInstance_t inst);
+
+extern const dvar_t *logScriptTimes;
+extern const dvar_t *scrVmEnableScripts;
+extern const dvar_t *scrShowVarUseage;
+extern const dvar_t *scrShowStrUsage;
+extern const dvar_t *sv_clientside;
+
+extern scrVmGlob_t gScrVmGlob[2];
+extern scrVmPub_t gScrVmPub[2];
+extern scrVmDebugPub_t gScrVmDebugPub[2];

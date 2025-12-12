@@ -1,4 +1,5 @@
 #pragma once
+#include <database/db_registry.h>
 
 int __cdecl UI_ParseInfos(const char *buf, int max, char **infos);
 void __cdecl UI_LoadArenas();

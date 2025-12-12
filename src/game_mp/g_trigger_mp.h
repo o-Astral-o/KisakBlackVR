@@ -1,4 +1,6 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <qcommon/common.h>
 
 void __cdecl G_Trigger(gentity_s *self, gentity_s *other);
 char __cdecl InitTrigger(gentity_s *self);

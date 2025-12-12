@@ -1,4 +1,13 @@
 #include "cscr_parsetree.h"
+#include <universal/assertive.h>
+#include <universal/mem_userhunk.h>
+#include "cscr_evaluate.h"
+#include <universal/com_memory.h>
+#include "cscr_vm.h"
+
+HunkUser *g_allocNodeUser[2];
+
+debugger_sval_s *g_debugExprHead = NULL;
 
 XAssetHeader __cdecl node_pos(void *pool)
 {
@@ -39,7 +48,7 @@ sval_u __cdecl node0(scriptInstance_t inst, unsigned __int8 type)
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 1);
-    *(_BYTE *)result.stringValue = type;
+    result.node[0].type = type;
     return result;
 }
 
@@ -63,8 +72,8 @@ sval_u __cdecl node1(scriptInstance_t inst, unsigned __int8 type, sval_u val1)
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 2);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
     return result;
 }
 
@@ -73,9 +82,9 @@ sval_u __cdecl node2(scriptInstance_t inst, unsigned __int8 type, sval_u val1, s
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 3);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
     return result;
 }
 
@@ -94,10 +103,10 @@ sval_u __cdecl node3(scriptInstance_t inst, unsigned __int8 type, sval_u val1, s
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 4);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
     return result;
 }
 
@@ -106,11 +115,11 @@ sval_u __cdecl node4(scriptInstance_t inst, unsigned __int8 type, sval_u val1, s
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 5);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
-    *(sval_u *)(result.stringValue + 16) = val4;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+    result.node[4].node = val4.node;
     return result;
 }
 
@@ -126,12 +135,12 @@ sval_u __cdecl node5(
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 6);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
-    *(sval_u *)(result.stringValue + 16) = val4;
-    *(sval_u *)(result.stringValue + 20) = val5;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+    result.node[4].node = val4.node;
+    result.node[5].node = val5.node;
     return result;
 }
 
@@ -148,13 +157,13 @@ sval_u __cdecl node6(
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 7);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
-    *(sval_u *)(result.stringValue + 16) = val4;
-    *(sval_u *)(result.stringValue + 20) = val5;
-    *(sval_u *)(result.stringValue + 24) = val6;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+    result.node[4].node = val4.node;
+    result.node[5].node = val5.node;
+    result.node[6].node = val6.node;
     return result;
 }
 
@@ -172,14 +181,14 @@ sval_u __cdecl node7(
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 8);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
-    *(sval_u *)(result.stringValue + 16) = val4;
-    *(sval_u *)(result.stringValue + 20) = val5;
-    *(sval_u *)(result.stringValue + 24) = val6;
-    *(sval_u *)(result.stringValue + 28) = val7;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+    result.node[4].node = val4.node;
+    result.node[5].node = val5.node;
+    result.node[6].node = val6.node;
+    result.node[7].node = val7.node;
     return result;
 }
 
@@ -198,52 +207,52 @@ sval_u __cdecl node8(
     sval_u result; // eax
 
     result.stringValue = (unsigned int)Scr_AllocNode(inst, 9);
-    *(_BYTE *)result.stringValue = type;
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
-    *(sval_u *)(result.stringValue + 16) = val4;
-    *(sval_u *)(result.stringValue + 20) = val5;
-    *(sval_u *)(result.stringValue + 24) = val6;
-    *(sval_u *)(result.stringValue + 28) = val7;
-    *(sval_u *)(result.stringValue + 32) = val8;
+    result.node[0].type = type;
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+    result.node[4].node = val4.node;
+    result.node[5].node = val5.node;
+    result.node[6].node = val6.node;
+    result.node[7].node = val7.node;
+    result.node[8].node = val8.node;
     return result;
 }
 
 sval_u __cdecl linked_list_end(scriptInstance_t inst, sval_u val)
 {
-    sval_u result; // eax
-    sval_u *node; // [esp+0h] [ebp-8h]
+    sval_u *node;
+    sval_u result;
 
     node = Scr_AllocNode(inst, 2);
-    *node = val;
+    node[0].node = val.node;
     node[1].stringValue = 0;
-    result.stringValue = (unsigned int)Scr_AllocNode(inst, 2);
-    *(unsigned int *)result.stringValue = node;
-    *(unsigned int *)(result.stringValue + 4) = node;
+    result.node = Scr_AllocNode(inst, 2);
+    result.node[0].node = node;
+    result.node[1].node = node;
     return result;
 }
 
 sval_u __cdecl prepend_node(scriptInstance_t inst, sval_u val1, sval_u val2)
 {
-    sval_u *v3; // eax
+    sval_u *node;
 
-    v3 = Scr_AllocNode(inst, 2);
-    *v3 = val1;
-    v3[1] = *val2.node;
-    *(unsigned int *)val2.stringValue = v3;
+    node = Scr_AllocNode(inst, 2);
+    node[0] = val1;
+    node[1] = *val2.node;
+    val2.node->node = node;
     return val2;
 }
 
 sval_u __cdecl append_node(scriptInstance_t inst, sval_u val1, sval_u val2)
 {
-    sval_u *v3; // eax
+    sval_u *node;
 
-    v3 = Scr_AllocNode(inst, 2);
-    *v3 = val2;
-    v3[1].stringValue = 0;
-    *(unsigned int *)(*(unsigned int *)(val1.stringValue + 4) + 4) = v3;
-    *(unsigned int *)(val1.stringValue + 4) = v3;
+    node = Scr_AllocNode(inst, 2);
+    node[0] = val2;
+    node[1].stringValue = 0;
+    val1.node[1].node[1].node = node;
+    val1.node[1].node = node;
     return val1;
 }
 
@@ -251,20 +260,31 @@ void __cdecl Scr_ClearDebugExpr(scriptInstance_t inst, debugger_sval_s *debugExp
 {
     while ( debugExprHead )
     {
-        Scr_ClearDebugExprValue(inst, (sval_u)&debugExprHead[1]);
+        //Scr_ClearDebugExprValue(inst, (sval_u)&debugExprHead[1]);
+        sval_u *pval = (sval_u *)((char *)debugExprHead + sizeof(debugger_sval_s));
+        Scr_ClearDebugExprValue(inst, *(sval_u *)&pval);
         debugExprHead = debugExprHead->next;
     }
 }
 
-sval_u __cdecl Scr_AllocDebugExpr(scriptInstance_t inst, unsigned __int8 type, int size, const char *name)
+sval_u *__cdecl Scr_AllocDebugExpr(scriptInstance_t inst, unsigned __int8 type, int size, const char *name)
 {
-    unsigned int *v4; // eax
+    sval_u *val; // eax
+    debugger_sval_s *debugval;
 
-    v4 = Z_Malloc(size + 4, name, 0);
-    *v4 = (unsigned int)g_debugExprHead;
-    g_debugExprHead = (debugger_sval_s *)v4;
-    *((_BYTE *)v4 + 4) = type;
-    return (sval_u)(v4 + 1);
+    // prefix the malloc with a `debugger_sval_s`
+    unsigned char *data = (unsigned char*)Z_Malloc(sizeof(debugger_sval_s) + size, name, 0);
+
+    debugval = (debugger_sval_s *)data;
+    val = (sval_u *)(data + sizeof(debugger_sval_s));
+
+    // prepend the global list
+    debugval->next = g_debugExprHead;
+    g_debugExprHead = debugval;
+
+    // set val type (convenience vs. the non-debug way) and return it
+    val->type = type;
+    return val;
 }
 
 void __cdecl Scr_FreeDebugExpr(scriptInstance_t inst, ScriptExpression_t *expr)
@@ -272,39 +292,39 @@ void __cdecl Scr_FreeDebugExpr(scriptInstance_t inst, ScriptExpression_t *expr)
     debugger_sval_s *debugExprHead; // [esp+0h] [ebp-Ch]
     debugger_sval_s *nextDebugExprHead; // [esp+8h] [ebp-4h]
 
-    if ( expr->breakonExpr )
-        --dword_A0642E8[1155 * inst];
+    if (expr->breakonExpr)
+        --gScrVmDebugPub[inst].checkBreakon;
+
     debugExprHead = expr->exprHead;
-    if ( !debugExprHead
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parsetree.cpp",
-                    410,
-                    0,
-                    "%s",
-                    "debugExprHead") )
+
+    iassert(debugExprHead);
+
+    while (debugExprHead)
     {
-        __debugbreak();
-    }
-    while ( debugExprHead )
-    {
-        Scr_FreeDebugExprValue(inst, (sval_u)&debugExprHead[1]);
+        // See Prefixed data in Scr_AllocDebugExpr()
+        sval_u *pval = (sval_u *)((char *)debugExprHead + sizeof(debugger_sval_s));
+        Scr_FreeDebugExprValue(inst, *(sval_u *)&pval);
+
         nextDebugExprHead = debugExprHead->next;
-        Z_Free(debugExprHead, 0);
+        Z_Free((char*)debugExprHead, 0);
         debugExprHead = nextDebugExprHead;
     }
 }
 
 sval_u __cdecl debugger_node0(scriptInstance_t inst, unsigned __int8 type)
 {
-    return Scr_AllocDebugExpr(inst, type, 4, "debugger_node0");
+    sval_u result;
+    result.node = Scr_AllocDebugExpr(inst, type, 4, "debugger_node0");
+    return result;
 }
 
 sval_u __cdecl debugger_node1(scriptInstance_t inst, unsigned __int8 type, sval_u val1)
 {
     sval_u result; // eax
 
-    result = Scr_AllocDebugExpr(inst, type, 8, "debugger_node1");
-    *(sval_u *)(result.stringValue + 4) = val1;
+    result.node = Scr_AllocDebugExpr(inst, type, 8, "debugger_node1");
+    result.node[1].node = val1.node;
+
     return result;
 }
 
@@ -312,9 +332,9 @@ sval_u __cdecl debugger_node2(scriptInstance_t inst, unsigned __int8 type, sval_
 {
     sval_u result; // eax
 
-    result = Scr_AllocDebugExpr(inst, type, 12, "debugger_node2");
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
+    result.node = Scr_AllocDebugExpr(inst, type, 12, "debugger_node2");
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
     return result;
 }
 
@@ -322,10 +342,11 @@ sval_u __cdecl debugger_node3(scriptInstance_t inst, unsigned __int8 type, sval_
 {
     sval_u result; // eax
 
-    result = Scr_AllocDebugExpr(inst, type, 16, "debugger_node3");
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
+    result.node = Scr_AllocDebugExpr(inst, type, 16, "debugger_node3");
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+
     return result;
 }
 
@@ -339,11 +360,11 @@ sval_u __cdecl debugger_node4(
 {
     sval_u result; // eax
 
-    result = Scr_AllocDebugExpr(inst, type, 20, "debugger_node4");
-    *(sval_u *)(result.stringValue + 4) = val1;
-    *(sval_u *)(result.stringValue + 8) = val2;
-    *(sval_u *)(result.stringValue + 12) = val3;
-    *(sval_u *)(result.stringValue + 16) = val4;
+    result.node = Scr_AllocDebugExpr(inst, type, 20, "debugger_node4");
+    result.node[1].node = val1.node;
+    result.node[2].node = val2.node;
+    result.node[3].node = val3.node;
+    result.node[4].node = val4.node;
     return result;
 }
 
@@ -360,26 +381,39 @@ sval_u __cdecl debugger_buffer(
                 unsigned int size,
                 int alignment)
 {
-    sval_u result; // [esp+4h] [ebp-8h]
-    unsigned __int8 *bufCopy; // [esp+8h] [ebp-4h]
-    int alignmenta; // [esp+24h] [ebp+18h]
+    //sval_u result; // [esp+4h] [ebp-8h]
+    //unsigned __int8 *bufCopy; // [esp+8h] [ebp-4h]
+    //int alignmenta; // [esp+24h] [ebp+18h]
+    //
+    //if ( (alignment & (alignment - 1)) != 0
+    //    && !Assert_MyHandler(
+    //                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parsetree.cpp",
+    //                611,
+    //                0,
+    //                "%s",
+    //                "IsPowerOf2( alignment )") )
+    //{
+    //    __debugbreak();
+    //}
+    //alignmenta = alignment - 1;
+    //result = Scr_AllocDebugExpr(inst, type, size + alignmenta + 8, "debugger_buffer");
+    //bufCopy = (unsigned __int8 *)(~alignmenta & (result.stringValue + alignmenta + 8));
+    //memcpy(bufCopy, (unsigned __int8 *)buf, size);
+    //*(unsigned int *)(result.stringValue + 4) = bufCopy;
+    //return result;
 
-    if ( (alignment & (alignment - 1)) != 0
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parsetree.cpp",
-                    611,
-                    0,
-                    "%s",
-                    "IsPowerOf2( alignment )") )
-    {
-        __debugbreak();
-    }
+    sval_u *result; // [esp+4h] [ebp-8h]
+    unsigned __int8 *bufCopy; // [esp+8h] [ebp-4h]
+    int alignmenta; // [esp+20h] [ebp+14h]
+
+    //if ((alignment & (alignment - 1)) != 0)
+    //    MyAssertHandler((char *)".\\script\\scr_parsetree.cpp", 594, 0, "%s", "IsPowerOf2( alignment )");
     alignmenta = alignment - 1;
     result = Scr_AllocDebugExpr(inst, type, size + alignmenta + 8, "debugger_buffer");
-    bufCopy = (unsigned __int8 *)(~alignmenta & (result.stringValue + alignmenta + 8));
+    bufCopy = (unsigned __int8 *)(~alignmenta & ((unsigned int)&result[2] + alignmenta));
     memcpy(bufCopy, (unsigned __int8 *)buf, size);
-    *(unsigned int *)(result.stringValue + 4) = bufCopy;
-    return result;
+    result[1].intValue = (int)bufCopy;
+    return *result; // sus deref
 }
 
 sval_u __cdecl debugger_string(scriptInstance_t inst, unsigned __int8 type, char *s)

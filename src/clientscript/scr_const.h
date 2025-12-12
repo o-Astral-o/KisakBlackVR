@@ -938,6 +938,228 @@ struct scr_const_t // sizeof=0x40C
         unsigned __int16 up;                                // XREF: .text:0069F661/w
 };
 
+struct cscr_const_t // sizeof=0xD8
+{                                       // XREF: .data:cscr_const_t cscr_const/r
+    unsigned __int16 none;              // XREF: CG_EntityEvent(int,centity_s *,int):def_4B68E5/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+14/w ...
+    unsigned __int16 asphalt;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+2B/w
+                                        // CScr_GetVehicleTreadFxArray+CF/r
+    unsigned __int16 bark;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+42/w
+                                        // CScr_GetVehicleTreadFxArray+FA/r
+    unsigned __int16 brick;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+59/w
+                                        // CScr_GetVehicleTreadFxArray+125/r
+    unsigned __int16 carpet;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+70/w
+                                        // CScr_GetVehicleTreadFxArray+150/r
+    unsigned __int16 ceramic;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+87/w
+                                        // CScr_GetVehicleTreadFxArray+17B/r
+    unsigned __int16 cloth;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+9E/w
+                                        // CScr_GetVehicleTreadFxArray+1A6/r
+    unsigned __int16 concrete;          // XREF: CScr_SetClientScripts(ScriptFunctions *)+B5/w
+                                        // CScr_GetVehicleTreadFxArray+1D1/r
+    unsigned __int16 cushion;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+CC/w
+                                        // CScr_GetVehicleTreadFxArray+1FC/r
+    unsigned __int16 dirt;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+E3/w
+                                        // CScr_GetVehicleTreadFxArray+252/r
+    unsigned __int16 flesh;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+FA/w
+                                        // CScr_GetVehicleTreadFxArray+27D/r
+    unsigned __int16 foliage;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+111/w
+                                        // CScr_GetVehicleTreadFxArray+2A8/r
+    unsigned __int16 fruit;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+128/w
+                                        // CScr_GetVehicleTreadFxArray+2D3/r
+    unsigned __int16 glass;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+13F/w
+                                        // CScr_GetVehicleTreadFxArray+2FE/r
+    unsigned __int16 grass;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+156/w
+                                        // CScr_GetVehicleTreadFxArray+329/r
+    unsigned __int16 gravel;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+16D/w
+                                        // CScr_GetVehicleTreadFxArray+354/r
+    unsigned __int16 ice;               // XREF: CScr_SetClientScripts(ScriptFunctions *)+184/w
+                                        // CScr_GetVehicleTreadFxArray+37F/r
+    unsigned __int16 metal;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+19B/w
+                                        // CScr_GetVehicleTreadFxArray+3AA/r
+    unsigned __int16 mud;               // XREF: CScr_SetClientScripts(ScriptFunctions *)+1B2/w
+                                        // CScr_GetVehicleTreadFxArray+3D5/r
+    unsigned __int16 paintedmetal;      // XREF: CScr_SetClientScripts(ScriptFunctions *)+1C9/w
+                                        // CScr_GetVehicleTreadFxArray+400/r
+    unsigned __int16 paper;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+1E0/w
+                                        // CScr_GetVehicleTreadFxArray+42B/r
+    unsigned __int16 plaster;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+1F7/w
+                                        // CScr_GetVehicleTreadFxArray+456/r
+    unsigned __int16 plastic;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+20E/w
+                                        // CScr_GetVehicleTreadFxArray+481/r
+    unsigned __int16 rock;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+225/w
+                                        // CScr_GetVehicleTreadFxArray+4AC/r
+    unsigned __int16 rubber;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+23C/w
+                                        // CScr_GetVehicleTreadFxArray+4D7/r
+    unsigned __int16 sand;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+253/w
+                                        // CScr_GetVehicleTreadFxArray+502/r
+    unsigned __int16 snow;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+26A/w
+                                        // CScr_GetVehicleTreadFxArray+52D/r
+    unsigned __int16 water;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+281/w
+                                        // CScr_GetVehicleTreadFxArray+558/r
+    unsigned __int16 wood;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+298/w
+                                        // CScr_GetVehicleTreadFxArray+583/r
+    unsigned __int16 movedone;          // XREF: CG_InterpolateEntityPosition+11D/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+2AF/w
+    unsigned __int16 rotatedone;        // XREF: CG_InterpolateEntityPosition+242/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+2C6/w
+    unsigned __int16 entityshutdown;    // XREF: CScr_SetClientScripts(ScriptFunctions *)+2DD/w
+                                        // CScrCmd_Delete+D2/r ...
+    unsigned __int16 front_left;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+2F4/w
+                                        // CScrCmd_GetWheelSurface(scr_entref_t)+132/r ...
+    unsigned __int16 front_right;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+30B/w
+                                        // CScrCmd_GetWheelSurface(scr_entref_t):loc_4EF597/r ...
+    unsigned __int16 back_left;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+322/w
+                                        // CScrCmd_GetWheelSurface(scr_entref_t):loc_4EF5AC/r ...
+    unsigned __int16 back_right;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+339/w
+                                        // CScrCmd_GetWheelSurface(scr_entref_t):loc_4EF5C1/r ...
+    unsigned __int16 middle_left;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+350/w
+                                        // CScrCmd_GetWheelSurface(scr_entref_t):loc_4EF5D6/r ...
+    unsigned __int16 middle_right;      // XREF: CScr_SetClientScripts(ScriptFunctions *)+367/w
+                                        // CScrCmd_GetWheelSurface(scr_entref_t):loc_4EF5EB/r ...
+    unsigned __int16 fraction;          // XREF: CScr_SetClientScripts(ScriptFunctions *)+37E/w
+                                        // CScr_BulletTrace+1F0/r ...
+    unsigned __int16 position;          // XREF: CScr_SetClientScripts(ScriptFunctions *)+395/w
+                                        // CScr_BulletTrace+237/r ...
+    unsigned __int16 entity;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+3AC/w
+                                        // CScr_BulletTrace:loc_4F19E3/r
+    unsigned __int16 enemy;             // XREF: CG_ActorProcessSnapshot(int,centity_s *)+9A/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+3F1/w
+    unsigned __int16 normal;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+3C3/w
+                                        // CScr_BulletTrace+2E1/r ...
+    unsigned __int16 surfacetype;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+3DA/w
+                                        // CScr_BulletTrace+333/r ...
+    unsigned __int16 weapon_fired;      // XREF: CScr_SetClientScripts(ScriptFunctions *)+408/w
+                                        // CG_FireWeapon_VehicleFire(int,centity_s *,playerState_s const *,int,ushort)+2A/r
+    unsigned __int16 death;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+436/w
+                                        // CScrCmd_Delete+B5/r ...
+    unsigned __int16 trigger;           // XREF: CG_NotifyTriggers(void)+11B/r
+                                        // CG_Trigger(centity_s *,centity_s *)+84/r ...
+    unsigned __int16 touch;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+44D/w
+                                        // CG_DoTouchTriggers(centity_s *,int)+464/r ...
+    unsigned __int16 broken;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+41F/w
+                                        // CG_NotifyDestructibleScripts+23/r
+    unsigned __int16 swimming_begin;    // XREF: CScr_SetClientScripts(ScriptFunctions *)+464/w
+                                        // CG_SendSwimNotify(int,int,int)+A/r
+    unsigned __int16 swimming_end;      // XREF: CScr_SetClientScripts(ScriptFunctions *)+47B/w
+                                        // CG_SendSwimNotify(int,int,int):loc_4FF536/r
+    unsigned __int16 breakafter;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+5A6/w
+                                        // CG_DestructibleBreakPiece(centity_s *,DestructiblePiece *,int,int,int,float const * const,float const * const,int)+916/r
+    unsigned __int16 prone;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+4A9/w
+                                        // GetFootstepString(int):$LN2_27/r ...
+    unsigned __int16 stand;             // XREF: CScr_SetClientScripts(ScriptFunctions *)+4C0/w
+                                        // CScr_GetStance+152/r
+    unsigned __int16 crouch;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+4D7/w
+                                        // CScr_GetStance+13E/r
+    unsigned __int16 sprint;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+4EE/w
+                                        // GetFootstepString(int):$LN7_21/r
+    unsigned __int16 run;               // XREF: CScr_SetClientScripts(ScriptFunctions *)+505/w
+                                        // GetFootstepString(int):$LN6_25/r ...
+    unsigned __int16 walk;              // XREF: CScr_SetClientScripts(ScriptFunctions *)+51C/w
+                                        // GetFootstepString(int):$LN5_24/r
+    unsigned __int16 crouchrun;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+533/w
+                                        // GetFootstepString(int):$LN4_26/r
+    unsigned __int16 crouchwalk;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+54A/w
+                                        // GetFootstepString(int):$LN3_31/r
+    unsigned __int16 explode;           // XREF: CG_ExplosionEvent(int,float const * const,float,float,float,int)+105/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+561/w
+    unsigned __int16 dtp_land;          // XREF: CG_EntityEvent(int,centity_s *,int)+4936/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+578/w
+    unsigned __int16 respawn;           // XREF: CG_Respawn(int,int)+402/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+58F/w
+    unsigned __int16 fake_fire;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+5BD/w
+                                        // CG_SndWeaponFakeFireNotify+27/r ...
+    unsigned __int16 hidden;            // XREF: CG_Vehicle+6A/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+5D4/w
+    unsigned __int16 mod_unknown;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+5EB/w
+                                        // .data:ushort * * cg_modNames/o
+    unsigned __int16 mod_pistol_bullet; // XREF: CScr_SetClientScripts(ScriptFunctions *)+602/w
+                                        // .data:00E0385C/o
+    unsigned __int16 mod_rifle_bullet;  // XREF: CScr_SetClientScripts(ScriptFunctions *)+619/w
+                                        // .data:00E03860/o
+    unsigned __int16 mod_grenade;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+630/w
+                                        // .data:00E03864/o
+    unsigned __int16 mod_grenade_splash;
+                                        // XREF: CScr_SetClientScripts(ScriptFunctions *)+647/w
+                                        // .data:00E03868/o
+    unsigned __int16 mod_projectile;    // XREF: CScr_SetClientScripts(ScriptFunctions *)+65E/w
+                                        // .data:00E0386C/o
+    unsigned __int16 mod_projectile_splash;
+                                        // XREF: CScr_SetClientScripts(ScriptFunctions *)+675/w
+                                        // .data:00E03870/o
+    unsigned __int16 mod_melee;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+68C/w
+                                        // .data:00E03874/o
+    unsigned __int16 mod_bayonet;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+6A3/w
+                                        // .data:00E03878/o
+    unsigned __int16 mod_head_shot;     // XREF: CScr_SetClientScripts(ScriptFunctions *)+6BA/w
+                                        // .data:00E0387C/o
+    unsigned __int16 mod_crush;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+6D1/w
+                                        // .data:00E03880/o
+    unsigned __int16 mod_telefrag;      // XREF: CScr_SetClientScripts(ScriptFunctions *)+6E8/w
+                                        // .data:00E03884/o
+    unsigned __int16 mod_falling;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+6FF/w
+                                        // .data:00E03888/o
+    unsigned __int16 mod_suicide;       // XREF: CScr_SetClientScripts(ScriptFunctions *)+716/w
+                                        // .data:00E0388C/o
+    unsigned __int16 mod_trigger_hurt;  // XREF: CScr_SetClientScripts(ScriptFunctions *)+72D/w
+                                        // .data:00E03890/o
+    unsigned __int16 mod_explosive;     // XREF: CScr_SetClientScripts(ScriptFunctions *)+744/w
+                                        // .data:00E03894/o
+    unsigned __int16 mod_impact;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+75B/w
+                                        // .data:00E03898/o
+    unsigned __int16 mod_burned;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+772/w
+                                        // .data:00E0389C/o
+    unsigned __int16 mod_hit_by_object; // XREF: CScr_SetClientScripts(ScriptFunctions *)+789/w
+                                        // .data:00E038A0/o
+    unsigned __int16 mod_drown;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+7A0/w
+                                        // .data:00E038A4/o
+    unsigned __int16 mod_gas;           // XREF: CScr_SetClientScripts(ScriptFunctions *)+7B7/w
+                                        // .data:00E038A8/o
+    unsigned __int16 face;              // XREF: CG_EntityEvent(int,centity_s *,int)+15EF/r
+                                        // CG_EntityEvent(int,centity_s *,int)+16A2/r ...
+    unsigned __int16 face_casual;       // XREF: CG_EntityEvent(int,centity_s *,int):$LN17_6/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+7E5/w
+    unsigned __int16 face_alert;        // XREF: CG_EntityEvent(int,centity_s *,int):$LN16_7/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+7FC/w
+    unsigned __int16 face_cqb;          // XREF: CG_EntityEvent(int,centity_s *,int):$LN15_7/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+813/w
+    unsigned __int16 face_running;      // XREF: CG_EntityEvent(int,centity_s *,int):$LN14_6/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+82A/w
+    unsigned __int16 face_shoot_single; // XREF: CG_EntityEvent(int,centity_s *,int)+12BD/r
+                                        // CG_EntityEvent(int,centity_s *,int):loc_4B328F/r ...
+    unsigned __int16 face_shoot_burst;  // XREF: CG_EntityEvent(int,centity_s *,int):$LN12_6/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+858/w
+    unsigned __int16 face_melee;        // XREF: CG_EntityEvent(int,centity_s *,int):loc_4B34C9/r
+                                        // CG_EntityEvent(int,centity_s *,int)+1843/r ...
+    unsigned __int16 face_react;        // XREF: CG_EntityEvent(int,centity_s *,int):$LN10_8/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+886/w
+    unsigned __int16 face_talk;         // XREF: CG_EntityEvent(int,centity_s *,int):$LN9_12/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+89D/w
+    unsigned __int16 face_talk_long;    // XREF: CG_EntityEvent(int,centity_s *,int):$LN8_9/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+8B4/w
+    unsigned __int16 face_pain;         // XREF: CG_EntityEvent(int,centity_s *,int):$LN7_9/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+8CB/w ...
+    unsigned __int16 face_death;        // XREF: CG_EntityEvent(int,centity_s *,int):$LN6_9/r
+                                        // CScr_SetClientScripts(ScriptFunctions *)+8E2/w
+    unsigned __int16 veh_collision;     // XREF: CScr_SetClientScripts(ScriptFunctions *)+8F9/w
+                                        // CG_UpdateVehicleNotifies(int,centity_s *)+F3/r
+    unsigned __int16 veh_inair;         // XREF: CScr_SetClientScripts(ScriptFunctions *)+910/w
+                                        // CG_UpdateVehicleNotifies(int,centity_s *)+115/r
+    unsigned __int16 veh_landed;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+927/w
+                                        // CG_UpdateVehicleNotifies(int,centity_s *)+137/r
+    unsigned __int16 veh_suspension_limit_activated;
+                                        // XREF: CScr_SetClientScripts(ScriptFunctions *)+93E/w
+                                        // CG_UpdateVehicleNotifies(int,centity_s *)+159/r
+    unsigned __int16 veh_engine_stutter;
+                                        // XREF: CScr_SetClientScripts(ScriptFunctions *)+955/w
+                                        // CG_UpdateVehicleNotifies(int,centity_s *)+17B/r
+    unsigned __int16 liveupdate;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+96C/w
+                                        // CG_NotifyScriptsOfSelectedScriptStruct(uint):loc_6ECB90/r
+    unsigned __int16 disconnect;        // XREF: CScr_SetClientScripts(ScriptFunctions *)+983/w
+    unsigned __int16 freeze;            // XREF: CScr_SetClientScripts(ScriptFunctions *)+99A/w
+    unsigned __int16 up;                // XREF: CScr_SetClientScripts(ScriptFunctions *)+9B1/w
+};
+
 void __cdecl    GScr_LoadConsts();
 
 extern scr_const_t scr_const;
+extern cscr_const_t cscr_const;

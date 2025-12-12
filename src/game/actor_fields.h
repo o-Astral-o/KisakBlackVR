@@ -1,4 +1,28 @@
 #pragma once
+#include "actor.h"
+
+enum actorFieldtype_t : __int32
+{                                       // XREF: actor_field_t/r
+    AF_NONE   = 0x0,
+    AF_STRING = 0x1,                    // XREF: .rdata:actorFields_0/s
+};
+
+struct actor_fields_s // sizeof=0x18
+{                                       // XREF: .rdata:aifield_list/r
+    const char *name;
+    int ofs;
+    int size[1];
+    fieldtype_t type;
+    void (__cdecl *setter)(actor_s *, const actor_fields_s *);
+    void (__cdecl *getter)(actor_s *, const actor_fields_s *);
+};
+
+struct actor_field_t // sizeof=0xC
+{                                       // XREF: .rdata:actorFields_0/r
+    int ofs;
+    int size[1];
+    actorFieldtype_t type;
+};
 
 void __cdecl ActorScr_SetSpecies(actor_s *pSelf);
 void __cdecl ActorScr_GetSpecies(actor_s *pSelf);

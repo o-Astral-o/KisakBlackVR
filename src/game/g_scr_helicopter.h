@@ -1,4 +1,6 @@
 #pragma once
+#include <clientscript/cscr_variable.h>
+#include <bgame/bg_public.h>
 
 void __cdecl CMD_Heli_FreeHelicopter(scr_entref_t entref);
 void __cdecl CMD_Heli_SetDamageStage(scr_entref_t entref);

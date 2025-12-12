@@ -1,4 +1,7 @@
 #include "g_scr_main_mp.h"
+#include <clientscript/cscr_vm.h>
+
+scr_data_t g_scr_data;
 
 void assertCmd()
 {

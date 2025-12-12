@@ -858,6 +858,25 @@ struct WeaponVariantDef // sizeof=0xE4
     float ikLeftHandUiViewerRotation[3];
 };
 
+struct weaponParms // sizeof=0x44
+{                                       // XREF: ?Actor_Melee@@YAPAUgentity_s@@PAUactor_s@@QBM@Z/r
+                                        // Fire_Lead/r ...
+    float forward[3];                   // XREF: GScr_MagicBullet(void)+16D/w
+                                        // GScr_MagicBullet(void)+17A/w ...
+    float right[3];                     // XREF: GScr_MagicBullet(void)+194/w
+                                        // GScr_MagicBullet(void)+1A1/w ...
+    float up[3];                        // XREF: GScr_MagicBullet(void)+1BB/w
+                                        // GScr_MagicBullet(void)+1C8/w ...
+    float muzzleTrace[3];               // XREF: GScr_MagicBullet(void)+F6/w
+                                        // GScr_MagicBullet(void)+103/w ...
+    float gunForward[3];                // XREF: VEH_DebugAim(gentity_s *,float const * const,int)+83/w
+                                        // VEH_DebugAim(gentity_s *,float const * const,int)+90/w ...
+    const WeaponVariantDef *weapVariantDef;
+                                        // XREF: FireWeapon(gentity_s *,int,int):loc_697B7A/r
+    const WeaponDef *weapDef;           // XREF: G_UpdateWeapons+72/r
+                                        // G_UpdateWeapons+7B/r ...
+};
+
 struct pmove_t;
 struct playerState_s;
 struct pml_t;

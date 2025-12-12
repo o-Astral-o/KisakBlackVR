@@ -1,4 +1,7 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <qcommon/common.h>
+#include <game/teams.h>
 
 void __cdecl G_ParseHitLocDmgTable();
 void __cdecl LookAtKiller(gentity_s *self, gentity_s *inflictor, gentity_s *attacker);

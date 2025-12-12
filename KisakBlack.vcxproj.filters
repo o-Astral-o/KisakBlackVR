@@ -5048,5 +5048,11 @@
     <ClInclude Include="src\minilzo\lzoconf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\game\game_public.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\actor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 #pragma once
+#include <bgame/bg_public.h>
 
 int __cdecl G_GetActorCorpseIndex(gentity_s *ent);
 int __cdecl G_GetFreeActorCorpseIndex(int reuse);

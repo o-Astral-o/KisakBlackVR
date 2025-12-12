@@ -1,7 +1,61 @@
 #pragma once
 #include "sentient.h"
+#include <bgame/bg_weapons.h>
 
 struct gentity_s;
+
+struct TurretInfo // sizeof=0xE0
+{                                       // XREF: .data:turretInfoStore/r
+    bool inuse;                         // XREF: G_InitTurrets(void)+25/w
+    // padding byte
+    // padding byte
+    // padding byte
+    int state;
+    int flags;
+    int fireTime;
+    EntHandle manualTarget;
+    EntHandle target;
+    float targetPos[3];
+    int targetTime;
+    float missOffsetNormalized[3];
+    float arcmin[2];
+    float arcmax[2];
+    float initialYawmin;
+    float initialYawmax;
+    float forwardAngleDot;
+    float dropPitch;
+    float scanningPitch;
+    int convergenceTime[2];
+    int suppressTime;
+    float maxRangeSquared;
+    SentientHandle detachSentient;
+    int stance;
+    int prevStance;
+    int fireSndDelay;
+    float accuracy;
+    float userOrigin[3];
+    int prevSentTarget;
+    float aiSpread;
+    float playerSpread;
+    team_t eTeam;
+    float heatVal;
+    bool overheating;
+    // padding byte
+    // padding byte
+    // padding byte
+    int fireBarrel;
+    float scanSpeed;
+    float scanDecelYaw;
+    int scanPauseTime;
+    float originError[3];
+    float anglesError[3];
+    float pitchCap;
+    int triggerDown;
+    unsigned int fireSnd;
+    unsigned int fireSndPlayer;
+    unsigned int stopSnd;
+    unsigned int stopSndPlayer;
+};
 
 void __cdecl Turret_RegisterDvars();
 void __cdecl G_InitTurrets();

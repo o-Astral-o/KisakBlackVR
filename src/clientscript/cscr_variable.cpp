@@ -1,4 +1,46 @@
 #include "cscr_variable.h"
+#include <universal/com_memory.h>
+#include <qcommon/common.h>
+#include "cscr_parser.h"
+#include "cscr_debugger.h"
+#include "cscr_animtree.h"
+#include "cscr_vm.h"
+#include <universal/physicalmemory.h>
+#include "cscr_instance.h"
+#include "cscr_stringlist.h"
+#include "cscr_readwrite.h"
+#include "cscr_memorytree.h"
+#include <universal/com_files.h>
+#include "cscr_tempmemory.h"
+#include <universal/q_parse.h>
+
+
+
+scrVarGlob_t gScrVarGlob[2];
+scrVarPub_t gScrVarPub[2];
+scrVarDebugPub_t *gScrVarDebugPub[2];
+
+scr_classStruct_t gServerClassMap[5] =
+{
+  { 0u, 0u, 'e', "entity" },
+  { 0u, 0u, 'h', "hudelem" },
+  { 0u, 0u, 'p', "pathnode" },
+  { 0u, 0u, 'v', "vehiclenode" },
+  { 0u, 0u, 'd', "dynentity" }
+};
+
+scr_classStruct_t gClientClassMap[5] =
+{
+  { 0u, 0u, 'e', "entity" },
+  { 0u, 0u, 'h', "hudelem" },
+  { 0u, 0u, 'p', "pathnode" },
+  { 0u, 0u, 'v', "vehiclenode" },
+  { 0u, 0u, 'd', "dynentity" }
+};
+
+
+
+scr_classStruct_t *gScrClassMap[2] = { gServerClassMap, gClientClassMap };
 
 void __cdecl Scr_DumpScriptThreads(scriptInstance_t inst)
 {
@@ -87,7 +129,7 @@ void __cdecl Scr_DumpScriptThreads(scriptInstance_t inst)
                     info.varUsage = info.varUsage + infoArray[i].varUsage;
                     info.endonUsage = info.endonUsage + infoArray[i++].endonUsage;
                 }
-                while ( i < num && !ThreadInfoCompare(pInfo, infoArray[i].pos) );
+                while ( i < num && !ThreadInfoCompare((unsigned int*)pInfo->pos, (unsigned int *)infoArray[i].pos) );
                 varUsage = varUsage + info.varUsage;
                 endonUsage = endonUsage + info.endonUsage;
                 Com_Printf(24, "count: %d, var usage: %d, endon usage: %d\n", count, (int)info.varUsage, (int)info.endonUsage);
@@ -164,19 +206,19 @@ int __cdecl ThreadInfoCompare(unsigned int *info1, unsigned int *info2)
 }
 
 void __cdecl Scr_DumpScriptVariables(
-                scriptInstance_t inst,
-                bool spreadsheet,
-                bool summary,
-                bool total,
-                bool functionSummary,
-                bool lineSort,
-                const char *fileName,
-                const char *functionName,
-                int minCount)
+    scriptInstance_t inst,
+    bool spreadsheet,
+    bool summary,
+    bool total,
+    bool functionSummary,
+    bool lineSort,
+    const char *fileName,
+    const char *functionName,
+    int minCount)
 {
-    int NumScriptVars; // eax
+    unsigned int NumScriptVars; // eax
     char *pos; // [esp+0h] [ebp-24h]
-    int (__cdecl *VariableInfoCompareCallBack)(const void *, const void *); // [esp+4h] [ebp-20h]
+    int(__cdecl * VariableInfoCompareCallBack)(const void *, const void *); // [esp+4h] [ebp-20h]
     unsigned int index; // [esp+8h] [ebp-1Ch]
     VariableDebugInfo *pInfo; // [esp+Ch] [ebp-18h]
     VariableDebugInfo *pInfoa; // [esp+Ch] [ebp-18h]
@@ -188,27 +230,27 @@ void __cdecl Scr_DumpScriptVariables(
     char *infoArray; // [esp+1Ch] [ebp-8h]
     int count; // [esp+20h] [ebp-4h]
 
-    if ( gScrVarDebugPub[inst]
-        && (MEMORY[0xA05AB86][116 * inst]
-         || !spreadsheet && !fileName && !functionName && !lineSort && !functionSummary && !minCount) )
+    if (gScrVarDebugPub[inst]
+        && (gScrVarPub[inst].developer
+            || !spreadsheet && !fileName && !functionName && !lineSort && !functionSummary && !minCount))
     {
         infoArray = Z_TryVirtualAlloc(4718560, "Scr_DumpScriptVariables", 0);
-        if ( infoArray )
+        if (infoArray)
         {
             num = 0;
-            for ( index = 0; index < 0x47FFE; ++index )
+            for (index = 0; index < 0x47FFE; ++index)
             {
                 pos = (char *)gScrVarDebugPub[inst]->varUsage[index];
-                if ( pos )
+                if (pos)
                 {
                     pInfo = (VariableDebugInfo *)&infoArray[16 * num];
-                    if ( !fileName || Scr_PrevCodePosFileNameMatches(inst, pos, fileName) )
+                    if (!fileName || Scr_PrevCodePosFileNameMatches(inst, pos, fileName))
                     {
-                        if ( functionName || functionSummary )
+                        if (functionName || functionSummary)
                             pInfo->functionName = Scr_PrevCodePosFunctionName(inst, pos);
                         else
                             pInfo->functionName = 0;
-                        if ( !functionName || pInfo->functionName && I_stristr(pInfo->functionName, functionName) )
+                        if (!functionName || pInfo->functionName && I_stristr(pInfo->functionName, functionName))
                         {
                             pInfo->pos = pos;
                             pInfo->fileName = Scr_PrevCodePosFileName(inst, pos);
@@ -218,51 +260,50 @@ void __cdecl Scr_DumpScriptVariables(
                     }
                 }
             }
-            if ( total )
+            if (total)
             {
-                Com_Printf(0, "num vars:                    %d\n", num);
+                Com_Printf(0, "num vars:          %d\n", num);
                 Z_VirtualFree(infoArray, 0);
             }
             else
             {
-                if ( summary )
+                if (summary)
                 {
-                    VariableInfoCompareCallBack = (int (__cdecl *)(const void *, const void *))VariableInfoFileNameCompare;
-                    qsort(infoArray, num, 0x10u, (int (__cdecl *)(const void *, const void *))VariableInfoFileNameCompare);
+                    VariableInfoCompareCallBack = (int(__cdecl *)(const void *, const void *))VariableInfoFileNameCompare;
+                    qsort(infoArray, num, 0x10u, (int(__cdecl *)(const void *, const void *))VariableInfoFileNameCompare);
                 }
-                else if ( functionSummary )
+                else if (functionSummary)
                 {
-                    VariableInfoCompareCallBack = (int (__cdecl *)(const void *, const void *))VariableInfoFunctionCompare;
-                    qsort(infoArray, num, 0x10u, (int (__cdecl *)(const void *, const void *))VariableInfoFunctionCompare);
+                    VariableInfoCompareCallBack = (int(__cdecl *)(const void *, const void *))VariableInfoFunctionCompare;
+                    qsort(infoArray, num, 0x10u, (int(__cdecl *)(const void *, const void *))VariableInfoFunctionCompare);
                 }
                 else
                 {
-                    VariableInfoCompareCallBack = (int (__cdecl *)(const void *, const void *))CompareThreadIndices;
-                    qsort(infoArray, num, 0x10u, (int (__cdecl *)(const void *, const void *))CompareThreadIndices);
+                    VariableInfoCompareCallBack = (int(__cdecl *)(const void *, const void *))CompareThreadIndices;
+                    qsort(infoArray, num, 0x10u, (int(__cdecl *)(const void *, const void *))CompareThreadIndices);
                 }
                 i = 0;
-                while ( i < num )
+                while (i < num)
                 {
                     pInfoa = (VariableDebugInfo *)&infoArray[16 * i];
                     do
                     {
                         ++pInfoa->varUsage;
-                        --*(unsigned int *)&infoArray[16 * i++ + 12];
-                    }
-                    while ( i < num && !VariableInfoCompareCallBack(pInfoa, &infoArray[16 * i]) );
+                        --*(_DWORD *)&infoArray[16 * i++ + 12];
+                    } while (i < num && !VariableInfoCompareCallBack(pInfoa, &infoArray[16 * i]));
                 }
-                if ( lineSort )
-                    qsort(infoArray, num, 0x10u, (int (__cdecl *)(const void *, const void *))VariableInfoFileLineCompare);
+                if (lineSort)
+                    qsort(infoArray, num, 0x10u, (int(__cdecl *)(const void *, const void *))VariableInfoFileLineCompare);
                 else
-                    qsort(infoArray, num, 0x10u, (int (__cdecl *)(const void *, const void *))VariableInfoCountCompare);
+                    qsort(infoArray, num, 0x10u, (int(__cdecl *)(const void *, const void *))VariableInfoCountCompare);
                 Com_Printf(24, "********************************\n");
-                if ( spreadsheet )
+                if (spreadsheet)
                 {
-                    if ( summary )
+                    if (summary)
                     {
                         Com_Printf(0, "count\tfile\n");
                     }
-                    else if ( functionSummary )
+                    else if (functionSummary)
                     {
                         Com_Printf(0, "count\tfile\tfunction\n");
                     }
@@ -273,29 +314,29 @@ void __cdecl Scr_DumpScriptVariables(
                 }
                 count = 0;
                 filteredCount = 0;
-                for ( ia = 0; ia < num; ++ia )
+                for (ia = 0; ia < num; ++ia)
                 {
                     pInfob = (VariableDebugInfo *)&infoArray[16 * ia];
-                    if ( pInfob->varUsage )
+                    if (pInfob->varUsage)
                     {
                         count += pInfob->varUsage;
-                        if ( pInfob->varUsage >= minCount )
+                        if (pInfob->varUsage >= minCount)
                         {
                             filteredCount += pInfob->varUsage;
-                            if ( spreadsheet )
+                            if (spreadsheet)
                             {
                                 Com_Printf(0, "%d\t", pInfob->varUsage);
                                 Scr_PrintPrevCodePosSpreadSheet(inst, 0, (char *)pInfob->pos, summary, functionSummary);
                             }
                             else
                             {
-                                if ( summary
+                                if (summary
                                     && !Assert_MyHandler(
-                                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                                751,
-                                                0,
-                                                "%s",
-                                                "!summary") )
+                                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                                        751,
+                                        0,
+                                        "%s",
+                                        "!summary"))
                                 {
                                     __debugbreak();
                                 }
@@ -305,18 +346,18 @@ void __cdecl Scr_DumpScriptVariables(
                         }
                     }
                 }
-                if ( num != count
+                if (num != count
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                758,
-                                0,
-                                "%s",
-                                "num == count") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        758,
+                        0,
+                        "%s",
+                        "num == count"))
                 {
                     __debugbreak();
                 }
                 Com_Printf(0, "********************************\n");
-                Com_Printf(0, "num vars:                    %d\n", filteredCount);
+                Com_Printf(0, "num vars:          %d\n", filteredCount);
                 NumScriptVars = Scr_GetNumScriptVars(inst);
                 Com_Printf(0, "num unlisted vars: %d\n", NumScriptVars - filteredCount);
                 Com_Printf(0, "********************************\n");
@@ -383,48 +424,56 @@ void __cdecl Scr_DumpScriptVariablesDefault(scriptInstance_t inst)
     Scr_DumpScriptVariables(inst, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
+const char *gScriptVarsAlloc = "ScriptVars";
+
 void __cdecl Scr_InitVariables(scriptInstance_t inst)
 {
     gScrVarGlob[inst].variableList = (VariableValueInternal *)_PMem_AllocNamed(
-                                                                                                                            0x7DFFC8u,
-                                                                                                                            0x80u,
-                                                                                                                            4,
-                                                                                                                            1u,
-                                                                                                                            gScriptVarsAlloc,
-                                                                                                                            TRACK_SCRIPT);
-    MEMORY[0xA05ABD0][29 * inst] = (int)_PMem_AllocNamed(0xFFFCu, 4u, 4, 1u, gScriptVarsAlloc, TRACK_SCRIPT);
-    MEMORY[0xA05ABD4][29 * inst] = (int)_PMem_AllocNamed(0xFFFCu, 4u, 4, 1u, gScriptVarsAlloc, TRACK_SCRIPT);
-    if ( !gScrVarDebugPub[inst] )
+        0x7DFFC8u,
+        0x80u,
+        4,
+        1u,
+        gScriptVarsAlloc,
+        TRACK_SCRIPT);
+    gScrVarPub[inst].saveIdMap = (unsigned __int16 *)_PMem_AllocNamed(0xFFFCu, 4u, 4, 1u, gScriptVarsAlloc, TRACK_SCRIPT);
+    gScrVarPub[inst].saveIdMapRev = (unsigned __int16 *)_PMem_AllocNamed(
+        0xFFFCu,
+        4u,
+        4,
+        1u,
+        gScriptVarsAlloc,
+        TRACK_SCRIPT);
+    if (!gScrVarDebugPub[inst])
         Scr_ResetScrVarDebugPub(inst);
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
     {
         gScrVarDebugPub[inst]->leakCount = (int *)_PMem_AllocNamed(0x11FFF8u, 4u, 4, 1u, gScriptVarsAlloc, TRACK_SCRIPT);
         memset((unsigned __int8 *)gScrVarDebugPub[inst]->leakCount, 0, 0x11FFF8u);
     }
-    MEMORY[0xA05ABEC][29 * inst] = 0;
-    MEMORY[0xA05ABF0][29 * inst] = 0;
-    if ( gScrVarDebugPub[inst] )
+    gScrVarPub[inst].totalObjectRefCount = 0;
+    gScrVarPub[inst].totalVectorRefCount = 0;
+    if (gScrVarDebugPub[inst])
     {
         gScrVarDebugPub[inst]->extRefCount = (unsigned __int16 *)_PMem_AllocNamed(
-                                                                                                                             0xFFFCu,
-                                                                                                                             4u,
-                                                                                                                             4,
-                                                                                                                             1u,
-                                                                                                                             gScriptVarsAlloc,
-                                                                                                                             TRACK_SCRIPT);
+            0xFFFCu,
+            4u,
+            4,
+            1u,
+            gScriptVarsAlloc,
+            TRACK_SCRIPT);
         memset((unsigned __int8 *)gScrVarDebugPub[inst]->extRefCount, 0, 0xFFFCu);
     }
-    MEMORY[0xA05ABDC][29 * inst] = 0;
-    MEMORY[0xA05ABE0][29 * inst] = 0;
-    if ( gScrVarDebugPub[inst] )
+    gScrVarPub[inst].numScriptValues = 0;
+    gScrVarPub[inst].numScriptObjects = 0;
+    if (gScrVarDebugPub[inst])
     {
         gScrVarDebugPub[inst]->varUsage = (const char **)_PMem_AllocNamed(
-                                                                                                             0x11FFF8u,
-                                                                                                             4u,
-                                                                                                             4,
-                                                                                                             1u,
-                                                                                                             gScriptVarsAlloc,
-                                                                                                             TRACK_SCRIPT);
+            0x11FFF8u,
+            4u,
+            4,
+            1u,
+            gScriptVarsAlloc,
+            TRACK_SCRIPT);
         memset((unsigned __int8 *)gScrVarDebugPub[inst]->varUsage, 0, 0x11FFF8u);
     }
     Scr_InitVariableRange(inst, 1u, 0x7FFFu);
@@ -490,32 +539,32 @@ void __cdecl Scr_InitClassMap(scriptInstance_t inst)
 
 void __cdecl Scr_ShutdownVariables(scriptInstance_t inst)
 {
-    if ( MEMORY[0xA05ABA4][29 * inst] )
+    if (gScrVarPub[inst].gameId)
     {
-        FreeValue(inst, MEMORY[0xA05ABA4][29 * inst]);
-        MEMORY[0xA05ABA4][29 * inst] = 0;
+        FreeValue(inst, gScrVarPub[inst].gameId);
+        gScrVarPub[inst].gameId = 0;
     }
-    if ( !gScrStringDebugGlob[inst] || !gScrStringDebugGlob[inst]->ignoreLeaks )
+    if (!gScrStringDebugGlob[inst] || !gScrStringDebugGlob[inst]->ignoreLeaks)
     {
-        if ( MEMORY[0xA05ABDC][29 * inst]
+        if (gScrVarPub[inst].numScriptValues
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        927,
-                        0,
-                        "%s\n\t(gScrVarPub[inst].numScriptValues) = %i",
-                        "(!gScrVarPub[inst].numScriptValues)",
-                        MEMORY[0xA05ABDC][29 * inst]) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                927,
+                0,
+                "%s\n\t(gScrVarPub[inst].numScriptValues) = %i",
+                "(!gScrVarPub[inst].numScriptValues)",
+                gScrVarPub[inst].numScriptValues))
         {
             __debugbreak();
         }
-        if ( MEMORY[0xA05ABE0][29 * inst]
+        if (gScrVarPub[inst].numScriptObjects
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        928,
-                        0,
-                        "%s\n\t(gScrVarPub[inst].numScriptObjects) = %i",
-                        "(!gScrVarPub[inst].numScriptObjects)",
-                        MEMORY[0xA05ABE0][29 * inst]) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                928,
+                0,
+                "%s\n\t(gScrVarPub[inst].numScriptObjects) = %i",
+                "(!gScrVarPub[inst].numScriptObjects)",
+                gScrVarPub[inst].numScriptObjects))
         {
             __debugbreak();
         }
@@ -529,60 +578,60 @@ void __cdecl Scr_CheckLeaks(scriptInstance_t inst)
     unsigned int id; // [esp+4h] [ebp-4h]
     unsigned int ida; // [esp+4h] [ebp-4h]
 
-    if ( !gScrStringDebugGlob[inst] || !gScrStringDebugGlob[inst]->ignoreLeaks )
+    if (!gScrStringDebugGlob[inst] || !gScrStringDebugGlob[inst]->ignoreLeaks)
     {
         Scr_CheckLeakRange(inst, 1u, 0x7FFFu);
         Scr_CheckLeakRange(inst, 0x8000u, 0x47FFEu);
-        if ( MEMORY[0xA05ABEC][29 * inst]
+        if (gScrVarPub[inst].totalObjectRefCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        172,
-                        0,
-                        "%s",
-                        "!gScrVarPub[inst].totalObjectRefCount") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                172,
+                0,
+                "%s",
+                "!gScrVarPub[inst].totalObjectRefCount"))
         {
             __debugbreak();
         }
-        if ( MEMORY[0xA05ABF0][29 * inst]
+        if (gScrVarPub[inst].totalVectorRefCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        173,
-                        0,
-                        "%s",
-                        "!gScrVarPub[inst].totalVectorRefCount") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                173,
+                0,
+                "%s",
+                "!gScrVarPub[inst].totalVectorRefCount"))
         {
             __debugbreak();
         }
-        if ( MEMORY[0xA05ABE8][29 * inst]
+        if (gScrVarPub[inst].ext_threadcount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        174,
-                        0,
-                        "%s",
-                        "!gScrVarPub[inst].ext_threadcount") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                174,
+                0,
+                "%s",
+                "!gScrVarPub[inst].ext_threadcount"))
         {
             __debugbreak();
         }
     }
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
     {
         bLeak = 0;
-        for ( id = 0; id < 0x47FFE; ++id )
+        for (id = 0; id < 0x47FFE; ++id)
         {
-            if ( gScrVarDebugPub[inst]->leakCount[id] )
+            if (gScrVarDebugPub[inst]->leakCount[id])
                 bLeak = 1;
         }
-        if ( bLeak )
+        if (bLeak)
         {
             Com_Printf(24, "leak:\n");
-            for ( ida = 0; ida < 0x47FFE; ++ida )
+            for (ida = 0; ida < 0x47FFE; ++ida)
             {
-                if ( gScrVarDebugPub[inst]->leakCount[ida] )
+                if (gScrVarDebugPub[inst]->leakCount[ida])
                     Com_Printf(24, "%d, %d\n", ida, gScrVarDebugPub[inst]->leakCount[ida]);
             }
             Com_Printf(24, "\n");
-            if ( (!gScrStringDebugGlob[inst] || !gScrStringDebugGlob[inst]->ignoreLeaks)
-                && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp", 198, 0, "leak") )
+            if ((!gScrStringDebugGlob[inst] || !gScrStringDebugGlob[inst]->ignoreLeaks)
+                && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp", 198, 0, "leak"))
             {
                 __debugbreak();
             }
@@ -639,19 +688,19 @@ LABEL_11:
     }
 }
 
-int __cdecl Scr_GetNumScriptVars(scriptInstance_t inst)
+unsigned int __cdecl Scr_GetNumScriptVars(scriptInstance_t inst)
 {
-    return MEMORY[0xA05ABE0][29 * inst] + MEMORY[0xA05ABDC][29 * inst];
+    return gScrVarPub[inst].numScriptObjects + gScrVarPub[inst].numScriptValues;
 }
 
-int __cdecl Scr_GetNumScriptVarsParent(scriptInstance_t inst)
+unsigned int __cdecl Scr_GetNumScriptVarsParent(scriptInstance_t inst)
 {
-    return MEMORY[0xA05ABE0][29 * inst];
+    return gScrVarPub[inst].numScriptObjects;
 }
 
-int __cdecl Scr_GetNumScriptVarsChild(scriptInstance_t inst)
+unsigned int __cdecl Scr_GetNumScriptVarsChild(scriptInstance_t inst)
 {
-    return MEMORY[0xA05ABDC][29 * inst];
+    return gScrVarPub[inst].numScriptValues;
 }
 
 unsigned int __cdecl GetVariableKeyObject(scriptInstance_t inst, unsigned int id)
@@ -1143,7 +1192,7 @@ LABEL_66:
     {
         __debugbreak();
     }
-    ++MEMORY[0xA05ABEC][29 * inst];
+    ++gScrVarPub[inst].totalObjectRefCount;
     if ( gScrVarDebugPub[inst] )
     {
         if ( gScrVarDebugPub[inst]->leakCount[entry->hash.id + 0x8000]
@@ -1158,14 +1207,14 @@ LABEL_66:
         }
         ++gScrVarDebugPub[inst]->leakCount[entry->hash.id + 0x8000];
     }
-    ++MEMORY[0xA05ABDC][29 * inst];
-    if ( !MEMORY[0xA05ABE4][29 * inst]
+    ++gScrVarPub[inst].numScriptValues;
+    if (!gScrVarPub[inst].varUsagePos
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1185,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].varUsagePos") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1185,
+            0,
+            "%s",
+            "gScrVarPub[inst].varUsagePos"))
     {
         __debugbreak();
     }
@@ -1181,7 +1230,7 @@ LABEL_66:
         {
             __debugbreak();
         }
-        gScrVarDebugPub[inst]->varUsage[entry->hash.id + 0x8000] = (const char *)MEMORY[0xA05ABE4][29 * inst];
+        gScrVarDebugPub[inst]->varUsage[entry->hash.id + 0x8000] = gScrVarPub[inst].varUsagePos;
     }
     parentValue = &gScrVarGlob[inst].variableList[parentId + 1];
     if ( (parentValue->w.status & 0x60) != 0x60
@@ -1326,7 +1375,7 @@ void __cdecl ClearObjectInternal(scriptInstance_t inst, unsigned int parentId)
 
 void __cdecl MakeVariableExternal(scriptInstance_t inst, unsigned int index, VariableValueInternal *parentValue)
 {
-    Variable::<unnamed_type_u> v3; // edx
+    Variable_u v3; // edx
     VariableValueInternal *entry; // [esp+1Ch] [ebp-3Ch]
     unsigned int oldPrevSiblingIndex; // [esp+20h] [ebp-38h]
     unsigned int nextSiblingIndex; // [esp+24h] [ebp-34h]
@@ -1334,7 +1383,7 @@ void __cdecl MakeVariableExternal(scriptInstance_t inst, unsigned int index, Var
     unsigned int oldIndex; // [esp+30h] [ebp-28h]
     VariableValueInternal *entryValue; // [esp+34h] [ebp-24h]
     unsigned int tempEntry; // [esp+38h] [ebp-20h]
-    Variable::<unnamed_type_u> tempEntry_4; // [esp+3Ch] [ebp-1Ch]
+    Variable_u tempEntry_4; // [esp+3Ch] [ebp-1Ch]
     VariableValueInternal *oldEntry; // [esp+40h] [ebp-18h]
     VariableValueInternal *oldEntrya; // [esp+40h] [ebp-18h]
     Variable *prev; // [esp+44h] [ebp-14h]
@@ -1434,8 +1483,8 @@ void __cdecl MakeVariableExternal(scriptInstance_t inst, unsigned int index, Var
             if ( prevSiblingIndex )
                 gScrVarGlob[inst].variableList[gScrVarGlob[inst].variableList[prevSiblingIndex + 0x8000].hash.id + 0x8000].nextSibling = oldIndex;
             tempEntry = entry->hash.id;
-            tempEntry_4.prev = (unsigned int)entry->hash.u;
-            v3.prev = (unsigned int)oldEntry->hash.u;
+            tempEntry_4.prev = entry->hash.u.prev;
+            v3.prev = oldEntry->hash.u.prev;
             entry->hash.id = oldEntry->hash.id;
             entry->hash.u = v3;
             oldEntry->hash.id = tempEntry;
@@ -1494,159 +1543,159 @@ void __cdecl FreeChildValue(scriptInstance_t inst, unsigned int parentId, unsign
     unsigned int index; // [esp+20h] [ebp-Ch]
 
     entryValue = &gScrVarGlob[inst].variableList[id + 0x8000];
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1475,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1475,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x60) == 0
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x1F) >= 0xD
+    if ((entryValue->w.status & 0x1F) >= 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1476,
-                    0,
-                    "%s",
-                    "!IsObject( entryValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1476,
+            0,
+            "%s",
+            "!IsObject( entryValue )"))
     {
         __debugbreak();
     }
-    if ( gScrVarGlob[inst].variableList[entryValue->v.next + 0x8000].hash.id != id
+    if (gScrVarGlob[inst].variableList[entryValue->v.next + 0x8000].hash.id != id
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1477,
-                    0,
-                    "%s",
-                    "gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ entryValue->v.index].hash.id == id") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1477,
+            0,
+            "%s",
+            "gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ entryValue->v.index].hash.id == id"))
     {
         __debugbreak();
     }
     RemoveRefToValue(inst, entryValue->w.status & 0x1F, entryValue->u.u);
-    if ( (!id || id >= 0x3FFFE)
+    if ((!id || id >= 0x3FFFE)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1483,
-                    0,
-                    "%s",
-                    "id > 0 && id < VARIABLELIST_CHILD_SIZE(inst)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1483,
+            0,
+            "%s",
+            "id > 0 && id < VARIABLELIST_CHILD_SIZE(inst)"))
     {
         __debugbreak();
     }
-    --MEMORY[0xA05ABEC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    --gScrVarPub[inst].totalObjectRefCount;
+    if (gScrVarDebugPub[inst])
     {
-        if ( !gScrVarDebugPub[inst]->leakCount[id + 0x8000]
+        if (!gScrVarDebugPub[inst]->leakCount[id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1488,
-                        0,
-                        "%s",
-                        "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1488,
+                0,
+                "%s",
+                "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
-        if ( --gScrVarDebugPub[inst]->leakCount[id + 0x8000]
+        if (--gScrVarDebugPub[inst]->leakCount[id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1490,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1490,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
     }
-    --MEMORY[0xA05ABDC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    --gScrVarPub[inst].numScriptValues;
+    if (gScrVarDebugPub[inst])
     {
-        if ( !gScrVarDebugPub[inst]->varUsage[id + 0x8000]
+        if (!gScrVarDebugPub[inst]->varUsage[id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1498,
-                        0,
-                        "%s",
-                        "gScrVarDebugPub[inst]->varUsage[VARIABLELIST_CHILD_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1498,
+                0,
+                "%s",
+                "gScrVarDebugPub[inst]->varUsage[VARIABLELIST_CHILD_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
         gScrVarDebugPub[inst]->varUsage[id + 0x8000] = 0;
     }
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1503,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1503,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
     index = entryValue->v.next;
     entry = &gScrVarGlob[inst].variableList[index + 0x8000];
-    if ( entry->hash.id != id
+    if (entry->hash.id != id
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1507,
-                    0,
-                    "%s",
-                    "entry->id == id") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1507,
+            0,
+            "%s",
+            "entry->id == id"))
     {
         __debugbreak();
     }
     nextSiblingIndex = entryValue->nextSibling;
     prevSiblingIndex = entry->hash.u.prev;
-    if ( prevSiblingIndex )
+    if (prevSiblingIndex)
     {
         gScrVarGlob[inst].variableList[gScrVarGlob[inst].variableList[prevSiblingIndex + 0x8000].hash.id + 0x8000].nextSibling = nextSiblingIndex;
     }
     else
     {
-        if ( gScrVarGlob[inst].variableList[0x8000].hash.id
+        if (gScrVarGlob[inst].variableList[0x8000].hash.id
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1519,
-                        0,
-                        "%s",
-                        "!gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)].hash.id") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1519,
+                0,
+                "%s",
+                "!gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)].hash.id"))
         {
             __debugbreak();
         }
         gScrVarGlob[inst].variableList[parentId + 1].nextSibling = gScrVarGlob[inst].variableList[nextSiblingIndex + 0x8000].hash.id;
     }
-    if ( nextSiblingIndex )
+    if (nextSiblingIndex)
     {
         gScrVarGlob[inst].variableList[nextSiblingIndex + 0x8000].hash.u.prev = prevSiblingIndex;
     }
     else
     {
         parentIndex = gScrVarGlob[inst].variableList[parentId + 1].v.next;
-        if ( gScrVarGlob[inst].variableList[0x8000].hash.id
+        if (gScrVarGlob[inst].variableList[0x8000].hash.id
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1531,
-                        0,
-                        "%s",
-                        "!gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)].hash.id") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1531,
+                0,
+                "%s",
+                "!gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)].hash.id"))
         {
             __debugbreak();
         }
         gScrVarGlob[inst].variableList[parentIndex + 1].hash.u.prev = gScrVarGlob[inst].variableList[prevSiblingIndex
-                                                                                                                                                                                             + 0x8000].hash.id;
+            + 0x8000].hash.id;
     }
     entryValue->w.status = 0;
     entryValue->u.next = gScrVarGlob[inst].variableList[0x8000].u.next;
@@ -1689,19 +1738,19 @@ void __cdecl Scr_SetThreadNotifyName(scriptInstance_t inst, unsigned int startLo
 
 void __cdecl Scr_StopThread(scriptInstance_t inst, unsigned int threadId)
 {
-    if ( !threadId
+    if (!threadId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1636,
-                    0,
-                    "%s",
-                    "threadId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1636,
+            0,
+            "%s",
+            "threadId"))
     {
         __debugbreak();
     }
     Scr_ClearThread(inst, threadId);
-    gScrVarGlob[inst].variableList[threadId + 1].u.o.u.nextEntId = MEMORY[0xA05ABA0][29 * inst];
-    AddRefToObject(inst, MEMORY[0xA05ABA0][29 * inst]);
+    gScrVarGlob[inst].variableList[threadId + 1].u.o.u.nextEntId = gScrVarPub[inst].levelId;
+    AddRefToObject(inst, gScrVarPub[inst].levelId);
 }
 
 void __cdecl Scr_ClearThread(scriptInstance_t inst, unsigned int parentId)
@@ -2031,71 +2080,71 @@ unsigned int __cdecl GetStartLocalId(scriptInstance_t inst, unsigned int threadI
 void __cdecl Scr_KillThread(scriptInstance_t inst, unsigned int parentId)
 {
     unsigned int ObjectVariable; // eax
-    VariableValueInternal::<unnamed_type_u> *VariableValueAddress; // eax
+    VariableValueInternal_u *VariableValueAddress; // eax
     VariableValueInternal *parentValue; // [esp+4h] [ebp-18h]
     unsigned int selfNameId; // [esp+8h] [ebp-14h]
     unsigned int name; // [esp+Ch] [ebp-10h]
     unsigned int id; // [esp+14h] [ebp-8h]
     unsigned int notifyListEntry; // [esp+18h] [ebp-4h]
 
-    if ( !parentId
+    if (!parentId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1760,
-                    0,
-                    "%s",
-                    "parentId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1760,
+            0,
+            "%s",
+            "parentId"))
     {
         __debugbreak();
     }
     parentValue = &gScrVarGlob[inst].variableList[parentId + 1];
-    if ( (parentValue->w.status & 0x60) != 0x60
+    if ((parentValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1763,
-                    0,
-                    "%s",
-                    "(parentValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1763,
+            0,
+            "%s",
+            "(parentValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL"))
     {
         __debugbreak();
     }
-    if ( ((parentValue->w.status & 0x1F) < 0xD || (parentValue->w.status & 0x1F) > 0x10)
+    if (((parentValue->w.status & 0x1F) < 0xD || (parentValue->w.status & 0x1F) > 0x10)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1764,
-                    0,
-                    "%s",
-                    "((parentValue->w.type & VAR_MASK) >= VAR_THREAD) && ((parentValue->w.type & VAR_MASK) <= VAR_CHILD_THREAD)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1764,
+            0,
+            "%s",
+            "((parentValue->w.type & VAR_MASK) >= VAR_THREAD) && ((parentValue->w.type & VAR_MASK) <= VAR_CHILD_THREAD)"))
     {
         __debugbreak();
     }
     Scr_ClearThread(inst, parentId);
-    id = FindObjectVariable(inst, MEMORY[0xA05AB9C][29 * inst], parentId);
-    if ( id )
+    id = FindObjectVariable(inst, gScrVarPub[inst].pauseArrayId, parentId);
+    if (id)
     {
-        for ( selfNameId = FindObject(inst, id); ; RemoveObjectVariable(inst, selfNameId, name - 0x10000) )
+        for (selfNameId = FindObject(inst, id); ; RemoveObjectVariable(inst, selfNameId, name - 0x10000))
         {
             notifyListEntry = FindFirstSibling(inst, selfNameId);
-            if ( !notifyListEntry )
+            if (!notifyListEntry)
                 break;
-            if ( (gScrVarGlob[inst].variableList[notifyListEntry + 0x8000].w.status & 0x1F) != 1
+            if ((gScrVarGlob[inst].variableList[notifyListEntry + 0x8000].w.status & 0x1F) != 1
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            1779,
-                            0,
-                            "%s",
-                            "(gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ notifyListEntry].w.type & VAR_MASK) == VAR_POINTER") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    1779,
+                    0,
+                    "%s",
+                    "(gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ notifyListEntry].w.type & VAR_MASK) == VAR_POINTER"))
             {
                 __debugbreak();
             }
             name = gScrVarGlob[inst].variableList[notifyListEntry + 0x8000].w.status >> 8;
-            if ( name - 0x10000 >= 0x10000
+            if (name - 0x10000 >= 0x10000
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            1781,
-                            0,
-                            "%s",
-                            "(name - SL_MAX_STRING_INDEX) < (1 << 16)") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    1781,
+                    0,
+                    "%s",
+                    "(name - SL_MAX_STRING_INDEX) < (1 << 16)"))
             {
                 __debugbreak();
             }
@@ -2104,17 +2153,17 @@ void __cdecl Scr_KillThread(scriptInstance_t inst, unsigned int parentId)
             VM_CancelNotify(inst, VariableValueAddress->next, name - 0x10000);
             Scr_KillEndonThread(inst, name - 0x10000);
         }
-        if ( GetArraySize(inst, selfNameId)
+        if (GetArraySize(inst, selfNameId)
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1790,
-                        0,
-                        "%s",
-                        "!GetArraySize( inst, selfNameId )") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1790,
+                0,
+                "%s",
+                "!GetArraySize( inst, selfNameId )"))
         {
             __debugbreak();
         }
-        RemoveObjectVariable(inst, MEMORY[0xA05AB9C][29 * inst], parentId);
+        RemoveObjectVariable(inst, gScrVarPub[inst].pauseArrayId, parentId);
     }
     parentValue->w.status &= 0xFFFFFFE0;
     parentValue->w.status |= 0x15u;
@@ -2125,44 +2174,44 @@ void __cdecl Scr_KillEndonThread(scriptInstance_t inst, unsigned int threadId)
     VariableValueInternal *parentValue; // [esp+0h] [ebp-4h]
 
     parentValue = &gScrVarGlob[inst].variableList[threadId + 1];
-    if ( (parentValue->w.status & 0x60) != 0x60
+    if ((parentValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1805,
-                    0,
-                    "%s",
-                    "(parentValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1805,
+            0,
+            "%s",
+            "(parentValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL"))
     {
         __debugbreak();
     }
-    if ( (parentValue->w.status & 0x1F) != 0xD
+    if ((parentValue->w.status & 0x1F) != 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1806,
-                    0,
-                    "%s",
-                    "(parentValue->w.type & VAR_MASK) == VAR_THREAD") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1806,
+            0,
+            "%s",
+            "(parentValue->w.type & VAR_MASK) == VAR_THREAD"))
     {
         __debugbreak();
     }
-    if ( parentValue->nextSibling
+    if (parentValue->nextSibling
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1807,
-                    0,
-                    "%s",
-                    "!parentValue->nextSibling") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1807,
+            0,
+            "%s",
+            "!parentValue->nextSibling"))
     {
         __debugbreak();
     }
     RemoveRefToObject(inst, parentValue->u.o.u.nextEntId);
-    if ( FindObjectVariable(inst, MEMORY[0xA05AB9C][29 * inst], threadId)
+    if (FindObjectVariable(inst, gScrVarPub[inst].pauseArrayId, threadId)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1811,
-                    0,
-                    "%s",
-                    "!FindObjectVariable( inst, gScrVarPub[inst].pauseArrayId, threadId )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1811,
+            0,
+            "%s",
+            "!FindObjectVariable( inst, gScrVarPub[inst].pauseArrayId, threadId )"))
     {
         __debugbreak();
     }
@@ -2179,31 +2228,31 @@ unsigned int __cdecl AllocValue(scriptInstance_t inst)
     unsigned int index; // [esp+14h] [ebp-4h]
 
     index = gScrVarGlob[inst].variableList[0x8000].u.next;
-    if ( !index )
+    if (!index)
         Scr_TerminalError("exceeded maximum number of script variables", inst);
     entry = &gScrVarGlob[inst].variableList[index + 0x8000];
     entryValue = &gScrVarGlob[inst].variableList[entry->hash.id + 0x8000];
-    if ( (entryValue->w.status & 0x60) != 0
+    if ((entryValue->w.status & 0x60) != 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1946,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_FREE") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1946,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_FREE"))
     {
         __debugbreak();
     }
     next = entryValue->u.next;
-    if ( entry != entryValue && (entry->w.status & 0x60) == 0 )
+    if (entry != entryValue && (entry->w.status & 0x60) == 0)
     {
         newIndex = entry->v.next;
-        if ( newIndex == index
+        if (newIndex == index
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1954,
-                        0,
-                        "%s",
-                        "newIndex != index") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1954,
+                0,
+                "%s",
+                "newIndex != index"))
         {
             __debugbreak();
         }
@@ -2218,64 +2267,64 @@ unsigned int __cdecl AllocValue(scriptInstance_t inst)
     entryValue->v.next = index;
     entryValue->nextSibling = 0;
     entry->hash.u.prev = 0;
-    if ( (!entry->hash.id || entry->hash.id >= 0x3FFFE)
+    if ((!entry->hash.id || entry->hash.id >= 0x3FFFE)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1970,
-                    0,
-                    "%s",
-                    "entry->hash.id > 0 && entry->hash.id < VARIABLELIST_CHILD_SIZE(inst)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1970,
+            0,
+            "%s",
+            "entry->hash.id > 0 && entry->hash.id < VARIABLELIST_CHILD_SIZE(inst)"))
     {
         __debugbreak();
     }
-    ++MEMORY[0xA05ABEC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    ++gScrVarPub[inst].totalObjectRefCount;
+    if (gScrVarDebugPub[inst])
     {
-        if ( gScrVarDebugPub[inst]->leakCount[entry->hash.id + 0x8000]
+        if (gScrVarDebugPub[inst]->leakCount[entry->hash.id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1975,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ entry->hash.id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1975,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ entry->hash.id]"))
         {
             __debugbreak();
         }
         ++gScrVarDebugPub[inst]->leakCount[entry->hash.id + 0x8000];
     }
-    ++MEMORY[0xA05ABDC][29 * inst];
-    if ( !MEMORY[0xA05ABE4][29 * inst]
+    ++gScrVarPub[inst].numScriptValues;
+    if (!gScrVarPub[inst].varUsagePos
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1982,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].varUsagePos") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1982,
+            0,
+            "%s",
+            "gScrVarPub[inst].varUsagePos"))
     {
         __debugbreak();
     }
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
     {
-        if ( gScrVarDebugPub[inst]->varUsage[entry->hash.id + 0x8000]
+        if (gScrVarDebugPub[inst]->varUsage[entry->hash.id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1985,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->varUsage[VARIABLELIST_CHILD_BEGIN(inst)+ entry->hash.id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1985,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->varUsage[VARIABLELIST_CHILD_BEGIN(inst)+ entry->hash.id]"))
         {
             __debugbreak();
         }
-        gScrVarDebugPub[inst]->varUsage[entry->hash.id + 0x8000] = (const char *)MEMORY[0xA05ABE4][29 * inst];
+        gScrVarDebugPub[inst]->varUsage[entry->hash.id + 0x8000] = gScrVarPub[inst].varUsagePos;
     }
     entryValue->w.status = 96;
-    if ( (entryValue->w.status & 0x1F) != 0
+    if ((entryValue->w.status & 0x1F) != 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1991,
-                    0,
-                    "%s",
-                    "!(entryValue->w.type & VAR_MASK)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1991,
+            0,
+            "%s",
+            "!(entryValue->w.type & VAR_MASK)"))
     {
         __debugbreak();
     }
@@ -2315,31 +2364,31 @@ unsigned int __cdecl AllocVariable(scriptInstance_t inst)
     VariableValueInternal *entryValue; // [esp+14h] [ebp-4h]
 
     index = gScrVarGlob[inst].variableList[1].u.next;
-    if ( !index )
+    if (!index)
         Scr_TerminalError("exceeded maximum number of script variables", inst);
     entry = &gScrVarGlob[inst].variableList[index + 1];
     entryValue = &gScrVarGlob[inst].variableList[entry->hash.id + 1];
-    if ( (entryValue->w.status & 0x60) != 0
+    if ((entryValue->w.status & 0x60) != 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1835,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_FREE") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1835,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_FREE"))
     {
         __debugbreak();
     }
     next = entryValue->u.next;
-    if ( entry != entryValue && (entry->w.status & 0x60) == 0 )
+    if (entry != entryValue && (entry->w.status & 0x60) == 0)
     {
         newIndex = entry->v.next;
-        if ( newIndex == index
+        if (newIndex == index
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1843,
-                        0,
-                        "%s",
-                        "newIndex != index") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1843,
+                0,
+                "%s",
+                "newIndex != index"))
         {
             __debugbreak();
         }
@@ -2354,55 +2403,55 @@ unsigned int __cdecl AllocVariable(scriptInstance_t inst)
     entryValue->v.next = index;
     entryValue->nextSibling = 0;
     entry->hash.u.prev = 0;
-    if ( (!entry->hash.id || entry->hash.id >= 0x7FFE)
+    if ((!entry->hash.id || entry->hash.id >= 0x7FFE)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1859,
-                    0,
-                    "%s",
-                    "entry->hash.id > 0 && entry->hash.id < VARIABLELIST_PARENT_SIZE(inst)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1859,
+            0,
+            "%s",
+            "entry->hash.id > 0 && entry->hash.id < VARIABLELIST_PARENT_SIZE(inst)"))
     {
         __debugbreak();
     }
-    ++MEMORY[0xA05ABEC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    ++gScrVarPub[inst].totalObjectRefCount;
+    if (gScrVarDebugPub[inst])
     {
-        if ( gScrVarDebugPub[inst]->leakCount[entry->hash.id + 1]
+        if (gScrVarDebugPub[inst]->leakCount[entry->hash.id + 1]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1864,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ entry->hash.id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1864,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ entry->hash.id]"))
         {
             __debugbreak();
         }
         ++gScrVarDebugPub[inst]->leakCount[entry->hash.id + 1];
     }
-    ++MEMORY[0xA05ABE0][29 * inst];
-    if ( !MEMORY[0xA05ABE4][29 * inst]
+    ++gScrVarPub[inst].numScriptObjects;
+    if (!gScrVarPub[inst].varUsagePos
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1871,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].varUsagePos") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1871,
+            0,
+            "%s",
+            "gScrVarPub[inst].varUsagePos"))
     {
         __debugbreak();
     }
-    if ( gScrVarDebugPub[inst] )
+    if (gScrVarDebugPub[inst])
     {
-        if ( gScrVarDebugPub[inst]->varUsage[entry->hash.id + 1]
+        if (gScrVarDebugPub[inst]->varUsage[entry->hash.id + 1]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1874,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->varUsage[VARIABLELIST_PARENT_BEGIN(inst)+ entry->hash.id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1874,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->varUsage[VARIABLELIST_PARENT_BEGIN(inst)+ entry->hash.id]"))
         {
             __debugbreak();
         }
-        gScrVarDebugPub[inst]->varUsage[entry->hash.id + 1] = (const char *)MEMORY[0xA05ABE4][29 * inst];
+        gScrVarDebugPub[inst]->varUsage[entry->hash.id + 1] = gScrVarPub[inst].varUsagePos;
     }
     return entry->hash.id;
 }
@@ -2413,26 +2462,26 @@ unsigned int __cdecl Scr_AllocArray(scriptInstance_t inst)
     VariableValueInternal *entryValue; // [esp+4h] [ebp-8h]
     unsigned int id; // [esp+8h] [ebp-4h]
 
-    varUsagePos = (const char *)MEMORY[0xA05ABE4][29 * inst];
-    if ( !varUsagePos )
-        MEMORY[0xA05ABE4][29 * inst] = (int)"<script array variable>";
+    varUsagePos = gScrVarPub[inst].varUsagePos;
+    if (!varUsagePos)
+        gScrVarPub[inst].varUsagePos = "<script array variable>";
     id = AllocVariable(inst);
     entryValue = &gScrVarGlob[inst].variableList[id + 1];
     entryValue->w.status = 96;
-    if ( (entryValue->w.status & 0x1F) != 0
+    if ((entryValue->w.status & 0x1F) != 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2054,
-                    0,
-                    "%s",
-                    "!(entryValue->w.type & VAR_MASK)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2054,
+            0,
+            "%s",
+            "!(entryValue->w.type & VAR_MASK)"))
     {
         __debugbreak();
     }
     entryValue->w.status |= 0x14u;
     entryValue->u.o.refCount = 0;
     entryValue->u.o.u.entnum = 0;
-    MEMORY[0xA05ABE4][29 * inst] = (int)varUsagePos;
+    gScrVarPub[inst].varUsagePos = varUsagePos;
     return id;
 }
 
@@ -2519,7 +2568,7 @@ unsigned int __cdecl Scr_GetSelf(scriptInstance_t inst, unsigned int threadId)
     {
         __debugbreak();
     }
-    return gScrVarGlob[inst].variableList[threadId + 1].u.o.u;
+    return gScrVarGlob[inst].variableList[threadId + 1].u.o.u.self;
 }
 
 void __cdecl FreeValue(scriptInstance_t inst, unsigned int id)
@@ -2529,137 +2578,137 @@ void __cdecl FreeValue(scriptInstance_t inst, unsigned int id)
     unsigned int index; // [esp+14h] [ebp-4h]
 
     entryValue = &gScrVarGlob[inst].variableList[id + 0x8000];
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2119,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2119,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x60) == 0
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x1F) >= 0xD
+    if ((entryValue->w.status & 0x1F) >= 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2120,
-                    0,
-                    "%s",
-                    "!IsObject( entryValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2120,
+            0,
+            "%s",
+            "!IsObject( entryValue )"))
     {
         __debugbreak();
     }
-    if ( gScrVarGlob[inst].variableList[entryValue->v.next + 0x8000].hash.id != id
+    if (gScrVarGlob[inst].variableList[entryValue->v.next + 0x8000].hash.id != id
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2121,
-                    0,
-                    "%s",
-                    "gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ entryValue->v.index].hash.id == id") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2121,
+            0,
+            "%s",
+            "gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ entryValue->v.index].hash.id == id"))
     {
         __debugbreak();
     }
     RemoveRefToValue(inst, entryValue->w.status & 0x1F, entryValue->u.u);
-    if ( (!id || id >= 0x3FFFE)
+    if ((!id || id >= 0x3FFFE)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2127,
-                    0,
-                    "%s",
-                    "id > 0 && id < VARIABLELIST_CHILD_SIZE(inst)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2127,
+            0,
+            "%s",
+            "id > 0 && id < VARIABLELIST_CHILD_SIZE(inst)"))
     {
         __debugbreak();
     }
-    --MEMORY[0xA05ABEC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    --gScrVarPub[inst].totalObjectRefCount;
+    if (gScrVarDebugPub[inst])
     {
-        if ( !gScrVarDebugPub[inst]->leakCount[id + 0x8000]
+        if (!gScrVarDebugPub[inst]->leakCount[id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        2132,
-                        0,
-                        "%s",
-                        "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                2132,
+                0,
+                "%s",
+                "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
-        if ( --gScrVarDebugPub[inst]->leakCount[id + 0x8000]
+        if (--gScrVarDebugPub[inst]->leakCount[id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        2134,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                2134,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_CHILD_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
     }
-    --MEMORY[0xA05ABDC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    --gScrVarPub[inst].numScriptValues;
+    if (gScrVarDebugPub[inst])
     {
-        if ( !gScrVarDebugPub[inst]->varUsage[id + 0x8000]
+        if (!gScrVarDebugPub[inst]->varUsage[id + 0x8000]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        2142,
-                        0,
-                        "%s",
-                        "gScrVarDebugPub[inst]->varUsage[VARIABLELIST_CHILD_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                2142,
+                0,
+                "%s",
+                "gScrVarDebugPub[inst]->varUsage[VARIABLELIST_CHILD_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
         gScrVarDebugPub[inst]->varUsage[id + 0x8000] = 0;
     }
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2147,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2147,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
     index = entryValue->v.next;
     entry = &gScrVarGlob[inst].variableList[index + 0x8000];
-    if ( entry->hash.id != id
+    if (entry->hash.id != id
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2151,
-                    0,
-                    "%s",
-                    "entry->id == id") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2151,
+            0,
+            "%s",
+            "entry->id == id"))
     {
         __debugbreak();
     }
-    if ( entry->hash.u.prev
+    if (entry->hash.u.prev
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2152,
-                    0,
-                    "%s",
-                    "!entry->u.prevSibling") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2152,
+            0,
+            "%s",
+            "!entry->u.prevSibling"))
     {
         __debugbreak();
     }
-    if ( entryValue->nextSibling
+    if (entryValue->nextSibling
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2153,
-                    0,
-                    "%s",
-                    "!entryValue->nextSibling") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2153,
+            0,
+            "%s",
+            "!entryValue->nextSibling"))
     {
         __debugbreak();
     }
@@ -2669,7 +2718,6 @@ void __cdecl FreeValue(scriptInstance_t inst, unsigned int id)
     gScrVarGlob[inst].variableList[gScrVarGlob[inst].variableList[0x8000].u.next + 0x8000].hash.u.prev = index;
     gScrVarGlob[inst].variableList[0x8000].u.next = index;
 }
-
 void __cdecl RemoveRefToObject(scriptInstance_t inst, unsigned int id)
 {
     int unsignedValue; // [esp+0h] [ebp-10h]
@@ -2677,95 +2725,95 @@ void __cdecl RemoveRefToObject(scriptInstance_t inst, unsigned int id)
     unsigned int entArrayId; // [esp+8h] [ebp-8h]
     VariableValueInternal *entryValue; // [esp+Ch] [ebp-4h]
 
-    if ( (!id || id >= 0x7FFE)
+    if ((!id || id >= 0x7FFE)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2176,
-                    0,
-                    "%s",
-                    "id >= 1 && id < VARIABLELIST_PARENT_SIZE(inst)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2176,
+            0,
+            "%s",
+            "id >= 1 && id < VARIABLELIST_PARENT_SIZE(inst)"))
     {
         __debugbreak();
     }
     entryValue = &gScrVarGlob[inst].variableList[id + 1];
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2179,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2179,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x60) == 0
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x1F) < 0xD
+    if ((entryValue->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2180,
-                    0,
-                    "%s",
-                    "IsObject( entryValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2180,
+            0,
+            "%s",
+            "IsObject( entryValue )"))
     {
         __debugbreak();
     }
-    if ( entryValue->u.o.refCount )
+    if (entryValue->u.o.refCount)
     {
-        --MEMORY[0xA05ABEC][29 * inst];
-        if ( gScrVarDebugPub[inst] )
+        --gScrVarPub[inst].totalObjectRefCount;
+        if (gScrVarDebugPub[inst])
         {
-            if ( !gScrVarDebugPub[inst]->leakCount[id + 1]
+            if (!gScrVarDebugPub[inst]->leakCount[id + 1]
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            2188,
-                            0,
-                            "%s",
-                            "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2188,
+                    0,
+                    "%s",
+                    "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]"))
             {
                 __debugbreak();
             }
             --gScrVarDebugPub[inst]->leakCount[id + 1];
         }
-        if ( !--entryValue->u.o.refCount && (entryValue->w.status & 0x1F) == 0x13 && !entryValue->nextSibling )
+        if (!--entryValue->u.o.refCount && (entryValue->w.status & 0x1F) == 0x13 && !entryValue->nextSibling)
         {
             entryValue->w.status &= 0xFFFFFFE0;
             entryValue->w.status |= 0x12u;
             classnum = entryValue->w.status >> 8;
-            if ( classnum >= 5
+            if (classnum >= 5
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            2203,
-                            0,
-                            "%s",
-                            "classnum < CLASS_NUM_COUNT") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2203,
+                    0,
+                    "%s",
+                    "classnum < CLASS_NUM_COUNT"))
             {
                 __debugbreak();
             }
             entArrayId = gScrClassMap[inst][classnum].entArrayId;
-            if ( !entArrayId
+            if (!entArrayId
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            2206,
-                            0,
-                            "%s",
-                            "entArrayId") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2206,
+                    0,
+                    "%s",
+                    "entArrayId"))
             {
                 __debugbreak();
             }
             unsignedValue = entryValue->u.o.u.entnum & 0x3FFF;
-            if ( inst == SCRIPTINSTANCE_CLIENT )
+            if (inst == SCRIPTINSTANCE_CLIENT)
             {
-                if ( (int)entryValue->u.o.u.entnum >> 14 )
+                if ((int)entryValue->u.o.u.entnum >> 14)
                     unsignedValue += 1536 * ((int)entryValue->u.o.u.entnum >> 14);
             }
             RemoveArrayVariable(inst, entArrayId, unsignedValue);
@@ -2773,108 +2821,107 @@ void __cdecl RemoveRefToObject(scriptInstance_t inst, unsigned int id)
     }
     else
     {
-        if ( entryValue->nextSibling )
+        if (entryValue->nextSibling)
             ClearObject(inst, id);
         FreeVariable(inst, id);
     }
 }
-
 void __cdecl FreeVariable(scriptInstance_t inst, unsigned int id)
 {
     VariableValueInternal *entry; // [esp+4h] [ebp-Ch]
     VariableValueInternal *entryValue; // [esp+8h] [ebp-8h]
     unsigned int index; // [esp+Ch] [ebp-4h]
 
-    if ( (!id || id >= 0x7FFE)
+    if ((!id || id >= 0x7FFE)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1890,
-                    0,
-                    "%s",
-                    "id > 0 && id < VARIABLELIST_PARENT_SIZE(inst)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1890,
+            0,
+            "%s",
+            "id > 0 && id < VARIABLELIST_PARENT_SIZE(inst)"))
     {
         __debugbreak();
     }
-    --MEMORY[0xA05ABEC][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    --gScrVarPub[inst].totalObjectRefCount;
+    if (gScrVarDebugPub[inst])
     {
-        if ( !gScrVarDebugPub[inst]->leakCount[id + 1]
+        if (!gScrVarDebugPub[inst]->leakCount[id + 1]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1895,
-                        0,
-                        "%s",
-                        "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1895,
+                0,
+                "%s",
+                "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
-        if ( --gScrVarDebugPub[inst]->leakCount[id + 1]
+        if (--gScrVarDebugPub[inst]->leakCount[id + 1]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1897,
-                        0,
-                        "%s",
-                        "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1897,
+                0,
+                "%s",
+                "!gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
     }
-    --MEMORY[0xA05ABE0][29 * inst];
-    if ( gScrVarDebugPub[inst] )
+    --gScrVarPub[inst].numScriptObjects;
+    if (gScrVarDebugPub[inst])
     {
-        if ( !gScrVarDebugPub[inst]->varUsage[id + 1]
+        if (!gScrVarDebugPub[inst]->varUsage[id + 1]
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        1905,
-                        0,
-                        "%s",
-                        "gScrVarDebugPub[inst]->varUsage[VARIABLELIST_PARENT_BEGIN(inst)+ id]") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                1905,
+                0,
+                "%s",
+                "gScrVarDebugPub[inst]->varUsage[VARIABLELIST_PARENT_BEGIN(inst)+ id]"))
         {
             __debugbreak();
         }
         gScrVarDebugPub[inst]->varUsage[id + 1] = 0;
     }
     entryValue = &gScrVarGlob[inst].variableList[id + 1];
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1912,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1912,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
     index = entryValue->v.next;
     entry = &gScrVarGlob[inst].variableList[index + 1];
-    if ( entry->hash.id != id
+    if (entry->hash.id != id
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1916,
-                    0,
-                    "%s",
-                    "entry->id == id") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1916,
+            0,
+            "%s",
+            "entry->id == id"))
     {
         __debugbreak();
     }
-    if ( entry->hash.u.prev
+    if (entry->hash.u.prev
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1917,
-                    0,
-                    "%s",
-                    "!entry->u.prevSibling") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1917,
+            0,
+            "%s",
+            "!entry->u.prevSibling"))
     {
         __debugbreak();
     }
-    if ( entryValue->nextSibling
+    if (entryValue->nextSibling
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    1918,
-                    0,
-                    "%s",
-                    "!entryValue->nextSibling") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            1918,
+            0,
+            "%s",
+            "!entryValue->nextSibling"))
     {
         __debugbreak();
     }
@@ -2890,69 +2937,69 @@ void __cdecl RemoveRefToEmptyObject(scriptInstance_t inst, unsigned int id)
     VariableValueInternal *entryValue; // [esp+0h] [ebp-4h]
 
     entryValue = &gScrVarGlob[inst].variableList[id + 1];
-    if ( (entryValue->w.status & 0x60) != 0x60
+    if ((entryValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2232,
-                    0,
-                    "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
-                    "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
-                    entryValue->w.status & 0x60) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2232,
+            0,
+            "%s\n\t(entryValue->w.status & VAR_STAT_MASK) = %i",
+            "((entryValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL)",
+            entryValue->w.status & 0x60))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x60) == 0
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x1F) < 0xD
+    if ((entryValue->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2233,
-                    0,
-                    "%s",
-                    "IsObject( entryValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2233,
+            0,
+            "%s",
+            "IsObject( entryValue )"))
     {
         __debugbreak();
     }
-    if ( entryValue->nextSibling
+    if (entryValue->nextSibling
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2234,
-                    0,
-                    "%s",
-                    "!entryValue->nextSibling") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2234,
+            0,
+            "%s",
+            "!entryValue->nextSibling"))
     {
         __debugbreak();
     }
-    if ( entryValue->u.o.refCount )
+    if (entryValue->u.o.refCount)
     {
-        if ( (!id || id >= 0x7FFE)
+        if ((!id || id >= 0x7FFE)
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        2238,
-                        0,
-                        "%s",
-                        "id >= 1 && id < VARIABLELIST_PARENT_SIZE(inst)") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                2238,
+                0,
+                "%s",
+                "id >= 1 && id < VARIABLELIST_PARENT_SIZE(inst)"))
         {
             __debugbreak();
         }
-        --MEMORY[0xA05ABEC][29 * inst];
-        if ( gScrVarDebugPub[inst] )
+        --gScrVarPub[inst].totalObjectRefCount;
+        if (gScrVarDebugPub[inst])
         {
-            if ( !gScrVarDebugPub[inst]->leakCount[id + 1]
+            if (!gScrVarDebugPub[inst]->leakCount[id + 1]
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            2243,
-                            0,
-                            "%s",
-                            "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2243,
+                    0,
+                    "%s",
+                    "gScrVarDebugPub[inst]->leakCount[VARIABLELIST_PARENT_BEGIN(inst)+ id]"))
             {
                 __debugbreak();
             }
@@ -3021,33 +3068,32 @@ float *__cdecl Scr_AllocVector(scriptInstance_t inst)
     char *v1; // eax
 
     v1 = MT_Alloc(16, 2, inst);
-    *(unsigned int *)v1 = 0;
-    _InterlockedExchangeAdd(&MEMORY[0xA05ABF0][29 * inst], 1u);
-    if ( gScrStringDebugGlob[inst] )
+    *(_DWORD *)v1 = 0;
+    _InterlockedExchangeAdd(&gScrVarPub[inst].totalVectorRefCount, 1u);
+    if (gScrStringDebugGlob[inst])
         _InterlockedExchangeAdd(&gScrStringDebugGlob[inst]->refCount[(v1 - gScrMemTreePub[inst].mt_buffer) / 16], 1u);
     return (float *)(v1 + 4);
 }
 
 bool __cdecl IsValidArrayIndex(scriptInstance_t inst, unsigned int unsignedValue)
 {
-    return (unsigned int)&loc_7FFFFD + 8290308 >= unsignedValue + 8290306;
+    return unsignedValue + 0x7E8002 <= 0xFE8001;
 }
 
 unsigned int __cdecl GetInternalVariableIndex(scriptInstance_t inst, unsigned int unsignedValue)
 {
-    if ( !IsValidArrayIndex(inst, unsignedValue)
+    if (!IsValidArrayIndex(inst, unsignedValue)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2306,
-                    0,
-                    "%s",
-                    "IsValidArrayIndex( inst, unsignedValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2306,
+            0,
+            "%s",
+            "IsValidArrayIndex( inst, unsignedValue )"))
     {
         __debugbreak();
     }
-    return (unsigned int)&cls.rankedServers[711].game[34] & ((unsigned int)&loc_800000 + unsignedValue);
+    return (unsignedValue + 0x800000) & 0xFFFFFF;
 }
-
 unsigned int __cdecl FindArrayVariable(scriptInstance_t inst, unsigned int parentId, unsigned int intValue)
 {
     return gScrVarGlob[inst].variableList[FindArrayVariableIndex(inst, parentId, intValue) + 0x8000].hash.id;
@@ -3055,20 +3101,17 @@ unsigned int __cdecl FindArrayVariable(scriptInstance_t inst, unsigned int paren
 
 unsigned int __cdecl FindArrayVariableIndex(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
 {
-    if ( !IsValidArrayIndex(inst, unsignedValue)
+    if (!IsValidArrayIndex(inst, unsignedValue)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2314,
-                    0,
-                    "%s",
-                    "IsValidArrayIndex( inst, unsignedValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2314,
+            0,
+            "%s",
+            "IsValidArrayIndex( inst, unsignedValue )"))
     {
         __debugbreak();
     }
-    return FindVariableIndexInternal(
-                     inst,
-                     parentId,
-                     (unsigned int)&cls.rankedServers[711].game[34] & ((unsigned int)&loc_800000 + unsignedValue));
+    return FindVariableIndexInternal(inst, parentId, (unsignedValue + 0x800000) & 0xFFFFFF);
 }
 
 unsigned int __cdecl FindVariable(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
@@ -3083,74 +3126,71 @@ unsigned int __cdecl FindObjectVariable(scriptInstance_t inst, unsigned int pare
 
 unsigned int __cdecl GetArrayVariableIndex(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
 {
-    if ( !IsValidArrayIndex(inst, unsignedValue)
+    if (!IsValidArrayIndex(inst, unsignedValue)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2340,
-                    0,
-                    "%s",
-                    "IsValidArrayIndex( inst, unsignedValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2340,
+            0,
+            "%s",
+            "IsValidArrayIndex( inst, unsignedValue )"))
     {
         __debugbreak();
     }
-    return GetVariableIndexInternal(
-                     inst,
-                     parentId,
-                     (unsigned int)&cls.rankedServers[711].game[34] & ((unsigned int)&loc_800000 + unsignedValue));
+    return GetVariableIndexInternal(inst, parentId, (unsignedValue + 0x800000) & 0xFFFFFF);
 }
 
-unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, int parentId, int name)
+unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, unsigned int parentId, unsigned int name)
 {
     const char *v4; // eax
     VariableValueInternal *v5; // [esp+20h] [ebp-10h]
     unsigned int index; // [esp+28h] [ebp-8h]
     unsigned int type; // [esp+2Ch] [ebp-4h]
 
-    if ( !parentId
+    if (!parentId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2360,
-                    0,
-                    "%s",
-                    "parentId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2360,
+            0,
+            "%s",
+            "parentId"))
     {
         __debugbreak();
     }
     v5 = &gScrVarGlob[inst].variableList[parentId + 1];
-    if ( (v5->w.status & 0x60) == 0
+    if ((v5->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (v5->w.status & 0x1F) < 0xD
+    if ((v5->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2361,
-                    0,
-                    "%s",
-                    "IsObject( &gScrVarGlob[inst].variableList[VARIABLELIST_PARENT_BEGIN(inst)+ parentId] )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2361,
+            0,
+            "%s",
+            "IsObject( &gScrVarGlob[inst].variableList[VARIABLELIST_PARENT_BEGIN(inst)+ parentId] )"))
     {
         __debugbreak();
     }
     type = gScrVarGlob[inst].variableList[parentId + 1].w.status & 0x1F;
-    if ( type <= 0x11 )
+    if (type <= 0x11)
         return GetVariableIndexInternal(inst, parentId, name);
-    if ( type == 19 )
+    if (type == 19)
     {
         index = FindVariableIndexInternal(inst, parentId, name);
-        if ( index )
+        if (index)
         {
             return index;
         }
         else
         {
-            MEMORY[0xA05ABBC][29 * inst] = parentId;
-            MEMORY[0xA05ABC0][29 * inst] = name;
+            gScrVarPub[inst].entId = parentId;
+            gScrVarPub[inst].entFieldName = name;
             return 0;
         }
     }
@@ -3162,10 +3202,10 @@ unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, int parent
     }
 }
 
-VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name)
+VariableValue __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name)
 {
-    VariableValueInternal *v4; // [esp+18h] [ebp-24h]
-    int value; // [esp+30h] [ebp-Ch]
+    VariableValueInternal *entryValue; // [esp+18h] [ebp-24h]
+    VariableValue value; // [esp+30h] [ebp-Ch]
     unsigned int id; // [esp+38h] [ebp-4h]
 
     if ( !parentId
@@ -3178,8 +3218,8 @@ VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int 
     {
         __debugbreak();
     }
-    v4 = &gScrVarGlob[inst].variableList[parentId + 1];
-    if ( (v4->w.status & 0x60) == 0
+    entryValue = &gScrVarGlob[inst].variableList[parentId + 1];
+    if ( (entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
                     "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
                     323,
@@ -3189,7 +3229,7 @@ VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int 
     {
         __debugbreak();
     }
-    if ( (v4->w.status & 0x1F) < 0xD
+    if ( (entryValue->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
                     2394,
@@ -3199,6 +3239,7 @@ VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int 
     {
         __debugbreak();
     }
+
     if ( ((gScrVarGlob[inst].variableList[parentId + 1].w.status & 0x1F) < 0xD
          || (gScrVarGlob[inst].variableList[parentId + 1].w.status & 0x1F) >= 0x14)
         && (gScrVarGlob[inst].variableList[parentId + 1].w.status & 0x1F) < 0x15
@@ -3214,10 +3255,11 @@ VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int 
     {
         __debugbreak();
     }
+
     id = FindVariable(inst, parentId, name);
     if ( id )
     {
-        return (VariableUnion)Scr_EvalVariable(inst, id).u.stringValue;
+        return Scr_EvalVariable(inst, id);
     }
     else if ( (gScrVarGlob[inst].variableList[parentId + 1].w.status & 0x1F) == 0x13 )
     {
@@ -3225,12 +3267,15 @@ VariableUnion __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int 
     }
     else
     {
-        return (VariableUnion)value;
+        value.type = VAR_UNDEFINED;
+        value.u.intValue = 0;
+        return value;
     }
 }
 
 unsigned int __cdecl Scr_FindAllVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int *names)
 {
+    VariableValueInternal *v3; // ecx
     unsigned int classnum; // [esp+4Ch] [ebp-1Ch]
     VariableValueInternal *parentValue; // [esp+50h] [ebp-18h]
     unsigned int name; // [esp+58h] [ebp-10h]
@@ -3242,131 +3287,132 @@ unsigned int __cdecl Scr_FindAllVariableField(scriptInstance_t inst, unsigned in
     unsigned int idb; // [esp+64h] [ebp-4h]
 
     parentValue = &gScrVarGlob[inst].variableList[parentId + 1];
-    if ( (parentValue->w.status & 0x60) == 0
+    if ((parentValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2423,
-                    0,
-                    "%s",
-                    "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2423,
+            0,
+            "%s",
+            "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (parentValue->w.status & 0x60) == 0
+    if ((parentValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (parentValue->w.status & 0x1F) < 0xD
+    if ((parentValue->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2424,
-                    0,
-                    "%s",
-                    "IsObject( parentValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2424,
+            0,
+            "%s",
+            "IsObject( parentValue )"))
     {
         __debugbreak();
     }
     count = 0;
-    switch ( parentValue->w.status & 0x1F )
+    switch (parentValue->w.status & 0x1F)
     {
-        case 0xDu:
-        case 0xEu:
-        case 0xFu:
-        case 0x10u:
-        case 0x11u:
-        case 0x12u:
-            goto $LN12_71;
-        case 0x13u:
-            classnum = parentValue->w.status >> 8;
-            if ( classnum >= 5
+    case 0xDu:
+    case 0xEu:
+    case 0xFu:
+    case 0x10u:
+    case 0x11u:
+    case 0x12u:
+        goto $LN12_71;
+    case 0x13u:
+        classnum = parentValue->w.status >> 8;
+        if (classnum >= 5
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                2432,
+                0,
+                "%s",
+                "classnum < CLASS_NUM_COUNT"))
+        {
+            __debugbreak();
+        }
+        for (id = FindFirstSibling(inst, gScrClassMap[inst][classnum].id); id; id = FindNextSibling(inst, id))
+        {
+            v3 = &gScrVarGlob[inst].variableList[id + 0x8000];
+            name = (v3->w.status >> 8) - 0x800000;
+            if (v3->w.status >> 8 == 0x800000
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            2432,
-                            0,
-                            "%s",
-                            "classnum < CLASS_NUM_COUNT") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2440,
+                    0,
+                    "%s",
+                    "name"))
             {
                 __debugbreak();
             }
-            for ( id = FindFirstSibling(inst, gScrClassMap[inst][classnum].id); id; id = FindNextSibling(inst, id) )
+            if (name <= gScrVarPub[inst].canonicalStrCount && !FindVariable(inst, parentId, name))
             {
-                name = (gScrVarGlob[inst].variableList[id + 0x8000].w.status >> 8) - (unsigned int)&loc_800000;
-                if ( !name
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                2440,
-                                0,
-                                "%s",
-                                "name") )
-                {
-                    __debugbreak();
-                }
-                if ( name <= (unsigned __int16)MEMORY[0xA05AB84][58 * inst] && !FindVariable(inst, parentId, name) )
-                {
-                    if ( names )
-                        names[count] = name;
-                    ++count;
-                }
-            }
-$LN12_71:
-            for ( ida = FindFirstSibling(inst, parentId); ida; ida = FindNextSibling(inst, ida) )
-            {
-                namea = gScrVarGlob[inst].variableList[ida + 0x8000].w.status >> 8;
-                if ( !namea
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                2463,
-                                0,
-                                "%s",
-                                "name") )
-                {
-                    __debugbreak();
-                }
-                if ( namea != 98302 && namea != 98303 )
-                {
-                    if ( namea > (unsigned __int16)MEMORY[0xA05AB84][58 * inst]
-                        && !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                    2466,
-                                    0,
-                                    "%s",
-                                    "name <= gScrVarPub[inst].canonicalStrCount") )
-                    {
-                        __debugbreak();
-                    }
-                    if ( names )
-                        names[count] = namea;
-                    ++count;
-                }
-            }
-            break;
-        case 0x14u:
-            for ( idb = FindFirstSibling(inst, parentId); idb; idb = FindNextSibling(inst, idb) )
-            {
-                nameb = gScrVarGlob[inst].variableList[idb + 0x8000].w.status >> 8;
-                if ( !nameb
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                2478,
-                                0,
-                                "%s",
-                                "name") )
-                {
-                    __debugbreak();
-                }
-                if ( names )
-                    names[count] = nameb;
+                if (names)
+                    names[count] = name;
                 ++count;
             }
-            break;
-        default:
-            return count;
+        }
+    $LN12_71:
+        for (ida = FindFirstSibling(inst, parentId); ida; ida = FindNextSibling(inst, ida))
+        {
+            namea = gScrVarGlob[inst].variableList[ida + 0x8000].w.status >> 8;
+            if (!namea
+                && !Assert_MyHandler(
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2463,
+                    0,
+                    "%s",
+                    "name"))
+            {
+                __debugbreak();
+            }
+            if (namea != 98302 && namea != 98303)
+            {
+                if (namea > gScrVarPub[inst].canonicalStrCount
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        2466,
+                        0,
+                        "%s",
+                        "name <= gScrVarPub[inst].canonicalStrCount"))
+                {
+                    __debugbreak();
+                }
+                if (names)
+                    names[count] = namea;
+                ++count;
+            }
+        }
+        break;
+    case 0x14u:
+        for (idb = FindFirstSibling(inst, parentId); idb; idb = FindNextSibling(inst, idb))
+        {
+            nameb = gScrVarGlob[inst].variableList[idb + 0x8000].w.status >> 8;
+            if (!nameb
+                && !Assert_MyHandler(
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    2478,
+                    0,
+                    "%s",
+                    "name"))
+            {
+                __debugbreak();
+            }
+            if (names)
+                names[count] = nameb;
+            ++count;
+        }
+        break;
+    default:
+        return count;
     }
     return count;
 }
@@ -3464,20 +3510,17 @@ unsigned int __cdecl GetNewArrayVariable(scriptInstance_t inst, unsigned int par
 
 unsigned int __cdecl GetNewArrayVariableIndex(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
 {
-    if ( !IsValidArrayIndex(inst, unsignedValue)
+    if (!IsValidArrayIndex(inst, unsignedValue)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2348,
-                    0,
-                    "%s",
-                    "IsValidArrayIndex( inst, unsignedValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2348,
+            0,
+            "%s",
+            "IsValidArrayIndex( inst, unsignedValue )"))
     {
         __debugbreak();
     }
-    return GetNewVariableIndexInternal(
-                     inst,
-                     parentId,
-                     (unsigned int)&cls.rankedServers[711].game[34] & ((unsigned int)&loc_800000 + unsignedValue));
+    return GetNewVariableIndexInternal(inst, parentId, (unsignedValue + 0x800000) & 0xFFFFFF);
 }
 
 unsigned int __cdecl GetNewVariableIndexInternal(scriptInstance_t inst, unsigned int parentId, unsigned int name)
@@ -3721,20 +3764,17 @@ void __cdecl RemoveObjectVariable(scriptInstance_t inst, unsigned int parentId, 
 
 void __cdecl RemoveArrayVariable(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
 {
-    if ( !IsValidArrayIndex(inst, unsignedValue)
+    if (!IsValidArrayIndex(inst, unsignedValue)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2626,
-                    0,
-                    "%s",
-                    "IsValidArrayIndex( inst, unsignedValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2626,
+            0,
+            "%s",
+            "IsValidArrayIndex( inst, unsignedValue )"))
     {
         __debugbreak();
     }
-    RemoveVariable(
-        inst,
-        parentId,
-        (unsigned int)&cls.rankedServers[711].game[34] & ((unsigned int)&loc_800000 + unsignedValue));
+    RemoveVariable(inst, parentId, (unsignedValue + 0x800000) & 0xFFFFFF);
 }
 
 void __cdecl SafeRemoveVariable(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
@@ -3882,7 +3922,7 @@ void __cdecl SetNewVariableValue(scriptInstance_t inst, unsigned int id, Variabl
     entryValue->u.next = value->u.intValue;
 }
 
-VariableValueInternal::<unnamed_type_u> *__cdecl GetVariableValueAddress(scriptInstance_t inst, unsigned int id)
+VariableValueInternal_u *__cdecl GetVariableValueAddress(scriptInstance_t inst, unsigned int id)
 {
     VariableValueInternal *entryValue; // [esp+0h] [ebp-4h]
 
@@ -4078,10 +4118,10 @@ void __cdecl ClearVariableValue(scriptInstance_t inst, unsigned int id)
 
 void __cdecl SetVariableFieldValue(scriptInstance_t inst, unsigned int id, VariableValue *value)
 {
-    if ( id )
+    if (id)
         SetVariableValue(inst, id, value);
     else
-        SetVariableEntityFieldValue(inst, MEMORY[0xA05ABBC][29 * inst], MEMORY[0xA05ABC0][29 * inst], value);
+        SetVariableEntityFieldValue(inst, gScrVarPub[inst].entId, gScrVarPub[inst].entFieldName, value);
 }
 
 unsigned int __cdecl Scr_EvalVariableObject(scriptInstance_t inst, unsigned int id)
@@ -4125,54 +4165,46 @@ unsigned int __cdecl Scr_EvalVariableObject(scriptInstance_t inst, unsigned int 
     }
 }
 
-VariableUnion __cdecl Scr_EvalVariableEntityField(scriptInstance_t inst, unsigned int entId, unsigned int fieldName)
+VariableValue __cdecl Scr_EvalVariableEntityField(scriptInstance_t inst, unsigned int entId, unsigned int fieldName)
 {
     VariableValueInternal *entValue; // [esp+8h] [ebp-14h]
     unsigned int fieldId; // [esp+10h] [ebp-Ch]
     int value; // [esp+14h] [ebp-8h]
+    VariableValue result;
 
-    entValue = &gScrVarGlob[inst].variableList[entId + 1];
-    if ( (entValue->w.status & 0x1F) != 0x13
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2896,
-                    0,
-                    "%s",
-                    "(entValue->w.type & VAR_MASK) == VAR_ENTITY") )
+    entValue = &gScrVarGlob[inst].variableList[entId + VARIABLELIST_PARENT_BEGIN];
+
+    iassert((entValue->w.type & VAR_MASK) == VAR_ENTITY);
+    iassert((entValue->w.classnum >> VAR_NAME_BITS) < CLASS_NUM_COUNT);
+
+
+    fieldId = FindArrayVariable(inst, gScrClassMap[inst][entValue->w.classnum >> VAR_NAME_BITS].id, fieldName);
+
+    if (!fieldId)
     {
-        __debugbreak();
+        result.type = VAR_UNDEFINED;
+        result.u.intValue = 0;
+        return result;
     }
-    if ( entValue->w.status >> 8 >= 5
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2897,
-                    0,
-                    "%s",
-                    "(entValue->w.classnum >> VAR_NAME_BITS) < CLASS_NUM_COUNT") )
-    {
-        __debugbreak();
-    }
-    fieldId = FindArrayVariable(inst, gScrClassMap[inst][entValue->w.status >> 8].id, fieldName);
-    if ( fieldId )
-        return GetEntityFieldValue(
-                         inst,
-                         entValue->w.status >> 8,
-                         entValue->u.o.u.entnum & 0x3FFF,
-                         (int)entValue->u.o.u.entnum >> 14,
-                         gScrVarGlob[inst].variableList[fieldId + 0x8000].u.next);
-    return (VariableUnion)value;
+
+    result = GetEntityFieldValue(
+        inst,
+        entValue->w.classnum >> VAR_NAME_BITS,
+        entValue->u.o.u.entnum & 0x3FFF,
+        (int)entValue->u.o.u.entnum >> 14,
+        gScrVarGlob[inst].variableList[fieldId + 0x8000].u.next);
+
+    //var_pointer check is optimized out halfway, does nothing
+
+    return result;
 }
 
 VariableValue __cdecl Scr_EvalVariableField(scriptInstance_t inst, unsigned int id)
 {
-    int v2; // edx
-    VariableValue v4; // [esp+18h] [ebp-18h]
-
-    if ( id )
+    if (id)
         return Scr_EvalVariable(inst, id);
-    v4.u = Scr_EvalVariableEntityField(inst, MEMORY[0xA05ABBC][29 * inst], MEMORY[0xA05ABC0][29 * inst]);
-    v4.type = v2;
-    return v4;
+    else
+        return Scr_EvalVariableEntityField(inst, gScrVarPub[inst].entId, gScrVarPub[inst].entFieldName);
 }
 
 void __cdecl Scr_EvalSizeValue(scriptInstance_t inst, VariableValue *value)
@@ -4185,7 +4217,7 @@ void __cdecl Scr_EvalSizeValue(scriptInstance_t inst, VariableValue *value)
 
     if ( value->type == 1 )
     {
-        id.intValue = (int)value->u;
+        id.intValue = value->u.intValue;
         entryValue = &gScrVarGlob[inst].variableList[value->u.intValue + 1];
         value->type = 6;
         if ( (entryValue->w.status & 0x1F) == 0x14 )
@@ -4198,7 +4230,7 @@ void __cdecl Scr_EvalSizeValue(scriptInstance_t inst, VariableValue *value)
     else if ( value->type == 2 )
     {
         value->type = 6;
-        stringValue.intValue = (int)value->u;
+        stringValue.intValue = value->u.intValue;
         value->u.intValue = strlen(SL_ConvertToString(value->u.intValue, inst));
         SL_RemoveRefToString(inst, stringValue.stringValue);
     }
@@ -4410,36 +4442,36 @@ bool __cdecl Scr_IsThreadAlive(unsigned int thread, scriptInstance_t inst)
 {
     VariableValueInternal *entryValue; // [esp+0h] [ebp-4h]
 
-    if ( !MEMORY[0xA05AB98][29 * inst]
+    if (!gScrVarPub[inst].timeArrayId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    3055,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].timeArrayId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            3055,
+            0,
+            "%s",
+            "gScrVarPub[inst].timeArrayId"))
     {
         __debugbreak();
     }
     entryValue = &gScrVarGlob[inst].variableList[thread + 1];
-    if ( (entryValue->w.status & 0x60) == 0
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    3058,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            3058,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( ((entryValue->w.status & 0x1F) < 0xD || (entryValue->w.status & 0x1F) > 0x10)
+    if (((entryValue->w.status & 0x1F) < 0xD || (entryValue->w.status & 0x1F) > 0x10)
         && (entryValue->w.status & 0x1F) != 0x15
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    3059,
-                    0,
-                    "%s",
-                    "((entryValue->w.type & VAR_MASK) >= VAR_THREAD && (entryValue->w.type & VAR_MASK) <= VAR_CHILD_THREAD) || (ent"
-                    "ryValue->w.type & VAR_MASK) == VAR_DEAD_THREAD") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            3059,
+            0,
+            "%s",
+            "((entryValue->w.type & VAR_MASK) >= VAR_THREAD && (entryValue->w.type & VAR_MASK) <= VAR_CHILD_THREAD) || (ent"
+            "ryValue->w.type & VAR_MASK) == VAR_DEAD_THREAD"))
     {
         __debugbreak();
     }
@@ -4500,29 +4532,29 @@ char __cdecl Scr_CastString(scriptInstance_t inst, VariableValue *value)
 {
     const float *constTempVector; // [esp+14h] [ebp-4h]
 
-    switch ( value->type )
+    switch (value->type)
     {
-        case 2:
-            return 1;
-        case 6:
-            value->type = 2;
-            value->u.intValue = SL_GetStringForInt(inst, value->u.intValue);
-            return 1;
-        case 5:
-            value->type = 2;
-            value->u.intValue = SL_GetStringForFloat(value->u.floatValue, inst);
-            return 1;
-        case 4:
-            value->type = 2;
-            constTempVector = (const float *)value->u.intValue;
-            value->u.intValue = SL_GetStringForVector(inst, value->u.vectorValue);
-            RemoveRefToVector(inst, constTempVector);
-            return 1;
-        default:
-            MEMORY[0xA05AB8C][29 * inst] = (int)va("cannot cast %s to string", var_typename[value->type]);
-            RemoveRefToValue(inst, value->type, value->u);
-            value->type = 0;
-            return 0;
+    case 2:
+        return 1;
+    case 6:
+        value->type = 2;
+        value->u.intValue = SL_GetStringForInt(inst, value->u.intValue);
+        return 1;
+    case 5:
+        value->type = 2;
+        value->u.intValue = SL_GetStringForFloat(value->u.floatValue, inst);
+        return 1;
+    case 4:
+        value->type = 2;
+        constTempVector = (const float *)value->u.intValue;
+        value->u.intValue = SL_GetStringForVector(inst, value->u.vectorValue);
+        RemoveRefToVector(inst, constTempVector);
+        return 1;
+    default:
+        gScrVarPub[inst].error_message = va("cannot cast %s to string", var_typename[value->type]);
+        RemoveRefToValue(inst, value->type, value->u);
+        value->type = 0;
+        return 0;
     }
 }
 
@@ -4613,18 +4645,18 @@ void __cdecl Scr_CastVector(scriptInstance_t inst, VariableValue *value)
     int i; // [esp+4h] [ebp-10h]
     float vec[3]; // [esp+8h] [ebp-Ch] BYREF
 
-    for ( i = 2; i >= 0; --i )
+    for (i = 2; i >= 0; --i)
     {
         type = value[i].type;
-        if ( type == 5 )
+        if (type == 5)
         {
             vec[2 - i] = value[i].u.floatValue;
         }
         else
         {
-            if ( type != 6 )
+            if (type != 6)
             {
-                MEMORY[0xA05AB90][29 * inst] = i + 1;
+                gScrVarPub[inst].error_index = i + 1;
                 Scr_ClearVector(inst, value);
                 v2 = va("type %s is not a float", var_typename[type]);
                 Scr_Error(inst, v2, 0);
@@ -4637,9 +4669,8 @@ void __cdecl Scr_CastVector(scriptInstance_t inst, VariableValue *value)
     value->u.intValue = (int)Scr_AllocVector(inst, vec);
 }
 
-VariableUnion __cdecl Scr_EvalFieldObject(scriptInstance_t inst, unsigned int tempVariable, VariableValue *value)
+unsigned int __cdecl Scr_EvalFieldObject(scriptInstance_t inst, unsigned int tempVariable, VariableValue *value)
 {
-    const char *v4; // eax
     unsigned int type; // [esp+14h] [ebp-Ch]
     VariableValue tempValue; // [esp+18h] [ebp-8h] BYREF
 
@@ -4659,13 +4690,12 @@ VariableUnion __cdecl Scr_EvalFieldObject(scriptInstance_t inst, unsigned int te
         tempValue.type = 1;
         tempValue.u.intValue = value->u.intValue;
         SetVariableValue(inst, tempVariable, &tempValue);
-        return tempValue.u;
+        return tempValue.u.pointerValue;
     }
     else
     {
         RemoveRefToValue(inst, value->type, value->u);
-        v4 = va("%s is not a field object", var_typename[type]);
-        Scr_Error(inst, v4, 0);
+        Scr_Error(inst, va("%s is not a field object", var_typename[type]), 0);
         return 0;
     }
 }
@@ -4773,7 +4803,7 @@ void __cdecl Scr_EvalEquality(scriptInstance_t inst, VariableValue *value1, Vari
         case 1:
             if ( ((gScrVarGlob[inst].variableList[value1->u.intValue + 0x8000].w.status & 0x1F) == 0x14
                  || (gScrVarGlob[inst].variableList[value2->u.intValue + 0x8000].w.status & 0x1F) == 0x14)
-                && !MEMORY[0xA05AB88][116 * inst] )
+                && !gScrVarPub[inst].evaluate) 
             {
                 goto LABEL_21;
             }
@@ -5464,74 +5494,74 @@ void __cdecl Scr_FreeEntityNum(unsigned int entnum, unsigned int classnum, scrip
     VariableValueInternal *entryValue; // [esp+Ch] [ebp-8h]
     unsigned int entId; // [esp+10h] [ebp-4h]
 
-    if ( MEMORY[0xA05ABB4][116 * inst] )
+    if (gScrVarPub[inst].bInited)
     {
         entArrayId = gScrClassMap[inst][classnum].entArrayId;
-        if ( !entArrayId
+        if (!entArrayId
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        3989,
-                        0,
-                        "%s",
-                        "entArrayId") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                3989,
+                0,
+                "%s",
+                "entArrayId"))
         {
             __debugbreak();
         }
         entnumId = FindArrayVariable(inst, entArrayId, entnum);
-        if ( entnumId )
+        if (entnumId)
         {
             entId = FindObject(inst, entnumId);
-            if ( !entId
+            if (!entId
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            3997,
-                            0,
-                            "%s",
-                            "entId") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    3997,
+                    0,
+                    "%s",
+                    "entId"))
             {
                 __debugbreak();
             }
             entryValue = &gScrVarGlob[inst].variableList[entId + 1];
-            if ( (entryValue->w.status & 0x1F) != 0x13
+            if ((entryValue->w.status & 0x1F) != 0x13
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4000,
-                            0,
-                            "%s",
-                            "(entryValue->w.type & VAR_MASK) == VAR_ENTITY") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    4000,
+                    0,
+                    "%s",
+                    "(entryValue->w.type & VAR_MASK) == VAR_ENTITY"))
             {
                 __debugbreak();
             }
-            if ( (entryValue->u.o.u.entnum & 0x3FFF) != entnum - 1536 * ((int)entryValue->u.o.u.entnum >> 14)
+            if ((entryValue->u.o.u.entnum & 0x3FFF) != entnum - 1536 * ((int)entryValue->u.o.u.entnum >> 14)
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4002,
-                            0,
-                            "%s",
-                            "SCR_GET_ENTITY_FROM_ENTCLIENT(entryValue->u.o.u.entnum) == entnum - (SCR_GET_CLIENT_FROM_ENTCLIENT(entryVa"
-                            "lue->u.o.u.entnum) * MAX_LOCAL_CENTITIES)") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    4002,
+                    0,
+                    "%s",
+                    "SCR_GET_ENTITY_FROM_ENTCLIENT(entryValue->u.o.u.entnum) == entnum - (SCR_GET_CLIENT_FROM_ENTCLIENT(entryVa"
+                    "lue->u.o.u.entnum) * MAX_LOCAL_CENTITIES)"))
             {
                 __debugbreak();
             }
-            if ( entryValue->w.status >> 8 != classnum
+            if (entryValue->w.status >> 8 != classnum
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4003,
-                            0,
-                            "%s",
-                            "(entryValue->w.classnum >> VAR_NAME_BITS) == classnum") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    4003,
+                    0,
+                    "%s",
+                    "(entryValue->w.classnum >> VAR_NAME_BITS) == classnum"))
             {
                 __debugbreak();
             }
             entryValue->w.status &= 0xFFFFFFE0;
             entryValue->w.status |= 0x12u;
             AddRefToObject(inst, entId);
-            entryValue->u.o.u.nextEntId = MEMORY[0xA05ABAC][29 * inst];
-            if ( gScrVarDebugPub[inst] )
-                --gScrVarDebugPub[inst]->extRefCount[MEMORY[0xA05ABAC][29 * inst]];
-            MEMORY[0xA05ABAC][29 * inst] = entId;
-            if ( gScrVarDebugPub[inst] )
-                ++gScrVarDebugPub[inst]->extRefCount[MEMORY[0xA05ABAC][29 * inst]];
+            entryValue->u.o.u.nextEntId = gScrVarPub[inst].freeEntList;
+            if (gScrVarDebugPub[inst])
+                --gScrVarDebugPub[inst]->extRefCount[gScrVarPub[inst].freeEntList];
+            gScrVarPub[inst].freeEntList = entId;
+            if (gScrVarDebugPub[inst])
+                ++gScrVarDebugPub[inst]->extRefCount[gScrVarPub[inst].freeEntList];
             RemoveArrayVariable(inst, entArrayId, entnum);
         }
     }
@@ -5540,18 +5570,18 @@ void __cdecl Scr_FreeEntityNum(unsigned int entnum, unsigned int classnum, scrip
 void __cdecl Scr_FreeEntityList(scriptInstance_t inst)
 {
     VariableValueInternal *entryValue; // [esp+0h] [ebp-8h]
-    int entId; // [esp+4h] [ebp-4h]
+    unsigned int entId; // [esp+4h] [ebp-4h]
 
-    if ( gScrVarDebugPub[inst] )
-        --gScrVarDebugPub[inst]->extRefCount[MEMORY[0xA05ABAC][29 * inst]];
-    while ( MEMORY[0xA05ABAC][29 * inst] )
+    if (gScrVarDebugPub[inst])
+        --gScrVarDebugPub[inst]->extRefCount[gScrVarPub[inst].freeEntList];
+    while (gScrVarPub[inst].freeEntList)
     {
-        entId = MEMORY[0xA05ABAC][29 * inst];
+        entId = gScrVarPub[inst].freeEntList;
         entryValue = &gScrVarGlob[inst].variableList[entId + 1];
-        MEMORY[0xA05ABAC][29 * inst] = entryValue->u.o.u.nextEntId;
+        gScrVarPub[inst].freeEntList = entryValue->u.o.u.nextEntId;
         entryValue->u.o.u.nextEntId = 0;
         Scr_CancelNotifyList(inst, entId);
-        if ( entryValue->nextSibling )
+        if (entryValue->nextSibling)
             ClearObjectInternal(inst, entId);
         RemoveRefToObject(inst, entId);
     }
@@ -5606,18 +5636,18 @@ void __cdecl Scr_SetClassMap(scriptInstance_t inst, unsigned int classnum)
 
 void __cdecl Scr_RemoveClassMap(scriptInstance_t inst, unsigned int classnum)
 {
-    if ( MEMORY[0xA05ABB4][116 * inst] )
+    if (gScrVarPub[inst].bInited)
     {
-        if ( gScrClassMap[inst][classnum].entArrayId )
+        if (gScrClassMap[inst][classnum].entArrayId)
         {
-            if ( gScrVarDebugPub[inst] )
+            if (gScrVarDebugPub[inst])
                 --gScrVarDebugPub[inst]->extRefCount[gScrClassMap[inst][classnum].entArrayId];
             RemoveRefToObject(inst, gScrClassMap[inst][classnum].entArrayId);
             gScrClassMap[inst][classnum].entArrayId = 0;
         }
-        if ( gScrClassMap[inst][classnum].id )
+        if (gScrClassMap[inst][classnum].id)
         {
-            if ( gScrVarDebugPub[inst] )
+            if (gScrVarDebugPub[inst])
                 --gScrVarDebugPub[inst]->extRefCount[gScrClassMap[inst][classnum].id];
             RemoveRefToObject(inst, gScrClassMap[inst][classnum].id);
             gScrClassMap[inst][classnum].id = 0;
@@ -5912,124 +5942,124 @@ void __cdecl Scr_EvalArray(scriptInstance_t inst, VariableValue *value, Variable
     const char *s; // [esp+3Ch] [ebp-8h]
     VariableValueInternal *entryValue; // [esp+40h] [ebp-4h]
 
-    if ( value == index
+    if (value == index
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4287,
-                    0,
-                    "%s",
-                    "value != index") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            4287,
+            0,
+            "%s",
+            "value != index"))
     {
         __debugbreak();
     }
     type = value->type;
-    switch ( type )
+    switch (type)
     {
-        case 1:
-            entryValue = &gScrVarGlob[inst].variableList[value->u.intValue + 1];
-            if ( (entryValue->w.status & 0x60) == 0
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4339,
-                            0,
-                            "%s",
-                            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+    case 1:
+        entryValue = &gScrVarGlob[inst].variableList[value->u.intValue + 1];
+        if ((entryValue->w.status & 0x60) == 0
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4339,
+                0,
+                "%s",
+                "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
+        {
+            __debugbreak();
+        }
+        if ((entryValue->w.status & 0x60) == 0
+            && !Assert_MyHandler(
+                "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+                323,
+                0,
+                "%s",
+                "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
+        {
+            __debugbreak();
+        }
+        if ((entryValue->w.status & 0x1F) < 0xD
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4340,
+                0,
+                "%s",
+                "IsObject( entryValue )"))
+        {
+            __debugbreak();
+        }
+        if ((entryValue->w.status & 0x1F) == 0x14)
+        {
+            ArrayIndex = Scr_FindArrayIndex(inst, value->u.intValue, index);
+            *index = Scr_EvalVariable(inst, ArrayIndex);
+            RemoveRefToObject(inst, value->u.intValue);
+        }
+        else
+        {
+            gScrVarPub[inst].error_index = 1;
+            v7 = va("%s is not an array", var_typename[entryValue->w.status & 0x1F]);
+            Scr_Error(inst, v7, 0);
+        }
+        break;
+    case 2:
+        if (index->type == 6)
+        {
+            if (index->u.intValue < 0
+                || (s = SL_ConvertToString(value->u.intValue, inst), index->u.intValue >= (signed int)strlen(s)))
             {
-                __debugbreak();
-            }
-            if ( (entryValue->w.status & 0x60) == 0
-                && !Assert_MyHandler(
-                            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                            323,
-                            0,
-                            "%s",
-                            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
-            {
-                __debugbreak();
-            }
-            if ( (entryValue->w.status & 0x1F) < 0xD
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4340,
-                            0,
-                            "%s",
-                            "IsObject( entryValue )") )
-            {
-                __debugbreak();
-            }
-            if ( (entryValue->w.status & 0x1F) == 0x14 )
-            {
-                ArrayIndex = Scr_FindArrayIndex(inst, value->u.intValue, index);
-                *index = Scr_EvalVariable(inst, ArrayIndex);
-                RemoveRefToObject(inst, value->u.intValue);
-            }
-            else
-            {
-                MEMORY[0xA05AB90][29 * inst] = 1;
-                v7 = va("%s is not an array", var_typename[entryValue->w.status & 0x1F]);
-                Scr_Error(inst, v7, 0);
-            }
-            break;
-        case 2:
-            if ( index->type == 6 )
-            {
-                if ( index->u.intValue < 0
-                    || (s = SL_ConvertToString(value->u.intValue, inst), index->u.intValue >= (signed int)strlen(s)) )
-                {
-                    v3 = va("string index %d out of range", index->u.intValue);
-                    Scr_Error(inst, v3, 0);
-                }
-                else
-                {
-                    index->type = 2;
-                    c[0] = s[index->u.intValue];
-                    c[1] = 0;
-                    index->u.intValue = SL_GetStringOfSize(inst, c, 0, 2u, 15);
-                    SL_RemoveRefToString(inst, value->u.intValue);
-                }
+                v3 = va("string index %d out of range", index->u.intValue);
+                Scr_Error(inst, v3, 0);
             }
             else
             {
-                v4 = va("%s is not a string index", var_typename[index->type]);
-                Scr_Error(inst, v4, 0);
+                index->type = 2;
+                c[0] = s[index->u.intValue];
+                c[1] = 0;
+                index->u.intValue = SL_GetStringOfSize(inst, c, 0, 2u, 15);
+                SL_RemoveRefToString(inst, value->u.intValue);
             }
-            break;
-        case 4:
-            if ( index->type == 6 )
+        }
+        else
+        {
+            v4 = va("%s is not a string index", var_typename[index->type]);
+            Scr_Error(inst, v4, 0);
+        }
+        break;
+    case 4:
+        if (index->type == 6)
+        {
+            if (index->u.intValue >= 3u)
             {
-                if ( index->u.intValue >= 3u )
-                {
-                    v5 = va("vector index %d out of range", index->u.intValue);
-                    Scr_Error(inst, v5, 0);
-                }
-                else
-                {
-                    index->type = 5;
-                    index->u.floatValue = *(float *)(value->u.intValue + 4 * index->u.intValue);
-                    RemoveRefToVector(inst, value->u.vectorValue);
-                }
+                v5 = va("vector index %d out of range", index->u.intValue);
+                Scr_Error(inst, v5, 0);
             }
             else
             {
-                v6 = va("%s is not a vector index", var_typename[index->type]);
-                Scr_Error(inst, v6, 0);
+                index->type = 5;
+                index->u.floatValue = *(float *)(value->u.intValue + 4 * index->u.intValue);
+                RemoveRefToVector(inst, value->u.vectorValue);
             }
-            break;
-        default:
-            if ( value->type == 10
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4354,
-                            0,
-                            "%s",
-                            "value->type != VAR_STACK") )
-            {
-                __debugbreak();
-            }
-            MEMORY[0xA05AB90][29 * inst] = 1;
-            v9 = va("%s is not an array, string, or vector", var_typename[value->type]);
-            Scr_Error(inst, v9, 0);
-            break;
+        }
+        else
+        {
+            v6 = va("%s is not a vector index", var_typename[index->type]);
+            Scr_Error(inst, v6, 0);
+        }
+        break;
+    default:
+        if (value->type == 10
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4354,
+                0,
+                "%s",
+                "value->type != VAR_STACK"))
+        {
+            __debugbreak();
+        }
+        gScrVarPub[inst].error_index = 1;
+        v9 = va("%s is not an array, string, or vector", var_typename[value->type]);
+        Scr_Error(inst, v9, 0);
+        break;
     }
 }
 
@@ -6070,127 +6100,115 @@ unsigned int __cdecl Scr_FindArrayIndex(scriptInstance_t inst, unsigned int pare
 
 unsigned int __cdecl Scr_EvalArrayRef(scriptInstance_t inst, unsigned int parentId)
 {
-    VariableUnion v2; // edx
+    const char *v3; // eax
     const char *v4; // eax
-    const char *v5; // eax
-    VariableUnion v6; // [esp+1Ch] [ebp-24h]
     VariableValueInternal *parentValue; // [esp+24h] [ebp-1Ch]
     VariableValueInternal *entValue; // [esp+28h] [ebp-18h]
-    unsigned int varValue; // [esp+2Ch] [ebp-14h]
-    int varValue_4; // [esp+30h] [ebp-10h]
+    VariableValue varValue; // [esp+2Ch] [ebp-14h]
     VariableValueInternal *entryValue; // [esp+34h] [ebp-Ch]
     unsigned int fieldId; // [esp+38h] [ebp-8h]
-    unsigned int id; // [esp+3Ch] [ebp-4h]
+    VariableUnion id; // [esp+3Ch] [ebp-4h]
 
-    if ( parentId )
+    if (parentId)
     {
         parentValue = &gScrVarGlob[inst].variableList[parentId + 0x8000];
-        if ( (parentValue->w.status & 0x60) == 0
+        if ((parentValue->w.status & 0x60) == 0
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4405,
-                        0,
-                        "%s",
-                        "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4405,
+                0,
+                "%s",
+                "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
         {
             __debugbreak();
         }
-        varValue_4 = parentValue->w.status & 0x1F;
-        if ( varValue_4 )
+        varValue.type = parentValue->w.status & 0x1F;
+        if (varValue.type)
         {
-            varValue = parentValue->u.next;
-add_array:
-            if ( varValue_4 == 1 )
+            varValue.u.intValue = parentValue->u.u.intValue;
+        add_array:
+            if (varValue.type == 1)
             {
-                entryValue = &gScrVarGlob[inst].variableList[varValue + 1];
-                if ( (entryValue->w.status & 0x60) == 0
+                entryValue = &gScrVarGlob[inst].variableList[varValue.u.intValue + 1];
+                if ((entryValue->w.status & 0x60) == 0
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                4446,
-                                0,
-                                "%s",
-                                "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        4446,
+                        0,
+                        "%s",
+                        "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
                 {
                     __debugbreak();
                 }
-                if ( (entryValue->w.status & 0x60) == 0
+                if ((entryValue->w.status & 0x60) == 0
                     && !Assert_MyHandler(
-                                "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                                323,
-                                0,
-                                "%s",
-                                "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+                        "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+                        323,
+                        0,
+                        "%s",
+                        "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
                 {
                     __debugbreak();
                 }
-                if ( (entryValue->w.status & 0x1F) < 0xD
+                if ((entryValue->w.status & 0x1F) < 0xD
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                4447,
-                                0,
-                                "%s",
-                                "IsObject( entryValue )") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        4447,
+                        0,
+                        "%s",
+                        "IsObject( entryValue )"))
                 {
                     __debugbreak();
                 }
-                if ( (entryValue->w.status & 0x1F) == 0x14 )
+                if ((entryValue->w.status & 0x1F) == 0x14)
                 {
-                    if ( entryValue->u.o.refCount )
+                    if (entryValue->u.o.refCount)
                     {
-                        id = varValue;
-                        RemoveRefToObject(inst, varValue);
-                        varValue = Scr_AllocArray(inst);
-                        CopyArray(inst, id, varValue);
-                        if ( !parentValue
-                            && !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                        4462,
-                                        0,
-                                        "%s",
-                                        "parentValue") )
-                        {
-                            __debugbreak();
-                        }
-                        parentValue->u.next = varValue;
+                        id.intValue = varValue.u.intValue;
+                        RemoveRefToObject(inst, varValue.u.stringValue);
+                        varValue.u.intValue = Scr_AllocArray(inst);
+                        CopyArray(inst, id.stringValue, varValue.u.stringValue);
+                        iassert(parentValue);
+                        parentValue->u.next = varValue.u.intValue;
                     }
-                    return varValue;
+                    return varValue.u.pointerValue;
                 }
                 else
                 {
-                    MEMORY[0xA05AB90][29 * inst] = 1;
-                    v5 = va("%s is not an array", var_typename[entryValue->w.status & 0x1F]);
-                    Scr_Error(inst, v5, 0);
+                    gScrVarPub[inst].error_index = 1;
+                    v4 = va("%s is not an array", var_typename[entryValue->w.status & 0x1F]);
+                    Scr_Error(inst, v4, 0);
                     return 0;
                 }
             }
             else
             {
-                if ( varValue_4 == 10
+                if (varValue.type == 10
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                4424,
-                                0,
-                                "%s",
-                                "varValue.type != VAR_STACK") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        4424,
+                        0,
+                        "%s",
+                        "varValue.type != VAR_STACK"))
                 {
                     __debugbreak();
                 }
-                MEMORY[0xA05AB90][29 * inst] = 1;
-                if ( varValue_4 == 2 )
+                gScrVarPub[inst].error_index = 1;
+                if (varValue.type == 2)
                 {
                     Scr_Error(inst, "string characters cannot be individually changed", 0);
                     return 0;
                 }
                 else
                 {
-                    if ( varValue_4 == 4 )
+                    if (varValue.type == 4)
                     {
                         Scr_Error(inst, "vector components cannot be individually changed", 0);
                     }
                     else
                     {
-                        v4 = va("%s is not an array", var_typename[varValue_4]);
-                        Scr_Error(inst, v4, 0);
+                        v3 = va("%s is not an array", var_typename[varValue.type]);
+                        Scr_Error(inst, v3, 0);
                     }
                     return 0;
                 }
@@ -6199,57 +6217,55 @@ add_array:
     }
     else
     {
-        entValue = &gScrVarGlob[inst].variableList[MEMORY[0xA05ABBC][29 * inst] + 1];
-        if ( (entValue->w.status & 0x1F) != 0x13
+        entValue = &gScrVarGlob[inst].variableList[gScrVarPub[inst].entId + 1];
+        if ((entValue->w.status & 0x1F) != 0x13
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4373,
-                        0,
-                        "%s",
-                        "(entValue->w.type & VAR_MASK) == VAR_ENTITY") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4373,
+                0,
+                "%s",
+                "(entValue->w.type & VAR_MASK) == VAR_ENTITY"))
         {
             __debugbreak();
         }
-        if ( entValue->w.status >> 8 >= 5
+        if (entValue->w.status >> 8 >= 5
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4374,
-                        0,
-                        "%s",
-                        "(entValue->w.classnum >> VAR_NAME_BITS) < CLASS_NUM_COUNT") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4374,
+                0,
+                "%s",
+                "(entValue->w.classnum >> VAR_NAME_BITS) < CLASS_NUM_COUNT"))
         {
             __debugbreak();
         }
-        fieldId = FindArrayVariable(inst, gScrClassMap[inst][entValue->w.status >> 8].id, MEMORY[0xA05ABC0][29 * inst]);
-        if ( fieldId )
+        fieldId = FindArrayVariable(inst, gScrClassMap[inst][entValue->w.status >> 8].id, gScrVarPub[inst].entFieldName);
+        if (fieldId)
         {
-            v6.intValue = GetEntityFieldValue(
-                                            inst,
-                                            entValue->w.status >> 8,
-                                            entValue->u.o.u.entnum & 0x3FFF,
-                                            (int)entValue->u.o.u.entnum >> 14,
-                                            gScrVarGlob[inst].variableList[fieldId + 0x8000].u.next).intValue;
-            varValue = v6.intValue;
-            varValue_4 = v2.intValue;
-            if ( v2.intValue )
+            varValue = GetEntityFieldValue(
+                inst,
+                entValue->w.status >> 8,
+                entValue->u.o.u.entnum & 0x3FFF,
+                (int)entValue->u.o.u.entnum >> 14,
+                gScrVarGlob[inst].variableList[fieldId + 0x8000].u.next);
+            if (varValue.type)
             {
-                if ( v2.intValue == 1 && !gScrVarGlob[inst].variableList[v6.intValue + 1].u.o.refCount )
+                if (varValue.type == 1 && !gScrVarGlob[inst].variableList[varValue.u.intValue + 1].u.o.refCount)
                 {
-                    RemoveRefToValue(inst, 1, v6);
-                    MEMORY[0xA05AB90][29 * inst] = 1;
+                    RemoveRefToValue(inst, 1, varValue.u);
+                    gScrVarPub[inst].error_index = 1;
                     Scr_Error(inst, "read-only array cannot be changed", 0);
                     return 0;
                 }
-                RemoveRefToValue(inst, v2.intValue, v6);
-                if ( varValue_4 == 1
-                    && gScrVarGlob[inst].variableList[v6.intValue + 1].u.o.refCount
+                RemoveRefToValue(inst, varValue.type, varValue.u);
+                if (varValue.type == 1
+                    && gScrVarGlob[inst].variableList[varValue.u.intValue + 1].u.o.refCount
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                4393,
-                                0,
-                                "%s",
-                                "(varValue.type != VAR_POINTER) || !gScrVarGlob[inst].variableList[VARIABLELIST_PARENT_BEGIN(inst)+ varVa"
-                                "lue.u.pointerValue].u.o.refCount") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        4393,
+                        0,
+                        "%s",
+                        "(varValue.type != VAR_POINTER) || !gScrVarGlob[inst].variableList[VARIABLELIST_PARENT_BEGIN(inst)+ varVa"
+                        "lue.u.pointerValue].u.o.refCount"))
                 {
                     __debugbreak();
                 }
@@ -6258,29 +6274,29 @@ add_array:
             }
         }
         parentValue = &gScrVarGlob[inst].variableList[GetNewVariable(
-                                                                                                        inst,
-                                                                                                        MEMORY[0xA05ABBC][29 * inst],
-                                                                                                        MEMORY[0xA05ABC0][29 * inst])
-                                                                                                + 0x8000];
+            inst,
+            gScrVarPub[inst].entId,
+            gScrVarPub[inst].entFieldName)
+            + 0x8000];
     }
-    if ( (parentValue->w.status & 0x1F) != 0
+    if ((parentValue->w.status & 0x1F) != 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4412,
-                    0,
-                    "%s",
-                    "!(parentValue->w.type & VAR_MASK)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            4412,
+            0,
+            "%s",
+            "!(parentValue->w.type & VAR_MASK)"))
     {
         __debugbreak();
     }
     parentValue->w.status |= 1u;
     parentValue->u.next = Scr_AllocArray(inst);
-    return parentValue->u.next;
+    return parentValue->u.u.pointerValue;
 }
 
 void __cdecl CopyArray(scriptInstance_t inst, unsigned int parentId, unsigned int newParentId)
 {
-    ObjectInfo::<unnamed_type_u> u; // edx
+    ObjectInfo_u u; // edx
     unsigned int nextSibling; // [esp+18h] [ebp-20h]
     VariableValueInternal *parentValue; // [esp+1Ch] [ebp-1Ch]
     VariableValueInternal *entryValue; // [esp+24h] [ebp-14h]
@@ -6418,211 +6434,204 @@ void __cdecl CopyArray(scriptInstance_t inst, unsigned int parentId, unsigned in
 
 void __cdecl ClearArray(scriptInstance_t inst, unsigned int parentId, VariableValue *value)
 {
-    VariableUnion v3; // edx
+    const char *v3; // eax
     const char *v4; // eax
     const char *v5; // eax
     const char *v6; // eax
-    const char *v7; // eax
-    VariableUnion v8; // [esp+10h] [ebp-24h]
     VariableValueInternal *parentValue; // [esp+18h] [ebp-1Ch]
     VariableValueInternal *entValue; // [esp+1Ch] [ebp-18h]
-    unsigned int varValue; // [esp+20h] [ebp-14h]
-    int varValue_4; // [esp+24h] [ebp-10h]
+    VariableValue varValue; // [esp+20h] [ebp-14h]
     VariableValueInternal *entryValue; // [esp+28h] [ebp-Ch]
     unsigned int fieldId; // [esp+2Ch] [ebp-8h]
-    unsigned int id; // [esp+30h] [ebp-4h]
+    VariableUnion id; // [esp+30h] [ebp-4h]
 
-    if ( parentId )
+    if (parentId)
     {
         parentValue = &gScrVarGlob[inst].variableList[parentId + 0x8000];
-        if ( (parentValue->w.status & 0x60) == 0
+        if ((parentValue->w.status & 0x60) == 0
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4515,
-                        0,
-                        "%s",
-                        "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4515,
+                0,
+                "%s",
+                "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
         {
             __debugbreak();
         }
-        varValue_4 = parentValue->w.status & 0x1F;
-        varValue = parentValue->u.next;
+        varValue.type = parentValue->w.status & 0x1F;
+        varValue.u.intValue = parentValue->u.u.intValue;
     }
     else
     {
-        entValue = &gScrVarGlob[inst].variableList[MEMORY[0xA05ABBC][29 * inst] + 1];
-        if ( (entValue->w.status & 0x1F) != 0x13
+        entValue = &gScrVarGlob[inst].variableList[gScrVarPub[inst].entId + 1];
+        if ((entValue->w.status & 0x1F) != 0x13
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4483,
-                        0,
-                        "%s",
-                        "(entValue->w.type & VAR_MASK) == VAR_ENTITY") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4483,
+                0,
+                "%s",
+                "(entValue->w.type & VAR_MASK) == VAR_ENTITY"))
         {
             __debugbreak();
         }
-        if ( entValue->w.status >> 8 >= 5
+        if (entValue->w.status >> 8 >= 5
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4484,
-                        0,
-                        "%s",
-                        "(entValue->w.classnum >> VAR_NAME_BITS) < CLASS_NUM_COUNT") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4484,
+                0,
+                "%s",
+                "(entValue->w.classnum >> VAR_NAME_BITS) < CLASS_NUM_COUNT"))
         {
             __debugbreak();
         }
-        fieldId = FindArrayVariable(inst, gScrClassMap[inst][entValue->w.status >> 8].id, MEMORY[0xA05ABC0][29 * inst]);
-        if ( !fieldId
-            || (v8.intValue = GetEntityFieldValue(
-                                                    inst,
-                                                    entValue->w.status >> 8,
-                                                    entValue->u.o.u.entnum & 0x3FFF,
-                                                    (int)entValue->u.o.u.entnum >> 14,
-                                                    gScrVarGlob[inst].variableList[fieldId + 0x8000].u.next).intValue,
-                    varValue = v8.intValue,
-                    (varValue_4 = v3.intValue) == 0) )
+        fieldId = FindArrayVariable(inst, gScrClassMap[inst][entValue->w.status >> 8].id, gScrVarPub[inst].entFieldName);
+        if (!fieldId
+            || (varValue = GetEntityFieldValue(
+                inst,
+                entValue->w.status >> 8,
+                entValue->u.o.u.entnum & 0x3FFF,
+                (int)entValue->u.o.u.entnum >> 14,
+                gScrVarGlob[inst].variableList[fieldId + 0x8000].u.next),
+                !varValue.type))
         {
-            varValue_4 = 0;
-error_0:
-            MEMORY[0xA05AB90][29 * inst] = 1;
-            v4 = va("%s is not an array", var_typename[varValue_4]);
-            Scr_Error(inst, v4, 0);
+            varValue.type = 0;
+        error_0:
+            gScrVarPub[inst].error_index = 1;
+            v3 = va("%s is not an array", var_typename[varValue.type]);
+            Scr_Error(inst, v3, 0);
             return;
         }
-        if ( v3.intValue == 1 && !gScrVarGlob[inst].variableList[v8.intValue + 1].u.o.refCount )
+        if (varValue.type == 1 && !gScrVarGlob[inst].variableList[varValue.u.intValue + 1].u.o.refCount)
         {
-            RemoveRefToValue(inst, 1, v8);
-            MEMORY[0xA05AB90][29 * inst] = 1;
+            RemoveRefToValue(inst, 1, varValue.u);
+            gScrVarPub[inst].error_index = 1;
             Scr_Error(inst, "read-only array cannot be changed", 0);
             return;
         }
-        RemoveRefToValue(inst, v3.intValue, v8);
-        if ( varValue_4 == 1
-            && gScrVarGlob[inst].variableList[v8.intValue + 1].u.o.refCount
+        RemoveRefToValue(inst, varValue.type, varValue.u);
+        if (varValue.type == 1
+            && gScrVarGlob[inst].variableList[varValue.u.intValue + 1].u.o.refCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4503,
-                        0,
-                        "%s",
-                        "(varValue.type != VAR_POINTER) || !gScrVarGlob[inst].variableList[VARIABLELIST_PARENT_BEGIN(inst)+ varValue."
-                        "u.pointerValue].u.o.refCount") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4503,
+                0,
+                "%s",
+                "(varValue.type != VAR_POINTER) || !gScrVarGlob[inst].variableList[VARIABLELIST_PARENT_BEGIN(inst)+ varValue."
+                "u.pointerValue].u.o.refCount"))
         {
             __debugbreak();
         }
         parentValue = 0;
     }
-    if ( varValue_4 != 1 )
+    if (varValue.type != 1)
     {
-        if ( varValue_4 == 10
+        if (varValue.type == 10
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        4524,
-                        0,
-                        "%s",
-                        "varValue.type != VAR_STACK") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                4524,
+                0,
+                "%s",
+                "varValue.type != VAR_STACK"))
         {
             __debugbreak();
         }
         goto error_0;
     }
-    entryValue = &gScrVarGlob[inst].variableList[varValue + 1];
-    if ( (entryValue->w.status & 0x60) == 0
+    entryValue = &gScrVarGlob[inst].variableList[varValue.u.intValue + 1];
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4534,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            4534,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x60) == 0
+    if ((entryValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x1F) < 0xD
+    if ((entryValue->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4535,
-                    0,
-                    "%s",
-                    "IsObject( entryValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            4535,
+            0,
+            "%s",
+            "IsObject( entryValue )"))
     {
         __debugbreak();
     }
-    if ( (entryValue->w.status & 0x1F) == 0x14 )
+    if ((entryValue->w.status & 0x1F) == 0x14)
     {
-        if ( entryValue->u.o.refCount )
+        if (entryValue->u.o.refCount)
         {
-            id = varValue;
-            RemoveRefToObject(inst, varValue);
-            varValue = Scr_AllocArray(inst);
-            CopyArray(inst, id, varValue);
-            if ( !parentValue
+            id.intValue = (int)varValue.u.pointerValue;
+            RemoveRefToObject(inst, varValue.u.stringValue);
+            varValue.u.intValue = Scr_AllocArray(inst);
+            CopyArray(inst, id.stringValue, varValue.u.stringValue);
+            if (!parentValue
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            4550,
-                            0,
-                            "%s",
-                            "parentValue") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                    4550,
+                    0,
+                    "%s",
+                    "parentValue"))
             {
                 __debugbreak();
             }
-            parentValue->u.next = varValue;
+            parentValue->u.next = varValue.u.intValue;
         }
-        if ( value->type == 6 )
+        if (value->type == 6)
         {
-            if ( IsValidArrayIndex(inst, value->u.intValue) )
+            if (IsValidArrayIndex(inst, value->u.intValue))
             {
-                SafeRemoveArrayVariable(inst, varValue, value->u.intValue);
+                SafeRemoveArrayVariable(inst, varValue.u.stringValue, value->u.intValue);
             }
             else
             {
-                v6 = va("array index %d out of range", value->u.intValue);
-                Scr_Error(inst, v6, 0);
+                v5 = va("array index %d out of range", value->u.intValue);
+                Scr_Error(inst, v5, 0);
             }
         }
-        else if ( value->type == 2 )
+        else if (value->type == 2)
         {
             SL_RemoveRefToString(inst, value->u.intValue);
-            SafeRemoveVariable(inst, varValue, value->u.intValue);
+            SafeRemoveVariable(inst, varValue.u.stringValue, value->u.intValue);
         }
         else
         {
-            v7 = va("%s is not an array index", var_typename[value->type]);
-            Scr_Error(inst, v7, 0);
+            v6 = va("%s is not an array index", var_typename[value->type]);
+            Scr_Error(inst, v6, 0);
         }
     }
     else
     {
-        MEMORY[0xA05AB90][29 * inst] = 1;
-        v5 = va("%s is not an array", var_typename[entryValue->w.status & 0x1F]);
-        Scr_Error(inst, v5, 0);
+        gScrVarPub[inst].error_index = 1;
+        v4 = va("%s is not an array", var_typename[entryValue->w.status & 0x1F]);
+        Scr_Error(inst, v4, 0);
     }
 }
 
 void __cdecl SafeRemoveArrayVariable(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue)
 {
-    if ( !IsValidArrayIndex(inst, unsignedValue)
+    if (!IsValidArrayIndex(inst, unsignedValue)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    2618,
-                    0,
-                    "%s",
-                    "IsValidArrayIndex( inst, unsignedValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            2618,
+            0,
+            "%s",
+            "IsValidArrayIndex( inst, unsignedValue )"))
     {
         __debugbreak();
     }
-    SafeRemoveVariable(
-        inst,
-        parentId,
-        (unsigned int)&cls.rankedServers[711].game[34] & ((unsigned int)&loc_800000 + unsignedValue));
+    SafeRemoveVariable(inst, parentId, (unsignedValue + 0x800000) & 0xFFFFFF);
 }
 
 void __cdecl SetEmptyArray(scriptInstance_t inst, unsigned int parentId)
@@ -6715,39 +6724,51 @@ void __cdecl Scr_AddArrayKeys(unsigned int parentId, scriptInstance_t inst)
     }
 }
 
-scr_entref_t __cdecl Scr_GetEntityIdRef(scr_entref_t *__return_ptr retstr, scriptInstance_t inst, unsigned int entId)
+scr_entref_t __cdecl Scr_GetEntityIdRef(scriptInstance_t inst, unsigned int entId)
 {
-    int v3; // eax
-    int entref; // [esp+0h] [ebp-Ch]
-    VariableValueInternal *entValue; // [esp+8h] [ebp-4h]
+    //int v3; // eax
+    //int entref; // [esp+0h] [ebp-Ch]
+    //VariableValueInternal *entValue; // [esp+8h] [ebp-4h]
+    //
+    //entValue = &gScrVarGlob[inst].variableList[entId + 1];
+    //if ( (entValue->w.status & 0x1F) != 0x13
+    //    && !Assert_MyHandler(
+    //                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+    //                4635,
+    //                0,
+    //                "%s",
+    //                "(entValue->w.type & VAR_MASK) == VAR_ENTITY") )
+    //{
+    //    __debugbreak();
+    //}
+    //if ( entValue->w.status >> 8 >= 5
+    //    && !Assert_MyHandler(
+    //                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+    //                4636,
+    //                0,
+    //                "%s",
+    //                "(entValue->w.name >> VAR_NAME_BITS) < CLASS_NUM_COUNT") )
+    //{
+    //    __debugbreak();
+    //}
+    //LOWORD(entref) = entValue->u.o.u.entnum & 0x3FFF;
+    //HIWORD(entref) = entValue->w.status >> 8;
+    //v3 = (int)entValue->u.o.u.entnum >> 14;
+    //*(unsigned int *)&retstr->entnum = entref;
+    //retstr->client = v3;
+    //return retstr;
+
+    scr_entref_t entref; // [esp+0h] [ebp-8h]
+    VariableValueInternal *entValue; // [esp+4h] [ebp-4h]
 
     entValue = &gScrVarGlob[inst].variableList[entId + 1];
-    if ( (entValue->w.status & 0x1F) != 0x13
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4635,
-                    0,
-                    "%s",
-                    "(entValue->w.type & VAR_MASK) == VAR_ENTITY") )
-    {
-        __debugbreak();
-    }
-    if ( entValue->w.status >> 8 >= 5
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4636,
-                    0,
-                    "%s",
-                    "(entValue->w.name >> VAR_NAME_BITS) < CLASS_NUM_COUNT") )
-    {
-        __debugbreak();
-    }
-    LOWORD(entref) = entValue->u.o.u.entnum & 0x3FFF;
-    HIWORD(entref) = entValue->w.status >> 8;
-    v3 = (int)entValue->u.o.u.entnum >> 14;
-    *(unsigned int *)&retstr->entnum = entref;
-    retstr->client = v3;
-    return retstr;
+
+    iassert((entValue->w.type & VAR_MASK) == VAR_ENTITY);
+    iassert((entValue->w.name >> VAR_NAME_BITS) < CLASS_NUM_COUNT);
+
+    entref.entnum = entValue->u.o.u.entnum & 0x3FFF;
+    entref.classnum = entValue->w.classnum >> VAR_NAME_BITS;
+    return entref;
 }
 
 void __cdecl Scr_CopyEntityNum(
@@ -7042,6 +7063,49 @@ double __cdecl Scr_GetObjectUsage(scriptInstance_t inst, unsigned int parentId)
     return usage;
 }
 
+double __cdecl Scr_GetEntryUsage_0(scriptInstance_t inst, unsigned int type, VariableUnion u)
+{
+  VariableValueInternal *parentValue; // [esp+8h] [ebp-4h]
+
+  if ( type != 1 )
+    return 0.0;
+  parentValue = &gScrVarGlob[inst].variableList[u.intValue + 1];
+  if ( (parentValue->w.status & 0x60) == 0
+    && !Assert_MyHandler(
+          "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+          4722,
+          0,
+          "%s",
+          "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+  {
+    __debugbreak();
+  }
+  if ( (parentValue->w.status & 0x60) == 0
+    && !Assert_MyHandler(
+          "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+          323,
+          0,
+          "%s",
+          "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+  {
+    __debugbreak();
+  }
+  if ( (parentValue->w.status & 0x1F) < 0xD
+    && !Assert_MyHandler(
+          "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+          4723,
+          0,
+          "%s",
+          "IsObject( parentValue )") )
+  {
+    __debugbreak();
+  }
+  if ( (parentValue->w.status & 0x1F) == 0x14 )
+    return Scr_GetObjectUsage(inst, u.stringValue) / ((double)parentValue->u.o.refCount + 1.0);
+  else
+    return 0.0;
+}
+
 double __cdecl Scr_GetEntryUsage(scriptInstance_t inst, VariableValueInternal *entryValue)
 {
     return Scr_GetEntryUsage_0(inst, entryValue->w.status & 0x1F, entryValue->u.u) + 1.0;
@@ -7088,38 +7152,38 @@ double __cdecl Scr_GetEndonUsage(scriptInstance_t inst, unsigned int parentId)
     unsigned int id; // [esp+4h] [ebp-4h]
 
     parentValue = &gScrVarGlob[inst].variableList[parentId + 1];
-    if ( (parentValue->w.status & 0x60) == 0
+    if ((parentValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4746,
-                    0,
-                    "%s",
-                    "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            4746,
+            0,
+            "%s",
+            "(parentValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (parentValue->w.status & 0x60) == 0
+    if ((parentValue->w.status & 0x60) == 0
         && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                    323,
-                    0,
-                    "%s",
-                    "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE") )
+            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
+            323,
+            0,
+            "%s",
+            "(entryValue->w.status & VAR_STAT_MASK) != VAR_STAT_FREE"))
     {
         __debugbreak();
     }
-    if ( (parentValue->w.status & 0x1F) < 0xD
+    if ((parentValue->w.status & 0x1F) < 0xD
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    4747,
-                    0,
-                    "%s",
-                    "IsObject( parentValue )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            4747,
+            0,
+            "%s",
+            "IsObject( parentValue )"))
     {
         __debugbreak();
     }
-    id = FindObjectVariable(inst, MEMORY[0xA05AB9C][29 * inst], parentId);
-    if ( !id )
+    id = FindObjectVariable(inst, gScrVarPub[inst].pauseArrayId, parentId);
+    if (!id)
         return 0.0;
     Object = FindObject(inst, id);
     return Scr_GetObjectUsage(inst, Object);
@@ -7246,7 +7310,7 @@ void __cdecl Scr_AddFieldsForFile(scriptInstance_t inst, char *filename)
         {
             if ( strcmp(token, "vector") )
             {
-                v3 = va(&byte_D2A948, token, filename);
+                v3 = va("unknown type %s in %s", token, filename);
                 Com_Error(ERR_DROP, v3);
                 return;
             }
@@ -7255,7 +7319,7 @@ void __cdecl Scr_AddFieldsForFile(scriptInstance_t inst, char *filename)
         token = (char *)Com_Parse(&sourcePos);
         if ( !sourcePos )
         {
-            v4 = va(&byte_D2A92C, filename);
+            v4 = va("missing field name in %s", filename);
             Com_Error(ERR_DROP, v4);
         }
         v8 = strlen(token);
@@ -7264,7 +7328,7 @@ void __cdecl Scr_AddFieldsForFile(scriptInstance_t inst, char *filename)
             token[i] = tolower(token[i]);
         index = SL_GetCanonicalString(inst, token);
         if ( Scr_FindField(token, &tempType, inst) )
-            Com_Error(ERR_DROP, &byte_D2A910, token, filename);
+            Com_Error(ERR_DROP, "duplicate key %s in %s", token, filename);
         if ( targetPos != TempMallocAlignStrict(0) - 1
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
@@ -7305,7 +7369,7 @@ char *__cdecl Scr_GetSourceFile_LoadObj(char *filename)
     len = FS_FOpenFileByMode(filename, &f, FS_READ);
     if ( len < 0 )
     {
-        v1 = va(&byte_D2A990, filename);
+        v1 = va("cannot find %s", filename);
         Com_Error(ERR_DROP, v1);
     }
     sourceBuffer = (unsigned __int8 *)Hunk_AllocateTempMemoryHigh(len + 1, "Scr_LoadAnimTreeInternal");
@@ -7320,13 +7384,13 @@ char *__cdecl Scr_GetSourceFile_FastFile(const char *filename)
     const char *v1; // eax
     RawFile *rawfile; // [esp+4h] [ebp-4h]
 
-    rawfile = DB_FindXAssetHeader(ASSET_TYPE_RAWFILE, filename, 1, -1).rawfile;
+    rawfile = DB_FindXAssetHeader(ASSET_TYPE_RAWFILE, (char*)filename, 1, -1).rawfile;
     if ( !rawfile )
     {
-        v1 = va(&byte_D2A990, filename);
+        v1 = va("cannot find %s", filename);
         Com_Error(ERR_DROP, v1);
     }
-    return rawfile->buffer;
+    return (char*)rawfile->buffer;
 }
 
 void __cdecl Scr_AddFields_FastFile(scriptInstance_t inst, const char *path, const char *extension)
@@ -7354,22 +7418,22 @@ void __cdecl Scr_FreeValue(scriptInstance_t inst, unsigned int id)
 
 void __cdecl Scr_AllocGameVariable(scriptInstance_t inst)
 {
-    if ( !MEMORY[0xA05ABA4][29 * inst] )
+    if (!gScrVarPub[inst].gameId)
     {
-        if ( MEMORY[0xA05ABE4][29 * inst] )
+        if (gScrVarPub[inst].varUsagePos)
         {
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                            5103,
-                            0,
-                            "%s",
-                            "!gScrVarPub[inst].varUsagePos") )
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                5103,
+                0,
+                "%s",
+                "!gScrVarPub[inst].varUsagePos"))
                 __debugbreak();
         }
-        MEMORY[0xA05ABE4][29 * inst] = (int)"<game variable>";
-        MEMORY[0xA05ABA4][29 * inst] = AllocValue(inst);
-        SetEmptyArray(inst, MEMORY[0xA05ABA4][29 * inst]);
-        MEMORY[0xA05ABE4][29 * inst] = 0;
+        gScrVarPub[inst].varUsagePos = "<game variable>";
+        gScrVarPub[inst].gameId = AllocValue(inst);
+        SetEmptyArray(inst, gScrVarPub[inst].gameId);
+        gScrVarPub[inst].varUsagePos = 0;
         Scr_UpdateDebugger(inst);
     }
 }
@@ -7378,31 +7442,31 @@ void __cdecl Scr_FreeGameVariable(scriptInstance_t inst, int bComplete)
 {
     VariableValueInternal *entryValue; // [esp+0h] [ebp-4h]
 
-    if ( !MEMORY[0xA05ABA4][29 * inst]
+    if (!gScrVarPub[inst].gameId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    5124,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].gameId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            5124,
+            0,
+            "%s",
+            "gScrVarPub[inst].gameId"))
     {
         __debugbreak();
     }
-    if ( bComplete )
+    if (bComplete)
     {
-        FreeValue(inst, MEMORY[0xA05ABA4][29 * inst]);
-        MEMORY[0xA05ABA4][29 * inst] = 0;
+        FreeValue(inst, gScrVarPub[inst].gameId);
+        gScrVarPub[inst].gameId = 0;
     }
     else
     {
-        entryValue = &gScrVarGlob[inst].variableList[MEMORY[0xA05ABA4][29 * inst] + 0x8000];
-        if ( (entryValue->w.status & 0x1F) != 1
+        entryValue = &gScrVarGlob[inst].variableList[gScrVarPub[inst].gameId + 0x8000];
+        if ((entryValue->w.status & 0x1F) != 1
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                        5134,
-                        0,
-                        "%s",
-                        "(entryValue->w.type & VAR_MASK) == VAR_POINTER") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                5134,
+                0,
+                "%s",
+                "(entryValue->w.type & VAR_MASK) == VAR_POINTER"))
         {
             __debugbreak();
         }
@@ -7666,70 +7730,70 @@ unsigned int __cdecl Scr_FindAllEndons(scriptInstance_t inst, unsigned int threa
     unsigned int id; // [esp+30h] [ebp-8h]
     unsigned int notifyListEntry; // [esp+34h] [ebp-4h]
 
-    if ( !threadId
+    if (!threadId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    5286,
-                    0,
-                    "%s",
-                    "threadId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            5286,
+            0,
+            "%s",
+            "threadId"))
     {
         __debugbreak();
     }
     threadValue = &gScrVarGlob[inst].variableList[threadId + 1];
-    if ( (threadValue->w.status & 0x60) != 0x60
+    if ((threadValue->w.status & 0x60) != 0x60
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    5289,
-                    0,
-                    "%s",
-                    "(threadValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            5289,
+            0,
+            "%s",
+            "(threadValue->w.status & VAR_STAT_MASK) == VAR_STAT_EXTERNAL"))
     {
         __debugbreak();
     }
-    if ( ((threadValue->w.status & 0x1F) < 0xD || (threadValue->w.status & 0x1F) > 0x10)
+    if (((threadValue->w.status & 0x1F) < 0xD || (threadValue->w.status & 0x1F) > 0x10)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                    5290,
-                    0,
-                    "%s",
-                    "((threadValue->w.type & VAR_MASK) >= VAR_THREAD) && ((threadValue->w.type & VAR_MASK) <= VAR_CHILD_THREAD)") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+            5290,
+            0,
+            "%s",
+            "((threadValue->w.type & VAR_MASK) >= VAR_THREAD) && ((threadValue->w.type & VAR_MASK) <= VAR_CHILD_THREAD)"))
     {
         __debugbreak();
     }
     count = 0;
-    for ( localId = threadId; localId; localId = GetSafeParentLocalId(inst, localId) )
+    for (localId = threadId; localId; localId = GetSafeParentLocalId(inst, localId))
     {
-        id = FindObjectVariable(inst, MEMORY[0xA05AB9C][29 * inst], localId);
-        if ( id )
+        id = FindObjectVariable(inst, gScrVarPub[inst].pauseArrayId, localId);
+        if (id)
         {
             selfNameId = FindObject(inst, id);
-            for ( notifyListEntry = FindFirstSibling(inst, selfNameId);
-                        notifyListEntry;
-                        notifyListEntry = FindNextSibling(inst, notifyListEntry) )
+            for (notifyListEntry = FindFirstSibling(inst, selfNameId);
+                notifyListEntry;
+                notifyListEntry = FindNextSibling(inst, notifyListEntry))
             {
-                if ( (gScrVarGlob[inst].variableList[notifyListEntry + 0x8000].w.status & 0x1F) != 1
+                if ((gScrVarGlob[inst].variableList[notifyListEntry + 0x8000].w.status & 0x1F) != 1
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                5303,
-                                0,
-                                "%s",
-                                "(gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ notifyListEntry].w.type & VAR_MASK) == VAR_POINTER") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        5303,
+                        0,
+                        "%s",
+                        "(gScrVarGlob[inst].variableList[VARIABLELIST_CHILD_BEGIN(inst)+ notifyListEntry].w.type & VAR_MASK) == VAR_POINTER"))
                 {
                     __debugbreak();
                 }
                 name = gScrVarGlob[inst].variableList[notifyListEntry + 0x8000].w.status >> 8;
-                if ( name - 0x10000 >= 0x10000
+                if (name - 0x10000 >= 0x10000
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
-                                5305,
-                                0,
-                                "%s",
-                                "(name - SL_MAX_STRING_INDEX) < (1 << 16)") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_variable.cpp",
+                        5305,
+                        0,
+                        "%s",
+                        "(name - SL_MAX_STRING_INDEX) < (1 << 16)"))
                 {
                     __debugbreak();
                 }
-                if ( names )
+                if (names)
                     names[count] = (unsigned __int16)Scr_GetThreadNotifyName(inst, name - 0x10000);
                 ++count;
             }
@@ -7737,4 +7801,3 @@ unsigned int __cdecl Scr_FindAllEndons(scriptInstance_t inst, unsigned int threa
     }
     return count;
 }
-

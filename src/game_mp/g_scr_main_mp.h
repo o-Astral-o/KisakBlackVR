@@ -3,6 +3,7 @@
 #include <clientscript/cscr_variable.h>
 #include <database/db_registry.h>
 #include <qcommon/common.h>
+#include <game/actor_animapi.h>
 
 struct gentity_s;
 struct scr_animscript_t;
@@ -11,6 +12,81 @@ enum objectiveState_t;
 struct objective_t;
 struct XAnimTree_s;
 struct scr_animtree_t;
+
+struct gameTypeScript_t // sizeof=0x84
+{                                       // XREF: scr_data_t::<unnamed_type_gametype>/r
+    char pszScript[64];
+    char pszName[64];                   // XREF: Scr_GetGameTypeNameForScript(char const *)+49/o
+    int bTeamBased;
+};
+
+struct scr_data_t_unnamed_type_gametype // sizeof=0x10BC
+{                                       // XREF: scr_data_t/r
+    int main;                           // XREF: GScr_LoadGameTypeScript(void)+41/w
+                                        // Scr_LoadGameType(void)+4/r ...
+    int startupgametype;                // XREF: GScr_LoadGameTypeScript(void)+5C/w
+                                        // Scr_StartupGameType(void)+6/r
+    int playerconnect;                  // XREF: GScr_LoadGameTypeScript(void)+77/w
+                                        // Scr_PlayerConnect(gentity_s *)+6/r
+    int playerdisconnect;               // XREF: GScr_LoadGameTypeScript(void)+92/w
+                                        // Scr_PlayerDisconnect(gentity_s *)+6/r
+    int playerdamage;                   // XREF: GScr_LoadGameTypeScript(void)+AD/w
+                                        // Scr_PlayerDamage(gentity_s *,gentity_s *,gentity_s *,int,int,int,int,float const * const,float const * const,hitLocation_t,int)+C6/r
+    int playerkilled;                   // XREF: GScr_LoadGameTypeScript(void)+C8/w
+                                        // Scr_PlayerKilled(gentity_s *,gentity_s *,gentity_s *,int,int,int,float const * const,hitLocation_t,int,int)+BA/r
+    int votecalled;
+    int playervote;
+    int playerrevive;
+    int actordamage;                    // XREF: GScr_LoadGameTypeScript(void)+E3/w
+                                        // Scr_ActorDamage(gentity_s *,gentity_s *,gentity_s *,int,int,int,int,float const * const,float const * const,hitLocation_t,int)+C6/r
+    int actorkilled;                    // XREF: GScr_LoadGameTypeScript(void)+FE/w
+                                        // Scr_ActorKilled(gentity_s *,gentity_s *,gentity_s *,int,int,int,float const * const,hitLocation_t,int)+AC/r
+    int vehicledamage;                  // XREF: GScr_LoadGameTypeScript(void)+119/w
+                                        // Scr_VehicleDamage(gentity_s *,gentity_s *,gentity_s *,int,int,int,int,float const * const,float const * const,hitLocation_t,int,int,uint,uint)+F0/r
+    int vehicleradiusdamage;            // XREF: GScr_LoadGameTypeScript(void)+134/w
+                                        // Scr_VehicleRadiusDamage(gentity_s *,gentity_s *,gentity_s *,int,float,float,int,int,int,float const * const,float,float,float const * const,int)+FD/r
+    int playerlaststand;                // XREF: GScr_LoadGameTypeScript(void)+14F/w
+                                        // Scr_PlayerLastStand(gentity_s *,gentity_s *,gentity_s *,int,int,int,float const * const,hitLocation_t,int)+B8/r
+    int iNumGameTypes;                  // XREF: Scr_ParseGameTypeList_LoadObj+30B/w
+                                        // Scr_ParseGameTypeList_FastFile+261/w ...
+    gameTypeScript_t list[32];          // XREF: Scr_ParseGameTypeList_LoadObj+1E/o
+                                        // Scr_ParseGameTypeList_LoadObj+14A/o ...
+};
+
+struct scr_data_t // sizeof=0x9810
+{                                       // XREF: .data:scr_data_t g_scr_data/r
+    int levelscript;                    // XREF: Scr_LoadLevel(void)+4/r
+                                        // Scr_LoadLevel(void)+11/r ...
+    int gametypescript;
+    scr_data_t_unnamed_type_gametype gametype;
+                                        // XREF: GScr_LoadGameTypeScript(void)+41/w
+                                        // GScr_LoadGameTypeScript(void)+5C/w ...
+    int delete_;                        // XREF: GScr_LoadScripts(scriptInstance_t)+29/w
+                                        // G_FreeEntityDelay(gentity_s *)+4/r ...
+    int initstructs;                    // XREF: GScr_LoadScripts(scriptInstance_t)+46/w
+                                        // G_LoadStructs(void)+6/r ...
+    int createstruct;                   // XREF: GScr_LoadScripts(scriptInstance_t)+63/w
+                                        // G_SpawnStruct(SpawnVar &):loc_683EB6/r ...
+    int findstruct;                     // XREF: GScr_LoadScripts(scriptInstance_t)+80/w
+                                        // G_FindStruct(SpawnVar &,int):loc_6EC836/r ...
+    AnimScriptList dogAnim;             // XREF: GScr_LoadDogAnimScripts+8/o
+                                        // .text:006418CE/o ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    _BYTE playerCorpseInfo[5984];       // XREF: PlayerCmd_ClonePlayer+401/o
+                                        // G_FreeAnimTreeInstances+88/r ...
+    XAnimTree_s *actorXAnimTrees[16];   // XREF: G_GetActorAnimTree(actor_s *)+F/r
+    _BYTE actorCorpseInfo[11968];       // XREF: G_FreeAnimTreeInstances+E3/r
+                                        // G_FreeAnimTreeInstances+F9/r ...
+    int destructible_callback;
+    int levelnotify;
+    int faceeventnotify;
+    int updatespawnpoints;
+    int pregamescript;
+    int glassSmash;
+};
 
 
 struct cached_tag_mat_t // sizeof=0x3C
@@ -781,3 +857,6 @@ void __cdecl GScr_Gdt_Update(char *asset, char *keyValue);
 void __cdecl Scr_GlassSmash(float *pos, float *dir);
 void __cdecl Scr_AddStruct(scriptInstance_t inst);
 void __cdecl Scr_ResetTimeout(scriptInstance_t inst);
+
+
+extern scr_data_t g_scr_data;

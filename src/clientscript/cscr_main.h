@@ -1,5 +1,7 @@
 #pragma once
 
+#undef GetObject
+
 enum scriptInstance_t : __int32
 {                                                                             // XREF: ScriptTokenizer/r
                                                                                 // ?Path_CallFunctionForNodes@@YAXW4scriptInstance_t@@P6AX0PAUpathnode_t@@@Z@Z/r ...
@@ -133,6 +135,36 @@ const struct ParseValue // sizeof=0x8
         // ParseNode+637/w ...
         XExpr::MathTypes exprType;                    // XREF: StoreExprInList(scriptInstance_t,uint,ParseValue)+4A/r
         // ParseNode+644/w ...
+};
+
+union HashEntry_u // sizeof=0x4
+{                                       // XREF: HashEntry/r
+    unsigned int prev;
+    unsigned int str;
+};
+
+struct HashEntry // sizeof=0x8
+{                                       // XREF: .data:HashEntry * gScrStringHashTable/r
+    unsigned int status_next;           // XREF: _Com_InitHunkMemory+95/o
+                                        // .data:scrStringGlob_t * gScrStringGlob/o
+    HashEntry_u u;
+};
+
+struct __declspec(align(128)) scrStringGlob_t // sizeof=0x100
+{                                       // XREF: .data:scrStringGlob_t * gScrStringGlob/r
+    HashEntry *hashTable;               // XREF: SL_Init(scriptInstance_t)+59/r
+                                        // SL_Init(scriptInstance_t)+D0/r ...
+    bool inited;                        // XREF: SL_Init(scriptInstance_t)+C/r
+                                        // SL_Init(scriptInstance_t)+1B2/w ...
+    // padding byte
+    // padding byte
+    // padding byte
+    HashEntry *nextFreeEntry;           // XREF: SL_FreeString+198/w
+                                        // SL_ShutdownSystem(scriptInstance_t,uint)+EF/w ...
+    int indentLevel;                    // XREF: Scr_LoadScriptInternal(scriptInstance_t,char const *,PrecacheEntry *,int)+212/r
+                                        // Scr_LoadScriptInternal(scriptInstance_t,char const *,PrecacheEntry *,int)+221/w ...
+    int stringsUsed[32];                // XREF: Scr_LoadScriptInternal(scriptInstance_t,char const *,PrecacheEntry *,int)+239/r
+                                        // Scr_LoadScriptInternal(scriptInstance_t,char const *,PrecacheEntry *,int)+4A0/r ...
 };
 
 bool __cdecl Scr_IsInOpcodeMemory(scriptInstance_t inst, const char *pos);

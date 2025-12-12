@@ -1,7 +1,20 @@
 #include "cscr_debugger.h"
 #include <universal/assertive.h>
+#include "cscr_compiler.h"
+#include "cscr_parser.h"
+#include <universal/q_shared.h>
+#include <win32/win_net.h>
+#include "cscr_vm.h"
+#include <universal/com_memory.h>
+#include <qcommon/common.h>
+#include "cscr_stringlist.h"
+#include "cscr_evaluate.h"
+#include "cscr_parsetree.h"
 
 scrDebuggerGlob_t gScrDebuggerGlob[2];
+scriptInstance_t gDebuggerInstance;
+
+Scr_Breakpoint *g_breakpointsHead;
 
 void __cdecl Scr_AddManualBreakpoint(scriptInstance_t inst, unsigned __int8 *codePos)
 {
@@ -78,19 +91,19 @@ char *__cdecl Scr_FindBreakpointInfo(scriptInstance_t inst, const char *codePos)
 {
     unsigned int index; // [esp+0h] [ebp-4h]
 
-    if ( !codePos
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp", 142, 0, "%s", "codePos") )
+    if (!codePos
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp", 142, 0, "%s", "codePos"))
     {
         __debugbreak();
     }
-    index = (unsigned int)&codePos[-MEMORY[0xA05ABC8][29 * inst]];
-    if ( index >= gScrCompilePub[inst].programLen
+    index = codePos - gScrVarPub[inst].programBuffer;
+    if (index >= gScrCompilePub[inst].programLen
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                    145,
-                    0,
-                    "%s",
-                    "index < gScrCompilePub[inst].programLen") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+            145,
+            0,
+            "%s",
+            "index < gScrCompilePub[inst].programLen"))
     {
         __debugbreak();
     }
@@ -122,7 +135,7 @@ void __cdecl Scr_FreeBreakpoint(Scr_Breakpoint *breakpoint)
     g_breakpointsHead = breakpoint;
 }
 
-void __thiscall Scr_ScriptWindow::SetScriptFile(Scr_ScriptWindow *this, scriptInstance_t inst, const char *name)
+void __thiscall Scr_ScriptWindow::SetScriptFile(scriptInstance_t inst, const char *name)
 {
     SourceBufferInfo *sourceBufData; // [esp+4h] [ebp-8h]
     unsigned int i; // [esp+8h] [ebp-4h]
@@ -133,16 +146,15 @@ void __thiscall Scr_ScriptWindow::SetScriptFile(Scr_ScriptWindow *this, scriptIn
         if ( sourceBufData->buf && !I_stricmp(sourceBufData->buf, name) )
         {
             this->bufferIndex = i;
-            Scr_ScriptWindow::Init(this, inst);
+            Scr_ScriptWindow::Init(inst);
             return;
         }
     }
     this->bufferIndex = -1;
-    Scr_ScriptWindow::Init(this, inst);
+    Scr_ScriptWindow::Init(inst);
 }
 
 void __thiscall Scr_ScriptWindow::AddBreakpoint(
-                Scr_ScriptWindow *this,
                 scriptInstance_t inst,
                 Scr_Breakpoint **pBreakpoint,
                 char *codePos,
@@ -198,14 +210,18 @@ Scr_WatchElement_s *__cdecl Scr_ReadElement(scriptInstance_t inst)
     int id; // [esp+4h] [ebp-4h]
 
     id = Sys_ReadDebugSocketInt();
-    if ( id )
-        return Scr_ScriptWatch::GetElementWithId(&gScrDebuggerGlob[inst].scriptWatch, id);
+    if (id)
+    {
+        //return Scr_ScriptWatch::GetElementWithId(&gScrDebuggerGlob[inst].scriptWatch, id);
+        return gScrDebuggerGlob[inst].scriptWatch.GetElementWithId(id);
+    }
     else
+    {
         return 0;
+    }
 }
 
 void __thiscall Scr_ScriptWindow::GetSourcePos(
-                Scr_ScriptWindow *this,
                 scriptInstance_t inst,
                 unsigned int *start,
                 unsigned int *end)
@@ -251,7 +267,6 @@ void __thiscall Scr_ScriptWindow::GetSourcePos(
 }
 
 char __thiscall Scr_ScriptWindow::AddBreakpointAtSourcePos(
-                Scr_ScriptWindow *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element,
                 unsigned __int8 breakpointType,
@@ -325,19 +340,19 @@ $LN6_152:
         Sys_WriteDebugSocketInt(this->bufferIndex);
         Sys_WriteDebugSocketInt(sourcePos);
     }
-    newElement = Scr_ScriptWatch::CreateBreakpointElement(
-                                 &gScrDebuggerGlob[inst].scriptWatch,
-                                 inst,
-                                 element,
-                                 this->bufferIndex,
-                                 sourcePos,
-                                 user);
-    Scr_ScriptWindow::AddBreakpoint(this, inst, pBreakpoint, codePos, builtinIndex, newElement, breakpointType);
+    //newElement = Scr_ScriptWatch::CreateBreakpointElement(
+    //                             &gScrDebuggerGlob[inst].scriptWatch,
+    //                             inst,
+    //                             element,
+    //                             this->bufferIndex,
+    //                             sourcePos,
+    //                             user);
+    newElement = gScrDebuggerGlob[inst].scriptWatch.CreateBreakpointElement(inst, element, this->bufferIndex, sourcePos, user);
+    Scr_ScriptWindow::AddBreakpoint(inst, pBreakpoint, codePos, builtinIndex, newElement, breakpointType);
     return 1;
 }
 
 void __thiscall Scr_ScriptWindow::ToggleBreakpointInternal(
-                Scr_ScriptWindow *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element,
                 bool force,
@@ -378,9 +393,8 @@ void __thiscall Scr_ScriptWindow::ToggleBreakpointInternal(
     }
     if ( breakpointType >= 6u && breakpointType <= 7u )
     {
-        Scr_ScriptWindow::GetSourcePos(this, inst, &startSourcePos, &endSourcePos);
+        Scr_ScriptWindow::GetSourcePos(inst, &startSourcePos, &endSourcePos);
         Scr_ScriptWindow::AddBreakpointAtSourcePos(
-            this,
             inst,
             element,
             breakpointType,
@@ -390,8 +404,11 @@ void __thiscall Scr_ScriptWindow::ToggleBreakpointInternal(
             endSourcePos);
         return;
     }
-    if ( overwrite && element )
-        element = Scr_ScriptWatch::DeleteElementInternal(&gScrDebuggerGlob[inst].scriptWatch, inst, element);
+    if (overwrite && element)
+    {
+        //element = Scr_ScriptWatch::DeleteElementInternal(&gScrDebuggerGlob[inst].scriptWatch, inst, element);
+        element = gScrDebuggerGlob[inst].scriptWatch.DeleteElementInternal(inst, element);
+    }
     s = sourceBufData->sourceBuf;
     line = 0;
     pBreakpoint = &this->breakpointHead;
@@ -436,7 +453,6 @@ LABEL_29:
             ++s;
         endSourcePos = s - sourceBufData->sourceBuf;
         if ( Scr_ScriptWindow::AddBreakpointAtSourcePos(
-                     this,
                      inst,
                      element,
                      breakpointType,
@@ -516,8 +532,11 @@ void __cdecl Scr_FreeLineBreakpoint(scriptInstance_t inst, Scr_Breakpoint *break
     }
     breakpointType = element->breakpointType;
     breakpoint->element = 0;
-    if ( deleteElement )
-        Scr_ScriptWatch::DeleteElementInternal(&gScrDebuggerGlob[inst].scriptWatch, inst, element);
+    if (deleteElement)
+    {
+        //Scr_ScriptWatch::DeleteElementInternal(&gScrDebuggerGlob[inst].scriptWatch, inst, element);
+        gScrDebuggerGlob[inst].scriptWatch.DeleteElementInternal(inst, element);
+    }
     if ( breakpointType >= 4u && breakpointType <= 5u )
     {
         if ( !breakpoint->codePos
@@ -605,7 +624,7 @@ void __cdecl Scr_RemoveBreakpoint(scriptInstance_t inst, unsigned __int8 *codePo
     --gScrDebuggerGlob[inst].breakpointCount;
 }
 
-char *__thiscall Scr_ScriptWindow::GetBreakpointCodePos(Scr_ScriptWindow *this, scriptInstance_t inst)
+char *__thiscall Scr_ScriptWindow::GetBreakpointCodePos(scriptInstance_t inst)
 {
     unsigned int startSourcePos; // [esp+4h] [ebp-1Ch]
     SourceBufferInfo *sourceBufData; // [esp+8h] [ebp-18h]
@@ -677,15 +696,15 @@ void __cdecl Scr_MonitorCommand(const char *text, scriptInstance_t inst)
         gScrDebuggerGlob[inst].abort = 1;
 }
 
-void __thiscall Scr_ScriptWindow::RunToCursor(Scr_ScriptWindow *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptWindow::RunToCursor(scriptInstance_t inst)
 {
     char *codePos; // [esp+4h] [ebp-4h]
 
     if ( Sys_IsRemoteDebugServer() && gScrDebuggerGlob[inst].atBreakpoint )
         Scr_ResumeBreakpoints(inst);
-    if ( MEMORY[0xA05AC90][4298 * inst] )
+    if (gScrVmPub[inst].function_count)
     {
-        codePos = Scr_ScriptWindow::GetBreakpointCodePos(this, inst);
+        codePos = Scr_ScriptWindow::GetBreakpointCodePos(inst);
         Scr_SetTempBreakpoint(inst, codePos, 0);
     }
 }
@@ -724,7 +743,7 @@ void __cdecl Scr_SetTempBreakpoint(scriptInstance_t inst, char *codePos, unsigne
     }
 }
 
-void __thiscall Scr_ScriptWindow::EnterCallInternal(Scr_ScriptWindow *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptWindow::EnterCallInternal(scriptInstance_t inst)
 {
     const char *v3; // [esp+4h] [ebp-30h]
     Scr_SourcePos_t pos; // [esp+Ch] [ebp-28h] BYREF
@@ -746,7 +765,7 @@ void __thiscall Scr_ScriptWindow::EnterCallInternal(Scr_ScriptWindow *this, scri
     {
         __debugbreak();
     }
-    Scr_ScriptWindow::GetSourcePos(this, inst, &startSourcePos, &endSourcePos);
+    Scr_ScriptWindow::GetSourcePos(inst, &startSourcePos, &endSourcePos);
     codePos = Scr_GetOpcodePosOfType(inst, this->bufferIndex, startSourcePos, endSourcePos, 2, &sourcePos);
     if ( codePos )
     {
@@ -775,7 +794,7 @@ void __thiscall Scr_ScriptWindow::EnterCallInternal(Scr_ScriptWindow *this, scri
         {
             if ( Sys_IsRemoteDebugServer() )
                 Sys_WriteDebugSocketMessageType(0x15u);
-            Scr_ScriptWindow::ToggleBreakpointInternal(this, inst, 0, 0, 0, 4u, 1);
+            Scr_ScriptWindow::ToggleBreakpointInternal(inst, 0, 0, 0, 4u, 1);
             if ( Sys_IsRemoteDebugServer() )
                 Sys_EndWriteDebugSocket();
         }
@@ -793,7 +812,7 @@ void __thiscall Scr_ScriptWindow::EnterCallInternal(Scr_ScriptWindow *this, scri
     }
 }
 
-void __thiscall Scr_ScriptWindow::Init(Scr_ScriptWindow *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptWindow::Init(scriptInstance_t inst)
 {
     int v2; // [esp+0h] [ebp-1Ch]
     SourceBufferInfo *sourceBufData; // [esp+Ch] [ebp-10h]
@@ -845,13 +864,13 @@ void __thiscall Scr_ScriptWindow::Init(Scr_ScriptWindow *this, scriptInstance_t 
     }
 }
 
-void __thiscall Scr_AbstractScriptList::Init(Scr_AbstractScriptList *this, scriptInstance_t inst)
+void __thiscall Scr_AbstractScriptList::Init(scriptInstance_t inst)
 {
     this->numLines = 0;
     this->scriptWindows = 0;
 }
 
-void __thiscall Scr_AbstractScriptList::Shutdown(Scr_AbstractScriptList *this, scriptInstance_t inst)
+void __thiscall Scr_AbstractScriptList::Shutdown(scriptInstance_t inst)
 {
     if ( this->scriptWindows )
     {
@@ -866,7 +885,6 @@ void __cdecl Scr_FreeDebugMem(scriptInstance_t inst, char *ptr)
 }
 
 void __thiscall Scr_ScriptList::AddFile(
-                Scr_ScriptList *this,
                 scriptInstance_t inst,
                 const char *filename,
                 Scr_AddFileInfo *info)
@@ -875,7 +893,8 @@ void __thiscall Scr_ScriptList::AddFile(
 
     scriptWindow = (Scr_ScriptWindow *)Scr_ScriptWindow::operator new(0x20u);
     this->scriptWindows[info->to] = scriptWindow;
-    Scr_ScriptWindow::SetScriptFile(scriptWindow, inst, filename);
+    //Scr_ScriptWindow::SetScriptFile(scriptWindow, inst, filename);
+    scriptWindow->SetScriptFile(inst, filename);
     if ( scriptWindow->bufferIndex == -1 )
     {
         Scr_ScriptWindow::operator delete(scriptWindow);
@@ -890,7 +909,7 @@ void __thiscall Scr_ScriptList::AddFile(
     ++info->from;
 }
 
-void __thiscall Scr_ScriptList::Init(Scr_ScriptList *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptList::Init(scriptInstance_t inst)
 {
     unsigned int VariableName; // eax
     char *v3; // eax
@@ -900,7 +919,7 @@ void __thiscall Scr_ScriptList::Init(Scr_ScriptList *this, scriptInstance_t inst
     int i; // [esp+8A0h] [ebp-8h]
     unsigned int id; // [esp+8A4h] [ebp-4h]
 
-    Scr_AbstractScriptList::Init(this, inst);
+    Scr_AbstractScriptList::Init(inst);
     ++this->numLines;
     for ( id = FindFirstSibling(inst, gScrCompilePub[inst].loadedscripts); id; id = FindNextSibling(inst, id) )
         ++this->numLines;
@@ -924,13 +943,13 @@ void __thiscall Scr_ScriptList::Init(Scr_ScriptList *this, scriptInstance_t inst
     Hunk_CheckTempMemoryHighClear();
     Scr_AddSourceBuffer(inst, 0, "scriptdebugger/help.txt", 0, 0);
     Hunk_ClearTempMemoryHigh();
-    Scr_ScriptList::AddFile(this, inst, "scriptdebugger/help.txt", &info);
+    Scr_ScriptList::AddFile(inst, "scriptdebugger/help.txt", &info);
     if ( info.to )
         this->selectedLine = 0;
     for ( id = FindFirstSibling(inst, gScrCompilePub[inst].loadedscripts); id; id = FindNextSibling(inst, id) )
     {
         Com_sprintf(filename, 0x40u, "%s.gsc", scriptWindowsNames[info.from]);
-        Scr_ScriptList::AddFile(this, inst, filename, &info);
+        Scr_ScriptList::AddFile(inst, filename, &info);
     }
     gScrDebuggerGlob[inst].colBuf = (char *)Hunk_UserAlloc(
                                                                                         g_DebugHunkUser,
@@ -944,7 +963,7 @@ unsigned int *__cdecl Scr_AllocDebugMem(scriptInstance_t inst, int size, const c
     return Z_Malloc(size, name, 0);
 }
 
-void __thiscall Scr_ScriptList::Shutdown(Scr_ScriptList *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptList::Shutdown(scriptInstance_t inst)
 {
     int i; // [esp+8h] [ebp-4h]
 
@@ -961,27 +980,27 @@ void __thiscall Scr_ScriptList::Shutdown(Scr_ScriptList *this, scriptInstance_t 
     Hunk_UserFree(g_DebugHunkUser, gScrDebuggerGlob[inst].colBuf);
     for ( i = 0; i < this->numLines; ++i )
         Scr_ScriptWindow::operator delete(this->scriptWindows[i]);
-    Scr_AbstractScriptList::Shutdown(this, inst);
+    Scr_AbstractScriptList::Shutdown(inst);
 }
 
-void __thiscall Scr_ScriptCallStack::UpdateStack(Scr_ScriptCallStack *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptCallStack::UpdateStack(scriptInstance_t inst)
 {
     Scr_SourcePos2_t *pos; // [esp+4h] [ebp-14h]
-    function_stack_t *v4; // [esp+8h] [ebp-10h]
+    function_frame_t *v4; // [esp+8h] [ebp-10h]
     unsigned int index; // [esp+Ch] [ebp-Ch]
     int i; // [esp+10h] [ebp-8h]
     char *codePos; // [esp+14h] [ebp-4h]
 
-    if ( MEMORY[0xA05AC90][4298 * inst] )
+    if (gScrVmPub[inst].function_count)
     {
-        this->numLines = MEMORY[0xA05AC90][4298 * inst] + 1;
-        for ( i = 0; i <= MEMORY[0xA05AC90][4298 * inst]; ++i )
+        this->numLines = gScrVmPub[inst].function_count + 1;
+        for (i = 0; i <= gScrVmPub[inst].function_count; ++i)
         {
-            if ( i )
+            if (i)
             {
-                v4 = (function_stack_t *)&MEMORY[0xA05ACB0][4298 * inst + 6 * (MEMORY[0xA05AC90][4298 * inst] - i)];
-                codePos = (char *)v4->pos;
-                index = v4->localId == 0;
+                v4 = &gScrVmPub[inst].function_frame_start[gScrVmPub[inst].function_count - i];
+                codePos = (char *)v4->fs.pos;
+                index = v4->fs.localId == 0;
             }
             else
             {
@@ -989,7 +1008,7 @@ void __thiscall Scr_ScriptCallStack::UpdateStack(Scr_ScriptCallStack *this, scri
                 index = 0;
             }
             pos = &this->stack[i];
-            if ( codePos == &g_EndPos )
+            if (codePos == &g_EndPos)
             {
                 pos->bufferIndex = -1;
                 this->stack[i].sourcePos = 0;
@@ -1007,10 +1026,7 @@ void __thiscall Scr_ScriptCallStack::UpdateStack(Scr_ScriptCallStack *this, scri
     }
 }
 
-Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementWithId_r(
-                Scr_ScriptWatch *this,
-                Scr_WatchElement_s *element,
-                int id)
+Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementWithId_r(Scr_WatchElement_s *element, int id)
 {
     Scr_WatchElement_s *childElement; // [esp+4h] [ebp-4h]
 
@@ -1020,7 +1036,7 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementWithId_r(
             return element;
         if ( element->childHead )
         {
-            childElement = Scr_ScriptWatch::GetElementWithId_r(this, element->childHead, id);
+            childElement = Scr_ScriptWatch::GetElementWithId_r(element->childHead, id);
             if ( childElement )
                 return childElement;
         }
@@ -1029,12 +1045,12 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementWithId_r(
     return 0;
 }
 
-Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementWithId(Scr_ScriptWatch *this, int id)
+Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementWithId(int id)
 {
-    return Scr_ScriptWatch::GetElementWithId_r(this, this->elementHead, id);
+    return Scr_ScriptWatch::GetElementWithId_r(this->elementHead, id);
 }
 
-Scr_WatchElement_s **__thiscall Scr_ScriptWatch::GetElementRef(Scr_ScriptWatch *this, Scr_WatchElement_s *element)
+Scr_WatchElement_s **__thiscall Scr_ScriptWatch::GetElementRef(Scr_WatchElement_s *element)
 {
     Scr_WatchElement_s **pElement; // [esp+4h] [ebp-4h]
 
@@ -1054,7 +1070,7 @@ Scr_WatchElement_s **__thiscall Scr_ScriptWatch::GetElementRef(Scr_ScriptWatch *
     return pElement;
 }
 
-Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementPrev(Scr_ScriptWatch *this, Scr_WatchElement_s *element)
+Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementPrev(Scr_WatchElement_s *element)
 {
     Scr_WatchElement_s *prevElement; // [esp+4h] [ebp-4h]
 
@@ -1070,16 +1086,13 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::GetElementPrev(Scr_ScriptWatch *
     return 0;
 }
 
-void __thiscall Scr_ScriptWatch::ToggleExpandElement(
-                Scr_ScriptWatch *this,
-                scriptInstance_t inst,
-                Scr_WatchElement_s *element)
+void __thiscall Scr_ScriptWatch::ToggleExpandElement(scriptInstance_t inst, Scr_WatchElement_s *element)
 {
     element->expand = !element->expand;
     if ( element->expand )
     {
         if ( element->objectType )
-            Scr_ScriptWatch::EvaluateWatchChildren(this, inst, element);
+            Scr_ScriptWatch::EvaluateWatchChildren(inst, element);
         else
             element->expand = 0;
     }
@@ -1093,7 +1106,6 @@ void __thiscall Scr_ScriptWatch::ToggleExpandElement(
 }
 
 void __thiscall Scr_ScriptWatch::ExpandElement(
-                Scr_ScriptWatch *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element,
                 bool expand)
@@ -1124,12 +1136,11 @@ void __thiscall Scr_ScriptWatch::ExpandElement(
             Scr_WriteElement(element);
             Sys_EndWriteDebugSocket();
         }
-        Scr_ScriptWatch::ToggleExpandElement(this, inst, element);
+        Scr_ScriptWatch::ToggleExpandElement(inst, element);
     }
 }
 
 Scr_WatchElement_s *__thiscall Scr_ScriptWatch::CreateBreakpointElement(
-                Scr_ScriptWatch *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element,
                 unsigned int bufferIndex,
@@ -1147,17 +1158,16 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::CreateBreakpointElement(
     if ( element )
     {
         ElementRoot = Scr_GetElementRoot(element);
-        ElementRef = Scr_ScriptWatch::GetElementRef(this, ElementRoot);
+        ElementRef = Scr_ScriptWatch::GetElementRef(ElementRoot);
     }
     else
     {
-        ElementRef = Scr_ScriptWatch::GetElementRef(this, 0);
+        ElementRef = Scr_ScriptWatch::GetElementRef(0);
     }
     pElement = ElementRef;
     lineNum = Scr_GetSourcePos(inst, bufferIndex, sourcePos, valueText, 0x101u) + 1;
     Com_sprintf(refText, 0x81u, "%i %s", lineNum, gScrParserPub[inst].sourceBufferLookup[bufferIndex].buf);
     newElement = Scr_ScriptWatch::CreateWatchElement(
-                                 this,
                                  inst,
                                  refText,
                                  pElement,
@@ -1174,7 +1184,6 @@ Scr_WatchElement_s *__cdecl Scr_GetElementRoot(Scr_WatchElement_s *element)
 }
 
 Scr_WatchElement_s *__thiscall Scr_ScriptWatch::PasteNonBreakpointElement(
-                Scr_ScriptWatch *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element,
                 char *text,
@@ -1187,14 +1196,13 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::PasteNonBreakpointElement(
     if ( element )
     {
         ElementRoot = Scr_GetElementRoot(element);
-        ElementRef = Scr_ScriptWatch::GetElementRef(this, ElementRoot);
+        ElementRef = Scr_ScriptWatch::GetElementRef(ElementRoot);
     }
     else
     {
-        ElementRef = Scr_ScriptWatch::GetElementRef(this, 0);
+        ElementRef = Scr_ScriptWatch::GetElementRef(0);
     }
     newElement = Scr_ScriptWatch::CreateWatchElement(
-                                 this,
                                  inst,
                                  text,
                                  ElementRef,
@@ -1210,12 +1218,11 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::PasteNonBreakpointElement(
         __debugbreak();
     }
     Scr_CompileText(inst, text, &newElement->expr);
-    Scr_ScriptWatch::EvaluateWatchElement(this, inst, newElement);
+    Scr_ScriptWatch::EvaluateWatchElement(inst, newElement);
     return newElement;
 }
 
 Scr_WatchElement_s *__thiscall Scr_ScriptWatch::DeleteElementInternal(
-                Scr_ScriptWatch *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element)
 {
@@ -1228,16 +1235,13 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::DeleteElementInternal(
     }
     if ( element->parent )
         return element;
-    pElement = Scr_ScriptWatch::GetElementRef(this, element);
+    pElement = Scr_ScriptWatch::GetElementRef(element);
     *pElement = element->next;
-    Scr_ScriptWatch::FreeWatchElement(this, inst, element);
+    Scr_ScriptWatch::FreeWatchElement(inst, element);
     return *pElement;
 }
 
-Scr_WatchElement_s *__thiscall Scr_ScriptWatch::BackspaceElementInternal(
-                Scr_ScriptWatch *this,
-                scriptInstance_t inst,
-                Scr_WatchElement_s *element)
+Scr_WatchElement_s *__thiscall Scr_ScriptWatch::BackspaceElementInternal(scriptInstance_t inst, Scr_WatchElement_s *element)
 {
     Scr_WatchElement_s **pElement; // [esp+4h] [ebp-8h]
     Scr_WatchElement_s *prevElement; // [esp+8h] [ebp-4h]
@@ -1249,30 +1253,30 @@ Scr_WatchElement_s *__thiscall Scr_ScriptWatch::BackspaceElementInternal(
     }
     if ( element->parent )
         return element;
-    pElement = Scr_ScriptWatch::GetElementRef(this, element);
-    prevElement = Scr_ScriptWatch::GetElementPrev(this, element);
+    pElement = Scr_ScriptWatch::GetElementRef(element);
+    prevElement = Scr_ScriptWatch::GetElementPrev(element);
     *pElement = element->next;
-    Scr_ScriptWatch::FreeWatchElement(this, inst, element);
+    Scr_ScriptWatch::FreeWatchElement(inst, element);
     return prevElement;
 }
 
-void __thiscall Scr_ScriptWatch::Init(Scr_ScriptWatch *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptWatch::Init(scriptInstance_t inst)
 {
     this->elementHead = 0;
     this->localId = 0;
     this->elementId = 0;
 }
 
-void __thiscall Scr_ScriptWatch::Shutdown(Scr_ScriptWatch *this, scriptInstance_t inst)
+void __thiscall Scr_ScriptWatch::Shutdown(scriptInstance_t inst)
 {
     Scr_WatchElement_s *next; // [esp+4h] [ebp-4h]
 
-    Scr_ScriptWatch::UpdateBreakpoints(this, inst, 0);
+    Scr_ScriptWatch::UpdateBreakpoints(inst, 0);
     Scr_UnbreakAllAssignmentPos(inst);
     while ( this->elementHead )
     {
         next = this->elementHead->next;
-        Scr_ScriptWatch::FreeWatchElement(this, inst, this->elementHead);
+        Scr_ScriptWatch::FreeWatchElement(inst, this->elementHead);
         this->elementHead = next;
     }
 }
@@ -1353,7 +1357,6 @@ void __cdecl Scr_FreeWatchElementText(scriptInstance_t inst, Scr_WatchElement_s 
 }
 
 void __thiscall Scr_ScriptWatch::FreeWatchElement(
-                Scr_ScriptWatch *this,
                 scriptInstance_t inst,
                 Scr_WatchElement_s *element)
 {
@@ -1395,16 +1398,16 @@ void __thiscall Scr_ScriptWatch::FreeWatchElement(
     {
         Scr_FreeWatchElementChildren(inst, element);
         if ( element->breakpointType )
-            Scr_ScriptWatch::RemoveBreakpoint(this, inst, element);
+            Scr_ScriptWatch::RemoveBreakpoint(inst, element);
         Scr_FreeDebugExpr(inst, &element->expr);
     }
     Scr_FreeDebugMem(inst, (char *)element);
 }
 
 void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
-                Scr_ScriptWatch *this,
-                scriptInstance_t inst,
-                Scr_WatchElement_s *parentElement)
+    Scr_ScriptWatch *this,
+    scriptInstance_t inst,
+    Scr_WatchElement_s *parentElement)
 {
     unsigned int AllVariableField; // eax
     char *v4; // eax
@@ -1415,8 +1418,8 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
     bool v9; // [esp+10h] [ebp-134h]
     int v10; // [esp+14h] [ebp-130h]
     bool v11; // [esp+18h] [ebp-12Ch]
-    int (__cdecl *v12)(const void *, const void *); // [esp+1Ch] [ebp-128h]
-    int (__cdecl *v13)(unsigned int *, unsigned int *); // [esp+20h] [ebp-124h]
+    int(__cdecl * v12)(const void *, const void *); // [esp+1Ch] [ebp-128h]
+    int(__cdecl * v13)(unsigned int *, unsigned int *); // [esp+20h] [ebp-124h]
     unsigned __int8 v14; // [esp+24h] [ebp-120h]
     unsigned __int8 objectType; // [esp+28h] [ebp-11Ch]
     bool oldHardcodedField; // [esp+43h] [ebp-101h]
@@ -1426,7 +1429,7 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
     Scr_WatchElement_s *childElement; // [esp+E4h] [ebp-60h]
     unsigned int newIndex; // [esp+E8h] [ebp-5Ch]
     unsigned int oldChildCount; // [esp+ECh] [ebp-58h]
-    int (__cdecl *compare)(const void *, const void *); // [esp+F0h] [ebp-54h]
+    int(__cdecl * compare)(const void *, const void *); // [esp+F0h] [ebp-54h]
     unsigned __int8 oldObjectType; // [esp+F6h] [ebp-4Eh]
     bool isArray; // [esp+F7h] [ebp-4Dh]
     Scr_WatchElement_s *newElements; // [esp+F8h] [ebp-4Ch]
@@ -1451,65 +1454,65 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
 
     oldObjectType = parentElement->oldObjectType;
     parentElement->oldObjectType = parentElement->objectType;
-    if ( parentElement->expand && parentElement->objectType )
+    if (parentElement->expand && parentElement->objectType)
     {
-        if ( !MEMORY[0xA05AB88][116 * inst]
+        if (!gScrVarPub[inst].evaluate
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                        5526,
-                        0,
-                        "%s",
-                        "gScrVarPub[inst].evaluate") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                5526,
+                0,
+                "%s",
+                "gScrVarPub[inst].evaluate"))
         {
             __debugbreak();
         }
         isArray = parentElement->objectType == 20;
         hardcodedCount = 0;
-        if ( parentElement->objectType == 23 )
+        if (parentElement->objectType == 23)
         {
-            if ( !parentElement->parent
+            if (!parentElement->parent
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                            5533,
-                            0,
-                            "%s",
-                            "parentElement->parent") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                    5533,
+                    0,
+                    "%s",
+                    "parentElement->parent"))
             {
                 __debugbreak();
             }
             objectId = parentElement->parent->objectId;
-            if ( !objectId
+            if (!objectId
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                            5535,
-                            0,
-                            "%s",
-                            "objectId") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                    5535,
+                    0,
+                    "%s",
+                    "objectId"))
             {
                 __debugbreak();
             }
             count = Scr_FindAllThreads(inst, objectId, 0, this->localId);
         }
-        else if ( parentElement->objectType == 24 )
+        else if (parentElement->objectType == 24)
         {
-            if ( !parentElement->parent
+            if (!parentElement->parent
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                            5541,
-                            0,
-                            "%s",
-                            "parentElement->parent") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                    5541,
+                    0,
+                    "%s",
+                    "parentElement->parent"))
             {
                 __debugbreak();
             }
             objectId = parentElement->parent->objectId;
-            if ( !objectId
+            if (!objectId
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                            5543,
-                            0,
-                            "%s",
-                            "objectId") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                    5543,
+                    0,
+                    "%s",
+                    "objectId"))
             {
                 __debugbreak();
             }
@@ -1518,50 +1521,47 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
         else
         {
             objectId = parentElement->objectId;
-            if ( !objectId
+            if (!objectId
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                            5550,
-                            0,
-                            "%s",
-                            "objectId") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                    5550,
+                    0,
+                    "%s",
+                    "objectId"))
             {
                 __debugbreak();
             }
-            if ( parentElement->directObject )
+            if (parentElement->directObject)
             {
                 objectType = parentElement->objectType;
-                if ( objectType == 13 )
+                if (objectType == 13)
                 {
                     threadId = GetSafeParentLocalId(inst, parentElement->objectId);
-                    if ( !threadId && GetObjectType(inst, parentElement->objectId) == 13 )
+                    if (!threadId && GetObjectType(inst, parentElement->objectId) == 13)
                     {
-                        for ( function_count = MEMORY[0xA05AC90][4298 * inst]; ; --function_count )
+                        for (function_count = gScrVmPub[inst].function_count; ; --function_count)
                         {
-                            if ( !function_count
+                            if (!function_count
                                 && !Assert_MyHandler(
-                                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                                            5570,
-                                            0,
-                                            "%s",
-                                            "function_count") )
+                                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                                    5570,
+                                    0,
+                                    "%s",
+                                    "function_count"))
                             {
                                 __debugbreak();
                             }
-                            if ( parentElement->objectId == MEMORY[0xA05ACB4][4298 * inst + 6 * function_count] )
+                            if (parentElement->objectId == gScrVmPub[inst].function_frame_start[function_count].fs.localId)
                                 break;
                         }
                         do
-                        {
-                            --function_count;
-                            threadId = MEMORY[0xA05ACB4][4298 * inst + 6 * function_count];
-                        }
-                        while ( !threadId && function_count );
+                            threadId = gScrVmPub[inst].function_frame_start[--function_count].fs.localId;
+                        while (!threadId && function_count);
                     }
-                    if ( threadId )
+                    if (threadId)
                         hardcodedNames[hardcodedCount++] = threadId + 5;
                 }
-                else if ( objectType > 0x10u && objectType <= 0x13u )
+                else if (objectType > 0x10u && objectType <= 0x13u)
                 {
                     hardcodedNames[hardcodedCount++] = 4;
                 }
@@ -1571,59 +1571,59 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                 hardcodedNames[hardcodedCount++] = 1;
             }
             v14 = parentElement->objectType;
-            if ( v14 == 13 )
+            if (v14 == 13)
             {
                 hardcodedNames[hardcodedCount++] = 2;
                 hardcodedNames[hardcodedCount++] = 3;
             }
-            else if ( v14 == 20 )
+            else if (v14 == 20)
             {
                 hardcodedNames[hardcodedCount++] = 0;
             }
-            if ( hardcodedCount > 5
+            if (hardcodedCount > 5
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                            5618,
-                            0,
-                            "%s",
-                            "hardcodedCount <= ARRAY_COUNT( hardcodedNames )") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                    5618,
+                    0,
+                    "%s",
+                    "hardcodedCount <= ARRAY_COUNT( hardcodedNames )"))
             {
                 __debugbreak();
             }
             AllVariableField = Scr_FindAllVariableField(inst, objectId, 0);
             count = hardcodedCount + AllVariableField;
         }
-        if ( count )
+        if (count)
         {
             names = Scr_AllocDebugMem(inst, 4 * count, "Scr_ScriptWatch::EvaluateWatchChildren");
             memcpy((unsigned __int8 *)names, (unsigned __int8 *)hardcodedNames, 4 * hardcodedCount);
-            if ( parentElement->objectType == 23 )
+            if (parentElement->objectType == 23)
             {
                 Scr_FindAllThreads(inst, objectId, names, this->localId);
-                compare = (int (__cdecl *)(const void *, const void *))CompareThreadIndices;
+                compare = (int(__cdecl *)(const void *, const void *))CompareThreadIndices;
             }
-            else if ( parentElement->objectType == 24 )
+            else if (parentElement->objectType == 24)
             {
                 Scr_FindAllEndons(inst, objectId, names);
-                if ( inst == SCRIPTINSTANCE_CLIENT )
-                    compare = (int (__cdecl *)(const void *, const void *))CompareArrayIndicesClient;
+                if (inst == SCRIPTINSTANCE_CLIENT)
+                    compare = (int(__cdecl *)(const void *, const void *))CompareArrayIndicesClient;
                 else
-                    compare = (int (__cdecl *)(const void *, const void *))CompareArrayIndices;
+                    compare = (int(__cdecl *)(const void *, const void *))CompareArrayIndices;
             }
             else
             {
                 Scr_FindAllVariableField(inst, objectId, &names[hardcodedCount]);
-                if ( isArray )
+                if (isArray)
                 {
-                    if ( inst == SCRIPTINSTANCE_CLIENT )
+                    if (inst == SCRIPTINSTANCE_CLIENT)
                         v13 = CompareArrayIndicesClient;
                     else
                         v13 = CompareArrayIndices;
-                    v12 = (int (__cdecl *)(const void *, const void *))v13;
+                    v12 = (int(__cdecl *)(const void *, const void *))v13;
                 }
                 else
                 {
-                    v12 = (int (__cdecl *)(const void *, const void *))Scr_CompareCanonicalStrings;
+                    v12 = (int(__cdecl *)(const void *, const void *))Scr_CompareCanonicalStrings;
                 }
                 compare = v12;
             }
@@ -1632,20 +1632,20 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
             oldElements = parentElement->childArrayHead;
             oldChildCount = parentElement->childCount;
             newElements = (Scr_WatchElement_s *)Scr_AllocDebugMem(
-                                                                                        inst,
-                                                                                        100 * count,
-                                                                                        "Scr_ScriptWatch::EvaluateWatchChildren3");
+                inst,
+                100 * count,
+                "Scr_ScriptWatch::EvaluateWatchChildren3");
             memset((unsigned __int8 *)&newElements->expr.parseData, 0, 100 * count);
             newElementOldRef = (Scr_WatchElement_s **)Scr_AllocDebugMem(
-                                                                                                    inst,
-                                                                                                    4 * count,
-                                                                                                    "Scr_ScriptWatch::EvaluateWatchChildren");
+                inst,
+                4 * count,
+                "Scr_ScriptWatch::EvaluateWatchChildren");
             v11 = oldElements && parentElement->objectType == oldObjectType;
             sameType = v11;
             elementChanged = 0;
             oldIndex = 0;
             newIndex = 0;
-            for ( nameIndex = 0; nameIndex < count; ++nameIndex )
+            for (nameIndex = 0; nameIndex < count; ++nameIndex)
             {
                 newElement = &newElements[newIndex];
                 v4 = CopyString((char *)"", "EvaluateWatchChildren", 0, inst);
@@ -1653,36 +1653,35 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                 v5 = CopyString((char *)"", "EvaluateWatchChildren", 0, inst);
                 newElement->refText = v5;
                 hardcodedField = newIndex < hardcodedCount;
-                if ( Scr_ScriptWatch::EvaluateWatchChildElement(
-                             this,
-                             inst,
-                             parentElement,
-                             names[nameIndex],
-                             newElement,
-                             newIndex < hardcodedCount) )
+                if (Scr_ScriptWatch::EvaluateWatchChildElement(
+                    inst,
+                    parentElement,
+                    names[nameIndex],
+                    newElement,
+                    newIndex < hardcodedCount))
                 {
                     newElement->parent = parentElement;
-                    if ( !++this->elementId
+                    if (!++this->elementId
                         && !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                                    5694,
-                                    0,
-                                    "%s",
-                                    "elementId") )
+                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                            5694,
+                            0,
+                            "%s",
+                            "elementId"))
                     {
                         __debugbreak();
                     }
                     newElement->id = this->elementId;
                     newElementOldRef[newIndex] = 0;
-                    if ( sameType )
+                    if (sameType)
                     {
-                        while ( oldIndex < oldChildCount )
+                        while (oldIndex < oldChildCount)
                         {
                             oldElement = &oldElements[oldIndex];
                             oldHardcodedField = oldIndex < parentElement->hardcodedCount;
-                            if ( oldHardcodedField == hardcodedField )
+                            if (oldHardcodedField == hardcodedField)
                             {
-                                if ( hardcodedField )
+                                if (hardcodedField)
                                     v10 = oldElement->fieldName - newElement->fieldName;
                                 else
                                     v10 = compare(&oldElement->fieldName, &newElement->fieldName);
@@ -1692,22 +1691,22 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                             {
                                 compareResult = oldHardcodedField - hardcodedField;
                             }
-                            if ( compareResult >= 0 )
+                            if (compareResult >= 0)
                             {
                                 Scr_RemoveValue(inst, oldElement);
-                                if ( compareResult )
+                                if (compareResult)
                                 {
                                     elementChanged = 1;
                                 }
                                 else
                                 {
-                                    if ( !this->elementId
+                                    if (!this->elementId
                                         && !Assert_MyHandler(
-                                                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                                                    5728,
-                                                    0,
-                                                    "%s",
-                                                    "elementId") )
+                                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                                            5728,
+                                            0,
+                                            "%s",
+                                            "elementId"))
                                     {
                                         __debugbreak();
                                     }
@@ -1724,18 +1723,18 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                                     newElement->sourcePos = oldElement->sourcePos;
                                     newElement->changed = oldElement->changed;
                                     newElement->changedTime = oldElement->changedTime;
-                                    if ( !oldElement->id
+                                    if (!oldElement->id
                                         && !Assert_MyHandler(
-                                                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
-                                                    5742,
-                                                    0,
-                                                    "%s",
-                                                    "oldElement->id") )
+                                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_debugger.cpp",
+                                            5742,
+                                            0,
+                                            "%s",
+                                            "oldElement->id"))
                                     {
                                         __debugbreak();
                                     }
                                     newElement->id = oldElement->id;
-                                    for ( childElement = oldElement->childHead; childElement; childElement = childElement->next )
+                                    for (childElement = oldElement->childHead; childElement; childElement = childElement->next)
                                         childElement->parent = newElement;
                                     newElementOldRef[newIndex] = oldElement;
                                     ++oldIndex;
@@ -1755,7 +1754,7 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                 }
             }
             Scr_FreeDebugMem(inst, (char *)names);
-            while ( oldIndex < oldChildCount )
+            while (oldIndex < oldChildCount)
             {
                 oldElement = &oldElements[oldIndex];
                 elementChanged = 1;
@@ -1765,30 +1764,30 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
             count = newIndex;
             v9 = newIndex && (!sameType || elementChanged || count != oldChildCount);
             setChildCount = v9;
-            if ( Sys_IsRemoteDebugServer() )
+            if (Sys_IsRemoteDebugServer())
             {
-                if ( setChildCount )
+                if (setChildCount)
                 {
                     Sys_WriteDebugSocketMessageType(0x23u);
                     Scr_WriteElement(parentElement);
                     Sys_WriteDebugSocketInt(count);
                     Sys_WriteDebugSocketInt(sameType);
                     Sys_EndWriteDebugSocket();
-                    if ( sameType )
+                    if (sameType)
                     {
                         oldIndex = 0;
                         newIndex = 0;
-                        for ( nameIndex = 0; nameIndex < count; ++nameIndex )
+                        for (nameIndex = 0; nameIndex < count; ++nameIndex)
                         {
                             newElement = &newElements[newIndex];
                             hardcodedField = newIndex < hardcodedCount;
-                            while ( oldIndex < oldChildCount )
+                            while (oldIndex < oldChildCount)
                             {
                                 oldElement = &oldElements[oldIndex];
                                 oldHardcodedFielda = oldIndex < parentElement->hardcodedCount;
-                                if ( oldHardcodedFielda == hardcodedField )
+                                if (oldHardcodedFielda == hardcodedField)
                                 {
-                                    if ( hardcodedField )
+                                    if (hardcodedField)
                                         v8 = oldElement->fieldName - newElement->fieldName;
                                     else
                                         v8 = compare(&oldElement->fieldName, &newElement->fieldName);
@@ -1799,9 +1798,9 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                                     compareResult = oldHardcodedFielda - hardcodedField;
                                 }
                                 Sys_WriteDebugSocketInt(compareResult);
-                                if ( compareResult >= 0 )
+                                if (compareResult >= 0)
                                 {
-                                    if ( !compareResult )
+                                    if (!compareResult)
                                         ++oldIndex;
                                     break;
                                 }
@@ -1812,20 +1811,20 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                     }
                 }
             }
-            for ( newIndex = 0; newIndex < count; ++newIndex )
+            for (newIndex = 0; newIndex < count; ++newIndex)
             {
                 newElement = &newElements[newIndex];
                 oldElement = newElementOldRef[newIndex];
                 hardcodedField = newIndex < hardcodedCount;
-                if ( newIndex >= hardcodedCount )
+                if (newIndex >= hardcodedCount)
                 {
                     v7 = parentElement->objectType;
-                    if ( v7 == 20 )
+                    if (v7 == 20)
                     {
                         value = Scr_GetArrayIndexValue(inst, newElement->fieldName);
                         Scr_GetValueString(inst, 0, &value, 129, fieldText);
                     }
-                    else if ( v7 > 0x16u && v7 <= 0x18u )
+                    else if (v7 > 0x16u && v7 <= 0x18u)
                     {
                         I_strncpyz(fieldText, newElement->valueText, 129);
                     }
@@ -1835,9 +1834,9 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                         I_strncpyz(fieldText, CanonicalString, 129);
                     }
                     Scr_SetElementRefText(inst, newElement, fieldText);
-                    if ( Sys_IsRemoteDebugServer() )
+                    if (Sys_IsRemoteDebugServer())
                     {
-                        if ( oldElement )
+                        if (oldElement)
                             Scr_DeltaElementRefText(newElement, oldElement->refText, fieldText);
                         else
                             Scr_DeltaElementRefText(newElement, "", fieldText);
@@ -1846,7 +1845,7 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                 else
                 {
                     Scr_SetNonFieldElementRefText(inst, newElement);
-                    if ( Sys_IsRemoteDebugServer() )
+                    if (Sys_IsRemoteDebugServer())
                     {
                         Sys_WriteDebugSocketMessageType(0x21u);
                         Scr_WriteElement(newElement);
@@ -1854,25 +1853,25 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                         Sys_EndWriteDebugSocket();
                     }
                 }
-                if ( oldElement )
+                if (oldElement)
                     Scr_DeltaElementValueText(newElement, oldElement->valueText);
                 else
                     Scr_DeltaElementValueText(newElement, "");
-                if ( oldElement )
+                if (oldElement)
                     Scr_FreeWatchElementText(inst, oldElement);
             }
             Scr_FreeDebugMem(inst, (char *)newElementOldRef);
-            if ( oldElements )
+            if (oldElements)
                 Scr_FreeDebugMem(inst, (char *)oldElements);
-            if ( count )
+            if (count)
             {
                 parentElement->childCount = count;
                 parentElement->hardcodedCount = hardcodedCount;
                 parentElement->childArrayHead = newElements;
                 Scr_ConnectElementChildren(parentElement);
-                if ( Scr_IsSortWatchElement(parentElement) )
+                if (Scr_IsSortWatchElement(parentElement))
                 {
-                    if ( Sys_IsRemoteDebugServer() && setChildCount )
+                    if (Sys_IsRemoteDebugServer() && setChildCount)
                     {
                         Sys_WriteDebugSocketMessageType(0x29u);
                         Scr_WriteElement(parentElement);
@@ -1880,15 +1879,15 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                     }
                     Scr_SortElementChildren(inst, parentElement);
                 }
-                for ( newElement = parentElement->childHead; newElement; newElement = newElement->next )
-                    Scr_ScriptWatch::EvaluateWatchChildren(this, inst, newElement);
+                for (newElement = parentElement->childHead; newElement; newElement = newElement->next)
+                    Scr_ScriptWatch::EvaluateWatchChildren(inst, newElement);
             }
             else
             {
                 Scr_FreeDebugMem(inst, (char *)newElements);
-                if ( parentElement->childCount )
+                if (parentElement->childCount)
                 {
-                    if ( Sys_IsRemoteDebugServer() )
+                    if (Sys_IsRemoteDebugServer())
                     {
                         Sys_WriteDebugSocketMessageType(0x1Du);
                         Scr_WriteElement(parentElement);
@@ -1898,9 +1897,9 @@ void __thiscall Scr_ScriptWatch::EvaluateWatchChildren(
                 }
             }
         }
-        else if ( parentElement->childCount )
+        else if (parentElement->childCount)
         {
-            if ( Sys_IsRemoteDebugServer() )
+            if (Sys_IsRemoteDebugServer())
             {
                 Sys_WriteDebugSocketMessageType(0x1Du);
                 Scr_WriteElement(parentElement);
@@ -1919,17 +1918,15 @@ VariableValue __cdecl Scr_GetArrayIndexValue(scriptInstance_t inst, unsigned int
 {
     VariableValue value; // [esp+0h] [ebp-8h]
 
-    if ( !name
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h", 472, 0, "%s", "name") )
-    {
-        __debugbreak();
-    }
-    if ( name < 0x10000 )
+    iassert(name);
+
+    if (name < 0x10000)
         return (VariableValue)((unsigned __int16)name | 0x200000000LL);
-    if ( name >= 0x17FFE )
+
+    if (name >= 0x17FFE)
     {
         value.type = 6;
-        value.u.intValue = name - (unsigned int)&loc_800000;
+        value.u.intValue = name - 0x800000;
     }
     else
     {

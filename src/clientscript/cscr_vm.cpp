@@ -1,4 +1,17 @@
 #include "cscr_vm.h"
+#include "cscr_stringlist.h"
+#include "cscr_compiler.h"
+#include <qcommon/cmd.h>
+
+scrVmGlob_t gScrVmGlob[2];
+scrVmPub_t gScrVmPub[2];
+scrVmDebugPub_t gScrVmDebugPub[2];
+
+const dvar_t *logScriptTimes;
+const dvar_t *scrVmEnableScripts;
+const dvar_t *scrShowVarUseage;
+const dvar_t *scrShowStrUsage;
+const dvar_t *sv_clientside;
 
 void __cdecl Scr_AddStruct()
 {
@@ -45,9 +58,9 @@ void __cdecl RemoveRefToValue(scriptInstance_t inst, int type, VariableUnion u)
 
 void __cdecl Scr_ClearErrorMessage(scriptInstance_t inst)
 {
-    MEMORY[0xA05AB8C][29 * inst] = 0;
-    dword_A0667D8[2058 * inst] = 0;
-    MEMORY[0xA05AB90][29 * inst] = 0;
+    gScrVarPub[inst].error_message = 0;
+    gScrVmGlob[inst].dialog_error_message = 0;
+    gScrVarPub[inst].error_index = 0;
 }
 
 void __cdecl Scr_Init(scriptInstance_t inst)
@@ -75,46 +88,48 @@ void __cdecl Scr_Init(scriptInstance_t inst)
     gScrVarPub[inst].bInited = 1;
 }
 
+cmd_function_s VM_DumpScriptProfileInfo_VAR;
+
 void __cdecl Scr_VM_Init(scriptInstance_t inst)
 {
-    MEMORY[0xA05ABE4][29 * inst] = (int)"<script init variable>";
-    MEMORY[0xA05AC8C][4298 * inst] = (int)&MEMORY[0xA05EFA8] + 17192 * inst;
-    MEMORY[0xA05AC98][4298 * inst] = (int)&MEMORY[0xA05AFB0] + 17192 * inst;
-    MEMORY[0xA05AC90][4298 * inst] = 0;
-    MEMORY[0xA05AC94][4298 * inst] = (int)&MEMORY[0xA05ACB0][4298 * inst];
-    gScrVmPub[inst].localVars = (unsigned int *)&dword_A0667E0[2058 * inst];
-    MEMORY[0xA05AB88][116 * inst] = 0;
-    MEMORY[0xA05AC9C][17192 * inst] = 0;
+    gScrVarPub[inst].varUsagePos = "<script init variable>";
+    gScrVmPub[inst].maxstack = &gScrVmPub[inst].stack[2047];
+    gScrVmPub[inst].top = gScrVmPub[inst].stack;
+    gScrVmPub[inst].function_count = 0;
+    gScrVmPub[inst].function_frame = gScrVmPub[inst].function_frame_start;
+    gScrVmPub[inst].localVars = (unsigned int *)&gScrVmGlob[inst].starttime;
+    gScrVarPub[inst].evaluate = 0;
+    gScrVmPub[inst].debugCode = 0;
     Scr_ClearErrorMessage(inst);
-    MEMORY[0xA05AC9E][17192 * inst] = 0;
-    MEMORY[0xA05ACA4][4298 * inst] = 0;
-    MEMORY[0xA05ACA0][4298 * inst] = 0;
-    MEMORY[0xA05ABB0][29 * inst] = AllocValue(inst);
-    MEMORY[0xA05AB98][29 * inst] = 0;
-    MEMORY[0xA05AB9C][29 * inst] = 0;
-    MEMORY[0xA05ABA0][29 * inst] = 0;
-    MEMORY[0xA05ABA4][29 * inst] = 0;
-    MEMORY[0xA05ABA8][29 * inst] = 0;
-    MEMORY[0xA05ABAC][29 * inst] = 0;
-    MEMORY[0xA05AFB4][4298 * inst] = 7;
-    dword_A0667DC[2058 * inst] = 0;
-    byte_A0687E4[8232 * inst] = 0;
-    dword_A0687E8[2058 * inst] = 0;
-    dword_A0687EC[2058 * inst] = 0;
-    MEMORY[0xA05ABE8][29 * inst] = 0;
-    MEMORY[0xA05ABD8][29 * inst] = 0;
-    MEMORY[0xA05ABE4][29 * inst] = 0;
+    gScrVmPub[inst].terminal_error = 0;
+    gScrVmPub[inst].outparamcount = 0;
+    gScrVmPub[inst].inparamcount = 0;
+    gScrVarPub[inst].tempVariable = AllocValue(inst);
+    gScrVarPub[inst].timeArrayId = 0;
+    gScrVarPub[inst].pauseArrayId = 0;
+    gScrVarPub[inst].levelId = 0;
+    gScrVarPub[inst].gameId = 0;
+    gScrVarPub[inst].animId = 0;
+    gScrVarPub[inst].freeEntList = 0;
+    gScrVmPub[inst].stack[0].type = 7;
+    gScrVmGlob[inst].loading = 0;
+    gScrVmGlob[inst].recordPlace = 0;
+    gScrVmGlob[inst].lastFileName = 0;
+    gScrVmGlob[inst].lastLine = 0;
+    gScrVarPub[inst].ext_threadcount = 0;
+    gScrVarPub[inst].numScriptThreads = 0;
+    gScrVarPub[inst].varUsagePos = 0;
     logScriptTimes = _Dvar_RegisterBool("logScriptTimes", 0, 0, "Log times for every print called from script");
     scrVmEnableScripts = _Dvar_RegisterBool("scrVmEnableScripts", 1, 0, "Enables script execution");
-    scrShowVarUseage = _Dvar_RegisterBool("scrShowVarUseage", 0, 0, "Displays var useage at compile time.");
+    scrShowVarUseage = _Dvar_RegisterBool("scrShowVarUseage", 0, 0, "Displays var useage at compile time."); // they seriously spelled it this way
     scrShowStrUsage = _Dvar_RegisterBool("scrShowStrUsage", 0, 0, "Displays script string usage at compile time.");
-    if ( inst == SCRIPTINSTANCE_SERVER )
+    if (inst == SCRIPTINSTANCE_SERVER)
         sv_clientside = _Dvar_RegisterBool(
-                                            "sv_clientside",
-                                            0,
-                                            0,
-                                            "Used to toggle systems in script on and off on the server.");
-    Cmd_AddCommandInternal("scrProfileInfo", BLOPS_NULLSUB, &VM_DumpScriptProfileInfo_VAR);
+            "sv_clientside",
+            0,
+            0,
+            "Used to toggle systems in script on and off on the server.");
+    Cmd_AddCommandInternal("scrProfileInfo", KISAK_NULLSUB, &VM_DumpScriptProfileInfo_VAR);
 }
 
 void __cdecl Scr_Settings(int developer, int developer_script, int abort_on_error, scriptInstance_t inst)
@@ -3791,73 +3806,76 @@ char __cdecl SetEntityFieldValue(
     }
 }
 
-VariableUnion __cdecl GetEntityFieldValue(
-                scriptInstance_t inst,
-                unsigned int classnum,
-                unsigned int entnum,
-                unsigned __int16 clientNum,
-                unsigned int offset)
+VariableValue __cdecl GetEntityFieldValue(
+    scriptInstance_t inst,
+    unsigned int classnum,
+    unsigned int entnum,
+    unsigned __int16 clientNum,
+    unsigned int offset)
 {
-    if ( MEMORY[0xA05ACA0][4298 * inst]
+    VariableValue result; // rax
+
+    if (gScrVmPub[inst].inparamcount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
-                    5708,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].inparamcount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
+            5708,
+            0,
+            "%s",
+            "!gScrVmPub[inst].inparamcount"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05ACA4][4298 * inst]
+    if (gScrVmPub[inst].outparamcount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
-                    5709,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].outparamcount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
+            5709,
+            0,
+            "%s",
+            "!gScrVmPub[inst].outparamcount"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05AC98][4298 * inst] = 8232 * inst + 168191936;
-    dword_A0667CC[2058 * inst] = 0;
-    if ( inst == SCRIPTINSTANCE_CLIENT )
+    gScrVmPub[inst].top = (VariableValue *)(8232 * inst + 168191936);
+    gScrVmGlob[inst].eval_stack[0].type = 0;
+    if (inst == SCRIPTINSTANCE_CLIENT)
         CScr_GetObjectField(classnum, entnum, clientNum, offset);
     else
         Scr_GetObjectField(classnum, entnum, offset);
-    if ( (unsigned int)MEMORY[0xA05ACA0][4298 * inst] >= 2
+    if (gScrVmPub[inst].inparamcount >= 2
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
-                    5723,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].inparamcount || gScrVmPub[inst].inparamcount == 1") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
+            5723,
+            0,
+            "%s",
+            "!gScrVmPub[inst].inparamcount || gScrVmPub[inst].inparamcount == 1"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05ACA4][4298 * inst]
+    if (gScrVmPub[inst].outparamcount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
-                    5724,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].outparamcount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
+            5724,
+            0,
+            "%s",
+            "!gScrVmPub[inst].outparamcount"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05AC98][4298 * inst] - 8 * MEMORY[0xA05ACA0][4298 * inst] != 8232 * inst + 168191936
+    if (&gScrVmPub[inst].top[-gScrVmPub[inst].inparamcount] != (VariableValue *)(8232 * inst + 168191936)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
-                    5725,
-                    0,
-                    "%s",
-                    "gScrVmPub[inst].top - gScrVmPub[inst].inparamcount == gScrVmGlob[inst].eval_stack - 1") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
+            5725,
+            0,
+            "%s",
+            "gScrVmPub[inst].top - gScrVmPub[inst].inparamcount == gScrVmGlob[inst].eval_stack - 1"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05ACA0][4298 * inst] = 0;
-    return gScrVmGlob[inst].eval_stack[0].u;
+    gScrVmPub[inst].inparamcount = 0;
+    result.u.intValue = gScrVmGlob[inst].eval_stack[0].u.intValue;
+    result.type = gScrVmGlob[inst].eval_stack[0].type;
+    return result;
 }
-
 void __cdecl Scr_SetStructField(unsigned int structId, unsigned int index, scriptInstance_t inst)
 {
     unsigned int fieldValueId; // [esp+0h] [ebp-8h]

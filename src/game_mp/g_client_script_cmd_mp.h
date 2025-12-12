@@ -1,7 +1,8 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <clientscript/cscr_variable.h>
+#include <bgame/bg_local.h>
 
-pmove_t *__thiscall pmove_t::pmove_t(pmove_t *this);
-colgeom_visitor_t *__thiscall colgeom_visitor_t::colgeom_visitor_t(colgeom_visitor_t *this);
 void __cdecl PlayerCmd_setBlockWeaponPickup(scr_entref_t entref);
 int __cdecl BG_PlayerWeaponSetBlockPickupWeapon(playerState_s *ps, unsigned int weaponIndex, bool blockPickupWeapon);
 void __cdecl PlayerCmd_giveWeapon(scr_entref_t entref);
@@ -44,10 +45,6 @@ void __cdecl PlayerCmd_CameraActivate(scr_entref_t entref);
 void __cdecl PlayerCmd_CameraSetPosition(scr_entref_t entref);
 void __cdecl PlayerCmd_CameraSetLookAt(scr_entref_t entref);
 void __cdecl PlayerCmd_Revive(scr_entref_t entref);
-pmove_t *__thiscall pmove_t::pmove_t(pmove_t *this, const pmove_t *__that);
-colgeom_visitor_t *__thiscall colgeom_visitor_t::colgeom_visitor_t(
-                colgeom_visitor_t *this,
-                const colgeom_visitor_t *__that);
 void __cdecl PlayerCmd_useButtonPressed(scr_entref_t entref);
 void __cdecl PlayerCmd_ChangeSeatButtonPressed(scr_entref_t entref);
 void __cdecl PlayerCmd_attackButtonPressed(scr_entref_t entref);

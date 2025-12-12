@@ -1,4 +1,5 @@
 #pragma once
+#include <bgame/bg_public.h>
 
 int __cdecl CheatsOk(gentity_s *ent);
 char *__cdecl ConcatArgs(int start);

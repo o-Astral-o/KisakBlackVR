@@ -1,4 +1,235 @@
 #pragma once
+#include <vehicle/nitrous_vehicle.h>
+#include <clientscript/cscr_variable.h>
+#include <bgame/bg_public.h>
+#include "g_vehicle_path.h"
+#include <physics/destructible.h>
+
+enum VehicleMoveState : __int32
+{                                       // XREF: scr_vehicle_s/r
+    VEH_MOVESTATE_STOP          = 0x0,
+    VEH_MOVESTATE_MOVE          = 0x1,
+    VEH_MOVESTATE_HOVER         = 0x2,
+    VEH_MOVESTATE_PLANE_ONCURVE = 0x3,
+    VEH_MOVESTATE_PLANE_FREE    = 0x4,
+};
+
+enum VehicleTurretState : __int32
+{                                       // XREF: VehicleTurret/r
+    VEH_TURRET_STOPPED  = 0x0,
+    VEH_TURRET_STOPPING = 0x1,
+    VEH_TURRET_MOVING   = 0x2,
+};
+
+struct VehicleSeat // sizeof=0x4
+{                                       // XREF: scr_vehicle_s/r
+    int _occupantEntNum;
+};
+
+struct vehicle_physic_t // sizeof=0x128
+{                                       // XREF: scr_vehicle_s/r
+                                        // VehiclePhysicsBackup/r ...
+    float origin[3];                    // XREF: CMD_VEH_GetAttachPos(scr_entref_t)+A1/w
+                                        // CMD_VEH_GetAttachPos(scr_entref_t)+B1/w ...
+    float prevOrigin[3];
+    float angles[3];                    // XREF: CMD_VEH_GetAttachPos(scr_entref_t)+D1/w
+                                        // CMD_VEH_GetAttachPos(scr_entref_t)+E1/w ...
+    float prevAngles[3];
+    float maxAngleVel[3];
+    float yawAccel;
+    float yawDecel;
+    char inputAccelerationOLD;
+    char inputTurning;
+    // padding byte
+    // padding byte
+    float driverPedal;
+    float driverSteer;
+    int onGround;
+    float colVelDelta[3];
+    float mins[3];
+    float maxs[3];
+    float vel[3];
+    float bodyVel[3];
+    float rotVel[3];
+    float accel[3];
+    float maxPitchAngle;
+    float maxRollAngle;
+    float wheelZVel[6];
+    float wheelZPos[6];
+    int wheelSurfType[6];
+    float worldTilt[3];
+    float worldTiltVel[3];
+    float heliLockHeight;
+    float curveLength;
+    int curveID;
+    float curveStep;
+    float curveTime;
+    float timeStep;
+};
+
+struct VehicleHover // sizeof=0x1C
+{                                       // XREF: scr_vehicle_s/r
+    float hoverRadius;
+    float hoverSpeed;
+    float hoverAccel;
+    float hoverGoalPos[3];
+    int useHoverAccelForAngles;
+};
+
+struct VehicleTurret // sizeof=0x20
+{                                       // XREF: scr_vehicle_s/r
+    int fireTime;
+    int fireBarrel;
+    float barrelOffset;
+    int flags;
+    float heatVal;
+    float turretOnTargetRange;
+    int overheating;
+    VehicleTurretState turretState;
+};
+
+struct VehicleJitter // sizeof=0x3C
+{                                       // XREF: scr_vehicle_s/r
+    int jitterPeriodMin;
+    int jitterPeriodMax;
+    int jitterEndTime;
+    float jitterOffsetRange[3];
+    float jitterDeltaAccel[3];
+    float jitterAccel[3];
+    float jitterPos[3];
+};
+
+struct VehicleTarget // sizeof=0x2C
+{                                       // XREF: scr_vehicle_s/r
+    int valid;
+    int hasTargetYaw;
+    int targetEnt;
+    int lookAtEnt;
+    float targetOrigin[3];
+    float targetOffset[3];
+    float targetYaw;
+};
+
+struct VehicleGunnerTags // sizeof=0x10
+{                                       // XREF: VehicleTags/r
+    int turret;
+    int barrel;
+    int flash;
+    int flash2;
+};
+
+struct VehicleTags // sizeof=0xC4
+{                                       // XREF: scr_vehicle_s/r
+    int player;
+    int popout;
+    int body;
+    int turret;
+    int turret_base;
+    int barrel;
+    int flash[5];
+    VehicleGunnerTags gunnerTags[4];
+    int wheel[6];
+    int seats[11];
+    int entryPoints[5];
+};
+
+struct vehicle_cache_t // sizeof=0x788
+{                                       // XREF: scr_vehicle_s/r
+    float lastOrigin[3];
+    float lastAngles[3];
+    int hit_indices[6];
+    int hit_sflags[6];
+    float hit_normals[6][3];
+    float hit_fractions[6];
+    TraceHitType hit_type[6];
+    unsigned __int16 hit_id[6];
+    colgeom_visitor_inlined_t<200> proximity_data;
+    int wheel_mask;
+};
+
+struct scr_vehicle_s // sizeof=0xE2C
+{                                       // XREF: .data:s_vehicles/r
+                                        // scr_vehicle_t/r
+    vehicle_pathpos_t pathPos;
+    vehicle_physic_t phys;
+    int entNum;                         // XREF: G_InitScrVehicles(void)+43/w
+    __int16 infoIdx;
+    // padding byte
+    // padding byte
+    int flags;
+    int team;
+    VehicleMoveState moveState;
+    __int16 waitNode;
+    // padding byte
+    // padding byte
+    float waitSpeed;
+    VehicleTurret turret;
+    float turretRotScale;
+    VehicleJitter jitter;
+    VehicleHover hover;
+    VehicleTurret gunnerTurrets[4];
+    VehicleJitter gunnerJitter[4];
+    unsigned __int16 lookAtText0;
+    unsigned __int16 lookAtText1;
+    int manualMode;
+    float manualSpeed;
+    float manualAccel;
+    float manualDecel;
+    float manualTime;
+    float speed;
+    float maxSpeedOverride;
+    float maxDragSpeed;
+    float turningAbility;
+    int hasTarget;
+    int hasTargetYaw;
+    int hasGoalYaw;
+    int stopAtGoal;
+    int stopping;
+    int targetEnt;
+    EntHandle lookAtEnt;
+    float targetOrigin[3];
+    float targetOffset[3];
+    float targetYaw;
+    float goalPosition[3];
+    float goalYaw;
+    float prevGoalYaw;
+    float yawOverShoot;
+    int yawSlowDown;
+    float pathTransitionTime;
+    int hasDefaultPitch;
+    float defaultPitch;
+    float hasGoalRoll;
+    float goalRoll;
+    float goalRollTime;
+    float currentRollTime;
+    int numRolls;
+    VehicleTarget gunnerTargets[4];
+    float nearGoalNotifyDist;
+    float joltDir[2];
+    float joltTime;
+    float joltWave;
+    float joltSpeed;
+    float joltDecel;
+    VehicleTags boneIndex;
+    int turretHitNum;
+    VehicleSeat seats[11];
+    float forcedMaterialSpeed;
+    float modelSwapDelay;
+    int oneExhaust;
+    float deathQuakeScale;
+    float deathQuakeDuration;
+    float deathQuakeRadius;
+    int secTurretAiControlled;
+    float frontArmorRegen;
+    int addToCompass;
+    int m_bSpecialAbilityEventDown;
+    int m_bFirePickupEventDown;
+    int m_bSwapPickupEventDown;
+    int m_bDropDeployableEventDown;
+    NitrousVehicle *nitrousVehicle;
+    vehicle_cache_t vehicle_cache;
+    float heliHeightLockOffset;
+};
 
 const vehicle_info_t *__cdecl BG_GetVehicleInfo(int index);
 gentity_s *__cdecl GScr_GetVehicle(scr_entref_t entref);
@@ -48,8 +279,7 @@ void __cdecl VEH_SetLinkAngleClamps(
                 float *vehicleAngles);
 void __cdecl VEH_SetPlayerVehicle(gentity_s *ent, bool enable);
 void __cdecl VEH_LinkPlayer(gentity_s *ent, gentity_s *player, int seatIndex, bool changingSeats);
-double    Scr_Vehicle_DamageScale@<st0>(
-                float a1@<ebp>,
+double    Scr_Vehicle_DamageScale(
                 gentity_s *pSelf,
                 gentity_s *pAttacker,
                 gentity_s *pInflictor,
@@ -97,7 +327,7 @@ bool __cdecl VEH_ShouldEjectOccupants(gentity_s *ent);
 bool __cdecl G_IsVehicleImmune(gentity_s *ent, int mod, char damageFlags, unsigned int weapon);
 bool __cdecl G_IsPlayerDrivingVehicle(const gentity_s *player);
 // local variable allocation has failed, the output may be wrong!
-void    VEH_Teleport(NitrousVehicle *a1@<ebp>, gentity_s *pSelf, float *origin, float *angles, float *vel);
+void    VEH_Teleport(gentity_s *pSelf, float *origin, float *angles, float *vel);
 void __cdecl VEH_UpdateNOClip(gentity_s *pSelf);
 void __cdecl VEH_UpdateDebug(gentity_s *pSelf);
 void __cdecl Scr_Vehicle_Controller(const gentity_s *pSelf, int *partBits);
@@ -135,10 +365,8 @@ void __cdecl VEH_UpdateClient(gentity_s *ent);
 void __cdecl VEH_GroundTrace(gentity_s *ent);
 void __cdecl VEH_GroundMove(gentity_s *ent);
 void __cdecl VEH_UpdateAvoidance(gentity_s *ent);
-void __userpurge NitrousVehicle::update_script_target(NitrousVehicle *this@<ecx>, int a2@<ebp>, float *goal_position);
 void __cdecl GetClosestPointOnSegment(float *pt1, float *pt2, float *testPt, float *out);
-// local variable allocation has failed, the output may be wrong!
-void    VEH_UpdatePath(const vehicle_info_t *a1@<ebp>, gentity_s *ent);
+void    VEH_UpdatePath(gentity_s *ent);
 void __cdecl VEH_UpdateAIMove(gentity_s *ent);
 void __cdecl VEH_UpdateMoveToGoal(gentity_s *ent, const float *goalPos);
 bool __cdecl VEH_IsHovering(scr_vehicle_s *veh);
@@ -240,7 +468,7 @@ void __cdecl CMD_VEH_SetViewClamp();
 void __cdecl CMD_VEH_ResetViewClamp(scr_entref_t entref);
 void __cdecl CMD_VEH_SetVehicleLookatText(scr_entref_t entref);
 void __cdecl CMD_VEH_NearGoalNotifyDist(scr_entref_t entref);
-void    CMD_VEH_SetGoalPos(float a1@<ebp>, scr_entref_t entref);
+void    CMD_VEH_SetGoalPos(scr_entref_t entref);
 void __cdecl CMD_VEH_ClearGoalPos(scr_entref_t entref);
 void __cdecl CMD_VEH_SetPlaneGoalPos(scr_entref_t entref);
 void __cdecl VEH_GenerateCurveForPlane(gentity_s *ent, float (*goals)[3], int numGoals, const float *goalAngles);

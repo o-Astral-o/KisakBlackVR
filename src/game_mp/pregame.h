@@ -1,4 +1,13 @@
 #pragma once
+#include <game/teams.h>
+
+enum pregameStateEnum : __int32
+{                                       // XREF: pregameStateGlobal/r
+                                        // ?Pregame_SetState@@YAXW4pregameStateEnum@@@Z/r
+    PREGAME_IDLE        = 0x0,
+    PREGAME_INPROGRESS  = 0x1,
+    PREGAME_GAMESTARTED = 0x2,
+};
 
 void __cdecl Pregame_SetState(pregameStateEnum s);
 pregameStateEnum __cdecl Pregame_GetState();

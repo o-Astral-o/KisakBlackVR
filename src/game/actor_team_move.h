@@ -1,4 +1,55 @@
 #pragma once
+#include "actor.h"
+
+enum ai_teammove_t : __int32
+{                                       // XREF: ?Actor_MoveAlongPathWithTeam@@YAXPAUactor_s@@_N11@Z/r
+                                        // Actor_GetTeamMoveStatus/r ...
+    AI_TEAMMOVE_TRAVEL    = 0x0,
+    AI_TEAMMOVE_WAIT      = 0x1,
+    AI_TEAMMOVE_SLOW_DOWN = 0x2,
+};
+
+struct team_move_context_t // sizeof=0x118
+{                                       // XREF: Actor_GetTeamMoveStatus/r
+    actor_s *self;                      // XREF: Actor_GetTeamMoveStatus+171/w
+    float vVelSelf[2];
+    float vOrgSelf[3];                  // XREF: Actor_GetTeamMoveStatus+11B/w
+                                        // Actor_GetTeamMoveStatus+12E/w ...
+    float vVelDirSelf[2];               // XREF: Actor_GetTeamMoveStatus:loc_91DA09/r
+                                        // Actor_GetTeamMoveStatus+52E/r ...
+    float fVelSelfSqrd;
+    float fDeltaCorrection;
+    float fIntervalSqrd;
+    float fWalkIntervalSqrd;
+    float fMaxIntervalSqrd;
+    int bFailedLookahead;               // XREF: Actor_GetTeamMoveStatus+C03/r
+    float fDodgePosDeltaLengthSqrd;     // XREF: Actor_GetTeamMoveStatus+350/r
+                                        // Actor_GetTeamMoveStatus+448/r ...
+    int dodgeEntities[48];              // XREF: Actor_GetTeamMoveStatus+6D2/o
+                                        // Actor_GetTeamMoveStatus+7CB/o
+    int dodgeEntityCount;               // XREF: Actor_GetTeamMoveStatus+6CE/r
+                                        // Actor_GetTeamMoveStatus+7C7/r
+    sentient_s *pDodgeOther;            // XREF: Actor_GetTeamMoveStatus+29E/r
+                                        // Actor_GetTeamMoveStatus+2E8/r ...
+    bool bPileUp;
+    // padding byte
+    // padding byte
+    // padding byte
+    float fSlowDownPosDeltaLengthSqrd;
+    sentient_s *pSlowDownOther;         // XREF: Actor_GetTeamMoveStatus:loc_91D759/r
+    float vVelSlowDownOther[2];
+};
+
+struct team_move_other_context_t // sizeof=0x30
+{                                       // XREF: Actor_GetTeamMoveStatus/r
+    sentient_s *other;                  // XREF: Actor_GetTeamMoveStatus+207/w
+    float vOrgOther[3];
+    float vVelOther[2];
+    float vDelta[2];
+    float vPerp[2];
+    float fPosDeltaLengthSqrd;
+    float fScale;
+};
 
 bool __cdecl Actor_AtDifferentElevation(float *vOrgSelf, float *vOrgOther);
 void __fastcall Actor_TeamMoveBlocked(actor_s *self);

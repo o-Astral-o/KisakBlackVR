@@ -1,4 +1,6 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <sound/snd.h>
 
 void __cdecl G_SafeDObjFree(unsigned int handle, int unusedLocalClientNum);
 void __cdecl G_ClearCachedModels();

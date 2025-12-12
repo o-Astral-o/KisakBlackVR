@@ -1,9 +1,32 @@
 #include "cscr_evaluate.h"
+#include <cstdlib>
+#include <universal/assertive.h>
+#include <string.h>
+#include "cscr_stringlist.h"
+#include "cscr_compiler.h"
+#include <qcommon/common.h>
+#include "cscr_vm.h"
+#include "cscr_parser.h"
+#include <xanim/xanim.h>
+#include "cscr_parsetree.h"
+#include "cscr_tempmemory.h"
+#include "cscr_yacc.h"
+#include <setjmp.h>
+
+scrEvaluateGlob_t gScrEvaluateGlob[2];
+
+thread_local int g_breakonExpr;
+thread_local unsigned int g_breakonString;
+thread_local int g_breakonHit;
+thread_local unsigned int g_breakonObject;
+
+int g_script_error_level[2];
+int g_script_error[2][33][16];
 
 int __cdecl Scr_CompareCanonicalStrings(unsigned int *arg1, unsigned int *arg2)
 {
-    return *(unsigned int *)(dword_9D3A04C[4 * gDebuggerInstance] + 4 * *arg1)
-             - *(unsigned int *)(dword_9D3A04C[4 * gDebuggerInstance] + 4 * *arg2);
+    return gScrEvaluateGlob[gDebuggerInstance].canonicalStringLookup[*arg1]
+        - gScrEvaluateGlob[gDebuggerInstance].canonicalStringLookup[*arg2];
 }
 
 void __cdecl Scr_ArchiveCanonicalStrings(scriptInstance_t inst)
@@ -22,40 +45,41 @@ void __cdecl Scr_ArchiveCanonicalStrings(scriptInstance_t inst)
     unsigned __int16 ia; // [esp+48h] [ebp-4h]
 
     len = 0;
-    for ( stringValue = 0; stringValue < 0x10000; ++stringValue )
+    for (stringValue = 0; stringValue < 0x10000; ++stringValue)
     {
-        if ( gScrCompilePub[inst].canonicalStrings[stringValue] )
+        if (gScrCompilePub[inst].canonicalStrings[stringValue])
             len += strlen(SL_ConvertToString(stringValue, inst)) + 1;
     }
     gScrEvaluateGlob[inst].archivedCanonicalStringsBuf = (char *)Hunk_UserAlloc(
-                                                                                                                                 g_DebugHunkUser,
-                                                                                                                                 len,
-                                                                                                                                 4,
-                                                                                                                                 "Scr_ArchiveCanonicalStrings1");
-    dword_9D3A048[4 * inst] = (int)Hunk_UserAlloc(
-                                                                     g_DebugHunkUser,
-                                                                     8 * (unsigned __int16)MEMORY[0xA05AB84][58 * inst],
-                                                                     4,
-                                                                     "Scr_ArchiveCanonicalStrings2");
-    dword_9D3A04C[4 * inst] = (int)Hunk_UserAlloc(
-                                                                     g_DebugHunkUser,
-                                                                     4 * (unsigned __int16)MEMORY[0xA05AB84][58 * inst] + 4,
-                                                                     4,
-                                                                     "Scr_ArchiveCanonicalStrings3");
+        g_DebugHunkUser,
+        len,
+        4,
+        "Scr_ArchiveCanonicalStrings1");
+    gScrEvaluateGlob[inst].archivedCanonicalStrings = (ArchivedCanonicalStringInfo *)Hunk_UserAlloc(
+        g_DebugHunkUser,
+        8
+        * gScrVarPub[inst].canonicalStrCount,
+        4,
+        "Scr_ArchiveCanonicalStrings2");
+    gScrEvaluateGlob[inst].canonicalStringLookup = (int *)Hunk_UserAlloc(
+        g_DebugHunkUser,
+        4 * gScrVarPub[inst].canonicalStrCount + 4,
+        4,
+        "Scr_ArchiveCanonicalStrings3");
     i = 0;
     lena = 0;
-    for ( stringValuea = 0; stringValuea < 0x10000; ++stringValuea )
+    for (stringValuea = 0; stringValuea < 0x10000; ++stringValuea)
     {
         canonicalStr = gScrCompilePub[inst].canonicalStrings[stringValuea];
-        if ( canonicalStr )
+        if (canonicalStr)
         {
-            if ( canonicalStr > (int)(unsigned __int16)MEMORY[0xA05AB84][58 * inst]
+            if (canonicalStr > (int)gScrVarPub[inst].canonicalStrCount
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                            156,
-                            0,
-                            "%s",
-                            "canonicalStr <= gScrVarPub[inst].canonicalStrCount") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                    156,
+                    0,
+                    "%s",
+                    "canonicalStr <= gScrVarPub[inst].canonicalStrCount"))
             {
                 __debugbreak();
             }
@@ -67,54 +91,53 @@ void __cdecl Scr_ArchiveCanonicalStrings(scriptInstance_t inst)
             {
                 v1 = *v3;
                 *v2++ = *v3++;
-            }
-            while ( v1 );
-            *(_WORD *)(dword_9D3A048[4 * inst] + 8 * i) = canonicalStr;
-            *(unsigned int *)(dword_9D3A048[4 * inst] + 8 * i + 4) = debugString;
+            } while (v1);
+            gScrEvaluateGlob[inst].archivedCanonicalStrings[i].canonicalStr = canonicalStr;
+            gScrEvaluateGlob[inst].archivedCanonicalStrings[i].value = debugString;
             lena += strlen(s) + 1;
             ++i;
         }
     }
-    if ( i != (unsigned __int16)MEMORY[0xA05AB84][58 * inst]
+    if (i != gScrVarPub[inst].canonicalStrCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    167,
-                    0,
-                    "%s",
-                    "i == gScrVarPub[inst].canonicalStrCount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            167,
+            0,
+            "%s",
+            "i == gScrVarPub[inst].canonicalStrCount"))
     {
         __debugbreak();
     }
     qsort(
-        (void *)dword_9D3A048[4 * inst],
-        (unsigned __int16)MEMORY[0xA05AB84][58 * inst],
+        gScrEvaluateGlob[inst].archivedCanonicalStrings,
+        gScrVarPub[inst].canonicalStrCount,
         8u,
-        (int (__cdecl *)(const void *, const void *))CompareCanonicalStrings);
-    for ( ia = 0; ia < (int)(unsigned __int16)MEMORY[0xA05AB84][58 * inst]; ++ia )
+        (int(__cdecl *)(const void *, const void *))CompareCanonicalStrings);
+    for (ia = 0; ia < (int)gScrVarPub[inst].canonicalStrCount; ++ia)
     {
-        if ( !*(_WORD *)(dword_9D3A048[4 * inst] + 8 * ia)
+        if (!gScrEvaluateGlob[inst].archivedCanonicalStrings[ia].canonicalStr
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                        173,
-                        0,
-                        "%s",
-                        "gScrEvaluateGlob[inst].archivedCanonicalStrings[i].canonicalStr") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                173,
+                0,
+                "%s",
+                "gScrEvaluateGlob[inst].archivedCanonicalStrings[i].canonicalStr"))
         {
             __debugbreak();
         }
-        if ( *(unsigned __int16 *)(dword_9D3A048[4 * inst] + 8 * ia) > (int)(unsigned __int16)MEMORY[0xA05AB84][58 * inst]
+        if (gScrEvaluateGlob[inst].archivedCanonicalStrings[ia].canonicalStr > (int)gScrVarPub[inst].canonicalStrCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                        174,
-                        0,
-                        "%s",
-                        "gScrEvaluateGlob[inst].archivedCanonicalStrings[i].canonicalStr <= gScrVarPub[inst].canonicalStrCount") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                174,
+                0,
+                "%s",
+                "gScrEvaluateGlob[inst].archivedCanonicalStrings[i].canonicalStr <= gScrVarPub[inst].canonicalStrCount"))
         {
             __debugbreak();
         }
-        *(unsigned int *)(dword_9D3A04C[4 * inst] + 4 * *(unsigned __int16 *)(dword_9D3A048[4 * inst] + 8 * ia)) = ia;
+        gScrEvaluateGlob[inst].canonicalStringLookup[gScrEvaluateGlob[inst].archivedCanonicalStrings[ia].canonicalStr] = ia;
     }
-    *(unsigned int *)dword_9D3A04C[4 * inst] = 0;
+    *gScrEvaluateGlob[inst].canonicalStringLookup = 0;
 }
 
 int __cdecl CompareCanonicalStrings(const char **arg1, const char **arg2)
@@ -124,74 +147,71 @@ int __cdecl CompareCanonicalStrings(const char **arg1, const char **arg2)
 
 const char *__cdecl Scr_GetCanonicalString(scriptInstance_t inst, unsigned int fieldName)
 {
-    if ( !fieldName
+    if (!fieldName
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    190,
-                    0,
-                    "%s",
-                    "fieldName") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            190,
+            0,
+            "%s",
+            "fieldName"))
     {
         __debugbreak();
     }
-    if ( fieldName > (unsigned __int16)MEMORY[0xA05AB84][58 * inst]
+    if (fieldName > gScrVarPub[inst].canonicalStrCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    191,
-                    0,
-                    "%s",
-                    "fieldName <= gScrVarPub[inst].canonicalStrCount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            191,
+            0,
+            "%s",
+            "fieldName <= gScrVarPub[inst].canonicalStrCount"))
     {
         __debugbreak();
     }
-    if ( *(unsigned int *)(dword_9D3A04C[4 * inst] + 4 * fieldName) >= (unsigned int)(unsigned __int16)MEMORY[0xA05AB84][58 * inst]
+    if (gScrEvaluateGlob[inst].canonicalStringLookup[fieldName] >= (unsigned int)gScrVarPub[inst].canonicalStrCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    192,
-                    0,
-                    "%s",
-                    "(unsigned)gScrEvaluateGlob[inst].canonicalStringLookup[fieldName] < gScrVarPub[inst].canonicalStrCount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            192,
+            0,
+            "%s",
+            "(unsigned)gScrEvaluateGlob[inst].canonicalStringLookup[fieldName] < gScrVarPub[inst].canonicalStrCount"))
     {
         __debugbreak();
     }
-    return *(const char **)(dword_9D3A048[4 * inst] + 8 * *(unsigned int *)(dword_9D3A04C[4 * inst] + 4 * fieldName) + 4);
+    return gScrEvaluateGlob[inst].archivedCanonicalStrings[gScrEvaluateGlob[inst].canonicalStringLookup[fieldName]].value;
 }
 
 void __cdecl Scr_InitEvaluate(scriptInstance_t inst)
 {
     gScrEvaluateGlob[inst].archivedCanonicalStringsBuf = 0;
-    dword_9D3A048[4 * inst] = 0;
-    dword_9D3A04C[4 * inst] = 0;
-    //BLOPS_NULLSUB();
+    gScrEvaluateGlob[inst].archivedCanonicalStrings = 0;
+    gScrEvaluateGlob[inst].canonicalStringLookup = 0;
+    //BG_EvalVehicleName();
 }
 
 void __cdecl Scr_EndLoadEvaluate(scriptInstance_t inst)
 {
-    if ( MEMORY[0xA05AB86][116 * inst] )
-    {
-        if ( com_sv_running->current.enabled )
-            Scr_ArchiveCanonicalStrings(inst);
-    }
+    if (gScrVarPub[inst].developer && com_sv_running->current.enabled)
+        Scr_ArchiveCanonicalStrings(inst);
 }
 
 void __cdecl Scr_ShutdownEvaluate(scriptInstance_t inst)
 {
-    if ( gScrEvaluateGlob[inst].archivedCanonicalStringsBuf )
+    if (gScrEvaluateGlob[inst].archivedCanonicalStringsBuf)
     {
         Hunk_UserFree(g_DebugHunkUser, gScrEvaluateGlob[inst].archivedCanonicalStringsBuf);
         gScrEvaluateGlob[inst].archivedCanonicalStringsBuf = 0;
     }
-    if ( dword_9D3A048[4 * inst] )
+    if (gScrEvaluateGlob[inst].archivedCanonicalStrings)
     {
-        Hunk_UserFree(g_DebugHunkUser, (void *)dword_9D3A048[4 * inst]);
-        dword_9D3A048[4 * inst] = 0;
+        Hunk_UserFree(g_DebugHunkUser, gScrEvaluateGlob[inst].archivedCanonicalStrings);
+        gScrEvaluateGlob[inst].archivedCanonicalStrings = 0;
     }
-    if ( dword_9D3A04C[4 * inst] )
+    if (gScrEvaluateGlob[inst].canonicalStringLookup)
     {
-        Hunk_UserFree(g_DebugHunkUser, (void *)dword_9D3A04C[4 * inst]);
-        dword_9D3A04C[4 * inst] = 0;
+        Hunk_UserFree(g_DebugHunkUser, gScrEvaluateGlob[inst].canonicalStringLookup);
+        gScrEvaluateGlob[inst].canonicalStringLookup = 0;
     }
-    //BLOPS_NULLSUB();
+    //BG_EvalVehicleName();
 }
 
 unsigned __int16 __cdecl Scr_CompileCanonicalString(scriptInstance_t inst, unsigned int stringValue)
@@ -204,15 +224,15 @@ unsigned __int16 __cdecl Scr_CompileCanonicalString(scriptInstance_t inst, unsig
 
     s = SL_ConvertToString(stringValue, inst);
     low = 0;
-    high = (unsigned __int16)MEMORY[0xA05AB84][58 * inst];
-    while ( low < high )
+    high = gScrVarPub[inst].canonicalStrCount;
+    while (low < high)
     {
         middle = (high + low) / 2;
-        v3 = strcmp(s, *(const char **)(dword_9D3A048[4 * inst] + 8 * middle + 4));
-        if ( v3 >= 0 )
+        v3 = strcmp(s, gScrEvaluateGlob[inst].archivedCanonicalStrings[middle].value);
+        if (v3 >= 0)
         {
-            if ( v3 <= 0 )
-                return *(_WORD *)(dword_9D3A048[4 * inst] + 8 * middle);
+            if (v3 <= 0)
+                return gScrEvaluateGlob[inst].archivedCanonicalStrings[middle].canonicalStr;
             low = middle + 1;
         }
         else
@@ -224,24 +244,24 @@ unsigned __int16 __cdecl Scr_CompileCanonicalString(scriptInstance_t inst, unsig
 }
 
 void __cdecl Scr_GetFieldValue(
-                scriptInstance_t inst,
-                unsigned int objectId,
-                const char *fieldName,
-                int len,
-                char *text)
+    scriptInstance_t inst,
+    unsigned int objectId,
+    const char *fieldName,
+    int len,
+    char *text)
 {
     unsigned __int16 v5; // ax
     unsigned int stringValue; // [esp+8h] [ebp-Ch]
     VariableValue tempValue; // [esp+Ch] [ebp-8h] BYREF
 
     stringValue = SL_FindString(fieldName, inst);
-    if ( stringValue )
+    if (stringValue)
     {
         v5 = Scr_CompileCanonicalString(inst, stringValue);
-        if ( v5 )
+        if (v5)
         {
             Scr_EvalFieldVariableInternal(inst, objectId, v5, &tempValue);
-            if ( MEMORY[0xA05AB8C][29 * inst] )
+            if (gScrVarPub[inst].error_message)
             {
                 Scr_ClearErrorMessage(inst);
                 *text = 0;
@@ -276,108 +296,108 @@ void __cdecl Scr_GetValueString(scriptInstance_t inst, unsigned int localId, Var
     unsigned int type; // [esp+2Ch] [ebp-8h]
     VariableUnion id; // [esp+30h] [ebp-4h]
 
-    if ( value->type >= 0x16u
+    if (value->type >= 0x16u
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    354,
-                    0,
-                    "%s",
-                    "(unsigned)value->type < VAR_COUNT") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            354,
+            0,
+            "%s",
+            "(unsigned)value->type < VAR_COUNT"))
     {
         __debugbreak();
     }
-    switch ( value->type )
+    switch (value->type)
     {
-        case 0:
-            I_strncpyz(s, "undefined", len);
-            break;
-        case 1:
-            id.intValue = (int)value->u;
-            type = GetObjectType(inst, value->u.intValue);
-            if ( type == 19 )
+    case 0:
+        I_strncpyz(s, "undefined", len);
+        break;
+    case 1:
+        id.intValue = value->u.intValue;
+        type = GetObjectType(inst, value->u.intValue);
+        if (type == 19)
+        {
+            EntNum = Scr_GetEntNum(inst, id.stringValue);
+            EntClassId = Scr_GetEntClassId(inst, id.stringValue);
+            Com_sprintf(s, len, "$%c%i", EntClassId, EntNum);
+        }
+        else if (id.intValue == gScrVarPub[inst].levelId)
+        {
+            I_strncpyz(s, "level", len);
+        }
+        else if (id.intValue == gScrVarPub[inst].animId)
+        {
+            I_strncpyz(s, "anim", len);
+        }
+        else
+        {
+            if (type >= 0x16
+                && !Assert_MyHandler(
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                    409,
+                    0,
+                    "%s",
+                    "(unsigned)type < VAR_COUNT"))
             {
-                EntNum = Scr_GetEntNum(inst, id.stringValue);
-                EntClassId = Scr_GetEntClassId(inst, id.stringValue);
-                Com_sprintf(s, len, "$%c%i", EntClassId, EntNum);
+                __debugbreak();
             }
-            else if ( id.intValue == MEMORY[0xA05ABA0][29 * inst] )
+            switch (type)
             {
-                I_strncpyz(s, "level", len);
+            case 0xDu:
+            case 0xEu:
+            case 0xFu:
+            case 0x10u:
+                Com_sprintf(s, len, "$t%i", id.intValue);
+                break;
+            case 0x11u:
+                if (!localId || id.intValue != Scr_GetSelf(inst, localId))
+                    goto LABEL_28;
+                I_strncpyz(s, "self", len);
+                break;
+            case 0x14u:
+                ArraySize = GetArraySize(inst, id.stringValue);
+                Com_sprintf(s, len, "<array of size %i>", ArraySize);
+                break;
+            default:
+            LABEL_28:
+                Com_sprintf(s, len, "<%s>", var_typename[type]);
+                break;
             }
-            else if ( id.intValue == MEMORY[0xA05ABA8][29 * inst] )
-            {
-                I_strncpyz(s, "anim", len);
-            }
-            else
-            {
-                if ( type >= 0x16
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                                409,
-                                0,
-                                "%s",
-                                "(unsigned)type < VAR_COUNT") )
-                {
-                    __debugbreak();
-                }
-                switch ( type )
-                {
-                    case 0xDu:
-                    case 0xEu:
-                    case 0xFu:
-                    case 0x10u:
-                        Com_sprintf(s, len, "$t%i", id.intValue);
-                        break;
-                    case 0x11u:
-                        if ( !localId || id.intValue != Scr_GetSelf(inst, localId) )
-                            goto LABEL_28;
-                        I_strncpyz(s, "self", len);
-                        break;
-                    case 0x14u:
-                        ArraySize = GetArraySize(inst, id.stringValue);
-                        Com_sprintf(s, len, "<array of size %i>", ArraySize);
-                        break;
-                    default:
-LABEL_28:
-                        Com_sprintf(s, len, "<%s>", var_typename[type]);
-                        break;
-                }
-            }
-            break;
-        case 2:
-            v5 = SL_ConvertToString(value->u.intValue, inst);
-            Com_sprintf(s, len, "\"%s\"", v5);
-            break;
-        case 3:
-            v6 = SL_ConvertToString(value->u.intValue, inst);
-            Com_sprintf(s, len, "&\"%s\"", v6);
-            break;
-        case 4:
-            sprintf(
-                s,
-                "(%g, %g, %g)",
-                *(float *)value->u.intValue,
-                *(float *)(value->u.intValue + 4),
-                *(float *)(value->u.intValue + 8));
-            break;
-        case 5:
-            Com_sprintf(s, len, "%g", value->u.floatValue);
-            break;
-        case 6:
-            Com_sprintf(s, len, "%i", value->u.intValue);
-            break;
-        case 9:
-            Scr_GetCodePos(inst, (const char *)(value->u.intValue - 1), 1u, s, len);
-            break;
-        case 0xB:
-            intValue = (unsigned __int16)value->u.intValue;
-            Anims = Scr_GetAnims(HIWORD(value->u.intValue), SCRIPTINSTANCE_SERVER);
-            AnimDebugName = XAnimGetAnimDebugName(Anims, intValue);
-            Com_sprintf(s, len, "%%%s", AnimDebugName);
-            break;
-        default:
-            Com_sprintf(s, len, "<%s>", var_typename[value->type]);
-            break;
+        }
+        break;
+    case 2:
+        v5 = SL_ConvertToString(value->u.intValue, inst);
+        Com_sprintf(s, len, "\"%s\"", v5);
+        break;
+    case 3:
+        v6 = SL_ConvertToString(value->u.intValue, inst);
+        Com_sprintf(s, len, "&\"%s\"", v6);
+        break;
+    case 4:
+        sprintf(
+            s,
+            "(%g, %g, %g)",
+            *(float *)value->u.intValue,
+            *(float *)(value->u.intValue + 4),
+            *(float *)(value->u.intValue + 8));
+        break;
+    case 5:
+        Com_sprintf(s, len, "%g", value->u.floatValue);
+        break;
+    case 6:
+        Com_sprintf(s, len, "%i", value->u.intValue);
+        break;
+    case 9:
+        Scr_GetCodePos(inst, (const char *)(value->u.intValue - 1), 1u, s, len);
+        break;
+    case 0xB:
+        intValue = (unsigned __int16)value->u.intValue;
+        Anims = Scr_GetAnims(HIWORD(value->u.intValue), SCRIPTINSTANCE_SERVER);
+        AnimDebugName = XAnimGetAnimDebugName(Anims, intValue);
+        Com_sprintf(s, len, "%%%s", AnimDebugName);
+        break;
+    default:
+        Com_sprintf(s, len, "<%s>", var_typename[value->type]);
+        break;
     }
 }
 
@@ -385,13 +405,13 @@ void __cdecl Scr_EvalArrayVariable(scriptInstance_t inst, unsigned int arrayId, 
 {
     VariableValue parentValue; // [esp+4h] [ebp-8h] BYREF
 
-    if ( !MEMORY[0xA05AB88][116 * inst]
+    if (!gScrVarPub[inst].evaluate
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    493,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].evaluate") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            493,
+            0,
+            "%s",
+            "gScrVarPub[inst].evaluate"))
     {
         __debugbreak();
     }
@@ -403,7 +423,7 @@ void __cdecl Scr_EvalArrayVariable(scriptInstance_t inst, unsigned int arrayId, 
 
 void __cdecl Scr_EvalArrayVariableInternal(scriptInstance_t inst, VariableValue *parentValue, VariableValue *value)
 {
-    if ( MEMORY[0xA05AB8C][29 * inst] || (Scr_EvalArray(inst, parentValue, value), MEMORY[0xA05AB8C][29 * inst]) )
+    if (gScrVarPub[inst].error_message || (Scr_EvalArray(inst, parentValue, value), gScrVarPub[inst].error_message))
     {
         Scr_ClearValue(inst, value);
         Scr_ClearValue(inst, parentValue);
@@ -417,35 +437,33 @@ void __cdecl Scr_ClearValue(scriptInstance_t inst, VariableValue *value)
 }
 
 void __cdecl Scr_EvalFieldVariableInternal(
-                scriptInstance_t inst,
-                unsigned int objectId,
-                unsigned int fieldName,
-                VariableValue *value)
+    scriptInstance_t inst,
+    unsigned int objectId,
+    unsigned int fieldName,
+    VariableValue *value)
 {
-    int v4; // edx
     unsigned int outparamcount; // [esp+8h] [ebp-8h]
     VariableValue *savedTop; // [esp+Ch] [ebp-4h]
 
-    if ( !fieldName
+    if (!fieldName
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1099,
-                    0,
-                    "%s",
-                    "fieldName") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1099,
+            0,
+            "%s",
+            "fieldName"))
     {
         __debugbreak();
     }
-    if ( IsFieldObject(inst, objectId) )
+    if (IsFieldObject(inst, objectId))
     {
-        outparamcount = MEMORY[0xA05ACA4][4298 * inst];
-        MEMORY[0xA05ACA4][4298 * inst] = 0;
-        savedTop = (VariableValue *)MEMORY[0xA05AC98][4298 * inst];
-        value->u = Scr_FindVariableField(inst, objectId, fieldName);
-        value->type = v4;
-        MEMORY[0xA05ACA4][4298 * inst] = outparamcount;
-        MEMORY[0xA05AC98][4298 * inst] = (int)savedTop;
-        if ( !value->type && !FindVariable(inst, objectId, fieldName) )
+        outparamcount = gScrVmPub[inst].outparamcount;
+        gScrVmPub[inst].outparamcount = 0;
+        savedTop = gScrVmPub[inst].top;
+        *value = Scr_FindVariableField(inst, objectId, fieldName);
+        gScrVmPub[inst].outparamcount = outparamcount;
+        gScrVmPub[inst].top = savedTop;
+        if (!value->type && !FindVariable(inst, objectId, fieldName))
             Scr_Error(inst, "unknown field", 0);
     }
     else
@@ -456,24 +474,23 @@ void __cdecl Scr_EvalFieldVariableInternal(
 }
 
 void __cdecl Scr_EvalFieldVariable(
-                scriptInstance_t inst,
-                unsigned int fieldName,
-                VariableValue *value,
-                unsigned int objectId)
+    scriptInstance_t inst,
+    unsigned int fieldName,
+    VariableValue *value,
+    unsigned int objectId)
 {
-    if ( !MEMORY[0xA05AB88][116 * inst]
+    if (!gScrVarPub[inst].evaluate
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1134,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].evaluate") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1134,
+            0,
+            "%s",
+            "gScrVarPub[inst].evaluate"))
     {
         __debugbreak();
     }
     Scr_EvalFieldVariableInternal(inst, objectId, fieldName, value);
 }
-
 void __cdecl Scr_CompileExpression(scriptInstance_t inst, sval_u *expr)
 {
     switch ( *(_BYTE *)expr->stringValue )
@@ -518,66 +535,66 @@ void __cdecl Scr_CompilePrimitiveExpression(scriptInstance_t inst, sval_u *expr)
     sval_u tempVariableId; // [esp+2Ch] [ebp-8h]
     sval_u tempVariableIda; // [esp+2Ch] [ebp-8h]
 
-    switch ( *(_BYTE *)expr->stringValue )
+    switch (*(_BYTE *)expr->stringValue)
     {
-        case 9:
-        case 0xA:
-        case 0xB:
-        case 0xC:
-            *expr = debugger_node1(inst, *(_BYTE *)expr->stringValue, *(sval_u *)(expr->stringValue + 4));
-            break;
-        case 0xD:
-        case 0xE:
-            v2 = SL_ConvertToString(*(unsigned int *)(expr->stringValue + 4), inst);
-            *expr = debugger_string(inst, *(_BYTE *)expr->stringValue, v2);
-            break;
-        case 0x13:
-            Scr_CompileVariableExpression(inst, (sval_u *)(expr->stringValue + 4));
-            tempVariableId.stringValue = AllocValue(inst);
-            *expr = debugger_node2(inst, 0x13u, *(sval_u *)(expr->stringValue + 4), tempVariableId);
-            break;
-        case 0x15:
-            if ( !Scr_CompileCallExpression(inst, (sval_u *)(expr->stringValue + 4)) )
-                goto LABEL_13;
-            tempVariableIda.stringValue = AllocValue(inst);
-            *expr = debugger_node2(inst, 0x15u, *(sval_u *)(expr->stringValue + 4), tempVariableIda);
-            break;
-        case 0x21:
-        case 0x24:
-        case 0x25:
-        case 0x26:
-        case 0x44:
-        case 0x4A:
-        case 0x4B:
-            *expr = debugger_node0(inst, *(_BYTE *)expr->stringValue);
-            break;
-        case 0x22:
-            *expr = debugger_node2(inst, *(_BYTE *)expr->stringValue, 0, 0);
-            break;
-        case 0x30:
-            Scr_CompilePrimitiveExpressionList(inst, (sval_u *)(expr->stringValue + 4));
-            *expr = debugger_node1(inst, 0x30u, *(sval_u *)(expr->stringValue + 4));
-            break;
-        case 0x36:
-            Scr_CompilePrimitiveExpression(inst, (sval_u *)(expr->stringValue + 4));
-            *expr = debugger_node1(inst, 0x36u, *(sval_u *)(expr->stringValue + 4));
-            break;
-        case 0x4D:
-            ++dword_A0642E8[1155 * inst];
-            *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8240) = 1;
-            Scr_CompilePrimitiveExpression(inst, (sval_u *)(expr->stringValue + 4));
-            Scr_CompileExpression(inst, (sval_u *)(expr->stringValue + 8));
-            *expr = debugger_node3(
-                                inst,
-                                *(_BYTE *)expr->stringValue,
-                                *(sval_u *)(expr->stringValue + 4),
-                                *(sval_u *)(expr->stringValue + 8),
-                                0);
-            break;
-        default:
-LABEL_13:
-            *expr = debugger_node0(inst, 0x56u);
-            break;
+    case 9:
+    case 0xA:
+    case 0xB:
+    case 0xC:
+        *expr = debugger_node1(inst, *(_BYTE *)expr->stringValue, *(sval_u *)(expr->stringValue + 4));
+        break;
+    case 0xD:
+    case 0xE:
+        v2 = SL_ConvertToString(*(_DWORD *)(expr->stringValue + 4), inst);
+        *expr = debugger_string(inst, *(_BYTE *)expr->stringValue, v2);
+        break;
+    case 0x13:
+        Scr_CompileVariableExpression(inst, (sval_u *)(expr->stringValue + 4));
+        tempVariableId.stringValue = AllocValue(inst);
+        *expr = debugger_node2(inst, 0x13u, *(sval_u *)(expr->stringValue + 4), tempVariableId);
+        break;
+    case 0x15:
+        if (!Scr_CompileCallExpression(inst, (sval_u *)(expr->stringValue + 4)))
+            goto LABEL_13;
+        tempVariableIda.stringValue = AllocValue(inst);
+        *expr = debugger_node2(inst, 0x15u, *(sval_u *)(expr->stringValue + 4), tempVariableIda);
+        break;
+    case 0x21:
+    case 0x24:
+    case 0x25:
+    case 0x26:
+    case 0x44:
+    case 0x4A:
+    case 0x4B:
+        *expr = debugger_node0(inst, *(_BYTE *)expr->stringValue);
+        break;
+    case 0x22:
+        *expr = debugger_node2(inst, *(_BYTE *)expr->stringValue, 0, 0);
+        break;
+    case 0x30:
+        Scr_CompilePrimitiveExpressionList(inst, (sval_u *)(expr->stringValue + 4));
+        *expr = debugger_node1(inst, 0x30u, *(sval_u *)(expr->stringValue + 4));
+        break;
+    case 0x36:
+        Scr_CompilePrimitiveExpression(inst, (sval_u *)(expr->stringValue + 4));
+        *expr = debugger_node1(inst, 0x36u, *(sval_u *)(expr->stringValue + 4));
+        break;
+    case 0x4D:
+        ++gScrVmDebugPub[inst].checkBreakon;
+        g_breakonExpr = 1;
+        Scr_CompilePrimitiveExpression(inst, (sval_u *)(expr->stringValue + 4));
+        Scr_CompileExpression(inst, (sval_u *)(expr->stringValue + 8));
+        *expr = debugger_node3(
+            inst,
+            *(_BYTE *)expr->stringValue,
+            *(sval_u *)(expr->stringValue + 4),
+            *(sval_u *)(expr->stringValue + 8),
+            0);
+        break;
+    default:
+    LABEL_13:
+        *expr = debugger_node0(inst, 0x56u);
+        break;
     }
 }
 
@@ -814,20 +831,20 @@ char __cdecl Scr_CompileMethod(scriptInstance_t inst, sval_u *expr, sval_u *func
 void __cdecl Scr_CompileText(scriptInstance_t inst, const char *text, ScriptExpression_t *scriptExpr)
 {
     g_debugExprHead = 0;
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8240) = 0;
+    g_breakonExpr = 0;
     Scr_CompileTextInternal(inst, text, scriptExpr);
-    if ( !g_debugExprHead
+    if (!g_debugExprHead
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    2203,
-                    0,
-                    "%s",
-                    "g_debugExprHead") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            2203,
+            0,
+            "%s",
+            "g_debugExprHead"))
     {
         __debugbreak();
     }
     scriptExpr->exprHead = g_debugExprHead;
-    scriptExpr->breakonExpr = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8240);
+    scriptExpr->breakonExpr = g_breakonExpr;
 }
 
 void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, ScriptExpression_t *scriptExpr)
@@ -838,7 +855,7 @@ void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, Sc
     HunkUser *user; // [esp+30h] [ebp-Ch]
     _BYTE *expr; // [esp+38h] [ebp-4h]
 
-    if ( !strcmp(text, "<locals>") )
+    if (!strcmp(text, "<locals>"))
     {
         scriptExpr->parseData = debugger_node1(inst, 0x54u, 0);
     }
@@ -847,31 +864,31 @@ void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, Sc
         Scr_InitAllocNode(inst);
         gScrCompilePub[inst].in_ptr = "*";
         gScrCompilePub[inst].parseBuf = text;
-        if ( MEMORY[0xA05AB8C][29 * inst]
+        if (gScrVarPub[inst].error_message
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                        2121,
-                        0,
-                        "%s",
-                        "!gScrVarPub[inst].error_message") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                2121,
+                0,
+                "%s",
+                "!gScrVarPub[inst].error_message"))
         {
             __debugbreak();
         }
-        if ( !MEMORY[0xA05AB88][116 * inst]
+        if (!gScrVarPub[inst].evaluate
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                        2123,
-                        0,
-                        "%s",
-                        "gScrVarPub[inst].evaluate") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                2123,
+                0,
+                "%s",
+                "gScrVarPub[inst].evaluate"))
         {
             __debugbreak();
         }
         ScriptParse(inst, &scriptExpr->parseData, 2u);
-        if ( MEMORY[0xA05AB8C][29 * inst] )
+        if (gScrVarPub[inst].error_message)
         {
-            if ( *text )
-                Com_PrintError(24, "%s\n", (const char *)MEMORY[0xA05AB8C][29 * inst]);
+            if (*text)
+                Com_PrintError(24, "%s\n", gScrVarPub[inst].error_message);
             Scr_ClearErrorMessage(inst);
             scriptExpr->parseData = debugger_node0(inst, 0x56u);
             SL_ShutdownSystem(inst, 2u);
@@ -880,35 +897,35 @@ void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, Sc
         {
             gScrCompilePub[inst].developer_statement = 3;
             expr = (_BYTE *)scriptExpr->parseData.stringValue;
-            scriptExpr->parseData.stringValue = *(unsigned int *)(scriptExpr->parseData.stringValue + 4);
-            if ( *expr == 67 )
+            scriptExpr->parseData.stringValue = *(_DWORD *)(scriptExpr->parseData.stringValue + 4);
+            if (*expr == 67)
             {
-                varUsagePos = (const char *)MEMORY[0xA05ABE4][29 * inst];
-                if ( !varUsagePos )
-                    MEMORY[0xA05ABE4][29 * inst] = (int)"<debug expression>";
+                varUsagePos = gScrVarPub[inst].varUsagePos;
+                if (!varUsagePos)
+                    gScrVarPub[inst].varUsagePos = "<debug expression>";
                 Scr_CompileExpression(inst, &scriptExpr->parseData);
-                MEMORY[0xA05ABE4][29 * inst] = (int)varUsagePos;
-                if ( MEMORY[0xA05AB8C][29 * inst] )
+                gScrVarPub[inst].varUsagePos = varUsagePos;
+                if (gScrVarPub[inst].error_message)
                 {
-                    if ( !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                                    2149,
-                                    0,
-                                    "%s",
-                                    "!gScrVarPub[inst].error_message") )
+                    if (!Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                        2149,
+                        0,
+                        "%s",
+                        "!gScrVarPub[inst].error_message"))
                         __debugbreak();
                 }
                 SL_ShutdownSystem(inst, 2u);
             }
             else
             {
-                if ( *expr != 85
+                if (*expr != 85
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                                2154,
-                                0,
-                                "%s",
-                                "expr.node[0].type == ENUM_statement") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                        2154,
+                        0,
+                        "%s",
+                        "expr.node[0].type == ENUM_statement"))
                 {
                     __debugbreak();
                 }
@@ -916,9 +933,9 @@ void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, Sc
                 TempMemoryReset(user);
                 start = TempMallocAlignStrict(0);
                 Scr_CompileStatement(inst, scriptExpr->parseData);
-                if ( MEMORY[0xA05AB8C][29 * inst] )
+                if (gScrVarPub[inst].error_message)
                 {
-                    Com_PrintError(24, "%s\n", (const char *)MEMORY[0xA05AB8C][29 * inst]);
+                    Com_PrintError(24, "%s\n", gScrVarPub[inst].error_message);
                     Scr_ClearErrorMessage(inst);
                     scriptExpr->parseData = debugger_node0(inst, 0x57u);
                     SL_ShutdownSystem(inst, 2u);
@@ -935,249 +952,250 @@ void __cdecl Scr_CompileTextInternal(scriptInstance_t inst, const char *text, Sc
     }
 }
 
-char __cdecl Scr_EvalScriptExpression(
-                scriptInstance_t inst,
-                ScriptExpression_t *expr,
-                unsigned int localId,
-                VariableValue *value,
-                bool freezeScope,
-                bool freezeObjects)
+bool __cdecl Scr_EvalScriptExpression(
+    scriptInstance_t inst,
+    ScriptExpression_t *expr,
+    unsigned int localId,
+    VariableValue *value,
+    bool freezeScope,
+    bool freezeObjects)
 {
-    if ( !expr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp", 2217, 0, "%s", "expr") )
+    if (!expr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp", 2217, 0, "%s", "expr"))
     {
         __debugbreak();
     }
-    byte_9D3A050[16 * inst] = freezeScope;
-    byte_9D3A051[16 * inst] = freezeObjects;
-    byte_9D3A052[16 * inst] = 0;
+    gScrEvaluateGlob[inst].freezeScope = freezeScope;
+    gScrEvaluateGlob[inst].freezeObjects = freezeObjects;
+    gScrEvaluateGlob[inst].objectChanged = 0;
     Scr_EvalExpression(inst, expr->parseData, localId, value);
-    return byte_9D3A052[16 * inst];
+    return gScrEvaluateGlob[inst].objectChanged;
 }
 
 void __cdecl Scr_EvalExpression(scriptInstance_t inst, sval_u expr, unsigned int localId, VariableValue *value)
 {
-    switch ( *(_BYTE *)expr.stringValue )
+    switch (*(_BYTE *)expr.stringValue)
     {
-        case 8:
-            Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            break;
-        case 0x31:
-            Scr_EvalBoolOrExpression(
-                inst,
-                *(sval_u *)(expr.stringValue + 4),
-                *(sval_u *)(expr.stringValue + 8),
-                localId,
-                value);
-            break;
-        case 0x32:
-            Scr_EvalBoolAndExpression(
-                inst,
-                *(sval_u *)(expr.stringValue + 4),
-                *(sval_u *)(expr.stringValue + 8),
-                localId,
-                value);
-            break;
-        case 0x33:
-            Scr_EvalBinaryOperatorExpression(
-                inst,
-                *(sval_u *)(expr.stringValue + 4),
-                *(sval_u *)(expr.stringValue + 8),
-                *(sval_u *)(expr.stringValue + 12),
-                localId,
-                value);
-            break;
-        case 0x34:
-            Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            Scr_EvalBoolNot(inst, value);
-            break;
-        case 0x35:
-            Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            Scr_EvalBoolComplement(inst, value);
-            break;
-        case 0x51:
-            Scr_EvalVector(
-                inst,
-                *(sval_u *)(expr.stringValue + 4),
-                *(sval_u *)(expr.stringValue + 8),
-                *(sval_u *)(expr.stringValue + 12),
-                localId,
-                value);
-            break;
-        case 0x54:
-            if ( byte_9D3A050[16 * inst] )
-                localId = *(unsigned int *)(expr.stringValue + 4);
-            if ( localId && Scr_IsThreadAlive(localId, inst) )
-            {
-                value->type = 1;
-                value->u.intValue = localId;
-                AddRefToObject(inst, localId);
-            }
-            else
-            {
-                localId = 0;
-                value->type = 0;
-                Scr_Error(inst, "thread not active", 0);
-            }
-            if ( byte_9D3A051[16 * inst] )
-            {
-                if ( *(unsigned int *)(expr.stringValue + 4) != localId )
-                    byte_9D3A052[16 * inst] = 1;
-            }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 4) = localId;
-            }
-            break;
-        default:
+    case 8:
+        Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        break;
+    case 0x31:
+        Scr_EvalBoolOrExpression(
+            inst,
+            *(sval_u *)(expr.stringValue + 4),
+            *(sval_u *)(expr.stringValue + 8),
+            localId,
+            value);
+        break;
+    case 0x32:
+        Scr_EvalBoolAndExpression(
+            inst,
+            *(sval_u *)(expr.stringValue + 4),
+            *(sval_u *)(expr.stringValue + 8),
+            localId,
+            value);
+        break;
+    case 0x33:
+        Scr_EvalBinaryOperatorExpression(
+            inst,
+            *(sval_u *)(expr.stringValue + 4),
+            *(sval_u *)(expr.stringValue + 8),
+            *(sval_u *)(expr.stringValue + 12),
+            localId,
+            value);
+        break;
+    case 0x34:
+        Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        Scr_EvalBoolNot(inst, value);
+        break;
+    case 0x35:
+        Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        Scr_EvalBoolComplement(inst, value);
+        break;
+    case 0x51:
+        Scr_EvalVector(
+            inst,
+            *(sval_u *)(expr.stringValue + 4),
+            *(sval_u *)(expr.stringValue + 8),
+            *(sval_u *)(expr.stringValue + 12),
+            localId,
+            value);
+        break;
+    case 0x54:
+        if (gScrEvaluateGlob[inst].freezeScope)
+            localId = *(_DWORD *)(expr.stringValue + 4);
+        if (localId && Scr_IsThreadAlive(localId, inst))
+        {
+            value->type = 1;
+            value->u.intValue = localId;
+            AddRefToObject(inst, localId);
+        }
+        else
+        {
+            localId = 0;
             value->type = 0;
-            Scr_Error(inst, "bad expression", 0);
-            break;
+            Scr_Error(inst, "thread not active", 0);
+        }
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 4) != localId)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 4) = localId;
+        }
+        break;
+    default:
+        value->type = 0;
+        Scr_Error(inst, "bad expression", 0);
+        break;
     }
 }
 
 void __cdecl Scr_EvalPrimitiveExpression(
-                scriptInstance_t inst,
-                sval_u expr,
-                unsigned int localId,
-                VariableValue *value)
+    scriptInstance_t inst,
+    sval_u expr,
+    unsigned int localId,
+    VariableValue *value)
 {
     VariableValue stringValue; // [esp+34h] [ebp-14h] BYREF
     VariableValue objectValue; // [esp+3Ch] [ebp-Ch] BYREF
     unsigned int selfId; // [esp+44h] [ebp-4h]
 
-    switch ( *(_BYTE *)expr.stringValue )
+    switch (*(_BYTE *)expr.stringValue)
     {
-        case 9:
-            value->type = 6;
-            value->u.intValue = *(unsigned int *)(expr.stringValue + 4);
-            break;
-        case 0xA:
-            value->type = 5;
-            value->u.floatValue = *(float *)(expr.stringValue + 4);
-            break;
-        case 0xB:
-            value->type = 6;
-            value->u.intValue = -*(unsigned int *)(expr.stringValue + 4);
-            break;
-        case 0xC:
-            value->type = 5;
-            value->u.intValue = *(unsigned int *)(expr.stringValue + 4) ^ _mask__NegFloat_;
-            break;
-        case 0xD:
-            value->type = 2;
-            value->u.intValue = SL_GetString_(inst, *(char **)(expr.stringValue + 4), 0, 20);
-            break;
-        case 0xE:
-            value->type = 3;
-            value->u.intValue = SL_GetString_(inst, *(char **)(expr.stringValue + 4), 0, 20);
-            break;
-        case 0x13:
-            Scr_EvalVariableExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            break;
-        case 0x15:
-            Scr_EvalCallExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            break;
-        case 0x21:
-            value->type = 0;
-            break;
-        case 0x22:
-            if ( byte_9D3A050[16 * inst] )
-                localId = *(unsigned int *)(expr.stringValue + 4);
-            if ( localId && Scr_IsThreadAlive(localId, inst) )
-            {
-                selfId = Scr_GetSelf(inst, localId).nextEntId;
-                value->type = 1;
-                value->u.intValue = selfId;
-                AddRefToObject(inst, value->u.intValue);
-            }
-            else
-            {
-                localId = 0;
-                selfId = 0;
-                value->type = 0;
-                Scr_Error(inst, "thread not active", 0);
-            }
-            if ( byte_9D3A051[16 * inst] )
-            {
-                if ( *(unsigned int *)(expr.stringValue + 4) != localId || *(unsigned int *)(expr.stringValue + 8) != selfId )
-                    byte_9D3A052[16 * inst] = 1;
-            }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 4) = localId;
-                *(unsigned int *)(expr.stringValue + 8) = selfId;
-            }
-            break;
-        case 0x23:
-            if ( !*(unsigned int *)(expr.stringValue + 8)
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                            1228,
-                            0,
-                            "%s",
-                            "expr.node[2].idValue") )
-            {
-                __debugbreak();
-            }
+    case 9:
+        value->type = VAR_INTEGER;
+        value->u.intValue = *(_DWORD *)(expr.stringValue + 4);
+        break;
+    case 0xA:
+        value->type = VAR_FLOAT;
+        value->u.floatValue = *(float *)(expr.stringValue + 4);
+        break;
+    case 0xB:
+        value->type = VAR_INTEGER;
+        value->u.intValue = -*(_DWORD *)(expr.stringValue + 4);
+        break;
+    case 0xC:
+        value->type = VAR_FLOAT;
+        //value->u.intValue = *(_DWORD *)(expr.stringValue + 4) ^ _mask__NegFloat_;
+        value->u.floatValue = -expr.node[1].floatValue;
+        break;
+    case 0xD:
+        value->type = 2;
+        value->u.intValue = SL_GetString_(inst, *(char **)(expr.stringValue + 4), 0, 20);
+        break;
+    case 0xE:
+        value->type = 3;
+        value->u.intValue = SL_GetString_(inst, *(char **)(expr.stringValue + 4), 0, 20);
+        break;
+    case 0x13:
+        Scr_EvalVariableExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        break;
+    case 0x15:
+        Scr_EvalCallExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        break;
+    case 0x21:
+        value->type = 0;
+        break;
+    case 0x22:
+        if (gScrEvaluateGlob[inst].freezeScope)
+            localId = *(_DWORD *)(expr.stringValue + 4);
+        if (localId && Scr_IsThreadAlive(localId, inst))
+        {
+            selfId = Scr_GetSelf(inst, localId);
             value->type = 1;
-            value->u.intValue = *(unsigned int *)(expr.stringValue + 8);
+            value->u.intValue = selfId;
             AddRefToObject(inst, value->u.intValue);
-            break;
-        case 0x24:
-            value->type = 1;
-            value->u.intValue = MEMORY[0xA05ABA0][29 * inst];
-            AddRefToObject(inst, MEMORY[0xA05ABA0][29 * inst]);
-            break;
-        case 0x25:
-            *value = Scr_EvalVariable(inst, MEMORY[0xA05ABA4][29 * inst]);
-            break;
-        case 0x26:
-            value->type = 1;
-            value->u.intValue = MEMORY[0xA05ABA8][29 * inst];
-            AddRefToObject(inst, MEMORY[0xA05ABA8][29 * inst]);
-            break;
-        case 0x30:
-            Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            break;
-        case 0x36:
-            Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            Scr_EvalSizeValue(inst, value);
-            break;
-        case 0x44:
+        }
+        else
+        {
+            localId = 0;
+            selfId = 0;
             value->type = 0;
-            Scr_Error(inst, "cannot evaluate []", 0);
-            break;
-        case 0x4A:
-            value->type = 6;
-            value->u.intValue = 0;
-            break;
-        case 0x4B:
-            value->type = 6;
-            value->u.intValue = 1;
-            break;
-        case 0x4D:
-            Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, &objectValue);
-            Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 8), localId, &stringValue);
-            if ( objectValue.type == 1
-                && stringValue.type == 2
-                && *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8248) == objectValue.u.intValue
-                && *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8236) == stringValue.u.intValue )
-            {
-                *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8244) = 1;
-                ++*(unsigned int *)(expr.stringValue + 12);
-            }
-            RemoveRefToValue(inst, objectValue.type, objectValue.u);
-            RemoveRefToValue(inst, stringValue.type, stringValue.u);
-            value->type = 6;
-            value->u.intValue = *(unsigned int *)(expr.stringValue + 12);
-            break;
-        case 0x56:
-            value->type = 0;
-            Scr_Error(inst, "bad expression", 0);
-            break;
-        default:
-            return;
+            Scr_Error(inst, "thread not active", 0);
+        }
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 4) != localId || *(_DWORD *)(expr.stringValue + 8) != selfId)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 4) = localId;
+            *(_DWORD *)(expr.stringValue + 8) = selfId;
+        }
+        break;
+    case 0x23:
+        if (!*(_DWORD *)(expr.stringValue + 8)
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                1228,
+                0,
+                "%s",
+                "expr.node[2].idValue"))
+        {
+            __debugbreak();
+        }
+        value->type = 1;
+        value->u.intValue = *(_DWORD *)(expr.stringValue + 8);
+        AddRefToObject(inst, value->u.intValue);
+        break;
+    case 0x24:
+        value->type = 1;
+        value->u.intValue = gScrVarPub[inst].levelId;
+        AddRefToObject(inst, gScrVarPub[inst].levelId);
+        break;
+    case 0x25:
+        *value = Scr_EvalVariable(inst, gScrVarPub[inst].gameId);
+        break;
+    case 0x26:
+        value->type = 1;
+        value->u.intValue = gScrVarPub[inst].animId;
+        AddRefToObject(inst, gScrVarPub[inst].animId);
+        break;
+    case 0x30:
+        Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        break;
+    case 0x36:
+        Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        Scr_EvalSizeValue(inst, value);
+        break;
+    case 0x44:
+        value->type = 0;
+        Scr_Error(inst, "cannot evaluate []", 0);
+        break;
+    case 0x4A:
+        value->type = 6;
+        value->u.intValue = 0;
+        break;
+    case 0x4B:
+        value->type = 6;
+        value->u.intValue = 1;
+        break;
+    case 0x4D:
+        Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, &objectValue);
+        Scr_EvalExpression(inst, *(sval_u *)(expr.stringValue + 8), localId, &stringValue);
+        if (objectValue.type == 1
+            && stringValue.type == 2
+            && g_breakonObject == objectValue.u.intValue
+            && g_breakonString == stringValue.u.intValue)
+        {
+            g_breakonHit = 1;
+            ++*(_DWORD *)(expr.stringValue + 12);
+        }
+        RemoveRefToValue(inst, objectValue.type, objectValue.u);
+        RemoveRefToValue(inst, stringValue.type, stringValue.u);
+        value->type = 6;
+        value->u.intValue = *(_DWORD *)(expr.stringValue + 12);
+        break;
+    case 0x56:
+        value->type = 0;
+        Scr_Error(inst, "bad expression", 0);
+        break;
+    default:
+        return;
     }
 }
 
@@ -1187,144 +1205,144 @@ void __cdecl Scr_EvalVariableExpression(scriptInstance_t inst, sval_u expr, unsi
     int objectIda; // [esp+14h] [ebp-4h]
     unsigned int objectIdb; // [esp+14h] [ebp-4h]
 
-    switch ( *(_BYTE *)expr.stringValue )
+    switch (*(_BYTE *)expr.stringValue)
     {
-        case 3:
+    case 3:
+        value->type = 0;
+        Scr_Error(inst, "unknown variable", 0);
+        break;
+    case 5:
+        if (gScrEvaluateGlob[inst].freezeScope)
+            localId = *(_DWORD *)(expr.stringValue + 8);
+        objectId = 0;
+        if (localId && Scr_IsThreadAlive(localId, inst))
+        {
+            Scr_EvalLocalVariable(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+            if (!gScrVarPub[inst].error_message)
+            {
+                AddRefToValue(inst, value->type, value->u);
+                objectId = Scr_EvalFieldObject(inst, *(_DWORD *)(expr.stringValue + 16), value);
+                Scr_ClearErrorMessage(inst);
+            }
+        }
+        else
+        {
+            localId = 0;
             value->type = 0;
-            Scr_Error(inst, "unknown variable", 0);
-            break;
-        case 5:
-            if ( byte_9D3A050[16 * inst] )
-                localId = *(unsigned int *)(expr.stringValue + 8);
-            objectId = 0;
-            if ( localId && Scr_IsThreadAlive(localId, inst) )
-            {
-                Scr_EvalLocalVariable(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-                if ( !MEMORY[0xA05AB8C][29 * inst] )
-                {
-                    AddRefToValue(inst, value->type, value->u);
-                    objectId = Scr_EvalFieldObject(inst, *(unsigned int *)(expr.stringValue + 16), value).stringValue;
-                    Scr_ClearErrorMessage(inst);
-                }
-            }
-            else
-            {
-                localId = 0;
-                value->type = 0;
-                Scr_Error(inst, "thread not active", 0);
-            }
-            if ( byte_9D3A051[16 * inst] )
-            {
-                if ( *(unsigned int *)(expr.stringValue + 8) != localId )
-                    byte_9D3A052[16 * inst] = 1;
-            }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 8) = localId;
-            }
-            if ( byte_9D3A051[16 * inst] )
-            {
-                if ( *(unsigned int *)(expr.stringValue + 12) != objectId )
-                    byte_9D3A052[16 * inst] = 1;
-            }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 12) = objectId;
-            }
-            break;
-        case 6:
-            if ( !*(unsigned int *)(expr.stringValue + 12) )
-                goto LABEL_29;
-            value->type = 1;
-            value->u.intValue = *(unsigned int *)(expr.stringValue + 12);
-            AddRefToObject(inst, value->u.intValue);
-            break;
-        case 0xF:
-            Scr_EvalArrayVariableExpression(
+            Scr_Error(inst, "thread not active", 0);
+        }
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 8) != localId)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 8) = localId;
+        }
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 12) != objectId)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 12) = objectId;
+        }
+        break;
+    case 6:
+        if (!*(_DWORD *)(expr.stringValue + 12))
+            goto LABEL_29;
+        value->type = 1;
+        value->u.intValue = *(_DWORD *)(expr.stringValue + 12);
+        AddRefToObject(inst, value->u.intValue);
+        break;
+    case 0xF:
+        Scr_EvalArrayVariableExpression(
+            inst,
+            *(sval_u *)(expr.stringValue + 4),
+            *(sval_u *)(expr.stringValue + 8),
+            localId,
+            value);
+        break;
+    case 0x10:
+        value->type = 0;
+        Scr_Error(inst, "unknown field", 0);
+        break;
+    case 0x11:
+        objectIda = Scr_EvalPrimitiveExpressionFieldObject(inst, *(sval_u *)(expr.stringValue + 4), localId);
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 12) != objectIda)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 12) = objectIda;
+        }
+        if (!objectIda)
+            goto LABEL_29;
+        Scr_EvalFieldVariableInternal(inst, objectIda, *(_DWORD *)(expr.stringValue + 8), value);
+        break;
+    case 0x12:
+        if (*(_DWORD *)(expr.stringValue + 12))
+        {
+            Scr_EvalFieldVariableInternal(
                 inst,
-                *(sval_u *)(expr.stringValue + 4),
-                *(sval_u *)(expr.stringValue + 8),
-                localId,
+                *(_DWORD *)(expr.stringValue + 12),
+                *(_DWORD *)(expr.stringValue + 8),
                 value);
-            break;
-        case 0x10:
+        }
+        else
+        {
+        LABEL_29:
             value->type = 0;
-            Scr_Error(inst, "unknown field", 0);
-            break;
-        case 0x11:
-            objectIda = Scr_EvalPrimitiveExpressionFieldObject(inst, *(sval_u *)(expr.stringValue + 4), localId);
-            if ( byte_9D3A051[16 * inst] )
+            Scr_Error(inst, "unknown object", 0);
+        }
+        break;
+    case 0x37:
+        Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
+        Scr_EvalSelfValue(inst, value);
+        break;
+    case 0x52:
+        objectIdb = Scr_EvalObject(inst, *(sval_u *)(expr.stringValue + 4), *(sval_u *)(expr.stringValue + 8), value);
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 12) != objectIdb)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 12) = objectIdb;
+        }
+        break;
+    case 0x53:
+        if (*(_DWORD *)(expr.stringValue + 4) && Scr_IsThreadAlive(*(_DWORD *)(expr.stringValue + 4), inst))
+        {
+            value->u.intValue = *(_DWORD *)(expr.stringValue + 4);
+            value->type = 1;
+            AddRefToObject(inst, value->u.intValue);
+        }
+        else
+        {
+            if (*(_DWORD *)(expr.stringValue + 4))
             {
-                if ( *(unsigned int *)(expr.stringValue + 12) != objectIda )
-                    byte_9D3A052[16 * inst] = 1;
+                RemoveRefToObject(inst, *(_DWORD *)(expr.stringValue + 4));
+                *(_DWORD *)(expr.stringValue + 4) = 0;
             }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 12) = objectIda;
-            }
-            if ( !objectIda )
-                goto LABEL_29;
-            Scr_EvalFieldVariableInternal(inst, objectIda, *(unsigned int *)(expr.stringValue + 8), value);
-            break;
-        case 0x12:
-            if ( *(unsigned int *)(expr.stringValue + 12) )
-            {
-                Scr_EvalFieldVariableInternal(
-                    inst,
-                    *(unsigned int *)(expr.stringValue + 12),
-                    *(unsigned int *)(expr.stringValue + 8),
-                    value);
-            }
-            else
-            {
-LABEL_29:
-                value->type = 0;
-                Scr_Error(inst, "unknown object", 0);
-            }
-            break;
-        case 0x37:
-            Scr_EvalPrimitiveExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, value);
-            Scr_EvalSelfValue(inst, value);
-            break;
-        case 0x52:
-            objectIdb = Scr_EvalObject(inst, *(sval_u *)(expr.stringValue + 4), *(sval_u *)(expr.stringValue + 8), value);
-            if ( byte_9D3A051[16 * inst] )
-            {
-                if ( *(unsigned int *)(expr.stringValue + 12) != objectIdb )
-                    byte_9D3A052[16 * inst] = 1;
-            }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 12) = objectIdb;
-            }
-            break;
-        case 0x53:
-            if ( *(unsigned int *)(expr.stringValue + 4) && Scr_IsThreadAlive(*(unsigned int *)(expr.stringValue + 4), inst) )
-            {
-                value->u.intValue = *(unsigned int *)(expr.stringValue + 4);
-                value->type = 1;
-                AddRefToObject(inst, value->u.intValue);
-            }
-            else
-            {
-                if ( *(unsigned int *)(expr.stringValue + 4) )
-                {
-                    RemoveRefToObject(inst, *(unsigned int *)(expr.stringValue + 4));
-                    *(unsigned int *)(expr.stringValue + 4) = 0;
-                }
-                value->type = 0;
-                Scr_Error(inst, "thread not active", 0);
-            }
-            break;
-        case 0x56:
             value->type = 0;
-            Scr_Error(inst, "bad expression", 0);
-            break;
-        case 0x59:
-            Scr_GetValue(inst, *(unsigned int *)(expr.stringValue + 4), value);
-            break;
-        default:
-            return;
+            Scr_Error(inst, "thread not active", 0);
+        }
+        break;
+    case 0x56:
+        value->type = 0;
+        Scr_Error(inst, "bad expression", 0);
+        break;
+    case 0x59:
+        Scr_GetValue(inst, *(_DWORD *)(expr.stringValue + 4), value);
+        break;
+    default:
+        return;
     }
 }
 
@@ -1396,14 +1414,14 @@ void __cdecl Scr_EvalSelfValue(scriptInstance_t inst, VariableValue *value)
 
     if ( value->type != 1 )
         goto LABEL_8;
-    threadId.intValue = (int)value->u;
+    threadId.intValue = value->u.intValue;
     ObjectType = GetObjectType(inst, value->u.intValue);
     if ( ObjectType < 13 )
         goto LABEL_8;
     if ( ObjectType <= 16 )
     {
         value->type = 1;
-        value->u.stringValue = Scr_GetSelf(inst, threadId.stringValue).nextEntId;
+        value->u.stringValue = Scr_GetSelf(inst, threadId.stringValue);
         AddRefToObject(inst, value->u.intValue);
         RemoveRefToObject(inst, threadId.stringValue);
         return;
@@ -1424,11 +1442,11 @@ LABEL_8:
 
 void __cdecl Scr_GetValue(scriptInstance_t inst, unsigned int index, VariableValue *value)
 {
-    VariableUnion *v3; // ecx
-    int intValue; // eax
+    VariableValue *v3; // ecx
+    int type; // eax
     const char *v5; // eax
 
-    if ( index >= MEMORY[0xA05ACA8][4298 * inst] )
+    if (index >= gScrVmPub[inst].breakpointOutparamcount)
     {
         value->type = 0;
         v5 = va("parameter %d does not exist", index);
@@ -1436,10 +1454,10 @@ void __cdecl Scr_GetValue(scriptInstance_t inst, unsigned int index, VariableVal
     }
     else
     {
-        v3 = (VariableUnion *)(MEMORY[0xA05AC98][4298 * inst] - 8 * index);
-        intValue = v3[1].intValue;
-        value->u = (VariableUnion)v3->intValue;
-        value->type = intValue;
+        v3 = &gScrVmPub[inst].top[-index];
+        type = v3->type;
+        value->u.intValue = v3->u.intValue;
+        value->type = type;
         AddRefToValue(inst, value->type, value->u);
     }
 }
@@ -1450,64 +1468,64 @@ int __cdecl Scr_EvalPrimitiveExpressionFieldObject(scriptInstance_t inst, sval_u
     VariableValue value; // [esp+4h] [ebp-Ch] BYREF
     unsigned int selfId; // [esp+Ch] [ebp-4h]
 
-    switch ( *(_BYTE *)expr.stringValue )
+    switch (*(_BYTE *)expr.stringValue)
     {
-        case 0x13:
-            Scr_EvalVariableExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, &value);
-            result = Scr_EvalFieldObject(inst, *(unsigned int *)(expr.stringValue + 8), &value).intValue;
-            break;
-        case 0x15:
-            Scr_EvalCallExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, &value);
-            result = Scr_EvalFieldObject(inst, *(unsigned int *)(expr.stringValue + 8), &value).intValue;
-            break;
-        case 0x22:
-            if ( byte_9D3A050[16 * inst] )
-                localId = *(unsigned int *)(expr.stringValue + 4);
-            if ( localId && Scr_IsThreadAlive(localId, inst) )
-            {
-                selfId = Scr_GetSelf(inst, localId).nextEntId;
-            }
-            else
-            {
-                localId = 0;
-                selfId = 0;
-                Scr_Error(inst, "thread not active", 0);
-            }
-            if ( byte_9D3A051[16 * inst] )
-            {
-                if ( *(unsigned int *)(expr.stringValue + 4) != localId || *(unsigned int *)(expr.stringValue + 8) != selfId )
-                    byte_9D3A052[16 * inst] = 1;
-            }
-            else
-            {
-                *(unsigned int *)(expr.stringValue + 4) = localId;
-                *(unsigned int *)(expr.stringValue + 8) = selfId;
-            }
-            result = selfId;
-            break;
-        case 0x23:
-            if ( !*(unsigned int *)(expr.stringValue + 8)
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                            1028,
-                            0,
-                            "%s",
-                            "expr.node[2].idValue") )
-            {
-                __debugbreak();
-            }
-            result = *(unsigned int *)(expr.stringValue + 8);
-            break;
-        case 0x24:
-            result = MEMORY[0xA05ABA0][29 * inst];
-            break;
-        case 0x26:
-            result = MEMORY[0xA05ABA8][29 * inst];
-            break;
-        default:
-            Scr_Error(inst, "bad expression", 0);
-            result = 0;
-            break;
+    case 0x13:
+        Scr_EvalVariableExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, &value);
+        result = Scr_EvalFieldObject(inst, *(_DWORD *)(expr.stringValue + 8), &value);
+        break;
+    case 0x15:
+        Scr_EvalCallExpression(inst, *(sval_u *)(expr.stringValue + 4), localId, &value);
+        result = Scr_EvalFieldObject(inst, *(_DWORD *)(expr.stringValue + 8), &value);
+        break;
+    case 0x22:
+        if (gScrEvaluateGlob[inst].freezeScope)
+            localId = *(_DWORD *)(expr.stringValue + 4);
+        if (localId && Scr_IsThreadAlive(localId, inst))
+        {
+            selfId = Scr_GetSelf(inst, localId);
+        }
+        else
+        {
+            localId = 0;
+            selfId = 0;
+            Scr_Error(inst, "thread not active", 0);
+        }
+        if (gScrEvaluateGlob[inst].freezeObjects)
+        {
+            if (*(_DWORD *)(expr.stringValue + 4) != localId || *(_DWORD *)(expr.stringValue + 8) != selfId)
+                gScrEvaluateGlob[inst].objectChanged = 1;
+        }
+        else
+        {
+            *(_DWORD *)(expr.stringValue + 4) = localId;
+            *(_DWORD *)(expr.stringValue + 8) = selfId;
+        }
+        result = selfId;
+        break;
+    case 0x23:
+        if (!*(_DWORD *)(expr.stringValue + 8)
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                1028,
+                0,
+                "%s",
+                "expr.node[2].idValue"))
+        {
+            __debugbreak();
+        }
+        result = *(_DWORD *)(expr.stringValue + 8);
+        break;
+    case 0x24:
+        result = gScrVarPub[inst].levelId;
+        break;
+    case 0x26:
+        result = gScrVarPub[inst].animId;
+        break;
+    default:
+        Scr_Error(inst, "bad expression", 0);
+        result = 0;
+        break;
     }
     return result;
 }
@@ -1549,7 +1567,8 @@ void __cdecl Scr_EvalFunction(
     {
         __debugbreak();
     }
-    if ( !_setjmp3(g_script_error[inst][g_script_error_level[inst]], 0) )
+    //if ( !_setjmp3(g_script_error[inst][g_script_error_level[inst]], 0) )
+    if ( !_setjmp(g_script_error[inst][g_script_error_level[inst]]) )
         ((void (*)(void))func_name.stringValue)();
     if ( g_script_error_level[inst] < 0
         && !Assert_MyHandler(
@@ -1569,135 +1588,135 @@ void __cdecl Scr_EvalFunction(
 void __cdecl Scr_PreEvalBuiltin(scriptInstance_t inst, sval_u params, unsigned int localId)
 {
     sval_u *node; // [esp+0h] [ebp-Ch]
-    int expr_count; // [esp+4h] [ebp-8h]
+    unsigned int expr_count; // [esp+4h] [ebp-8h]
     int index; // [esp+8h] [ebp-4h]
 
-    if ( MEMORY[0xA05ACA4][4298 * inst]
+    if (gScrVmPub[inst].outparamcount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1586,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].outparamcount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1586,
+            0,
+            "%s",
+            "!gScrVmPub[inst].outparamcount"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05ACA0][4298 * inst]
+    if (gScrVmPub[inst].inparamcount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1587,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].inparamcount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1587,
+            0,
+            "%s",
+            "!gScrVmPub[inst].inparamcount"))
     {
         __debugbreak();
     }
     expr_count = GetExpressionCount(params);
-    if ( MEMORY[0xA05AC98][4298 * inst] < (unsigned int)&MEMORY[0xA05AFB0] + 17192 * inst
+    if (gScrVmPub[inst].top < gScrVmPub[inst].stack
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1590,
-                    0,
-                    "%s",
-                    "gScrVmPub[inst].top >= gScrVmPub[inst].stack") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1590,
+            0,
+            "%s",
+            "gScrVmPub[inst].top >= gScrVmPub[inst].stack"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05AC98][4298 * inst] > (unsigned int)MEMORY[0xA05AC8C][4298 * inst]
+    if (gScrVmPub[inst].top > gScrVmPub[inst].maxstack
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1591,
-                    0,
-                    "%s",
-                    "gScrVmPub[inst].top <= gScrVmPub[inst].maxstack") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1591,
+            0,
+            "%s",
+            "gScrVmPub[inst].top <= gScrVmPub[inst].maxstack"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05AC98][4298 * inst] += 8 * expr_count;
-    if ( MEMORY[0xA05AC98][4298 * inst] > (unsigned int)MEMORY[0xA05AC8C][4298 * inst]
+    gScrVmPub[inst].top += expr_count;
+    if (gScrVmPub[inst].top > gScrVmPub[inst].maxstack
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1593,
-                    0,
-                    "%s",
-                    "gScrVmPub[inst].top <= gScrVmPub[inst].maxstack") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1593,
+            0,
+            "%s",
+            "gScrVmPub[inst].top <= gScrVmPub[inst].maxstack"))
     {
         __debugbreak();
     }
     index = 0;
-    for ( node = *(sval_u **)params.stringValue; node; node = node[1].node )
-        Scr_EvalExpression(inst, *node, localId, (VariableValue *)(MEMORY[0xA05AC98][4298 * inst] - 8 * index++));
-    MEMORY[0xA05ACA4][4298 * inst] = expr_count;
-    if ( !MEMORY[0xA05AB88][116 * inst]
+    for (node = *(sval_u **)params.stringValue; node; node = node[1].node)
+        Scr_EvalExpression(inst, *node, localId, &gScrVmPub[inst].top[-index++]);
+    gScrVmPub[inst].outparamcount = expr_count;
+    if (!gScrVarPub[inst].evaluate
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1605,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].evaluate") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1605,
+            0,
+            "%s",
+            "gScrVarPub[inst].evaluate"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05AB88][116 * inst] = 0;
-    if ( MEMORY[0xA05AC9C][17192 * inst]
+    gScrVarPub[inst].evaluate = 0;
+    if (gScrVmPub[inst].debugCode
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1608,
-                    0,
-                    "%s",
-                    "!gScrVmPub[inst].debugCode") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1608,
+            0,
+            "%s",
+            "!gScrVmPub[inst].debugCode"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05AC9C][17192 * inst] = 1;
+    gScrVmPub[inst].debugCode = 1;
 }
 
 void __cdecl Scr_PostEvalBuiltin(scriptInstance_t inst, VariableValue *value)
 {
-    VariableUnion *v2; // edx
-    int intValue; // ecx
+    VariableValue *top; // edx
+    int type; // ecx
 
-    if ( !MEMORY[0xA05AC9C][17192 * inst]
+    if (!gScrVmPub[inst].debugCode
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1621,
-                    0,
-                    "%s",
-                    "gScrVmPub[inst].debugCode") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1621,
+            0,
+            "%s",
+            "gScrVmPub[inst].debugCode"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05AC9C][17192 * inst] = 0;
-    if ( MEMORY[0xA05AB88][116 * inst]
+    gScrVmPub[inst].debugCode = 0;
+    if (gScrVarPub[inst].evaluate
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1624,
-                    0,
-                    "%s",
-                    "!gScrVarPub[inst].evaluate") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1624,
+            0,
+            "%s",
+            "!gScrVarPub[inst].evaluate"))
     {
         __debugbreak();
     }
-    MEMORY[0xA05AB88][116 * inst] = 1;
+    gScrVarPub[inst].evaluate = 1;
     Scr_ClearOutParams(inst);
-    if ( MEMORY[0xA05ACA0][4298 * inst] )
+    if (gScrVmPub[inst].inparamcount)
     {
-        if ( MEMORY[0xA05ACA0][4298 * inst] != 1
+        if (gScrVmPub[inst].inparamcount != 1
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                        1631,
-                        0,
-                        "%s",
-                        "gScrVmPub[inst].inparamcount == 1") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+                1631,
+                0,
+                "%s",
+                "gScrVmPub[inst].inparamcount == 1"))
         {
             __debugbreak();
         }
-        MEMORY[0xA05ACA0][4298 * inst] = 0;
-        v2 = (VariableUnion *)MEMORY[0xA05AC98][4298 * inst];
-        intValue = v2[1].intValue;
-        value->u = (VariableUnion)v2->intValue;
-        value->type = intValue;
-        MEMORY[0xA05AC98][4298 * inst] -= 8;
+        gScrVmPub[inst].inparamcount = 0;
+        top = gScrVmPub[inst].top;
+        type = top->type;
+        value->u.intValue = top->u.intValue;
+        value->type = type;
+        --gScrVmPub[inst].top;
     }
     else
     {
@@ -1706,12 +1725,12 @@ void __cdecl Scr_PostEvalBuiltin(scriptInstance_t inst, VariableValue *value)
 }
 
 void __cdecl Scr_EvalMethod(
-                scriptInstance_t inst,
-                sval_u expr,
-                sval_u func_name,
-                sval_u params,
-                unsigned int localId,
-                VariableValue *value)
+    scriptInstance_t inst,
+    sval_u expr,
+    sval_u func_name,
+    sval_u params,
+    unsigned int localId,
+    VariableValue *value)
 {
     const char *v6; // eax
     const char *v7; // eax
@@ -1725,50 +1744,50 @@ void __cdecl Scr_EvalMethod(
 
     Scr_EvalPrimitiveExpression(inst, expr, localId, &objectValue);
     Scr_PreEvalBuiltin(inst, params, localId);
-    if ( (unsigned int)++g_script_error_level[inst] >= 0x21
+    if ((unsigned int)++g_script_error_level[inst] >= 0x21
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1683,
-                    0,
-                    "g_script_error_level[inst] doesn't index ARRAY_COUNT( g_script_error[inst] )\n\t%i not in [0, %i)",
-                    g_script_error_level[inst],
-                    33) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1683,
+            0,
+            "g_script_error_level[inst] doesn't index ARRAY_COUNT( g_script_error[inst] )\n\t%i not in [0, %i)",
+            g_script_error_level[inst],
+            33))
     {
         __debugbreak();
     }
-    if ( !_setjmp3(g_script_error[inst][g_script_error_level[inst]], 0) )
+    //if (!_setjmp3(g_script_error[inst][g_script_error_level[inst]], 0))
+    if (!_setjmp(g_script_error[inst][g_script_error_level[inst]]))
     {
-        if ( objectValue.type != 1 )
+        if (objectValue.type != 1)
         {
             type = objectValue.type;
             RemoveRefToValue(inst, objectValue.type, objectValue.u);
-            MEMORY[0xA05AB90][29 * inst] = -1;
+            gScrVarPub[inst].error_index = -1;
             v6 = va("%s is not an entity", var_typename[type]);
             Scr_Error(inst, v6, 0);
         }
         objectId = objectValue.u.intValue;
-        if ( GetObjectType(inst, objectValue.u.stringValue) != 19 )
+        if (GetObjectType(inst, objectValue.u.stringValue) != 19)
         {
             type = GetObjectType(inst, objectId);
             RemoveRefToObject(inst, objectId);
-            MEMORY[0xA05AB90][29 * inst] = -1;
+            gScrVarPub[inst].error_index = -1;
             v7 = va("%s is not an entity", var_typename[type]);
             Scr_Error(inst, v7, 0);
         }
-        v10 = *Scr_GetEntityIdRef(&v9, inst, objectId);
-        entref = v10;
+        entref = Scr_GetEntityIdRef(inst, objectId);
         RemoveRefToObject(inst, objectId);
-        LOWORD(v8) = entref.client;
-        ((void (__cdecl *)(unsigned int, int))func_name.stringValue)(*(unsigned int *)&entref.entnum, v8);
+        //LOWORD(v8) = entref.client;
+        ((void(__cdecl *)(_DWORD, int))func_name.stringValue)(*(_DWORD *)&entref.entnum, entref.client);
     }
-    if ( g_script_error_level[inst] < 0
+    if (g_script_error_level[inst] < 0
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
-                    1711,
-                    0,
-                    "%s\n\t(g_script_error_level[inst]) = %i",
-                    "(g_script_error_level[inst] >= 0)",
-                    g_script_error_level[inst]) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_evaluate.cpp",
+            1711,
+            0,
+            "%s\n\t(g_script_error_level[inst]) = %i",
+            "(g_script_error_level[inst] >= 0)",
+            g_script_error_level[inst]))
     {
         __debugbreak();
     }
@@ -1979,7 +1998,7 @@ $LN4_194:
             result = Scr_RefToVariable(inst, *(unsigned int *)(expr.stringValue + 8), 1);
             break;
         case 0x25:
-            result = Scr_RefToVariable(inst, MEMORY[0xA05ABA4][29 * inst], 0);
+            result = Scr_RefToVariable(inst, gScrVarPub[inst].gameId, 0);
             break;
         case 0x30:
             result = Scr_RefExpression(inst, *(sval_u *)(expr.stringValue + 4));

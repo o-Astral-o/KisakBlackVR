@@ -1,4 +1,5 @@
 #pragma once
+#include "actor.h"
 
 void __fastcall Actor_Exposed_FindReacquireNode(actor_s *self);
 pathnode_t *__fastcall Actor_Exposed_GetReacquireNode(actor_s *self);

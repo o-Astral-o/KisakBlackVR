@@ -1,4 +1,12 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include "g_main_mp.h"
+
+struct useList_t // sizeof=0x8
+{                                       // XREF: ?Player_UpdateCursorHints@@YAXPAUgentity_s@@@Z/r
+    gentity_s *ent;                     // XREF: Player_UpdateCursorHints(gentity_s *)+2EA/r
+    float score;
+};
 
 char __cdecl Player_IsPlayerUsingTurretNearby(gentity_s *ent);
 void __cdecl Player_UpdateActivate(gentity_s *ent);

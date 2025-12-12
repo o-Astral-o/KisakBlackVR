@@ -1,4 +1,5 @@
 #pragma once
+#include <qcommon/common.h>
 
 void __cdecl G_SetEntityParsePoint(const char *beginParsePoint);
 void __cdecl G_ResetEntityParsePoint();

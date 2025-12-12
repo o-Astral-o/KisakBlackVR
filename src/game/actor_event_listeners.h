@@ -1,4 +1,5 @@
 #pragma once
+#include "actor_events.h"
 
 void __cdecl RemoveSwapWithLast(unsigned int listenerIndex);
 void __cdecl Actor_EventListener_RemoveEntity(int entIndex);

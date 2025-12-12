@@ -1,4 +1,6 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include "g_scr_vehicle.h"
 
 void __cdecl Helicopter_RegisterDvars();
 void __cdecl HELI_CancelAIMove(gentity_s *ent);

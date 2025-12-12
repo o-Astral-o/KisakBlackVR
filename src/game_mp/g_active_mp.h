@@ -1,4 +1,30 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include "g_main_mp.h"
+#include <cgame/cg_weapons.h>
+
+struct viewState_t // sizeof=0x24
+{                                       // XREF: ?ClientThink_real@@YAXPAUgentity_s@@PAUusercmd_s@@@Z/r
+                                        // CG_OffsetFirstPersonView/r
+    playerState_s *ps;                  // XREF: CG_OffsetFirstPersonView+73/w
+                                        // CG_OffsetFirstPersonView+85/r ...
+    int damageTime;                     // XREF: CG_OffsetFirstPersonView+A3/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+856/w
+    int time;                           // XREF: CG_OffsetFirstPersonView+B8/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+85E/w ...
+    float v_dmg_pitch;                  // XREF: CG_OffsetFirstPersonView+C6/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+86F/w
+    float v_dmg_roll;                   // XREF: CG_OffsetFirstPersonView+D6/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+882/w
+    float xyspeed;                      // XREF: CG_OffsetFirstPersonView+E6/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+903/w
+    float frametime;                    // XREF: CG_OffsetFirstPersonView+FE/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+918/w
+    float fLastIdleFactor;              // XREF: CG_OffsetFirstPersonView+10B/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+92B/w
+    int *weapIdleTime;                  // XREF: CG_OffsetFirstPersonView+119/w
+                                        // ClientThink_real(gentity_s *,usercmd_s *)+93C/w
+};
 
 void __cdecl P_DamageFeedback(gentity_s *player);
 void __cdecl ClientImpacts(gentity_s *ent, pmove_t *pm);
@@ -9,7 +35,6 @@ void __cdecl ClientIntermissionThink(gentity_s *ent);
 void __cdecl NotifyGrenadePullback(gentity_s *ent, unsigned int weaponIndex);
 void __cdecl HandleClientEvent(gclient_s *client, gentity_s *ent, int event, int eventParm);
 void __cdecl AttemptLiveGrenadePickup(gentity_s *clientEnt);
-int __thiscall EntHandle::entnum(EntHandle *this);
 bool __cdecl IsLiveGrenade(gentity_s *ent);
 void __cdecl ClientEvents(gentity_s *ent, __int16 oldEventSequence);
 void __cdecl G_SetLastServerTime(int clientNum, int lastServerTime);

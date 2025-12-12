@@ -1,4 +1,6 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <qcommon/common.h>
 
 void __cdecl misc_EntInfo(gentity_s *self, float *source);
 void __cdecl EntinfoPosAndScale(gentity_s *self, float *source, float *pos, float *textScale, float *dist);

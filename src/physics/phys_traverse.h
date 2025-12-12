@@ -14,6 +14,8 @@ struct colgeom_visitor_t : visitor_base_t // sizeof=0x70
     //    void (__thiscall *update)(colgeom_visitor_t *this, const float *, const float *, int, const float *);
     //};
 
+    colgeom_visitor_t();
+    colgeom_visitor_t(const colgeom_visitor_t *__that);
     virtual ~colgeom_visitor_t();
     virtual void prolog();
     virtual void epilog(); 

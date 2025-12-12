@@ -50,6 +50,9 @@ struct pmove_t // sizeof=0x910
         int localClientNum;
         const struct gjkcc_input_t *m_gjkcc_input;
         colgeom_visitor_inlined_t<200> proximity_data;
+
+        pmove_t();
+        pmove_t(const pmove_t *__that);
 };
 
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "actor.h"
 
 char __fastcall Actor_Dog_Exposed_Start(actor_s *self, ai_state_t ePrevState);
 void __fastcall Actor_Dog_Exposed_Finish(actor_s *self, ai_state_t eNextState);

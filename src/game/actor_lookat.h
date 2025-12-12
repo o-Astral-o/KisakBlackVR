@@ -1,4 +1,5 @@
 #pragma once
+#include "actor.h"
 
 void __cdecl Actor_InitLookAt(actor_s *self);
 void __cdecl Actor_SetLookAtAnimNodes(

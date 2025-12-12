@@ -79,3 +79,6 @@ void __cdecl Hunk_UserReset(HunkUser *user);
 void __cdecl Hunk_UserDestroy(HunkUser *user);
 void __cdecl Hunk_UserSetPos(HunkUserDefault *_user, const char **pos);
 char *__cdecl Hunk_CopyString(HunkUser *user, const char *in);
+
+
+extern HunkUser *g_DebugHunkUser;

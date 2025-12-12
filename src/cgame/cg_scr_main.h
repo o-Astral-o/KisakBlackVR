@@ -1,4 +1,38 @@
 #pragma once
+#include <qcommon/common.h>
+#include <game_mp/g_main_mp.h>
+
+struct cg_level_locals_t // sizeof=0x3A1C
+{                                       // XREF: .data:cg_level_locals_t cg_level/r
+    int scriptPrintChannel;             // XREF: CScr_StructContents(uint)+2E/r
+                                        // CScr_StructContents(uint)+80/r ...
+    SpawnVar spawnVar;                  // XREF: CScr_LoadStructs(void):loc_4FB5D0/o
+                                        // CScr_LoadStructs(void)+83/o ...
+    int triggerIndex;                   // XREF: CG_ProcessTriggerDebug(centity_s *,trigger_info_t *):loc_4C8328/r
+                                        // CG_ProcessTriggerDebug(centity_s *,trigger_info_t *)+188/r ...
+    trigger_info_t pendingTriggerList[256];
+                                        // XREF: CG_Trigger(centity_s *,centity_s *)+AF/o
+                                        // CG_DrawActiveFrame(int,int,DemoType,CubemapShot,int,int)+E5E/o
+    trigger_info_t currentTriggerList[256];
+                                        // XREF: CG_NotifyTriggers(void)+48/o
+                                        // CG_NotifyTriggers(void)+15C/o ...
+    int pendingTriggerListSize;         // XREF: CG_Trigger(centity_s *,centity_s *):loc_4C8648/r
+                                        // CG_Trigger(centity_s *,centity_s *):loc_4C8696/r ...
+    int currentTriggerListSize;         // XREF: CG_NotifyTriggers(void)+36/r
+                                        // CG_NotifyTriggers(void):loc_4C859B/r ...
+    int entTriggerIndex[1536];          // XREF: CG_ProcessTriggerDebug(centity_s *,trigger_info_t *)+A8/r
+                                        // CG_ProcessTriggerDebug(centity_s *,trigger_info_t *)+181/r ...
+};
+
+struct cent_field_s // sizeof=0x18
+{                                       // XREF: .rdata:cent_fields/r
+    const char *name;
+    int ofs;
+    int size[1];
+    fieldtype_t type;
+    void (__cdecl *setter)(centity_s *, const cent_field_s *);
+    void (__cdecl *getter)(centity_s *, const cent_field_s *);
+};
 
 void __cdecl CScr_AddStruct();
 void __cdecl CScr_SetClientScripts(ScriptFunctions *functions);
@@ -386,3 +420,6 @@ int __cdecl CScr_SetEntityField(unsigned int entnum, int clientNum, unsigned int
 void __cdecl CScr_AddFieldsForEntity();
 void __cdecl CScr_AddFieldsForRadiant();
 void __cdecl CScr_PostLoadScripts();
+
+
+extern cg_level_locals_t cg_level;

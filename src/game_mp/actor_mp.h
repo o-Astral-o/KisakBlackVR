@@ -1,4 +1,7 @@
 #pragma once
+#include <game/sentient.h>
+#include <game/actor.h>
+#include <game/actor_fields.h>
 
 void __fastcall VisCache_Update(vis_cache_t *pCache, bool bVisible);
 void __fastcall SentientInfo_Clear(sentient_info_t *pInfo);
@@ -147,7 +150,7 @@ void __fastcall Actor_UpdateMoveHistory(actor_s *self);
 void __fastcall Actor_UpdateNetworkLeanAmount(actor_s *self);
 void __fastcall Path_UpdateLeanAmount(actor_s *self, float *vWishDir);
 double __fastcall Path_UpdateMomentum(actor_s *self, float *vWishDir, float fMoveDist);
-void __userpurge Path_UpdateMovementDelta(actor_s *self@<ecx>, float fMoveDist);
+void Path_UpdateMovementDelta(float fMoveDist);
 void __cdecl Actor_SetFlashed(actor_s *self, int flashed, float strength);
 void __fastcall Actor_AddStationaryMoveHistory(actor_s *self);
 bool __fastcall Actor_IsMoving(actor_s *self);

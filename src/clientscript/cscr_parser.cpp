@@ -1,66 +1,92 @@
 #include "cscr_parser.h"
+#include "cscr_variable.h"
+#include <universal/assertive.h>
+#include <cstring>
+#include "cscr_compiler.h"
+#include <win32/win_net.h>
+#include <universal/com_memory.h>
+#include <universal/com_shared.h>
+#include <universal/com_files.h>
+#include <universal/q_shared.h>
+#include <zlib/zlib.h>
+#include <qcommon/common.h>
+#include <monkey/monkey.h>
+#include "cscr_parsetree.h"
+#include "cscr_stringlist.h"
+#include "cscr_instance.h"
+#include "cscr_vm.h"
+
+scrParserPub_t gScrParserPub[2];
+scrParserGlob_t gScrParserGlob[2];
+
+char g_EndPos;
+
+thread_local bool g_loadedImpureScript = false;
 
 void __cdecl Scr_InitOpcodeLookup(scriptInstance_t inst)
 {
-    if ( gScrParserGlob[inst].opcodeLookup
+    if (gScrParserGlob[inst].opcodeLookup
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    94,
-                    0,
-                    "%s",
-                    "!gScrParserGlob[inst].opcodeLookup") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            94,
+            0,
+            "%s",
+            "!gScrParserGlob[inst].opcodeLookup"))
     {
         __debugbreak();
     }
-    if ( dword_9F7A814[13 * inst]
+    if (gScrParserGlob[inst].sourcePosLookup
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    95,
-                    0,
-                    "%s",
-                    "!gScrParserGlob[inst].sourcePosLookup") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            95,
+            0,
+            "%s",
+            "!gScrParserGlob[inst].sourcePosLookup"))
     {
         __debugbreak();
     }
-    if ( gScrParserPub[inst].sourceBufferLookup
+    if (gScrParserPub[inst].sourceBufferLookup
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    96,
-                    0,
-                    "%s",
-                    "!gScrParserPub[inst].sourceBufferLookup") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            96,
+            0,
+            "%s",
+            "!gScrParserPub[inst].sourceBufferLookup"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
     {
-        dword_9F7A834[13 * inst] = -1;
-        dword_9F7A80C[13 * inst] = inst != SCRIPTINSTANCE_CLIENT ? 0x40000 : 0x4000;
-        dword_9F7A810[13 * inst] = 0;
+        gScrParserGlob[inst].delayedSourceIndex = -1;
+        gScrParserGlob[inst].opcodeLookupMaxLen = inst != SCRIPTINSTANCE_CLIENT ? 0x40000 : 0x4000;
+        gScrParserGlob[inst].opcodeLookupLen = 0;
         gScrParserGlob[inst].opcodeLookup = (OpcodeLookup *)Hunk_UserAlloc(
-                                                                                                                    g_DebugHunkUser,
-                                                                                                                    12 * dword_9F7A80C[13 * inst],
-                                                                                                                    4,
-                                                                                                                    "Scr_InitOpcodeLookup");
-        memset((unsigned __int8 *)gScrParserGlob[inst].opcodeLookup, 0, 12 * dword_9F7A80C[13 * inst]);
-        dword_9F7A818[13 * inst] = inst != SCRIPTINSTANCE_CLIENT ? 393216 : 16;
-        dword_9F7A81C[13 * inst] = 0;
-        dword_9F7A814[13 * inst] = (int)Hunk_UserAlloc(
-                                                                            g_DebugHunkUser,
-                                                                            8 * dword_9F7A818[13 * inst],
-                                                                            4,
-                                                                            "Scr_InitOpcodeLookup");
-        memset((unsigned __int8 *)dword_9F7A814[13 * inst], 0, 8 * dword_9F7A818[13 * inst]);
-        dword_9F7A824[13 * inst] = 0;
-        dword_9F7A828[13 * inst] = 0;
-        dword_9F7A820[13 * inst] = inst != SCRIPTINSTANCE_CLIENT ? 256 : 16;
+            g_DebugHunkUser,
+            12 * gScrParserGlob[inst].opcodeLookupMaxLen,
+            4,
+            "Scr_InitOpcodeLookup");
+        memset((unsigned __int8 *)gScrParserGlob[inst].opcodeLookup, 0, 12 * gScrParserGlob[inst].opcodeLookupMaxLen);
+        gScrParserGlob[inst].sourcePosLookupMaxLen = inst != SCRIPTINSTANCE_CLIENT ? 393216 : 16;
+        gScrParserGlob[inst].sourcePosLookupLen = 0;
+        gScrParserGlob[inst].sourcePosLookup = (SourceLookup *)Hunk_UserAlloc(
+            g_DebugHunkUser,
+            8 * gScrParserGlob[inst].sourcePosLookupMaxLen,
+            4,
+            "Scr_InitOpcodeLookup");
+        memset((unsigned __int8 *)gScrParserGlob[inst].sourcePosLookup, 0, 8 * gScrParserGlob[inst].sourcePosLookupMaxLen);
+        gScrParserGlob[inst].currentCodePos = 0;
+        gScrParserGlob[inst].currentSourcePosCount = 0;
+        gScrParserGlob[inst].sourceBufferLookupMaxLen = inst != SCRIPTINSTANCE_CLIENT ? 256 : 16;
         gScrParserPub[inst].sourceBufferLookupLen = 0;
         gScrParserPub[inst].sourceBufferLookup = (SourceBufferInfo *)Hunk_UserAlloc(
-                                                                                                                                     g_DebugHunkUser,
-                                                                                                                                     24 * dword_9F7A820[13 * inst],
-                                                                                                                                     4,
-                                                                                                                                     "Scr_InitOpcodeLookup");
-        memset((unsigned __int8 *)gScrParserPub[inst].sourceBufferLookup, 0, 24 * dword_9F7A820[13 * inst]);
+            g_DebugHunkUser,
+            24 * gScrParserGlob[inst].sourceBufferLookupMaxLen,
+            4,
+            "Scr_InitOpcodeLookup");
+        memset(
+            (unsigned __int8 *)gScrParserPub[inst].sourceBufferLookup,
+            0,
+            24 * gScrParserGlob[inst].sourceBufferLookupMaxLen);
     }
 }
 
@@ -69,230 +95,236 @@ void __cdecl Scr_ShutdownOpcodeLookup(scriptInstance_t inst)
     unsigned int i; // [esp+0h] [ebp-4h]
     unsigned int ia; // [esp+0h] [ebp-4h]
 
-    if ( gScrParserGlob[inst].opcodeLookup )
+    if (gScrParserGlob[inst].opcodeLookup)
     {
         Hunk_UserFree(g_DebugHunkUser, gScrParserGlob[inst].opcodeLookup);
         gScrParserGlob[inst].opcodeLookup = 0;
     }
-    if ( dword_9F7A814[13 * inst] )
+    if (gScrParserGlob[inst].sourcePosLookup)
     {
-        Hunk_UserFree(g_DebugHunkUser, (void *)dword_9F7A814[13 * inst]);
-        dword_9F7A814[13 * inst] = 0;
+        Hunk_UserFree(g_DebugHunkUser, gScrParserGlob[inst].sourcePosLookup);
+        gScrParserGlob[inst].sourcePosLookup = 0;
     }
-    if ( gScrParserPub[inst].sourceBufferLookup )
+    if (gScrParserPub[inst].sourceBufferLookup)
     {
-        for ( i = 0; i < gScrParserPub[inst].sourceBufferLookupLen; ++i )
+        for (i = 0; i < gScrParserPub[inst].sourceBufferLookupLen; ++i)
             Hunk_UserFree(g_DebugHunkUser, gScrParserPub[inst].sourceBufferLookup[i].buf);
         Hunk_UserFree(g_DebugHunkUser, gScrParserPub[inst].sourceBufferLookup);
         gScrParserPub[inst].sourceBufferLookup = 0;
     }
-    if ( dword_9F7A82C[13 * inst] )
+    if (gScrParserGlob[inst].saveSourceBufferLookup)
     {
-        for ( ia = 0; ia < dword_9F7A830[13 * inst]; ++ia )
+        for (ia = 0; ia < gScrParserGlob[inst].saveSourceBufferLookupLen; ++ia)
         {
-            if ( *(unsigned int *)(dword_9F7A82C[13 * inst] + 8 * ia) )
-                Hunk_UserFree(g_DebugHunkUser, *(void **)(dword_9F7A82C[13 * inst] + 8 * ia));
+            if (gScrParserGlob[inst].saveSourceBufferLookup[ia].sourceBuf)
+                Hunk_UserFree(g_DebugHunkUser, gScrParserGlob[inst].saveSourceBufferLookup[ia].sourceBuf);
         }
-        Hunk_UserFree(g_DebugHunkUser, (void *)dword_9F7A82C[13 * inst]);
-        dword_9F7A82C[13 * inst] = 0;
+        Hunk_UserFree(g_DebugHunkUser, gScrParserGlob[inst].saveSourceBufferLookup);
+        gScrParserGlob[inst].saveSourceBufferLookup = 0;
     }
 }
 
 void __cdecl AddOpcodePos(scriptInstance_t inst, unsigned int sourcePos, int type)
 {
-    int sourcePosLookupIndex; // [esp+0h] [ebp-14h]
+    unsigned int sourcePosLookupIndex; // [esp+0h] [ebp-14h]
     OpcodeLookup *opcodeLookup; // [esp+4h] [ebp-10h]
     SourceLookup *sourcePosLookup; // [esp+8h] [ebp-Ch]
     unsigned __int8 *newSourcePosLookup; // [esp+Ch] [ebp-8h]
     unsigned __int8 *newOpcodeLookup; // [esp+10h] [ebp-4h]
 
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
     {
-        if ( gScrCompilePub[inst].developer_statement == 2 )
+        if (gScrCompilePub[inst].developer_statement == 2)
         {
-            if ( MEMORY[0xA05AB87][116 * inst] )
+            if (gScrVarPub[inst].developer_script
+                && !Assert_MyHandler(
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    177,
+                    0,
+                    "%s",
+                    "!gScrVarPub[inst].developer_script"))
             {
-                if ( !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                177,
-                                0,
-                                "%s",
-                                "!gScrVarPub[inst].developer_script") )
-                    __debugbreak();
+                __debugbreak();
             }
         }
-        else if ( gScrCompilePub[inst].developer_statement != 3 )
+        else if (gScrCompilePub[inst].developer_statement != 3)
         {
-            if ( !gScrCompilePub[inst].allowedBreakpoint )
+            if (!gScrCompilePub[inst].allowedBreakpoint)
                 type &= ~1u;
-            if ( !gScrParserGlob[inst].opcodeLookup
+            if (!gScrParserGlob[inst].opcodeLookup
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            189,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].opcodeLookup") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    189,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].opcodeLookup"))
             {
                 __debugbreak();
             }
-            if ( !dword_9F7A80C[13 * inst]
+            if (!gScrParserGlob[inst].opcodeLookupMaxLen
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            190,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].opcodeLookupMaxLen") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    190,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].opcodeLookupMaxLen"))
             {
                 __debugbreak();
             }
-            if ( !dword_9F7A814[13 * inst]
+            if (!gScrParserGlob[inst].sourcePosLookup
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            191,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].sourcePosLookup") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    191,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].sourcePosLookup"))
             {
                 __debugbreak();
             }
-            if ( !gScrCompilePub[inst].opcodePos
+            if (!gScrCompilePub[inst].opcodePos
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            192,
-                            0,
-                            "%s",
-                            "gScrCompilePub[inst].opcodePos") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    192,
+                    0,
+                    "%s",
+                    "gScrCompilePub[inst].opcodePos"))
             {
                 __debugbreak();
             }
-            if ( dword_9F7A810[13 * inst] >= (unsigned int)dword_9F7A80C[13 * inst] )
+            if (gScrParserGlob[inst].opcodeLookupLen >= gScrParserGlob[inst].opcodeLookupMaxLen)
             {
-                dword_9F7A80C[13 * inst] += 0x10000;
-                if ( dword_9F7A810[13 * inst] >= (unsigned int)dword_9F7A80C[13 * inst]
+                gScrParserGlob[inst].opcodeLookupMaxLen += 0x10000;
+                if (gScrParserGlob[inst].opcodeLookupLen >= gScrParserGlob[inst].opcodeLookupMaxLen
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                197,
-                                0,
-                                "%s",
-                                "gScrParserGlob[inst].opcodeLookupLen < gScrParserGlob[inst].opcodeLookupMaxLen") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        197,
+                        0,
+                        "%s",
+                        "gScrParserGlob[inst].opcodeLookupLen < gScrParserGlob[inst].opcodeLookupMaxLen"))
                 {
                     __debugbreak();
                 }
                 newOpcodeLookup = (unsigned __int8 *)Hunk_UserAlloc(
-                                                                                             g_DebugHunkUser,
-                                                                                             12 * dword_9F7A80C[13 * inst],
-                                                                                             4,
-                                                                                             "AddOpcodePos");
-                memset(newOpcodeLookup, 0, 12 * dword_9F7A80C[13 * inst]);
-                memcpy(newOpcodeLookup, (unsigned __int8 *)gScrParserGlob[inst].opcodeLookup, 12 * dword_9F7A810[13 * inst]);
+                    g_DebugHunkUser,
+                    12 * gScrParserGlob[inst].opcodeLookupMaxLen,
+                    4,
+                    "AddOpcodePos");
+                memset(newOpcodeLookup, 0, 12 * gScrParserGlob[inst].opcodeLookupMaxLen);
+                memcpy(
+                    newOpcodeLookup,
+                    (unsigned __int8 *)gScrParserGlob[inst].opcodeLookup,
+                    12 * gScrParserGlob[inst].opcodeLookupLen);
                 Hunk_UserFree(g_DebugHunkUser, gScrParserGlob[inst].opcodeLookup);
                 gScrParserGlob[inst].opcodeLookup = (OpcodeLookup *)newOpcodeLookup;
             }
-            if ( dword_9F7A81C[13 * inst] >= (unsigned int)dword_9F7A818[13 * inst] )
+            if (gScrParserGlob[inst].sourcePosLookupLen >= gScrParserGlob[inst].sourcePosLookupMaxLen)
             {
-                dword_9F7A818[13 * inst] += 0x10000;
-                if ( dword_9F7A81C[13 * inst] >= (unsigned int)dword_9F7A818[13 * inst]
+                gScrParserGlob[inst].sourcePosLookupMaxLen += 0x10000;
+                if (gScrParserGlob[inst].sourcePosLookupLen >= gScrParserGlob[inst].sourcePosLookupMaxLen
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                208,
-                                0,
-                                "%s",
-                                "gScrParserGlob[inst].sourcePosLookupLen < gScrParserGlob[inst].sourcePosLookupMaxLen") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        208,
+                        0,
+                        "%s",
+                        "gScrParserGlob[inst].sourcePosLookupLen < gScrParserGlob[inst].sourcePosLookupMaxLen"))
                 {
                     __debugbreak();
                 }
                 newSourcePosLookup = (unsigned __int8 *)Hunk_UserAlloc(
-                                                                                                    g_DebugHunkUser,
-                                                                                                    8 * dword_9F7A818[13 * inst],
-                                                                                                    4,
-                                                                                                    "AddOpcodePos");
-                memset(newSourcePosLookup, 0, 8 * dword_9F7A818[13 * inst]);
-                memcpy(newSourcePosLookup, (unsigned __int8 *)dword_9F7A814[13 * inst], 8 * dword_9F7A81C[13 * inst]);
-                Hunk_UserFree(g_DebugHunkUser, (void *)dword_9F7A814[13 * inst]);
-                dword_9F7A814[13 * inst] = (int)newSourcePosLookup;
+                    g_DebugHunkUser,
+                    8 * gScrParserGlob[inst].sourcePosLookupMaxLen,
+                    4,
+                    "AddOpcodePos");
+                memset(newSourcePosLookup, 0, 8 * gScrParserGlob[inst].sourcePosLookupMaxLen);
+                memcpy(
+                    newSourcePosLookup,
+                    (unsigned __int8 *)gScrParserGlob[inst].sourcePosLookup,
+                    8 * gScrParserGlob[inst].sourcePosLookupLen);
+                Hunk_UserFree(g_DebugHunkUser, gScrParserGlob[inst].sourcePosLookup);
+                gScrParserGlob[inst].sourcePosLookup = (SourceLookup *)newSourcePosLookup;
             }
-            if ( (unsigned __int8 *)dword_9F7A824[13 * inst] == gScrCompilePub[inst].opcodePos )
+            if (gScrParserGlob[inst].currentCodePos == gScrCompilePub[inst].opcodePos)
             {
-                if ( !dword_9F7A828[13 * inst]
+                if (!gScrParserGlob[inst].currentSourcePosCount
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                218,
-                                0,
-                                "%s",
-                                "gScrParserGlob[inst].currentSourcePosCount") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        218,
+                        0,
+                        "%s",
+                        "gScrParserGlob[inst].currentSourcePosCount"))
                 {
                     __debugbreak();
                 }
-                opcodeLookup = &gScrParserGlob[inst].opcodeLookup[--dword_9F7A810[13 * inst]];
-                if ( dword_9F7A828[13 * inst] + opcodeLookup->sourcePosIndex != dword_9F7A81C[13 * inst]
+                opcodeLookup = &gScrParserGlob[inst].opcodeLookup[--gScrParserGlob[inst].opcodeLookupLen];
+                if (gScrParserGlob[inst].currentSourcePosCount + opcodeLookup->sourcePosIndex != gScrParserGlob[inst].sourcePosLookupLen
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                224,
-                                0,
-                                "%s",
-                                "opcodeLookup->sourcePosIndex + gScrParserGlob[inst].currentSourcePosCount == gScrParserGlob[inst].sourcePosLookupLen") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        224,
+                        0,
+                        "%s",
+                        "opcodeLookup->sourcePosIndex + gScrParserGlob[inst].currentSourcePosCount == gScrParserGlob[inst].sourcePosLookupLen"))
                 {
                     __debugbreak();
                 }
-                if ( opcodeLookup->codePos != (const char *)dword_9F7A824[13 * inst]
+                if (opcodeLookup->codePos != (const char *)gScrParserGlob[inst].currentCodePos
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                225,
-                                0,
-                                "%s",
-                                "opcodeLookup->codePos == (char *)gScrParserGlob[inst].currentCodePos") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        225,
+                        0,
+                        "%s",
+                        "opcodeLookup->codePos == (char *)gScrParserGlob[inst].currentCodePos"))
                 {
                     __debugbreak();
                 }
             }
             else
             {
-                dword_9F7A828[13 * inst] = 0;
-                dword_9F7A824[13 * inst] = (int)gScrCompilePub[inst].opcodePos;
-                opcodeLookup = &gScrParserGlob[inst].opcodeLookup[dword_9F7A810[13 * inst]];
-                opcodeLookup->sourcePosIndex = dword_9F7A81C[13 * inst];
-                opcodeLookup->codePos = (const char *)dword_9F7A824[13 * inst];
+                gScrParserGlob[inst].currentSourcePosCount = 0;
+                gScrParserGlob[inst].currentCodePos = gScrCompilePub[inst].opcodePos;
+                opcodeLookup = &gScrParserGlob[inst].opcodeLookup[gScrParserGlob[inst].opcodeLookupLen];
+                opcodeLookup->sourcePosIndex = gScrParserGlob[inst].sourcePosLookupLen;
+                opcodeLookup->codePos = (const char *)gScrParserGlob[inst].currentCodePos;
             }
-            sourcePosLookupIndex = dword_9F7A828[13 * inst] + opcodeLookup->sourcePosIndex;
-            sourcePosLookup = (SourceLookup *)(dword_9F7A814[13 * inst] + 8 * sourcePosLookupIndex);
+            sourcePosLookupIndex = gScrParserGlob[inst].currentSourcePosCount + opcodeLookup->sourcePosIndex;
+            sourcePosLookup = &gScrParserGlob[inst].sourcePosLookup[sourcePosLookupIndex];
             sourcePosLookup->sourcePos = sourcePos;
-            if ( sourcePos == -1 )
+            if (sourcePos == -1)
             {
-                if ( dword_9F7A834[13 * inst] != -1
+                if (gScrParserGlob[inst].delayedSourceIndex != -1
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                244,
-                                0,
-                                "%s",
-                                "gScrParserGlob[inst].delayedSourceIndex == -1") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        244,
+                        0,
+                        "%s",
+                        "gScrParserGlob[inst].delayedSourceIndex == -1"))
                 {
                     __debugbreak();
                 }
-                if ( (type & 1) == 0
+                if ((type & 1) == 0
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                245,
-                                0,
-                                "%s",
-                                "type & SOURCE_TYPE_BREAKPOINT") )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        245,
+                        0,
+                        "%s",
+                        "type & SOURCE_TYPE_BREAKPOINT"))
                 {
                     __debugbreak();
                 }
-                dword_9F7A834[13 * inst] = sourcePosLookupIndex;
+                gScrParserGlob[inst].delayedSourceIndex = sourcePosLookupIndex;
             }
-            else if ( sourcePos == -2 )
+            else if (sourcePos == -2)
             {
-                dword_9F7A838[13 * inst] = sourcePosLookupIndex;
+                gScrParserGlob[inst].threadStartSourceIndex = sourcePosLookupIndex;
             }
-            else if ( dword_9F7A834[13 * inst] >= 0 && (type & 1) != 0 )
+            else if (gScrParserGlob[inst].delayedSourceIndex >= 0 && (type & 1) != 0)
             {
-                *(unsigned int *)(dword_9F7A814[13 * inst] + 8 * dword_9F7A834[13 * inst]) = sourcePos;
-                dword_9F7A834[13 * inst] = -1;
+                gScrParserGlob[inst].sourcePosLookup[gScrParserGlob[inst].delayedSourceIndex].sourcePos = sourcePos;
+                gScrParserGlob[inst].delayedSourceIndex = -1;
             }
             sourcePosLookup->type |= type;
-            opcodeLookup->sourcePosCount = ++dword_9F7A828[13 * inst];
-            ++dword_9F7A810[13 * inst];
-            ++dword_9F7A81C[13 * inst];
+            opcodeLookup->sourcePosCount = ++gScrParserGlob[inst].currentSourcePosCount;
+            ++gScrParserGlob[inst].opcodeLookupLen;
+            ++gScrParserGlob[inst].sourcePosLookupLen;
         }
     }
 }
@@ -301,130 +333,130 @@ void __cdecl RemoveOpcodePos(scriptInstance_t inst)
 {
     OpcodeLookup *opcodeLookup; // [esp+0h] [ebp-4h]
 
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
     {
-        if ( gScrCompilePub[inst].developer_statement == 2 )
+        if (gScrCompilePub[inst].developer_statement == 2)
         {
-            if ( MEMORY[0xA05AB87][116 * inst] )
+            if (gScrVarPub[inst].developer_script
+                && !Assert_MyHandler(
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    281,
+                    0,
+                    "%s",
+                    "!gScrVarPub[inst].developer_script"))
             {
-                if ( !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                281,
-                                0,
-                                "%s",
-                                "!gScrVarPub[inst].developer_script") )
-                    __debugbreak();
+                __debugbreak();
             }
         }
         else
         {
-            if ( !gScrParserGlob[inst].opcodeLookup
+            if (!gScrParserGlob[inst].opcodeLookup
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            285,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].opcodeLookup") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    285,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].opcodeLookup"))
             {
                 __debugbreak();
             }
-            if ( !dword_9F7A80C[13 * inst]
+            if (!gScrParserGlob[inst].opcodeLookupMaxLen
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            286,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].opcodeLookupMaxLen") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    286,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].opcodeLookupMaxLen"))
             {
                 __debugbreak();
             }
-            if ( !dword_9F7A814[13 * inst]
+            if (!gScrParserGlob[inst].sourcePosLookup
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            287,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].sourcePosLookup") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    287,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].sourcePosLookup"))
             {
                 __debugbreak();
             }
-            if ( !gScrCompilePub[inst].opcodePos
+            if (!gScrCompilePub[inst].opcodePos
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            288,
-                            0,
-                            "%s",
-                            "gScrCompilePub[inst].opcodePos") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    288,
+                    0,
+                    "%s",
+                    "gScrCompilePub[inst].opcodePos"))
             {
                 __debugbreak();
             }
-            if ( !dword_9F7A81C[13 * inst]
+            if (!gScrParserGlob[inst].sourcePosLookupLen
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            290,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].sourcePosLookupLen") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    290,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].sourcePosLookupLen"))
             {
                 __debugbreak();
             }
-            --dword_9F7A81C[13 * inst];
-            if ( !dword_9F7A810[13 * inst]
+            --gScrParserGlob[inst].sourcePosLookupLen;
+            if (!gScrParserGlob[inst].opcodeLookupLen
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            293,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].opcodeLookupLen") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    293,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].opcodeLookupLen"))
             {
                 __debugbreak();
             }
-            --dword_9F7A810[13 * inst];
-            if ( !dword_9F7A828[13 * inst]
+            --gScrParserGlob[inst].opcodeLookupLen;
+            if (!gScrParserGlob[inst].currentSourcePosCount
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            296,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].currentSourcePosCount") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    296,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].currentSourcePosCount"))
             {
                 __debugbreak();
             }
-            --dword_9F7A828[13 * inst];
-            opcodeLookup = &gScrParserGlob[inst].opcodeLookup[dword_9F7A810[13 * inst]];
-            if ( (unsigned __int8 *)dword_9F7A824[13 * inst] != gScrCompilePub[inst].opcodePos
+            --gScrParserGlob[inst].currentSourcePosCount;
+            opcodeLookup = &gScrParserGlob[inst].opcodeLookup[gScrParserGlob[inst].opcodeLookupLen];
+            if (gScrParserGlob[inst].currentCodePos != gScrCompilePub[inst].opcodePos
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            301,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].currentCodePos == gScrCompilePub[inst].opcodePos") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    301,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].currentCodePos == gScrCompilePub[inst].opcodePos"))
             {
                 __debugbreak();
             }
-            if ( dword_9F7A828[13 * inst] + opcodeLookup->sourcePosIndex != dword_9F7A81C[13 * inst]
+            if (gScrParserGlob[inst].currentSourcePosCount + opcodeLookup->sourcePosIndex != gScrParserGlob[inst].sourcePosLookupLen
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            302,
-                            0,
-                            "%s",
-                            "opcodeLookup->sourcePosIndex + gScrParserGlob[inst].currentSourcePosCount == gScrParserGlob[inst].sourcePosLookupLen") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    302,
+                    0,
+                    "%s",
+                    "opcodeLookup->sourcePosIndex + gScrParserGlob[inst].currentSourcePosCount == gScrParserGlob[inst].sourcePosLookupLen"))
             {
                 __debugbreak();
             }
-            if ( opcodeLookup->codePos != (const char *)dword_9F7A824[13 * inst]
+            if (opcodeLookup->codePos != (const char *)gScrParserGlob[inst].currentCodePos
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            303,
-                            0,
-                            "%s",
-                            "opcodeLookup->codePos == (char *)gScrParserGlob[inst].currentCodePos") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    303,
+                    0,
+                    "%s",
+                    "opcodeLookup->codePos == (char *)gScrParserGlob[inst].currentCodePos"))
             {
                 __debugbreak();
             }
-            if ( !dword_9F7A828[13 * inst] )
-                dword_9F7A824[13 * inst] = 0;
-            opcodeLookup->sourcePosCount = dword_9F7A828[13 * inst];
+            if (!gScrParserGlob[inst].currentSourcePosCount)
+                gScrParserGlob[inst].currentCodePos = 0;
+            opcodeLookup->sourcePosCount = gScrParserGlob[inst].currentSourcePosCount;
         }
     }
 }
@@ -433,58 +465,59 @@ void __cdecl AddThreadStartOpcodePos(scriptInstance_t inst, unsigned int sourceP
 {
     SourceLookup *sourcePosLookup; // [esp+0h] [ebp-4h]
 
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
     {
-        if ( gScrCompilePub[inst].developer_statement == 2 )
+        if (gScrCompilePub[inst].developer_statement == 2)
         {
-            if ( MEMORY[0xA05AB87][116 * inst] )
+            if (gScrVarPub[inst].developer_script
+                && !Assert_MyHandler(
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    323,
+                    0,
+                    "%s",
+                    "!gScrVarPub[inst].developer_script"))
             {
-                if ( !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                323,
-                                0,
-                                "%s",
-                                "!gScrVarPub[inst].developer_script") )
-                    __debugbreak();
+                __debugbreak();
             }
         }
         else
         {
-            if ( dword_9F7A838[13 * inst] < 0
+            if (gScrParserGlob[inst].threadStartSourceIndex < 0
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            327,
-                            0,
-                            "%s",
-                            "gScrParserGlob[inst].threadStartSourceIndex >= 0") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    327,
+                    0,
+                    "%s",
+                    "gScrParserGlob[inst].threadStartSourceIndex >= 0"))
             {
                 __debugbreak();
             }
-            sourcePosLookup = (SourceLookup *)(dword_9F7A814[13 * inst] + 8 * dword_9F7A838[13 * inst]);
+            sourcePosLookup = &gScrParserGlob[inst].sourcePosLookup[gScrParserGlob[inst].threadStartSourceIndex];
             sourcePosLookup->sourcePos = sourcePos;
-            if ( sourcePosLookup->type
+            if (sourcePosLookup->type
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                            330,
-                            0,
-                            "%s",
-                            "!sourcePosLookup->type") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                    330,
+                    0,
+                    "%s",
+                    "!sourcePosLookup->type"))
             {
                 __debugbreak();
             }
             sourcePosLookup->type = 4;
-            dword_9F7A838[13 * inst] = -1;
+            gScrParserGlob[inst].threadStartSourceIndex = -1;
         }
     }
 }
 
+
 const char *__cdecl Scr_GetOpcodePosOfType(
-                scriptInstance_t inst,
-                unsigned int bufferIndex,
-                unsigned int startSourcePos,
-                unsigned int endSourcePos,
-                int type,
-                unsigned int *sourcePos)
+    scriptInstance_t inst,
+    unsigned int bufferIndex,
+    unsigned int startSourcePos,
+    unsigned int endSourcePos,
+    int type,
+    unsigned int *sourcePos)
 {
     const char *codePos; // [esp+0h] [ebp-34h]
     SourceBufferInfo *v8; // [esp+4h] [ebp-30h]
@@ -499,47 +532,47 @@ const char *__cdecl Scr_GetOpcodePosOfType(
     const char *opcodePos; // [esp+2Ch] [ebp-8h]
 
     sourceBufData = &gScrParserPub[inst].sourceBufferLookup[bufferIndex];
-    if ( bufferIndex + 1 >= gScrParserPub[inst].sourceBufferLookupLen )
+    if (bufferIndex + 1 >= gScrParserPub[inst].sourceBufferLookupLen)
         v8 = 0;
     else
         v8 = &gScrParserPub[inst].sourceBufferLookup[bufferIndex + 1];
     startBufferCodePos = sourceBufData->codePos;
-    if ( sourceBufData->codePos )
+    if (sourceBufData->codePos)
     {
         firstOpcodePos = 0;
         firstSourcePos = 0;
-        if ( v8 )
+        if (v8)
             codePos = v8->codePos;
         else
             codePos = 0;
-        for ( j = 0; j < dword_9F7A810[13 * inst]; ++j )
+        for (j = 0; j < gScrParserGlob[inst].opcodeLookupLen; ++j)
         {
             sourcePosCount = gScrParserGlob[inst].opcodeLookup[j].sourcePosCount;
-            for ( k = 0; k < sourcePosCount; ++k )
+            for (k = 0; k < sourcePosCount; ++k)
             {
                 opcodePos = gScrParserGlob[inst].opcodeLookup[j].codePos;
-                if ( opcodePos >= startBufferCodePos )
+                if (opcodePos >= startBufferCodePos)
                 {
-                    if ( opcodePos <= codePos - 1 )
+                    if (opcodePos <= codePos - 1)
                     {
-                        sourcePosLookup = (SourceLookup *)(dword_9F7A814[13 * inst]
-                                                                                         + 8 * (k + gScrParserGlob[inst].opcodeLookup[j].sourcePosIndex));
-                        if ( (type & sourcePosLookup->type) == type
+                        sourcePosLookup = &gScrParserGlob[inst].sourcePosLookup[k
+                            + gScrParserGlob[inst].opcodeLookup[j].sourcePosIndex];
+                        if ((type & sourcePosLookup->type) == type
                             && sourcePosLookup->sourcePos >= startSourcePos
                             && sourcePosLookup->sourcePos < endSourcePos
-                            && (!firstOpcodePos || gScrParserGlob[inst].opcodeLookup[j].codePos < firstOpcodePos) )
+                            && (!firstOpcodePos || gScrParserGlob[inst].opcodeLookup[j].codePos < firstOpcodePos))
                         {
                             firstOpcodePos = gScrParserGlob[inst].opcodeLookup[j].codePos;
                             firstSourcePos = sourcePosLookup->sourcePos;
                         }
                     }
-                    else if ( !v8
-                                 && !Assert_MyHandler(
-                                             "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                             379,
-                                             0,
-                                             "%s",
-                                             "nextSourceBufData") )
+                    else if (!v8
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                            379,
+                            0,
+                            "%s",
+                            "nextSourceBufData"))
                     {
                         __debugbreak();
                     }
@@ -557,10 +590,10 @@ const char *__cdecl Scr_GetOpcodePosOfType(
 }
 
 unsigned int __cdecl Scr_GetClosestSourcePosOfType(
-                scriptInstance_t inst,
-                unsigned int bufferIndex,
-                unsigned int sourcePos,
-                int type)
+    scriptInstance_t inst,
+    unsigned int bufferIndex,
+    unsigned int sourcePos,
+    int type)
 {
     const char *codePos; // [esp+0h] [ebp-30h]
     SourceBufferInfo *v6; // [esp+4h] [ebp-2Ch]
@@ -575,43 +608,43 @@ unsigned int __cdecl Scr_GetClosestSourcePosOfType(
 
     bestSourcePos = 0;
     sourceBufData = &gScrParserPub[inst].sourceBufferLookup[bufferIndex];
-    if ( bufferIndex + 1 >= gScrParserPub[inst].sourceBufferLookupLen )
+    if (bufferIndex + 1 >= gScrParserPub[inst].sourceBufferLookupLen)
         v6 = 0;
     else
         v6 = &gScrParserPub[inst].sourceBufferLookup[bufferIndex + 1];
     startBufferCodePos = sourceBufData->codePos;
-    if ( !sourceBufData->codePos )
+    if (!sourceBufData->codePos)
         return 0;
-    if ( v6 )
+    if (v6)
         codePos = v6->codePos;
     else
         codePos = 0;
-    for ( j = 0; j < dword_9F7A810[13 * inst]; ++j )
+    for (j = 0; j < gScrParserGlob[inst].opcodeLookupLen; ++j)
     {
         sourcePosCount = gScrParserGlob[inst].opcodeLookup[j].sourcePosCount;
-        for ( k = 0; k < sourcePosCount; ++k )
+        for (k = 0; k < sourcePosCount; ++k)
         {
             opcodePos = gScrParserGlob[inst].opcodeLookup[j].codePos;
-            if ( opcodePos >= startBufferCodePos )
+            if (opcodePos >= startBufferCodePos)
             {
-                if ( opcodePos <= codePos - 1 )
+                if (opcodePos <= codePos - 1)
                 {
-                    sourcePosLookup = (SourceLookup *)(dword_9F7A814[13 * inst]
-                                                                                     + 8 * (k + gScrParserGlob[inst].opcodeLookup[j].sourcePosIndex));
-                    if ( (type & sourcePosLookup->type) == type
+                    sourcePosLookup = &gScrParserGlob[inst].sourcePosLookup[k
+                        + gScrParserGlob[inst].opcodeLookup[j].sourcePosIndex];
+                    if ((type & sourcePosLookup->type) == type
                         && sourcePosLookup->sourcePos >= bestSourcePos
-                        && sourcePosLookup->sourcePos <= sourcePos )
+                        && sourcePosLookup->sourcePos <= sourcePos)
                     {
                         bestSourcePos = sourcePosLookup->sourcePos;
                     }
                 }
-                else if ( !v6
-                             && !Assert_MyHandler(
-                                         "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                                         439,
-                                         0,
-                                         "%s",
-                                         "nextSourceBufData") )
+                else if (!v6
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                        439,
+                        0,
+                        "%s",
+                        "nextSourceBufData"))
                 {
                     __debugbreak();
                 }
@@ -623,8 +656,7 @@ unsigned int __cdecl Scr_GetClosestSourcePosOfType(
 
 unsigned int __cdecl Scr_GetPrevSourcePos(scriptInstance_t inst, const char *codePos, unsigned int index)
 {
-    return *(unsigned int *)(dword_9F7A814[13 * inst]
-                                     + 8 * (index + Scr_GetPrevSourcePosOpcodeLookup(inst, codePos)->sourcePosIndex));
+    return gScrParserGlob[inst].sourcePosLookup[index + Scr_GetPrevSourcePosOpcodeLookup(inst, codePos)->sourcePosIndex].sourcePos;
 }
 
 OpcodeLookup *__cdecl Scr_GetPrevSourcePosOpcodeLookup(scriptInstance_t inst, const char *codePos)
@@ -633,43 +665,46 @@ OpcodeLookup *__cdecl Scr_GetPrevSourcePosOpcodeLookup(scriptInstance_t inst, co
     unsigned int middle; // [esp+4h] [ebp-8h]
     unsigned int high; // [esp+8h] [ebp-4h]
 
-    if ( !Scr_IsInOpcodeMemory(inst, codePos)
+    if (!Scr_IsInOpcodeMemory(inst, codePos)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    462,
-                    0,
-                    "%s",
-                    "Scr_IsInOpcodeMemory( inst, codePos )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            462,
+            0,
+            "%s",
+            "Scr_IsInOpcodeMemory( inst, codePos )"))
     {
         __debugbreak();
     }
-    if ( !gScrParserGlob[inst].opcodeLookup
+    if (!gScrParserGlob[inst].opcodeLookup
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    463,
-                    0,
-                    "%s",
-                    "gScrParserGlob[inst].opcodeLookup") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            463,
+            0,
+            "%s",
+            "gScrParserGlob[inst].opcodeLookup"))
     {
         __debugbreak();
     }
     low = 0;
-    high = dword_9F7A810[13 * inst] - 1;
-    while ( low <= high )
+    high = gScrParserGlob[inst].opcodeLookupLen - 1;
+    while (low <= high)
     {
         middle = (high + low) >> 1;
-        if ( codePos < gScrParserGlob[inst].opcodeLookup[middle].codePos )
+        if (codePos < gScrParserGlob[inst].opcodeLookup[middle].codePos)
         {
             high = middle - 1;
         }
         else
         {
             low = middle + 1;
-            if ( middle + 1 == dword_9F7A810[13 * inst] || codePos < gScrParserGlob[inst].opcodeLookup[low].codePos )
+            if (middle + 1 == gScrParserGlob[inst].opcodeLookupLen
+                || codePos < gScrParserGlob[inst].opcodeLookup[low].codePos)
+            {
                 return &gScrParserGlob[inst].opcodeLookup[middle];
+            }
         }
     }
-    if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 482, 0, "unreachable") )
+    if (!Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 482, 0, "unreachable"))
         __debugbreak();
     return 0;
 }
@@ -679,21 +714,21 @@ unsigned int __cdecl Scr_GetLineNum(scriptInstance_t inst, unsigned int bufferIn
     const char *startLine; // [esp+0h] [ebp-8h] BYREF
     int col; // [esp+4h] [ebp-4h] BYREF
 
-    if ( !MEMORY[0xA05AB86][116 * inst]
+    if (!gScrVarPub[inst].developer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    645,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].developer") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            645,
+            0,
+            "%s",
+            "gScrVarPub[inst].developer"))
     {
         __debugbreak();
     }
     return Scr_GetLineNumInternal(
-                     gScrParserPub[inst].sourceBufferLookup[bufferIndex].sourceBuf,
-                     sourcePos,
-                     &startLine,
-                     &col);
+        gScrParserPub[inst].sourceBufferLookup[bufferIndex].sourceBuf,
+        sourcePos,
+        &startLine,
+        &col);
 }
 
 unsigned int __cdecl Scr_GetLineNumInternal(const char *buf, unsigned int sourcePos, const char **startLine, int *col)
@@ -760,17 +795,17 @@ int __cdecl Scr_GetSourcePosOfType(scriptInstance_t inst, const char *codePos, i
     OpcodeLookup *SourcePosOpcodeLookup; // [esp+0h] [ebp-Ch]
     unsigned int index; // [esp+8h] [ebp-4h]
 
-    if ( type )
+    if (type)
         SourcePosOpcodeLookup = Scr_GetSourcePosOpcodeLookup(inst, codePos);
     else
         SourcePosOpcodeLookup = Scr_GetPrevSourcePosOpcodeLookup(inst, codePos);
-    if ( SourcePosOpcodeLookup )
+    if (SourcePosOpcodeLookup)
     {
-        for ( index = 0; index < SourcePosOpcodeLookup->sourcePosCount; ++index )
+        for (index = 0; index < SourcePosOpcodeLookup->sourcePosCount; ++index)
         {
-            if ( (type & *(unsigned int *)(dword_9F7A814[13 * inst] + 8 * (index + SourcePosOpcodeLookup->sourcePosIndex) + 4)) == type )
+            if ((type & gScrParserGlob[inst].sourcePosLookup[index + SourcePosOpcodeLookup->sourcePosIndex].type) == type)
             {
-                pos->sourcePos = *(unsigned int *)(dword_9F7A814[13 * inst] + 8 * (index + SourcePosOpcodeLookup->sourcePosIndex));
+                pos->sourcePos = gScrParserGlob[inst].sourcePosLookup[index + SourcePosOpcodeLookup->sourcePosIndex].sourcePos;
                 pos->bufferIndex = Scr_GetSourceBuffer(inst, codePos);
                 pos->lineNum = Scr_GetLineNum(inst, pos->bufferIndex, pos->sourcePos);
                 return 1;
@@ -789,38 +824,38 @@ OpcodeLookup *__cdecl Scr_GetSourcePosOpcodeLookup(scriptInstance_t inst, const 
     int middle; // [esp+4h] [ebp-8h]
     int high; // [esp+8h] [ebp-4h]
 
-    if ( !Scr_IsInOpcodeMemory(inst, codePos)
+    if (!Scr_IsInOpcodeMemory(inst, codePos)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    523,
-                    0,
-                    "%s",
-                    "Scr_IsInOpcodeMemory( inst, codePos )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            523,
+            0,
+            "%s",
+            "Scr_IsInOpcodeMemory( inst, codePos )"))
     {
         __debugbreak();
     }
-    if ( !gScrParserGlob[inst].opcodeLookup
+    if (!gScrParserGlob[inst].opcodeLookup
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    524,
-                    0,
-                    "%s",
-                    "gScrParserGlob[inst].opcodeLookup") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            524,
+            0,
+            "%s",
+            "gScrParserGlob[inst].opcodeLookup"))
     {
         __debugbreak();
     }
     low = 0;
-    high = dword_9F7A810[13 * inst] - 1;
-    while ( low <= high )
+    high = gScrParserGlob[inst].opcodeLookupLen - 1;
+    while (low <= high)
     {
         middle = (high + low) / 2;
-        if ( codePos < gScrParserGlob[inst].opcodeLookup[middle].codePos )
+        if (codePos < gScrParserGlob[inst].opcodeLookup[middle].codePos)
         {
             high = middle - 1;
         }
         else
         {
-            if ( codePos == gScrParserGlob[inst].opcodeLookup[middle].codePos )
+            if (codePos == gScrParserGlob[inst].opcodeLookup[middle].codePos)
                 return &gScrParserGlob[inst].opcodeLookup[middle];
             low = middle + 1;
         }
@@ -833,29 +868,29 @@ void __cdecl Scr_SendSource(scriptInstance_t inst)
     unsigned int i; // [esp+0h] [ebp-8h]
     SourceBufferInfo *sourceBufferLookup; // [esp+4h] [ebp-4h]
 
-    if ( !Sys_IsRemoteDebugServer()
+    if (!Sys_IsRemoteDebugServer()
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    818,
-                    0,
-                    "%s",
-                    "Sys_IsRemoteDebugServer()") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            818,
+            0,
+            "%s",
+            "Sys_IsRemoteDebugServer()"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
     {
         Sys_WriteDebugSocketMessageType(2u);
         Sys_EndWriteDebugSocket();
-        for ( i = 0; i < gScrParserPub[inst].sourceBufferLookupLen; ++i )
+        for (i = 0; i < gScrParserPub[inst].sourceBufferLookupLen; ++i)
         {
             sourceBufferLookup = &gScrParserPub[inst].sourceBufferLookup[i];
-            if ( sourceBufferLookup->codePos )
+            if (sourceBufferLookup->codePos)
             {
                 Sys_WriteDebugSocketMessageType(1u);
                 Sys_WriteDebugSocketString(sourceBufferLookup->buf);
                 Sys_WriteDebugSocketInt(sourceBufferLookup->len);
-                if ( sourceBufferLookup->len > 0 )
+                if (sourceBufferLookup->len > 0)
                     Sys_WriteDebugSocketData((unsigned __int8 *)sourceBufferLookup->sourceBuf, sourceBufferLookup->len);
                 Sys_EndWriteDebugSocket();
             }
@@ -866,11 +901,11 @@ void __cdecl Scr_SendSource(scriptInstance_t inst)
 }
 
 char *__cdecl Scr_AddSourceBuffer(
-                scriptInstance_t inst,
-                const char *filename,
-                char *extFilename,
-                const char *codePos,
-                bool archive)
+    scriptInstance_t inst,
+    const char *filename,
+    char *extFilename,
+    const char *codePos,
+    bool archive)
 {
     char v6; // [esp+3h] [ebp-1Dh]
     const char *source; // [esp+4h] [ebp-1Ch]
@@ -881,43 +916,44 @@ char *__cdecl Scr_AddSourceBuffer(
     int i; // [esp+18h] [ebp-8h]
     char *sourceBuf; // [esp+1Ch] [ebp-4h]
 
-    if ( !archive || !dword_9F7A82C[13 * inst] )
+    if (!archive || !gScrParserGlob[inst].saveSourceBufferLookup)
         return Scr_ReadFile(inst, filename, extFilename, codePos, archive);
-    if ( !dword_9F7A830[13 * inst]
+    if (!gScrParserGlob[inst].saveSourceBufferLookupLen
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1010,
-                    0,
-                    "%s",
-                    "gScrParserGlob[inst].saveSourceBufferLookupLen > 0") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1010,
+            0,
+            "%s",
+            "gScrParserGlob[inst].saveSourceBufferLookupLen > 0"))
     {
         __debugbreak();
     }
-    --dword_9F7A830[13 * inst];
-    saveSourceBuffer = (SaveSourceBufferInfo *)(dword_9F7A82C[13 * inst] + 8 * dword_9F7A830[13 * inst]);
+    saveSourceBuffer = &gScrParserGlob[inst].saveSourceBufferLookup[--gScrParserGlob[inst].saveSourceBufferLookupLen];
     len = saveSourceBuffer->len;
-    if ( len < -1
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1014, 0, "%s", "len >= -1") )
+    if (len < -1
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1014, 0, "%s", "len >= -1"))
     {
         __debugbreak();
     }
-    if ( len >= 0 )
+    if (len >= 0)
     {
         sourceBuf = (char *)Hunk_AllocateTempMemoryHigh(len + 1, "Scr_AddSourceBuffer1");
         source = saveSourceBuffer->sourceBuf;
         dest = sourceBuf;
-        for ( i = 0; i < len; ++i )
+        for (i = 0; i < len; ++i)
         {
             c = *source++;
-            if ( c )
+            if (c)
                 v6 = c;
             else
                 v6 = 10;
             *dest++ = v6;
         }
         *dest = 0;
-        if ( saveSourceBuffer->sourceBuf )
-            Hunk_UserFree(g_DebugHunkUser, *(void **)(dword_9F7A82C[13 * inst] + 8 * dword_9F7A830[13 * inst]));
+        if (saveSourceBuffer->sourceBuf)
+            Hunk_UserFree(
+                g_DebugHunkUser,
+                gScrParserGlob[inst].saveSourceBufferLookup[gScrParserGlob[inst].saveSourceBufferLookupLen].sourceBuf);
         Scr_AddSourceBufferInternal(inst, extFilename, codePos, sourceBuf, len, 1, archive);
     }
     else
@@ -1010,48 +1046,48 @@ SourceBufferInfo *__cdecl Scr_GetNewSourceBuffer(scriptInstance_t inst)
 {
     unsigned __int8 *newSourceBufferInfo; // [esp+4h] [ebp-4h]
 
-    if ( !gScrParserPub[inst].sourceBufferLookup
+    if (!gScrParserPub[inst].sourceBufferLookup
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    700,
-                    0,
-                    "%s",
-                    "gScrParserPub[inst].sourceBufferLookup") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            700,
+            0,
+            "%s",
+            "gScrParserPub[inst].sourceBufferLookup"))
     {
         __debugbreak();
     }
-    if ( !dword_9F7A820[13 * inst]
+    if (!gScrParserGlob[inst].sourceBufferLookupMaxLen
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    701,
-                    0,
-                    "%s",
-                    "gScrParserGlob[inst].sourceBufferLookupMaxLen") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            701,
+            0,
+            "%s",
+            "gScrParserGlob[inst].sourceBufferLookupMaxLen"))
     {
         __debugbreak();
     }
-    if ( gScrParserPub[inst].sourceBufferLookupLen >= dword_9F7A820[13 * inst] )
+    if (gScrParserPub[inst].sourceBufferLookupLen >= gScrParserGlob[inst].sourceBufferLookupMaxLen)
     {
-        dword_9F7A820[13 * inst] += 0x4000;
-        if ( gScrParserPub[inst].sourceBufferLookupLen >= dword_9F7A820[13 * inst]
+        gScrParserGlob[inst].sourceBufferLookupMaxLen += 0x4000;
+        if (gScrParserPub[inst].sourceBufferLookupLen >= gScrParserGlob[inst].sourceBufferLookupMaxLen
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                        706,
-                        0,
-                        "%s",
-                        "gScrParserPub[inst].sourceBufferLookupLen < gScrParserGlob[inst].sourceBufferLookupMaxLen") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                706,
+                0,
+                "%s",
+                "gScrParserPub[inst].sourceBufferLookupLen < gScrParserGlob[inst].sourceBufferLookupMaxLen"))
         {
             __debugbreak();
         }
         newSourceBufferInfo = (unsigned __int8 *)Hunk_UserAlloc(
-                                                                                             g_DebugHunkUser,
-                                                                                             24 * dword_9F7A820[13 * inst],
-                                                                                             4,
-                                                                                             "Scr_AddSourceBuffer4");
-        memset(newSourceBufferInfo, 0, 24 * dword_9F7A820[13 * inst]);
+            g_DebugHunkUser,
+            24 * gScrParserGlob[inst].sourceBufferLookupMaxLen,
+            4,
+            "Scr_AddSourceBuffer4");
+        memset(newSourceBufferInfo, 0, 24 * gScrParserGlob[inst].sourceBufferLookupMaxLen);
         Com_Memcpy(
             newSourceBufferInfo,
-            gScrParserPub[inst].sourceBufferLookup,
+            (unsigned char*)gScrParserPub[inst].sourceBufferLookup,
             24 * gScrParserPub[inst].sourceBufferLookupLen);
         Hunk_UserFree(g_DebugHunkUser, gScrParserPub[inst].sourceBufferLookup);
         gScrParserPub[inst].sourceBufferLookup = (SourceBufferInfo *)newSourceBufferInfo;
@@ -1097,7 +1133,7 @@ char *__cdecl Scr_ReadFile_FastFile(
                 const char *codePos,
                 bool archive)
 {
-    unsigned int outlen; // [esp+14h] [ebp-18h] BYREF
+    uLongf outlen; // [esp+14h] [ebp-18h] BYREF
     unsigned int inlen; // [esp+18h] [ebp-14h]
     RawFile *rawfile; // [esp+1Ch] [ebp-10h]
     const char *extension; // [esp+20h] [ebp-Ch]
@@ -1105,7 +1141,7 @@ char *__cdecl Scr_ReadFile_FastFile(
     char *sourceBuf; // [esp+28h] [ebp-4h]
 
     if ( useFastFile->current.enabled
-        && (rawfile = DB_FindXAssetHeader(ASSET_TYPE_RAWFILE, extFilename, 1, -1).rawfile) != 0 )
+        && (rawfile = DB_FindXAssetHeader(ASSET_TYPE_RAWFILE, (char*)extFilename, 1, -1).rawfile) != 0 )
     {
         extension = Com_GetExtensionSubString(extFilename);
         if ( I_stricmp(extension, ".gsc") && I_stricmp(extension, ".csc") )
@@ -1141,7 +1177,7 @@ char *__cdecl Scr_ReadFile_FastFile(
     }
 }
 
-char *__cdecl Scr_ReadFile_LoadObj(
+char *__cdecl x(
                 scriptInstance_t inst,
                 const char *filename,
                 char *extFilename,
@@ -1156,7 +1192,7 @@ char *__cdecl Scr_ReadFile_LoadObj(
     if ( len >= 0 )
     {
         if ( !fs_gameDirVar || !*(_BYTE *)fs_gameDirVar->current.integer )
-            *(_BYTE *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8264) = 1;
+            g_loadedImpureScript = 1;
         sourceBuf = (char *)Hunk_AllocateTempMemoryHigh(len + 1, "Scr_ReadFile");
         FS_Read((unsigned __int8 *)sourceBuf, len, f);
         sourceBuf[len] = 0;
@@ -1172,28 +1208,28 @@ char *__cdecl Scr_ReadFile_LoadObj(
 }
 
 unsigned int __cdecl Scr_GetSourcePos(
-                scriptInstance_t inst,
-                unsigned int bufferIndex,
-                unsigned int sourcePos,
-                char *outBuf,
-                unsigned int outBufLen)
+    scriptInstance_t inst,
+    unsigned int bufferIndex,
+    unsigned int sourcePos,
+    char *outBuf,
+    unsigned int outBufLen)
 {
     unsigned int lineNum; // [esp+4h] [ebp-40Ch]
     char line[1024]; // [esp+8h] [ebp-408h] BYREF
     int col; // [esp+40Ch] [ebp-4h] BYREF
 
-    if ( !MEMORY[0xA05AB86][116 * inst]
+    if (!gScrVarPub[inst].developer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1190,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].developer") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1190,
+            0,
+            "%s",
+            "gScrVarPub[inst].developer"))
     {
         __debugbreak();
     }
     lineNum = Scr_GetLineInfo(gScrParserPub[inst].sourceBufferLookup[bufferIndex].sourceBuf, sourcePos, &col, line);
-    if ( dword_9F7A82C[13 * inst] )
+    if (gScrParserGlob[inst].saveSourceBufferLookup)
         Com_sprintf(
             outBuf,
             outBufLen,
@@ -1292,25 +1328,25 @@ unsigned int __cdecl Scr_GetSourceBuffer(scriptInstance_t inst, const char *code
 
 void __cdecl Scr_PrintPrevCodePos(scriptInstance_t inst, int channel, char *codePos, unsigned int index)
 {
-    const char *v4; // eax
+    char *v4; // eax
     unsigned int PrevSourcePos; // eax
-    const char *v6; // eax
+    char *v6; // eax
     unsigned int bufferIndex; // [esp+0h] [ebp-4h]
 
-    if ( !codePos )
+    if (!codePos)
     {
-        Com_PrintMessage(channel, "<frozen thread>\n", 0);
+        Com_PrintMessage(channel, (char*)"<frozen thread>\n", 0);
         return;
     }
-    if ( codePos == &g_EndPos )
+    if (codePos == &g_EndPos)
     {
-        Com_PrintMessage(channel, "<removed thread>\n", 0);
+        Com_PrintMessage(channel, (char *)"<removed thread>\n", 0);
     }
     else
     {
-        if ( MEMORY[0xA05AB86][116 * inst] )
+        if (gScrVarPub[inst].developer)
         {
-            if ( MEMORY[0xA05ABC8][29 * inst] && Scr_IsInOpcodeMemory(inst, codePos) )
+            if (gScrVarPub[inst].programBuffer && Scr_IsInOpcodeMemory(inst, codePos))
             {
                 bufferIndex = Scr_GetSourceBuffer(inst, codePos - 1);
                 PrevSourcePos = Scr_GetPrevSourcePos(inst, codePos - 1, index);
@@ -1323,9 +1359,9 @@ void __cdecl Scr_PrintPrevCodePos(scriptInstance_t inst, int channel, char *code
                 return;
             }
         }
-        else if ( Scr_IsInOpcodeMemory(inst, codePos - 1) )
+        else if (Scr_IsInOpcodeMemory(inst, codePos - 1))
         {
-            v4 = va("@ %d\n", &codePos[-MEMORY[0xA05ABC8][29 * inst]]);
+            v4 = va("@ %d\n", codePos - gScrVarPub[inst].programBuffer);
             Com_PrintMessage(channel, v4, 0);
             return;
         }
@@ -1335,27 +1371,27 @@ void __cdecl Scr_PrintPrevCodePos(scriptInstance_t inst, int channel, char *code
 }
 
 void __cdecl Scr_PrintSourcePos(
-                scriptInstance_t inst,
-                int channel,
-                const char *filename,
-                const char *buf,
-                unsigned int sourcePos)
+    scriptInstance_t inst,
+    int channel,
+    const char *filename,
+    const char *buf,
+    unsigned int sourcePos)
 {
-    const char *v5; // eax
-    const char *v6; // eax
+    char *v5; // eax
+    char *v6; // eax
     const char *v7; // [esp+0h] [ebp-418h]
     unsigned int lineNum; // [esp+4h] [ebp-414h]
     char line[1028]; // [esp+8h] [ebp-410h] BYREF
     int i; // [esp+410h] [ebp-8h]
     int col; // [esp+414h] [ebp-4h] BYREF
 
-    if ( !filename
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1136, 0, "%s", "filename") )
+    if (!filename
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1136, 0, "%s", "filename"))
     {
         __debugbreak();
     }
     lineNum = Scr_GetLineInfo(buf, sourcePos, &col, line);
-    if ( dword_9F7A82C[13 * inst] )
+    if (gScrParserGlob[inst].saveSourceBufferLookup)
         v7 = " (savegame)";
     else
         v7 = "";
@@ -1363,28 +1399,28 @@ void __cdecl Scr_PrintSourcePos(
     Com_PrintMessage(channel, v5, 0);
     v6 = va("%s\n", line);
     Com_PrintMessage(channel, v6, 0);
-    for ( i = 0; i < col; ++i )
-        Com_PrintMessage(channel, " ", 0);
-    Com_PrintMessage(channel, "*\n", 0);
+    for (i = 0; i < col; ++i)
+        Com_PrintMessage(channel, (char*)" ", 0);
+    Com_PrintMessage(channel, (char *)"*\n", 0);
 }
 
 char *__cdecl Scr_PrevCodePosFileName(scriptInstance_t inst, char *codePos)
 {
-    if ( !MEMORY[0xA05AB86][116 * inst]
+    if (!gScrVarPub[inst].developer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1319,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].developer") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1319,
+            0,
+            "%s",
+            "gScrVarPub[inst].developer"))
     {
         __debugbreak();
     }
-    if ( !codePos )
-        return "<frozen thread>";
-    if ( codePos == &g_EndPos )
-        return "<removed thread>";
-    if ( MEMORY[0xA05ABC8][29 * inst] && Scr_IsInOpcodeMemory(inst, codePos) )
+    if (!codePos)
+        return (char*)"<frozen thread>";
+    if (codePos == &g_EndPos)
+        return (char *)"<removed thread>";
+    if (gScrVarPub[inst].programBuffer && Scr_IsInOpcodeMemory(inst, codePos))
         return gScrParserPub[inst].sourceBufferLookup[Scr_GetSourceBuffer(inst, codePos - 1)].buf;
     return codePos;
 }
@@ -1395,21 +1431,21 @@ const char *__cdecl Scr_PrevCodePosFunctionName(scriptInstance_t inst, char *cod
     unsigned int bufferIndex; // [esp+0h] [ebp-8h]
     const char *startLine; // [esp+4h] [ebp-4h] BYREF
 
-    if ( !MEMORY[0xA05AB86][116 * inst]
+    if (!gScrVarPub[inst].developer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1367,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].developer") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1367,
+            0,
+            "%s",
+            "gScrVarPub[inst].developer"))
     {
         __debugbreak();
     }
-    if ( !codePos )
+    if (!codePos)
         return "<frozen thread>";
-    if ( codePos == &g_EndPos )
+    if (codePos == &g_EndPos)
         return "<removed thread>";
-    if ( !MEMORY[0xA05ABC8][29 * inst] || !Scr_IsInOpcodeMemory(inst, codePos) )
+    if (!gScrVarPub[inst].programBuffer || !Scr_IsInOpcodeMemory(inst, codePos))
         return "<unknown>";
     bufferIndex = Scr_GetSourceBuffer(inst, codePos - 1);
     PrevSourcePos = Scr_GetPrevSourcePos(inst, codePos - 1, 0);
@@ -1424,18 +1460,18 @@ bool __cdecl Scr_PrevCodePosFileNameMatches(scriptInstance_t inst, char *codePos
 {
     char *codePosFileName; // [esp+0h] [ebp-4h]
 
-    if ( !fileName
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1422, 0, "%s", "fileName") )
+    if (!fileName
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1422, 0, "%s", "fileName"))
     {
         __debugbreak();
     }
-    if ( !MEMORY[0xA05AB86][116 * inst]
+    if (!gScrVarPub[inst].developer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1423,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].developer") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1423,
+            0,
+            "%s",
+            "gScrVarPub[inst].developer"))
     {
         __debugbreak();
     }
@@ -1444,36 +1480,36 @@ bool __cdecl Scr_PrevCodePosFileNameMatches(scriptInstance_t inst, char *codePos
 }
 
 void __cdecl Scr_PrintPrevCodePosSpreadSheet(
-                scriptInstance_t inst,
-                int channel,
-                char *codePos,
-                bool summary,
-                bool functionSummary)
+    scriptInstance_t inst,
+    int channel,
+    char *codePos,
+    bool summary,
+    bool functionSummary)
 {
     unsigned int PrevSourcePos; // eax
-    const char *v6; // eax
+    char *v6; // eax
     unsigned int bufferIndex; // [esp+0h] [ebp-4h]
 
-    if ( !MEMORY[0xA05AB86][116 * inst]
+    if (!gScrVarPub[inst].developer
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1438,
-                    0,
-                    "%s",
-                    "gScrVarPub[inst].developer") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1438,
+            0,
+            "%s",
+            "gScrVarPub[inst].developer"))
     {
         __debugbreak();
     }
-    if ( codePos )
+    if (codePos)
     {
-        if ( codePos == &g_EndPos )
+        if (codePos == &g_EndPos)
         {
-            Com_PrintMessage(channel, "<removed thread>\n", 0);
+            Com_PrintMessage(channel, (char *)"<removed thread>\n", 0);
         }
-        else if ( MEMORY[0xA05ABC8][29 * inst] && Scr_IsInOpcodeMemory(inst, codePos) )
+        else if (gScrVarPub[inst].programBuffer && Scr_IsInOpcodeMemory(inst, codePos))
         {
             bufferIndex = Scr_GetSourceBuffer(inst, codePos - 1);
-            if ( summary )
+            if (summary)
             {
                 Scr_GetPrevSourcePos(inst, codePos - 1, 0);
                 Scr_PrintSourcePosSummary(inst, channel, gScrParserPub[inst].sourceBufferLookup[bufferIndex].buf);
@@ -1481,7 +1517,7 @@ void __cdecl Scr_PrintPrevCodePosSpreadSheet(
             else
             {
                 PrevSourcePos = Scr_GetPrevSourcePos(inst, codePos - 1, 0);
-                if ( functionSummary )
+                if (functionSummary)
                     Scr_PrintFunctionPosSpreadSheet(
                         inst,
                         channel,
@@ -1505,30 +1541,30 @@ void __cdecl Scr_PrintPrevCodePosSpreadSheet(
     }
     else
     {
-        Com_PrintMessage(channel, "<frozen thread>\n", 0);
+        Com_PrintMessage(channel, (char*)"<frozen thread>\n", 0);
     }
 }
 
 void __cdecl Scr_PrintSourcePosSpreadSheet(
-                scriptInstance_t inst,
-                int channel,
-                const char *filename,
-                const char *buf,
-                unsigned int sourcePos)
+    scriptInstance_t inst,
+    int channel,
+    const char *filename,
+    const char *buf,
+    unsigned int sourcePos)
 {
-    const char *v5; // eax
+    char *v5; // eax
     const char *v6; // [esp+0h] [ebp-410h]
     unsigned int lineNum; // [esp+4h] [ebp-40Ch]
     char line[1024]; // [esp+8h] [ebp-408h] BYREF
     int col; // [esp+40Ch] [ebp-4h] BYREF
 
-    if ( !filename
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1155, 0, "%s", "filename") )
+    if (!filename
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1155, 0, "%s", "filename"))
     {
         __debugbreak();
     }
     lineNum = Scr_GetLineInfo(buf, sourcePos, &col, line);
-    if ( dword_9F7A82C[13 * inst] )
+    if (gScrParserGlob[inst].saveSourceBufferLookup)
         v6 = "(savegame)";
     else
         v6 = "";
@@ -1537,24 +1573,24 @@ void __cdecl Scr_PrintSourcePosSpreadSheet(
 }
 
 void __cdecl Scr_PrintFunctionPosSpreadSheet(
-                scriptInstance_t inst,
-                int channel,
-                const char *filename,
-                const char *buf,
-                unsigned int sourcePos)
+    scriptInstance_t inst,
+    int channel,
+    const char *filename,
+    const char *buf,
+    unsigned int sourcePos)
 {
-    const char *v5; // eax
+    char *v5; // eax
     const char *v6; // [esp+0h] [ebp-410h]
     unsigned int lineNum; // [esp+4h] [ebp-40Ch]
     char line[1028]; // [esp+8h] [ebp-408h] BYREF
 
-    if ( !filename
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1168, 0, "%s", "filename") )
+    if (!filename
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1168, 0, "%s", "filename"))
     {
         __debugbreak();
     }
     lineNum = Scr_GetFunctionInfo(buf, sourcePos, line);
-    if ( dword_9F7A82C[13 * inst] )
+    if (gScrParserGlob[inst].saveSourceBufferLookup)
         v6 = "(savegame)";
     else
         v6 = "";
@@ -1574,15 +1610,15 @@ unsigned int __cdecl Scr_GetFunctionInfo(const char *buf, unsigned int sourcePos
 
 void __cdecl Scr_PrintSourcePosSummary(scriptInstance_t inst, int channel, const char *filename)
 {
-    const char *v3; // eax
+    char *v3; // eax
     const char *v4; // [esp+0h] [ebp-4h]
 
-    if ( !filename
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1178, 0, "%s", "filename") )
+    if (!filename
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp", 1178, 0, "%s", "filename"))
     {
         __debugbreak();
     }
-    if ( dword_9F7A82C[13 * inst] )
+    if (gScrParserGlob[inst].saveSourceBufferLookup)
         v4 = "(savegame)";
     else
         v4 = "";
@@ -1591,32 +1627,32 @@ void __cdecl Scr_PrintSourcePosSummary(scriptInstance_t inst, int channel, const
 }
 
 void __cdecl Scr_GetCodePos(
-                scriptInstance_t inst,
-                const char *codePos,
-                unsigned int index,
-                char *outBuf,
-                unsigned int outBufLen)
+    scriptInstance_t inst,
+    const char *codePos,
+    unsigned int index,
+    char *outBuf,
+    unsigned int outBufLen)
 {
     Scr_SourcePos_t pos; // [esp+0h] [ebp-Ch] BYREF
 
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
     {
         Scr_GetSourcePosOfType(inst, codePos, 4, &pos);
         Scr_GetSourcePos(inst, pos.bufferIndex, pos.sourcePos, outBuf, outBufLen);
     }
     else
     {
-        if ( !Scr_IsInOpcodeMemory(inst, codePos)
+        if (!Scr_IsInOpcodeMemory(inst, codePos)
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                        1474,
-                        0,
-                        "%s",
-                        "Scr_IsInOpcodeMemory( inst, codePos )") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+                1474,
+                0,
+                "%s",
+                "Scr_IsInOpcodeMemory( inst, codePos )"))
         {
             __debugbreak();
         }
-        Com_sprintf(outBuf, outBufLen, "@ %d", &codePos[-MEMORY[0xA05ABC8][29 * inst]]);
+        Com_sprintf(outBuf, outBufLen, "@ %d", codePos - gScrVarPub[inst].programBuffer);
     }
 }
 
@@ -1626,20 +1662,20 @@ void __cdecl Scr_GetFileAndLine(scriptInstance_t inst, const char *codePos, char
     OpcodeLookup *opcodeLookup; // [esp+4h] [ebp-8h]
     unsigned int sourcePos; // [esp+8h] [ebp-4h]
 
-    if ( !Scr_IsInOpcodeMemory(inst, codePos)
+    if (!Scr_IsInOpcodeMemory(inst, codePos)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1489,
-                    0,
-                    "%s",
-                    "Scr_IsInOpcodeMemory( inst, codePos )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1489,
+            0,
+            "%s",
+            "Scr_IsInOpcodeMemory( inst, codePos )"))
     {
         __debugbreak();
     }
     opcodeLookup = Scr_GetPrevSourcePosOpcodeLookup(inst, codePos);
-    if ( opcodeLookup )
+    if (opcodeLookup)
     {
-        sourcePos = *(unsigned int *)(dword_9F7A814[13 * inst] + 8 * opcodeLookup->sourcePosIndex);
+        sourcePos = gScrParserGlob[inst].sourcePosLookup[opcodeLookup->sourcePosIndex].sourcePos;
         bufferIndex = Scr_GetSourceBuffer(inst, codePos);
         *linenum = Scr_GetLineNum(inst, bufferIndex, sourcePos) + 1;
         *filename = gScrParserPub[inst].sourceBufferLookup[bufferIndex].buf;
@@ -1662,10 +1698,10 @@ void CompileError(scriptInstance_t inst, unsigned int sourcePos, const char *msg
     va_start(va, msg);
     lineNumber = 0;
     _vsnprintf(text, 0x400u, msg, va);
-    if ( MEMORY[0xA05AB88][116 * inst] )
+    if (gScrVarPub[inst].evaluate)
     {
-        if ( !MEMORY[0xA05AB8C][29 * inst] )
-            MEMORY[0xA05AB8C][29 * inst] = (int)::va("%s", text);
+        if (!gScrVarPub[inst].error_message)
+            gScrVarPub[inst].error_message = ::va("%s", text);
     }
     else
     {
@@ -1673,20 +1709,20 @@ void CompileError(scriptInstance_t inst, unsigned int sourcePos, const char *msg
         Scr_IgnoreLeaks(inst);
         Scr_ShutdownAllocNode(inst);
         Com_PrintError(24, "\n");
-        if ( inst )
+        if (inst)
             Com_PrintError(24, "******* %s script compile error *******\n", "Client");
         else
             Com_PrintError(24, "******* %s script compile error *******\n", "Server");
-        if ( MEMORY[0xA05AB86][116 * inst] && gScrParserPub[inst].sourceBuf )
+        if (gScrVarPub[inst].developer && gScrParserPub[inst].sourceBuf)
         {
             Com_PrintError(24, "%s: ", text);
             Scr_PrintSourcePos(inst, 24, gScrParserPub[inst].scriptfilename, gScrParserPub[inst].sourceBuf, sourcePos);
             lineNumber = Scr_GetLineInfo(gScrParserPub[inst].sourceBuf, sourcePos, &col, line);
             Monkey_Error(0);
-            if ( inst )
-                Com_Error(ERR_SCRIPT_DROP, &byte_D26C38, "Client", text, gScrParserPub[inst].scriptfilename, lineNumber, line);
+            if (inst)
+                Com_Error(ERR_SCRIPT_DROP, " %s script compile error %s %s(%d): %s (see console for details)", "Client", text, gScrParserPub[inst].scriptfilename, lineNumber, line);
             else
-                Com_Error(ERR_SCRIPT_DROP, &byte_D26C38, "Server", text, gScrParserPub[0].scriptfilename, lineNumber, line);
+                Com_Error(ERR_SCRIPT_DROP, " %s script compile error %s %s(%d): %s (see console for details)", "Server", text, gScrParserPub[0].scriptfilename, lineNumber, line);
         }
         else
         {
@@ -1694,10 +1730,10 @@ void CompileError(scriptInstance_t inst, unsigned int sourcePos, const char *msg
             line[0] = 0;
             Com_Printf(24, "************************************\n");
             Monkey_Error(0);
-            if ( inst )
-                Com_Error(ERR_SCRIPT_DROP, &byte_D26C9C, "Client", text, line);
+            if (inst)
+                Com_Error(ERR_SCRIPT_DROP, " %s script compile error %s %s (see console for details)", "Client", text, line);
             else
-                Com_Error(ERR_SCRIPT_DROP, &byte_D26C9C, "Server", text, line);
+                Com_Error(ERR_SCRIPT_DROP, " %s script compile error %s %s (see console for details)", "Server", text, line);
         }
     }
 }
@@ -1716,30 +1752,30 @@ void CompileError2(scriptInstance_t inst, char *codePos, const char *msg, ...)
     va_list va; // [esp+828h] [ebp+14h] BYREF
 
     va_start(va, msg);
-    if ( MEMORY[0xA05AB88][116 * inst]
+    if (gScrVarPub[inst].evaluate
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1894,
-                    0,
-                    "%s",
-                    "!gScrVarPub[inst].evaluate") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1894,
+            0,
+            "%s",
+            "!gScrVarPub[inst].evaluate"))
     {
         __debugbreak();
     }
-    if ( !Scr_IsInOpcodeMemory(inst, codePos)
+    if (!Scr_IsInOpcodeMemory(inst, codePos)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1895,
-                    0,
-                    "%s",
-                    "Scr_IsInOpcodeMemory( inst, codePos )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1895,
+            0,
+            "%s",
+            "Scr_IsInOpcodeMemory( inst, codePos )"))
     {
         __debugbreak();
     }
     Monkey_GrabComPrints(1);
     Scr_IgnoreLeaks(inst);
     Com_PrintError(24, "\n");
-    if ( inst )
+    if (inst)
         Com_PrintError(24, "******* %s script compile error *******\n", "Client");
     else
         Com_PrintError(24, "******* %s script compile error *******\n", "Server");
@@ -1749,10 +1785,10 @@ void CompileError2(scriptInstance_t inst, char *codePos, const char *msg, ...)
     Com_Printf(24, "************************************\n");
     Monkey_Error(0);
     Scr_GetTextSourcePos(inst, gScrParserPub[inst].sourceBuf, codePos, line);
-    if ( inst )
-        Com_Error(ERR_SCRIPT_DROP, &byte_D26D34, "Client", text, line);
+    if (inst)
+        Com_Error(ERR_SCRIPT_DROP, "%s script compile error %s %s (see console for details)", "Client", text, line);
     else
-        Com_Error(ERR_SCRIPT_DROP, &byte_D26D34, "Server", text, line);
+        Com_Error(ERR_SCRIPT_DROP, "%s script compile error %s %s (see console for details)", "Server", text, line);
 }
 
 void __cdecl Scr_GetTextSourcePos(scriptInstance_t inst, const char *buf, char *codePos, char *line)
@@ -1761,11 +1797,11 @@ void __cdecl Scr_GetTextSourcePos(scriptInstance_t inst, const char *buf, char *
     unsigned int bufferIndex; // [esp+0h] [ebp-8h]
     int col; // [esp+4h] [ebp-4h] BYREF
 
-    if ( MEMORY[0xA05AB86][116 * inst]
+    if (gScrVarPub[inst].developer
         && codePos
         && codePos != &g_EndPos
-        && MEMORY[0xA05ABC8][29 * inst]
-        && Scr_IsInOpcodeMemory(inst, codePos) )
+        && gScrVarPub[inst].programBuffer
+        && Scr_IsInOpcodeMemory(inst, codePos))
     {
         bufferIndex = Scr_GetSourceBuffer(inst, codePos - 1);
         PrevSourcePos = Scr_GetPrevSourcePos(inst, codePos - 1, 0);
@@ -1778,11 +1814,11 @@ void __cdecl Scr_GetTextSourcePos(scriptInstance_t inst, const char *buf, char *
 }
 
 void __cdecl RuntimeError(
-                scriptInstance_t inst,
-                char *codePos,
-                unsigned int index,
-                const char *msg,
-                const char *dialogMessage)
+    scriptInstance_t inst,
+    char *codePos,
+    unsigned int index,
+    const char *msg,
+    const char *dialogMessage)
 {
     const char *v5; // [esp+4h] [ebp-428h]
     const char *v6; // [esp+8h] [ebp-424h]
@@ -1794,54 +1830,54 @@ void __cdecl RuntimeError(
     int sourcePos; // [esp+424h] [ebp-8h]
     int col; // [esp+428h] [ebp-4h] BYREF
 
-    if ( MEMORY[0xA05AB86][116 * inst] )
+    if (gScrVarPub[inst].developer)
         goto LABEL_30;
-    if ( !Scr_IsInOpcodeMemory(inst, codePos)
+    if (!Scr_IsInOpcodeMemory(inst, codePos)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1962,
-                    0,
-                    "%s",
-                    "Scr_IsInOpcodeMemory( inst, codePos )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1962,
+            0,
+            "%s",
+            "Scr_IsInOpcodeMemory( inst, codePos )"))
     {
         __debugbreak();
     }
-    if ( MEMORY[0xA05AC9E][17192 * inst] )
+    if (gScrVmPub[inst].terminal_error)
     {
-LABEL_30:
-        if ( MEMORY[0xA05AC9C][17192 * inst] )
+    LABEL_30:
+        if (gScrVmPub[inst].debugCode)
         {
             Com_Printf(24, "%s\n", msg);
-            if ( !MEMORY[0xA05AC9E][17192 * inst] )
+            if (!gScrVmPub[inst].terminal_error)
                 return;
             goto error;
         }
-        v7 = MEMORY[0xA05AC9D][17192 * inst] || MEMORY[0xA05AC9E][17192 * inst];
+        v7 = gScrVmPub[inst].abort_on_error || gScrVmPub[inst].terminal_error;
         abort_on_error = v7;
-        if ( Scr_IgnoreErrors(inst) && inst != SCRIPTINSTANCE_CLIENT )
+        if (Scr_IgnoreErrors(inst) && inst != SCRIPTINSTANCE_CLIENT)
             abort_on_error = 0;
         RuntimeErrorInternal(inst, abort_on_error ? 24 : 6, codePos, index, msg);
-        if ( abort_on_error )
+        if (abort_on_error)
         {
-error:
-            if ( MEMORY[0xA05AC9E][17192 * inst] )
+        error:
+            if (gScrVmPub[inst].terminal_error)
                 Scr_IgnoreLeaks(inst);
             Monkey_Error(0);
             bufferIndex = Scr_GetSourceBuffer(inst, codePos - 1);
             sourcePos = Scr_GetPrevSourcePos(inst, codePos - 1, index);
             lineNum = Scr_GetLineInfo(gScrParserPub[inst].sourceBufferLookup[bufferIndex].sourceBuf, sourcePos, &col, line);
-            if ( dialogMessage )
+            if (dialogMessage)
                 v6 = dialogMessage;
             else
                 v6 = "";
-            if ( dialogMessage )
+            if (dialogMessage)
                 v5 = "\n";
             else
                 v5 = "";
-            if ( inst == SCRIPTINSTANCE_CLIENT )
+            if (inst == SCRIPTINSTANCE_CLIENT)
                 Com_Error(
-                    (errorParm_t)((MEMORY[0xA05EFC6] != 0) + 4),
-                    &byte_D26D70,
+                    (errorParm_t)(gScrVmPub[1].terminal_error + 4),
+                    "%s script runtime error %s%s%s %s(%d) %s",
                     "client",
                     msg,
                     v5,
@@ -1851,8 +1887,8 @@ error:
                     line);
             else
                 Com_Error(
-                    (errorParm_t)((MEMORY[0xA05AC9E][17192 * inst] != 0) + 4),
-                    &byte_D26D70,
+                    (errorParm_t)(gScrVmPub[inst].terminal_error + 4),
+                    "%s script runtime error %s%s%s %s(%d) %s",
                     "server",
                     msg,
                     v5,
@@ -1865,46 +1901,46 @@ error:
 }
 
 void __cdecl RuntimeErrorInternal(
-                scriptInstance_t inst,
-                int channel,
-                char *codePos,
-                unsigned int index,
-                const char *msg)
+    scriptInstance_t inst,
+    int channel,
+    char *codePos,
+    unsigned int index,
+    const char *msg)
 {
     int i; // [esp+4h] [ebp-4h]
 
-    if ( !Scr_IsInOpcodeMemory(inst, codePos)
+    if (!Scr_IsInOpcodeMemory(inst, codePos)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
-                    1924,
-                    0,
-                    "%s",
-                    "Scr_IsInOpcodeMemory( inst, codePos )") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_parser.cpp",
+            1924,
+            0,
+            "%s",
+            "Scr_IsInOpcodeMemory( inst, codePos )"))
     {
         __debugbreak();
     }
     Monkey_GrabComPrints(1);
     Com_PrintError(channel, "\n******* script runtime error *******\n%s: ", msg);
     Scr_PrintPrevCodePos(inst, channel, codePos, index);
-    if ( MEMORY[0xA05AC90][4298 * inst] )
+    if (gScrVmPub[inst].function_count)
     {
-        for ( i = MEMORY[0xA05AC90][4298 * inst] - 1; i >= 1; --i )
+        for (i = gScrVmPub[inst].function_count - 1; i >= 1; --i)
         {
             Com_PrintError(channel, "called from:\n");
             Scr_PrintPrevCodePos(
                 inst,
                 0,
-                (char *)MEMORY[0xA05ACB0][4298 * inst + 6 * i],
-                MEMORY[0xA05ACB0][4298 * inst + 1 + 6 * i] == 0);
+                (char *)gScrVmPub[inst].function_frame_start[i].fs.pos,
+                gScrVmPub[inst].function_frame_start[i].fs.localId == 0);
         }
         Com_PrintError(channel, "started from:\n");
-        Scr_PrintPrevCodePos(inst, 0, (char *)MEMORY[0xA05ACB0][4298 * inst], 1u);
+        Scr_PrintPrevCodePos(inst, 0, (char *)gScrVmPub[inst].function_frame_start[0].fs.pos, 1u);
     }
     Com_PrintError(channel, "************************************\n");
 }
 
 void __cdecl Scr_SetLoadedImpureScript(bool loadedImpureScript)
 {
-    *(_BYTE *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8264) = loadedImpureScript;
+    g_loadedImpureScript = loadedImpureScript;
 }
 

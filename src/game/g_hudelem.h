@@ -1,4 +1,126 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <game_mp/g_main_mp.h>
+#include <clientscript/cscr_variable.h>
+
+enum he_type_t : __int32
+{                                       // XREF: HECmd_SetTimer_Internal/r
+                                        // HECmd_SetClock_Internal/r
+    HE_TYPE_FREE              = 0x0,
+    HE_TYPE_TEXT              = 0x1,
+    HE_TYPE_VALUE             = 0x2,
+    HE_TYPE_PLAYERNAME        = 0x3,
+    HE_TYPE_MAPNAME           = 0x4,
+    HE_TYPE_GAMETYPE          = 0x5,
+    HE_TYPE_WAR_GAME_DATA     = 0x6,
+    HE_TYPE_SCORE             = 0x7,
+    HE_TYPE_MATERIAL          = 0x8,
+    HE_TYPE_TIMER_DOWN        = 0x9,
+    HE_TYPE_TIMER_UP          = 0xA,
+    HE_TYPE_TENTHS_TIMER_DOWN = 0xB,
+    HE_TYPE_TENTHS_TIMER_UP   = 0xC,
+    HE_TYPE_CLOCK_DOWN        = 0xD,
+    HE_TYPE_CLOCK_UP          = 0xE,
+    HE_TYPE_WAYPOINT          = 0xF,
+    HE_TYPE_COUNT             = 0x10,
+};
+
+enum hudelem_update_t : __int32
+{                                       // XREF: ?HudElem_UpdateClient@@YAXPAUgclient_s@@HW4hudelem_update_t@@@Z/r
+                                        // ?HudElem_ClearClient@@YAXPAUgclient_s@@W4hudelem_update_t@@@Z/r
+    HUDELEM_UPDATE_ARCHIVAL = 0x1,
+    HUDELEM_UPDATE_CURRENT  = 0x2,
+    HUDELEM_UPDATE_ARCHIVAL_AND_CURRENT = 0x3,
+};
+
+struct $0D0CB43DF22755AD856C77DD3F304010 // sizeof=0x4
+{                                       // XREF: hudelem_color_t/r
+    unsigned __int8 r;
+    unsigned __int8 g;
+    unsigned __int8 b;
+    unsigned __int8 a;
+};
+
+union hudelem_color_t // sizeof=0x4
+{                                       // XREF: DrawSingleHudElem2d+137/r
+                                        // RB_AddWaypoint+3C/r ...
+    $0D0CB43DF22755AD856C77DD3F304010 __s0;
+    int rgba;
+};
+
+struct __declspec(align(4)) hudelem_s // sizeof=0x70
+{                                       // XREF: .data:g_dummyHudCurrent/r
+                                        // .data:g_dummyHudCurrent_0/r ...
+    float x;
+    float y;
+    float z;
+    float fontScale;
+    hudelem_color_t color;
+    hudelem_color_t fromColor;
+    int fadeStartTime;
+    int scaleStartTime;
+    float fromX;
+    float fromY;
+    int moveStartTime;
+    int time;
+    int duration;
+    float value;
+    float sort;
+    hudelem_color_t glowColor;
+    int fxBirthTime;
+    __int16 targetEntNum;
+    __int16 fadeTime;
+    __int16 label;
+    __int16 width;
+    __int16 height;
+    __int16 fromWidth;
+    __int16 fromHeight;
+    __int16 scaleTime;
+    __int16 moveTime;
+    __int16 text;
+    unsigned __int16 fxLetterTime;
+    unsigned __int16 fxDecayStartTime;
+    unsigned __int16 fxDecayDuration;
+    unsigned __int16 fxRedactDecayStartTime;
+    unsigned __int16 fxRedactDecayDuration;
+    unsigned __int16 flags;
+    unsigned __int8 type;               // XREF: HudElem_Alloc(int,int)+25/r
+                                        // HudElem_ClientDisconnect(gentity_s *)+25/r ...
+    unsigned __int8 font;
+    unsigned __int8 alignOrg;
+    unsigned __int8 alignScreen;
+    unsigned __int8 materialIndex;
+    unsigned __int8 offscreenMaterialIdx;
+    unsigned __int8 fromAlignOrg;
+    unsigned __int8 fromAlignScreen;
+    unsigned __int8 soundID;
+    char ui3dWindow;
+    // padding byte
+    // padding byte
+};
+
+struct game_hudelem_field_t // sizeof=0x20
+{                                       // XREF: .rdata:fields_0/r
+    const char *name;
+    int ofs;                            // XREF: HudElem_GetFlagForeground+9/r
+                                        // HudElem_GetFontStyle3d+9/r ...
+    int size;
+    fieldtype_t type;
+    int mask;
+    int shift;
+    void (__cdecl *setter)(game_hudelem_s *, int);
+    void (__cdecl *getter)(game_hudelem_s *, int);
+};
+
+struct game_hudelem_s // sizeof=0x7C
+{                                       // XREF: .data:game_hudelem_s * g_hudelems/r
+    hudelem_s elem;                     // XREF: HudElem_Alloc(int,int)+25/r
+                                        // HudElem_ClientDisconnect(gentity_s *)+25/r ...
+    int clientNum;                      // XREF: HudElem_Alloc(int,int)+4D/w
+                                        // HudElem_ClientDisconnect(gentity_s *)+3B/r
+    int team;                           // XREF: HudElem_Alloc(int,int)+5C/w
+    int archived;
+};
 
 int __cdecl GetField(const int *i, int size);
 game_hudelem_s *__cdecl HudElem_Alloc(int clientNum, int teamNum);

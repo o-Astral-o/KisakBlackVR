@@ -2127,7 +2127,7 @@ int __cdecl yy_try_NUL_trans(int yy_current_state)
     return yy_current_statea != 261 ? yy_current_statea : 0;
 }
 
-void __cdecl yyrestart(_iobuf *input_file)
+void __cdecl yyrestart(FILE *input_file)
 {
     if ( !yy_current_buffer )
         yy_current_buffer = yy_create_buffer(yyin, 0x4000u);

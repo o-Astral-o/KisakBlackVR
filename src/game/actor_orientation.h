@@ -1,4 +1,26 @@
 #pragma once
+#include "actor.h"
+
+enum ai_orient_mode_t : __int32
+{                                       // XREF: ai_orient_t/r
+                                        // ?Actor_SetOrientMode@@YIXPAUactor_s@@W4ai_orient_mode_t@@@Z/r
+    AI_ORIENT_INVALID            = 0x0,
+    AI_ORIENT_DONT_CHANGE        = 0x1,
+    AI_ORIENT_TO_MOTION          = 0x2,
+    AI_ORIENT_TO_ENEMY           = 0x3,
+    AI_ORIENT_TO_ENEMY_OR_MOTION = 0x4,
+    AI_ORIENT_TO_ENEMY_OR_MOTION_SIDESTEP = 0x5,
+    AI_ORIENT_TO_GOAL            = 0x6,
+    AI_ORIENT_COUNT              = 0x7,
+};
+
+struct ai_orient_t // sizeof=0x10
+{                                       // XREF: actor_s/r actor_s/r
+    ai_orient_mode_t eMode;
+    float fDesiredLookPitch;
+    float fDesiredLookYaw;
+    float fDesiredBodyYaw;
+};
 
 void __fastcall Actor_SetDesiredLookAngles(ai_orient_t *pOrient, float fPitch, float fYaw);
 void __fastcall Actor_SetDesiredBodyAngle(ai_orient_t *pOrient, float fAngle);

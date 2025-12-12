@@ -1,4 +1,6 @@
 #pragma once
+#include <bgame/bg_public.h>
+#include <clientscript/cscr_variable.h>
 
 gentity_s *__cdecl GetEntity(const unsigned __int16 *targetname);
 gentity_s *__cdecl GetEntity(scr_entref_t entref);
