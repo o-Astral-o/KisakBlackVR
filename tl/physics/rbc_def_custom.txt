@@ -1,3 +1,0 @@
-rigid_body_constraint_custom_orientation::setup_constraint
-rigid_body_constraint_custom_path::setup_constraint
-rbint::mul_L
