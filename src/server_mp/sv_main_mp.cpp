@@ -1,5 +1,29 @@
 #include "sv_main_mp.h"
+#include "server/server.h"
+#include <qcommon/common.h>
+#include <client_mp/sv_client_mp.h>
+#include <qcommon/sv_msg_write.h>
+#include <string.h>
+#include <stdarg.h>
+#include "sv_voice_mp.h"
+#include <client_mp/cl_main_mp.h>
+#include <qcommon/dvar_cmds.h>
+#include <qcommon/threads.h>
+#include "sv_init_mp.h"
+#include <qcommon/cmd.h>
+#include <game_mp/g_cmds_mp.h>
+#include <qcommon/files.h>
+#include <DW/dwNet.h>
+#include <game_mp/g_main_mp.h>
+#include <qcommon/com_gamemodes.h>
+#include <game_mp/pregame.h>
+#include <universal/com_files.h>
+#include "sv_main_pc_mp.h"
 
+serverStatic_t svs;
+server_t sv;
+
+char string_0[1024];
 char *__cdecl SV_ExpandNewlines(char *in)
 {
     unsigned int l; // [esp+0h] [ebp-4h]
@@ -195,6 +219,7 @@ void __cdecl SV_CullIgnorableServerCommands(client_t *client)
     client->reliableSequence = to - 1;
 }
 
+unsigned __int8 tempServerCommandBuf[65536];
 void SV_SendServerCommand(client_t *cl, svscmd_type type, const char *fmt, ...)
 {
     const char *v3; // eax
@@ -318,9 +343,9 @@ void __cdecl SVC_Status(netadr_t from, bdSecurityID *secID)
     while ( v6 );
     if ( Dvar_GetBool("fs_restrict") )
     {
-        v2 = Info_ValueForKey(&s, "sv_keywords");
+        v2 = Info_ValueForKey(&s, (char*)"sv_keywords");
         Com_sprintf(dest, 0x400u, "demo %s", v2);
-        Info_SetValueForKey(&s, "sv_keywords", dest);
+        Info_SetValueForKey(&s, (char *)"sv_keywords", dest);
     }
     if ( !Sys_IsServerThread()
         && !Assert_MyHandler(
@@ -334,14 +359,14 @@ void __cdecl SVC_Status(netadr_t from, bdSecurityID *secID)
     }
     String = Dvar_GetString("g_password");
     if ( String && *String )
-        Info_SetValueForKey(&s, "pswrd", "1");
+        Info_SetValueForKey(&s, (char *)"pswrd", "1");
     else
-        Info_SetValueForKey(&s, "pswrd", "0");
+        Info_SetValueForKey(&s, (char *)"pswrd", "0");
     value = (char *)Dvar_GetString("ui_serverinfomessage");
     if ( value && *value )
-        Info_SetValueForKey(&s, "ui_serverinfomessage", value);
+        Info_SetValueForKey(&s, (char *)"ui_serverinfomessage", value);
     v3 = Dvar_GetString("sv_geolocation");
-    Info_SetValueForKey(&s, "geolocation", v3);
+    Info_SetValueForKey(&s, (char *)"geolocation", v3);
     v15 = Dvar_GetString("fs_game");
     if ( !sv_pure->current.enabled || v15 && *v15 )
     {
@@ -357,7 +382,7 @@ void __cdecl SVC_Status(netadr_t from, bdSecurityID *secID)
             for ( argIndex = 0; argIndex < v20; ++argIndex )
             {
                 v4 = (char *)SV_Cmd_Argv(argIndex);
-                if ( !FS_iwIwd(v4, "main") )
+                if ( !FS_iwIwd(v4, (char *)"main") )
                 {
                     v19 = 1;
                     break;
@@ -367,7 +392,7 @@ void __cdecl SVC_Status(netadr_t from, bdSecurityID *secID)
         }
     }
     v5 = va("%i", v19);
-    Info_SetValueForKey(&s, "mod", v5);
+    Info_SetValueForKey(&s, (char *)"mod", v5);
     dst[0] = 5;
     v17 = &dst[1];
     *(bdSecurityID *)&dst[1] = *secID;
@@ -376,6 +401,8 @@ void __cdecl SVC_Status(netadr_t from, bdSecurityID *secID)
     dwRawSendTo(&from, dst, &v12[strlen(&s)] - v12 + 9);
 }
 
+unsigned __int8 tempServerMsgBuf[65536];
+int gameInitialized;
 void __cdecl SVC_StatusScoreBoard(netadr_t from, bdSecurityID *secID)
 {
     team_t ClientTeam; // eax
@@ -545,66 +572,66 @@ void __cdecl SVC_Info(netadr_t from, bdSecurityID *secID, bool quick)
         if ( xblive_wagermatch && xblive_wagermatch->current.enabled && Pregame_GetState() == PREGAME_GAMESTARTED )
             clientCount = sv_maxclients->current.integer;
         v3 = va("%i", 1044);
-        Info_SetValueForKey(infostring, "protocol", v3);
+        Info_SetValueForKey(infostring, (char*)"protocol", v3);
         if ( clientCount )
         {
             v4 = va("%i", clientCount);
-            Info_SetValueForKey(infostring, "clients", v4);
+            Info_SetValueForKey(infostring, (char *)"clients", v4);
         }
         maxclients = sv_maxclients->current.integer - (Com_GetPrivateClients() - privateClientCount);
         if ( maxclients > 0 )
         {
             v5 = va("%i", maxclients);
-            Info_SetValueForKey(infostring, "sv_maxclients", v5);
+            Info_SetValueForKey(infostring, (char *)"sv_maxclients", v5);
         }
         if ( sv_pure->current.enabled || fs_numServerIwds )
-            Info_SetValueForKey(infostring, "pure", "1");
+            Info_SetValueForKey(infostring, (char *)"pure", "1");
         if ( sv_minPing->current.integer )
         {
             v6 = va("%i", sv_minPing->current.integer);
-            Info_SetValueForKey(infostring, "minPing", v6);
+            Info_SetValueForKey(infostring, (char *)"minPing", v6);
         }
         if ( sv_maxPing->current.integer )
         {
             v7 = va("%i", sv_maxPing->current.integer);
-            Info_SetValueForKey(infostring, "maxPing", v7);
+            Info_SetValueForKey(infostring, (char *)"maxPing", v7);
         }
         gamedir = Dvar_GetString("fs_game");
         if ( *gamedir )
-            Info_SetValueForKey(infostring, "game", gamedir);
+            Info_SetValueForKey(infostring, (char *)"game", gamedir);
         if ( sv_allowAnonymous->current.enabled )
         {
             v8 = va("%i", sv_allowAnonymous->current.color[0]);
-            Info_SetValueForKey(infostring, "sv_allowAnonymous", v8);
+            Info_SetValueForKey(infostring, (char *)"sv_allowAnonymous", v8);
         }
         if ( sv_disableClientConsole->current.enabled )
         {
             v9 = va("%i", sv_disableClientConsole->current.color[0]);
-            Info_SetValueForKey(infostring, "con_disabled", v9);
+            Info_SetValueForKey(infostring, (char *)"con_disabled", v9);
         }
         password = Dvar_GetString("g_password");
         if ( password && *password )
-            Info_SetValueForKey(infostring, "pswrd", "1");
+            Info_SetValueForKey(infostring, (char *)"pswrd", "1");
         friendlyfire = Dvar_GetInt("scr_team_fftype");
         if ( friendlyfire )
         {
             v10 = va("%i", friendlyfire);
-            Info_SetValueForKey(infostring, "ff", v10);
+            Info_SetValueForKey(infostring, (char *)"ff", v10);
         }
         killcam = Dvar_GetInt("scr_killcam");
         if ( killcam )
         {
             v11 = va("%i", killcam);
-            Info_SetValueForKey(infostring, "kc", v11);
+            Info_SetValueForKey(infostring, (char *)"kc", v11);
         }
         hardcore = Dvar_GetInt("scr_hardcore");
         if ( hardcore )
         {
             v12 = va("%i", hardcore);
-            Info_SetValueForKey(infostring, "hc", v12);
+            Info_SetValueForKey(infostring, (char *)"hc", v12);
         }
         v13 = va("%i", 2);
-        Info_SetValueForKey(infostring, "hw", v13);
+        Info_SetValueForKey(infostring, (char *)"hw", v13);
         if ( !sv_pure->current.enabled || gamedir && *gamedir )
         {
             serverModded = 1;

@@ -1,4 +1,6 @@
 #pragma once
+#include <universal/dvar.h>
+
 #include "rigid_body.h"
 #include "phys_colgeom.h"
 #include "phys_gjk_collision_detection.h"
@@ -125,102 +127,6 @@ struct __declspec(align(4)) phys_surface_type_info // sizeof=0x10
     // padding byte
     // padding byte
     // padding byte
-};
-
-struct broad_phase_group : broad_phase_base // sizeof=0x60
-{                                       // XREF: phys_free_list<broad_phase_group>::T_internal/r
-    broad_phase_info *m_list_bpi_head;
-    int m_bpi_count;
-    struct rb_vehicle_model *m_rbvm;
-    struct phys_wheel_collide_info *m_list_wci;
-
-    void set();
-    void add_bpi(broad_phase_info *bpi);
-};
-
-const struct __declspec(align(16)) broad_phase_environment_query_input // sizeof=0x40
-{                                       // XREF: ?bp_env_jq_batch_function2@@YAHPAUjqBatch@@@Z/r
-    phys_vec3 trace_aabb_min_wace;
-    phys_vec3 trace_aabb_max_wace;
-    phys_vec3 trace_translation;
-    unsigned int env_collision_flags;
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-};
-
-struct broad_phase_base_list // sizeof=0x8
-{                                       // XREF: broad_phase_environement_query_results/r
-    struct node // sizeof=0x8
-    {
-        broad_phase_base *m_bpb;
-        broad_phase_base_list::node *m_next;
-    };
-    broad_phase_base_list::node *m_list;
-    broad_phase_base_list::node **m_list_cur;
-};
-
-struct broad_phase_environement_query_results // sizeof=0x14
-{                                       // XREF: ?bp_env_jq_batch_function2@@YAHPAUjqBatch@@@Z/r
-    broad_phase_base_list m_list_bpi_env;
-    int m_list_bpi_env_count;
-    int m_thread_id;                    // XREF: bp_env_jq_batch_function2(jqBatch *)+10/w
-    unsigned int m_env_collision_flags;
-};
-
-struct broad_phase_terrain_query_callback // sizeof=0x4
-{                                       // XREF: standard_query/r
-    //broad_phase_terrain_query_callback_vtbl *__vftable;
-                                        // XREF: _dynamic_initializer_for__g_standard_query__+3/w
-                                        // _dynamic_initializer_for__g_standard_query__+D/w
-    //struct /*VFT*/ broad_phase_terrain_query_callback_vtbl // sizeof=0x4
-    //{
-    //    void (__thiscall *query)(broad_phase_terrain_query_callback *this, const broad_phase_environment_query_input *, broad_phase_environement_query_results *);
-    //};
-    virtual void query(const broad_phase_environment_query_input *, broad_phase_environement_query_results *);
-};
-
-struct broad_phase_collision_pair // sizeof=0xC
-{                                       // XREF: phys_free_list<broad_phase_collision_pair>::T_internal/r
-    broad_phase_info *m_bpi1;
-    broad_phase_info *m_bpi2;
-    broad_phase_collision_pair *m_next_bpcp;
-};
-
-struct broad_phase_memory // sizeof=0xCD8
-{
-    tlAtomicMutex g_bp_auto_activate_mutex;
-    tlAtomicReadWriteMutex g_bp_gjk_cache_mutex;
-    phys_heap_gjk_cache_system_avl_tree g_phys_gjk_cache_system;
-    phys_free_list<broad_phase_info> g_list_broad_phase_info;
-    phys_free_list<broad_phase_group> g_list_broad_phase_group;
-    phys_free_list<broad_phase_collision_pair> g_list_broad_phase_collision_pair;
-    bpei_database_t g_bpei_database;
-    broad_phase_terrain_query_callback *g_broad_phase_terrain_query_callback;
-    broad_phase_base *g_list_bpb;
-    int g_list_bpb_count;
-    broad_phase_info *m_list_bpi_env;
-    int m_bpi_env_count;
-    int m_bpg_env_count;
-    int m_bpg_env_bpi_count;
-    int m_bpi_env_no_database_count;
-    int m_memory_high_water;
-    phys_link_list<phys_collision_pair> g_list_phys_collide_data;
-    phys_transient_allocator g_collision_memory_buffer;
-    phys_surface_type_info *g_surface_type_info_database;
-    int m_max_num_surface_types;
-    int m_max_num_surface_type_infos;
-
-    void list_bpb_remove(broad_phase_base *bpb_to_remove);
 };
 
 struct phys_convex_hull // sizeof=0x20D60
@@ -453,6 +359,61 @@ int __cdecl Phys_GetCurrentTime();
 broad_phase_info *__cdecl create_broad_phase_info();
 void __cdecl destroy_broad_phase_info(broad_phase_info *bpi);
 
+extern const dvar_t *phys_gravity;
+extern const dvar_t *phys_gravity_dir;
+extern const dvar_t *phys_vehicleGravityMultiplier;
+extern const dvar_t *phys_vehicleDamageFroceScale;
+extern const dvar_t *phys_vehicleUsePredictedPosition;
+extern const dvar_t *phys_bulletUpBias;
+extern const dvar_t *phys_bulletSpinScale;
+extern const dvar_t *phys_msecStep;
+extern const dvar_t *phys_drawcontacts;
+extern const dvar_t *phys_drawCollisionObj;
+extern const dvar_t *phys_debugBigQueries;
+extern const dvar_t *phys_debugCallback;
+extern const dvar_t *phys_debugDangerousRigidBodies;
+extern const dvar_t *phys_debugExpensivePushout;
+extern const dvar_t *phys_drawNitrousVehicle;
+extern const dvar_t *phys_drawNitrousVehicleEffects;
+extern const dvar_t *phys_entityCollision;
+extern const dvar_t *phys_vehicleWheelEntityCollision;
+extern const dvar_t *phys_vehicleFriction;
+extern const dvar_t *phys_ragdoll_joint_damp_scale;
+extern const dvar_t *phys_dragLinear;
+extern const dvar_t *phys_dragAngular;
+extern const dvar_t *phys_userRigidBodies;
+extern const dvar_t *phys_waterDragLinear;
+extern const dvar_t *phys_waterDragAngular;
+extern const dvar_t *phys_maxFloatTime;
+extern const dvar_t *phys_buoyancyDistanceCutoff;
+extern const dvar_t *phys_piecesSpawnDistanceCutoff;
+extern const dvar_t *phys_floatTimeVariance;
+extern const dvar_t *phys_buoyancyRippleFrequency;
+extern const dvar_t *phys_buoyancyRippleVariance;
+extern const dvar_t *phys_buoyancyFastComputation;
+extern const dvar_t *phys_buoyancy;
+extern const dvar_t *phys_ragdoll_buoyancy;
+extern const dvar_t *debug_trace;
+extern const dvar_t *g_bDebugRenderBulletMeshes;
+extern const dvar_t *g_bDebugRenderEntityBrushes;
+extern const dvar_t *g_bDebugRenderPatches;
+extern const dvar_t *g_bDebugRenderBrushes;
+extern const dvar_t *g_bDebugRenderColoredPatches;
+extern const dvar_t *g_debugRenderMask;
+extern const dvar_t *g_debugRenderCollisionDistance;
+extern const dvar_t *g_bDebugRenderStaticModelsBounds;
+extern const dvar_t *g_dumpStaticModels;
+extern const dvar_t *g_debugRenderGjkTraceGeom;
+extern const dvar_t *phys_player_collision_mode;
+extern const dvar_t *phys_player_collision_adjust_height;
+extern const dvar_t *phys_ai_collision_mode;
+extern const dvar_t *render_player_collision;
+extern const dvar_t *render_actor_collision;
+extern const dvar_t *render_bpi_env_collision;
+extern const dvar_t *enable_moving_paths;
+extern const dvar_t *enable_new_prone_check;
+extern const dvar_t *phys_heavyTankSwitch;
+extern const dvar_t *phys_fluid;
 
 extern cdl_proftimer proftimer_physics_frame_advance;
 extern PhysGlob physGlob;

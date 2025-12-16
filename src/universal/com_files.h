@@ -224,6 +224,7 @@ unsigned int __cdecl FS_FTell(int f);
 void __cdecl FS_Flush(int f);
 void __cdecl Com_GetBspFilename(char *filename, unsigned int size, const char *mapname);
 
+extern int fs_numServerIwds;
 
 extern const dvar_t *fs_debug;
 extern const dvar_t *fs_copyfiles;

@@ -219,23 +219,6 @@ struct GfxCullViewInfo // sizeof=0x170
     GfxViewport scissorViewport;
 };
 
-struct jqBatchGroup // sizeof=0x8
-{                                       // XREF: jqModule/r
-                                        // GfxDrawSurfListInfo/r
-    //$F761E618955D9ED935731AE37AFEF266 ___u0;
-    union //$F761E618955D9ED935731AE37AFEF266 // sizeof=0x8
-    {                                       // XREF: jqGetQueuedBatchCount(jqBatchGroup *)+A/r
-                                            // jqGetExecutingBatchCount(jqBatchGroup *)+A/r ...
-        //$2BD02F38FBEBD854EF9A531D8B9F9671 __s0;
-        struct //$2BD02F38FBEBD854EF9A531D8B9F9671 // sizeof=0x8
-        {                                       // XREF: $F761E618955D9ED935731AE37AFEF266/r
-            int QueuedBatchCount;
-            int ExecutingBatchCount;
-        };
-        unsigned __int64 BatchCount;
-    };
-};
-
 struct __declspec(align(4)) GfxDrawSurfListInfo // sizeof=0x50
 {                                       // XREF: PointLightPartition/r
                                         // GfxViewInfo/r ...

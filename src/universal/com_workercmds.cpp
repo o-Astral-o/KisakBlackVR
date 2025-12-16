@@ -1,8 +1,15 @@
 #include "com_workercmds.h"
 
+bool g_WorkerCmdInit;
+
 void __cdecl Sys_WorkerCmdInit()
 {
     g_WorkerCmdInit = 1;
+}
+
+unsigned __int8 *__cdecl jqAllocBatchData(unsigned int Size)
+{
+    return jqAtomicHeap::Alloc(&jqPool.BatchDataHeap, Size, 0x10u);
 }
 
 unsigned __int8 *__cdecl jqCommitMemory(jqBatch *batch, unsigned __int8 *input, unsigned int dataSize)

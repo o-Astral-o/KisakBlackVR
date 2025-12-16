@@ -16,6 +16,7 @@ struct Glass;
 struct DynEntityDef;
 struct gjk_base_t;
 struct cLeafBrushNode_s;
+struct cbrush_t;
 
 struct visitor_base_t // sizeof=0x4
 {                                                                             // XREF: colgeom_visitor_t/r
@@ -285,13 +286,9 @@ public:
             this->m_flags = 0;
         }
 
-        void comp_aabb_loc();
-        const cbrush_t *get_brush();
         int get_contents();
         unsigned int get_geom_id();
         const phys_mat44 *get_xform();
-        bool is_foot(const phys_vec3 *hit_point);
-        bool is_walkable(const phys_vec3 *hit_point, const phys_vec3 *up);
 
         int get_contents();
         void set_contents(int contents);
@@ -299,6 +296,11 @@ public:
         void set_geom_id_new(unsigned int geom_id);
         void set_xform(const phys_mat44 *xform);
 
+        virtual void comp_aabb_loc();
+        virtual unsigned int get_type() = 0;
+        virtual bool is_foot(const phys_vec3 *hit_point);
+        virtual bool is_walkable(const phys_vec3 *hit_point, const phys_vec3 *up);
+        virtual const cbrush_t *get_brush();
 };
 
 struct gjk_geom_list_t // sizeof=0x8
@@ -359,7 +361,7 @@ struct __declspec(align(16)) gjk_aabb_t : gjk_base_t // sizeof=0x80
                 phys_vec3 *aabb_min,
                 phys_vec3 *aabb_max);
         const cbrush_t * get_brush();
-        void __cdecl destroy(gjk_aabb_t *geom);
+        static void __cdecl destroy(gjk_aabb_t *geom);
 };
 
 struct BrushWrapper // sizeof=0x60
@@ -408,7 +410,7 @@ struct gjk_obb_t : gjk_base_t // sizeof=0xA0
             phys_vec3 *aabb_min,
             phys_vec3 *aabb_max);
 
-        void __cdecl destroy(gjk_obb_t *geom);
+        static void __cdecl destroy(gjk_obb_t *geom);
         const phys_vec3 *get_center(phys_vec3 *result);
         void get_feature(phys_contact_manifold *cman);
         void get_simplex(
@@ -485,7 +487,7 @@ struct __declspec(align(8)) gjk_brush_t : gjk_base_t // sizeof=0x60
                 phys_vec3 *aabb_max);
         const cbrush_t *get_brush();
         unsigned int get_type();
-        void __cdecl destroy(gjk_brush_t *geom);
+        static void __cdecl destroy(gjk_brush_t *geom);
         const phys_vec3 *get_center(phys_vec3 *result);
 };
 
@@ -561,7 +563,7 @@ struct __declspec(align(16)) gjk_partition_t : gjk_base_t // sizeof=0x70
                 phys_vec3 *aabb_min,
                 phys_vec3 *aabb_max);
         unsigned int get_type();
-        void __cdecl destroy(gjk_partition_t *geom);
+        static void __cdecl destroy(gjk_partition_t *geom);
 };
 
 struct gjk_double_sphere_t : gjk_base_t // sizeof=0x90
@@ -602,7 +604,7 @@ struct gjk_double_sphere_t : gjk_base_t // sizeof=0x90
                 float r,
                 int stype,
                 gjk_collision_visitor *allocator);
-        void __cdecl destroy(gjk_double_sphere_t *geom);
+        static void __cdecl destroy(gjk_double_sphere_t *geom);
 };
 
 struct gjk_cylinder_t : gjk_base_t // sizeof=0xA0
@@ -638,7 +640,7 @@ struct gjk_cylinder_t : gjk_base_t // sizeof=0xA0
                 phys_vec3 *aabb_max);
         unsigned int get_type();
         float get_geom_radius();
-        void __cdecl destroy(gjk_cylinder_t *geom);
+        static void __cdecl destroy(gjk_cylinder_t *geom);
 };
 
 struct gjk_unique_id_database_t // sizeof=0x4
@@ -679,7 +681,7 @@ struct __declspec(align(8)) gjk_polygon_cylinder_t : gjk_base_t // sizeof=0x80
                 float radius_adjust,
                 int stype,
                 gjk_collision_visitor *allocator);
-        void __cdecl destroy(gjk_polygon_cylinder_t *geom);
+        static void __cdecl destroy(gjk_polygon_cylinder_t *geom);
 };
 
 PhysGeomList *__cdecl xmodel_get_geomlist(const XModel *model, int bone_index);

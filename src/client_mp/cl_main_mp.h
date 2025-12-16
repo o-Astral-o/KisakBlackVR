@@ -1,4 +1,5 @@
 #pragma once
+
 #include <bgame/bg_local.h>
 #include <qcommon/bitarray.h>
 #include <qcommon/msg_mp.h>
@@ -6,6 +7,7 @@
 #include <demo/demo_common.h>
 #include <qcommon/net_chan_mp.h>
 #include <client/screen_placement.h>
+#include <universal/dvar.h>
 
 struct ClientArchiveData // sizeof=0x30
 {                                                                             // XREF: demoInitialStateBuffer_t/r
@@ -1196,3 +1198,89 @@ bool __cdecl CL_IsLocalClientInGame(int localClientNum);
 
 extern clientStatic_t cls;
 extern clientConnection_t *clientConnections;
+extern UiContext cgDC[1];
+
+
+extern const dvar_t *cl_noprint;
+extern const dvar_t *playlist;
+extern const dvar_t *category;
+extern const dvar_t *categoryPlaylist;
+extern const dvar_t *wagerCategory;
+extern const dvar_t *wagerCategoryPlaylist;
+extern const dvar_t *customGameMode;
+extern const dvar_t *customclass[10];
+extern const dvar_t *cl_hudDrawsBehindUI;
+extern const dvar_t *cl_voice;
+extern const dvar_t *cl_timeout;
+extern const dvar_t *cl_connectTimeout;
+extern const dvar_t *cl_connectionAttempts;
+extern const dvar_t *cl_shownet;
+extern const dvar_t *cl_shownuments;
+extern const dvar_t *cl_showServerCommands;
+extern const dvar_t *cl_showSend;
+extern const dvar_t *cl_showTimeDelta;
+extern const dvar_t *cl_freezeDemo;
+extern const dvar_t *cl_activeAction;
+extern const dvar_t *cl_avidemo;
+extern const dvar_t *cl_forceavidemo;
+extern const dvar_t *cl_clientDemoName;
+extern const dvar_t *cl_clientDemoUseMemoryBuffer;
+extern const dvar_t *cl_clientDemoType;
+extern const dvar_t *cl_clientDemoMaxRecordTime;
+extern const dvar_t *cl_clientDemoRequestPingTime;
+extern const dvar_t *cl_clientDemoCoolMomentExtendEnabled;
+extern const dvar_t *cl_clientDemoCoolMomentExtendTime;
+extern const dvar_t *cl_yawspeed;
+extern const dvar_t *cl_pitchspeed;
+extern const dvar_t *cl_anglespeedkey;
+extern const dvar_t *cl_maxpackets;
+extern const dvar_t *cl_packetdup;
+extern const dvar_t *cl_sensitivity;
+extern const dvar_t *cl_mouseAccel;
+extern const dvar_t *cl_freelook;
+extern const dvar_t *cl_showMouseRate;
+extern const dvar_t *cl_allowDownload;
+extern const dvar_t *cl_wwwDownload;
+extern const dvar_t *cl_talking;
+extern const dvar_t *cl_inGameVideo;
+extern const dvar_t *cl_serverStatusResendTime;
+extern const dvar_t *cl_maxppf;
+extern const dvar_t *cl_bypassMouseInput;
+extern const dvar_t *m_pitch;
+extern const dvar_t *m_yaw;
+extern const dvar_t *m_forward;
+extern const dvar_t *m_side;
+extern const dvar_t *m_filter;
+extern const dvar_t *ui_custom_newname;
+extern const dvar_t *cl_socketpool_enabled;
+extern const dvar_t *cl_socketpool_size;
+extern const dvar_t *ui_clantag_new;
+extern const dvar_t *cl_demoFFSpeed;
+extern const dvar_t *cl_demoSkipToTime;
+extern const dvar_t *cl_demoLiveStreaming;
+extern const dvar_t *input_invertPitch;
+extern const dvar_t *input_viewSensitivity;
+extern const dvar_t *team_indicator;
+extern const dvar_t *cl_playerRank;
+extern const dvar_t *cl_playerPrestige;
+extern const dvar_t *cl_motdString;
+extern const dvar_t *cl_ingame;
+extern const dvar_t *cl_wasconnected;
+extern const dvar_t *cl_maxPing;
+extern const dvar_t *cl_profileTextHeight;
+extern const dvar_t *cl_profileTextY;
+extern const dvar_t *name;
+extern const dvar_t *clanName;
+extern const dvar_t *rate;
+extern const dvar_t *snaps;
+extern const dvar_t *cl_punkbuster;
+extern const dvar_t *password;
+extern const dvar_t *nextdemo;
+extern const dvar_t *mortarStrikesLeft;
+extern const dvar_t *hud_enable;
+extern const dvar_t *cg_blood;
+extern const dvar_t *cg_allow_mature;
+extern const dvar_t *cg_mature;
+extern const dvar_t *cl_serverchallenge;
+extern const dvar_t *cl_debugMessageKey;
+extern const dvar_t *motd;

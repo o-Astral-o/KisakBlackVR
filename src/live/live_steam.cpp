@@ -1,4 +1,11 @@
 #include "live_steam.h"
+#include <win32/win_splash.h>
+#include <qcommon/common.h>
+#include <win32/win_localize.h>
+#include <Windows.h>
+#include <win32/win_main.h>
+
+bool g_liveSteamInitialized;
 
 void __cdecl SteamAPIDebugTextHook(int severity, const char *pchDebugText)
 {

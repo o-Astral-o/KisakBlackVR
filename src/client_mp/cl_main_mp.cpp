@@ -3,9 +3,102 @@
 #include <qcommon/common.h>
 #include <qcommon/sv_msg_write.h>
 #include <ui/ui_main.h>
+#include <ui/ui_shared.h>
+#include <qcommon/com_clients.h>
+#include <win32/win_shared.h>
+#include <universal/com_files.h>
+#include <client/cl_main.h>
+#include <qcommon/files.h>
+#include <universal/com_memory.h>
+
+const dvar_t *cl_noprint;
+const dvar_t *playlist;
+const dvar_t *category;
+const dvar_t *categoryPlaylist;
+const dvar_t *wagerCategory;
+const dvar_t *wagerCategoryPlaylist;
+const dvar_t *customGameMode;
+const dvar_t *customclass[10];
+const dvar_t *cl_hudDrawsBehindUI;
+const dvar_t *cl_voice;
+const dvar_t *cl_timeout;
+const dvar_t *cl_connectTimeout;
+const dvar_t *cl_connectionAttempts;
+const dvar_t *cl_shownet;
+const dvar_t *cl_shownuments;
+const dvar_t *cl_showServerCommands;
+const dvar_t *cl_showSend;
+const dvar_t *cl_showTimeDelta;
+const dvar_t *cl_freezeDemo;
+const dvar_t *cl_activeAction;
+const dvar_t *cl_avidemo;
+const dvar_t *cl_forceavidemo;
+const dvar_t *cl_clientDemoName;
+const dvar_t *cl_clientDemoUseMemoryBuffer;
+const dvar_t *cl_clientDemoType;
+const dvar_t *cl_clientDemoMaxRecordTime;
+const dvar_t *cl_clientDemoRequestPingTime;
+const dvar_t *cl_clientDemoCoolMomentExtendEnabled;
+const dvar_t *cl_clientDemoCoolMomentExtendTime;
+const dvar_t *cl_yawspeed;
+const dvar_t *cl_pitchspeed;
+const dvar_t *cl_anglespeedkey;
+const dvar_t *cl_maxpackets;
+const dvar_t *cl_packetdup;
+const dvar_t *cl_sensitivity;
+const dvar_t *cl_mouseAccel;
+const dvar_t *cl_freelook;
+const dvar_t *cl_showMouseRate;
+const dvar_t *cl_allowDownload;
+const dvar_t *cl_wwwDownload;
+const dvar_t *cl_talking;
+const dvar_t *cl_inGameVideo;
+const dvar_t *cl_serverStatusResendTime;
+const dvar_t *cl_maxppf;
+const dvar_t *cl_bypassMouseInput;
+const dvar_t *m_pitch;
+const dvar_t *m_yaw;
+const dvar_t *m_forward;
+const dvar_t *m_side;
+const dvar_t *m_filter;
+const dvar_t *ui_custom_newname;
+const dvar_t *cl_socketpool_enabled;
+const dvar_t *cl_socketpool_size;
+const dvar_t *ui_clantag_new;
+const dvar_t *cl_demoFFSpeed;
+const dvar_t *cl_demoSkipToTime;
+const dvar_t *cl_demoLiveStreaming;
+const dvar_t *input_invertPitch;
+const dvar_t *input_viewSensitivity;
+const dvar_t *team_indicator;
+const dvar_t *cl_playerRank;
+const dvar_t *cl_playerPrestige;
+const dvar_t *cl_motdString;
+const dvar_t *cl_ingame;
+const dvar_t *cl_wasconnected;
+const dvar_t *cl_maxPing;
+const dvar_t *cl_profileTextHeight;
+const dvar_t *cl_profileTextY;
+const dvar_t *name;
+const dvar_t *clanName;
+const dvar_t *rate;
+const dvar_t *snaps;
+const dvar_t *cl_punkbuster;
+const dvar_t *password;
+const dvar_t *nextdemo;
+const dvar_t *mortarStrikesLeft;
+const dvar_t *hud_enable;
+const dvar_t *cg_blood;
+const dvar_t *cg_allow_mature;
+const dvar_t *cg_mature;
+const dvar_t *cl_serverchallenge;
+const dvar_t *cl_debugMessageKey;
+const dvar_t *motd;
+
+UiContext cgDC[1];
 
 clientStatic_t cls;
-extern clientConnection_t *clientConnections;
+clientConnection_t *clientConnections;
 
 void __cdecl CL_AddReliableCommand(int localClientNum, const char *cmd)
 {
@@ -105,7 +198,7 @@ void __cdecl CL_ToggleDemoRecording_f()
         if ( !cl_clientDemoType->current.integer )
         {
             ControllerIndex = Com_LocalClient_GetControllerIndex(0);
-            Cmd_ExecuteSingleCommand(0, ControllerIndex, "stoprecord");
+            Cmd_ExecuteSingleCommand(0, ControllerIndex, (char*)"stoprecord");
         }
     }
     else if ( CL_GetLocalClientConnectionState(0) == 10 )
@@ -272,18 +365,18 @@ void __cdecl CL_Record_f()
                             Com_sprintf(name, 0x100u, "%s.dm_%d", demoName, 7);
                             Com_sprintf(nameLiveStream, 0x100u, "%s.txt", demoName);
                             baspath = fs_homepath->current.string;
-                            FS_BuildOSPath((char *)baspath, "demos", name, ospath);
+                            FS_BuildOSPath((char *)baspath, (char*)"demos", name, ospath);
                             if ( !FS_OSFPathExists(ospath) )
                                 break;
                         }
                     }
                     Com_Printf(0, "recording to %s.\n", name);
-                    v0 = FS_SV_FOpenFileWrite(name, "demos");
+                    v0 = FS_SV_FOpenFileWrite(name, (char*)"demos");
                     clc->demofile = v0;
                     if ( clc->demofile )
                     {
                         if ( !cl_demoLiveStreaming->current.integer
-                            || (v1 = FS_SV_FOpenFileWrite(nameLiveStream, "demos"), (clc->demoLiveStream = v1) != 0) )
+                            || (v1 = FS_SV_FOpenFileWrite(nameLiveStream, (char *)"demos"), (clc->demoLiveStream = v1) != 0) )
                         {
                             clc->demorecording = 1;
                             clc->demoRecordStartTime = Sys_Milliseconds();
@@ -350,7 +443,7 @@ void __cdecl CL_WriteUncompressedDemoInfo(int localClientNum)
     char *v8; // eax
     int v9; // eax
     clientActive_t *LocalClientGlobals; // [esp+28h] [ebp-184h]
-    LargeLocal compressedBuf_large_local; // [esp+2Ch] [ebp-180h] BYREF
+    LargeLocal compressedBuf_large_local(0x10000); // [esp+2Ch] [ebp-180h] BYREF
     int configStringCount; // [esp+34h] [ebp-178h]
     int compressedSize; // [esp+38h] [ebp-174h]
     int numConfigStringsWritten; // [esp+3Ch] [ebp-170h]
@@ -363,7 +456,7 @@ void __cdecl CL_WriteUncompressedDemoInfo(int localClientNum)
     SnapshotInfo_s snapInfo; // [esp+164h] [ebp-48h] BYREF
     int nextConstConfigStringIndex; // [esp+17Ch] [ebp-30h]
     clientConnection_t *clc; // [esp+180h] [ebp-2Ch]
-    LargeLocal bufData_large_local; // [esp+184h] [ebp-28h] BYREF
+    LargeLocal bufData_large_local(0x10000); // [esp+184h] [ebp-28h] BYREF
     int lastStringIndex; // [esp+18Ch] [ebp-20h]
     int oldSvsHeaderValid; // [esp+190h] [ebp-1Ch]
     const char *constValue; // [esp+194h] [ebp-18h]
@@ -373,10 +466,10 @@ void __cdecl CL_WriteUncompressedDemoInfo(int localClientNum)
     int i; // [esp+1A4h] [ebp-8h]
     int bitsStart; // [esp+1A8h] [ebp-4h]
 
-    LargeLocal::LargeLocal(&compressedBuf_large_local, 0x10000);
-    compressedBuf = (unsigned __int8 (*)[65536])LargeLocal::GetBuf(&compressedBuf_large_local);
-    LargeLocal::LargeLocal(&bufData_large_local, 0x10000);
-    bufData = (unsigned __int8 (*)[65536])LargeLocal::GetBuf(&bufData_large_local);
+    //LargeLocal::LargeLocal(&compressedBuf_large_local, 0x10000);
+    compressedBuf = (unsigned __int8 (*)[65536])compressedBuf_large_local.GetBuf();
+    //LargeLocal::LargeLocal(&bufData_large_local, 0x10000);
+    bufData = (unsigned __int8 (*)[65536])bufData_large_local.GetBuf();
     oldSvsHeaderValid = 0;
     clc = CL_GetLocalClientConnection(localClientNum);
     if ( clc->demoUseMemoryBuffer )

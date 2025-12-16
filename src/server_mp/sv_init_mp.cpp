@@ -1,4 +1,93 @@
 #include "sv_init_mp.h"
+#include <server/server.h>
+#include <qcommon/common.h>
+#include <clientscript/cscr_stringlist.h>
+
+#include <cstring>
+
+const dvar_t *sv_gametype;
+const dvar_t *sv_mapname;
+const dvar_t *sv_privateClients;
+const dvar_t *sv_hostname;
+const dvar_t *sv_noname;
+const dvar_t *sv_geolocation;
+const dvar_t *sv_maxgrouperrors;
+const dvar_t *sv_ownerid;
+const dvar_t *sv_numreservedslots;
+const dvar_t *sv_clientSideBullets;
+const dvar_t *sv_clientSideVehicles;
+const dvar_t *sv_penetrationCount;
+const dvar_t *sv_axis_penetrationCount;
+const dvar_t *sv_allies_penetrationCount;
+const dvar_t *sv_bullet_range;
+const dvar_t *sv_hitFXFrustumCutoff;
+const dvar_t *sv_punkbuster;
+const dvar_t *sv_security;
+const dvar_t *sv_ranked;
+const dvar_t *ui_ranked;
+const dvar_t *sv_dedicatedmaxclients;
+const dvar_t *sv_maxclients;
+const dvar_t *sv_maxRate;
+const dvar_t *sv_minPing;
+const dvar_t *sv_maxPing;
+const dvar_t *sv_timeout;
+const dvar_t *sv_connectTimeout;
+const dvar_t *sv_floodProtect;
+const dvar_t *sv_showCommands;
+const dvar_t *sv_writeConfigStrings;
+const dvar_t *scr_writeConfigStrings;
+const dvar_t *sv_dwlsgerror;
+const dvar_t *sv_allowAnonymous;
+const dvar_t *sv_disableClientConsole;
+const dvar_t *sv_privatePassword;
+const dvar_t *sv_allowDownload;
+const dvar_t *sv_iwds;
+const dvar_t *sv_iwdNames;
+const dvar_t *sv_referencedIwds;
+const dvar_t *sv_referencedIwdNames;
+const dvar_t *sv_FFCheckSums;
+const dvar_t *sv_FFNames;
+const dvar_t *sv_referencedFFCheckSums;
+const dvar_t *sv_referencedFFNames;
+const dvar_t *sv_authenticating;
+const dvar_t *sv_voice;
+const dvar_t *sv_voiceQuality;
+const dvar_t *sv_cheats;
+const dvar_t *sv_pure;
+const dvar_t *rcon_password;
+const dvar_t *sv_fps;
+const dvar_t *sv_showPingSpam;
+const dvar_t *sv_zombietime;
+const dvar_t *sv_reconnectlimit;
+const dvar_t *sv_padPackets;
+const dvar_t *sv_allowedClan1;
+const dvar_t *sv_allowedClan2;
+const dvar_t *sv_packet_info;
+const dvar_t *sv_showAverageBPS;
+const dvar_t *sv_kickBanTime;
+const dvar_t *sv_debugMessageKey;
+const dvar_t *sv_debugPacketContents;
+const dvar_t *sv_debugPacketContentsForClientThisFrame;
+const dvar_t *sv_showHuffmanData;
+const dvar_t *sv_debugConstantConfigStrings;
+const dvar_t *sv_loadMyChanges;
+const dvar_t *sv_debugPlayerstate;
+const dvar_t *sv_debugPacketContentsQuick;
+const dvar_t *sv_printMessageSize;
+const dvar_t *sv_mapRotation;
+const dvar_t *sv_mapRotationCurrent;
+const dvar_t *sv_debugRate;
+const dvar_t *sv_debugReliableCmds;
+const dvar_t *nextmap;
+const dvar_t *com_movieIsPlaying;
+const dvar_t *sv_wwwDownload;
+const dvar_t *sv_wwwBaseURL;
+const dvar_t *sv_wwwDlDisconnected;
+const dvar_t *sv_smp;
+const dvar_t *sv_network_fps;
+const dvar_t *sv_assistWorkers;
+const dvar_t *sv_clientArchive;
+
 
 void __cdecl SV_SetConfigstring(int index, char *val)
 {

@@ -299,7 +299,29 @@ struct phys_link_list //<pulse_sum_node> // sizeof=0xC
     //pulse_sum_node **m_last_next_ptr;
     T *m_first;
     T **m_last_next_ptr;
-    int m_alloc_count;
+    volatile unsigned int m_alloc_count;
+
+    void add(T *p)
+    {
+        p->m_next_link = NULL;
+        this->m_alloc_count++;
+        *this->m_last_next_ptr = p;
+        this->m_last_next_ptr = &p->m_next_link;
+    }
+
+    void add_mt(T *p)
+    {
+        p->m_next_link = nullptr;
+
+        InterlockedIncrement(reinterpret_cast<volatile LONG *>(&m_alloc_count));
+
+        T **prev = (T **)InterlockedExchangePointer(
+            (PVOID *)&m_last_next_ptr,
+            &p->m_next_link
+        );
+
+        *prev = p;
+    }
 };
 
 template <typename T>

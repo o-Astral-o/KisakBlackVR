@@ -222,6 +222,9 @@ void __cdecl set_simplex(
                 int w_set);
 int    backup1(phys_gjk_info *gjk_info, int new_index, bool seed_simplex);
 
+void __cdecl setup_gjk_input_from_pcp(phys_gjk_input *pgi, phys_collision_pair *pcp);
+
+
 
 
 

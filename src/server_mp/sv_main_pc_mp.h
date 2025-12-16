@@ -1,5 +1,7 @@
 #pragma once
 
+#include <qcommon/net_chan_mp.h>
+
 void __cdecl SV_ResetDWState();
 int __cdecl SV_GetRegion();
 void __cdecl SV_SetRegion(int region);

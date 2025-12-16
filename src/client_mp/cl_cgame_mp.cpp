@@ -1,4 +1,13 @@
 #include "cl_cgame_mp.h"
+#include <universal/assertive.h>
+#include "cl_main_mp.h"
+#include <qcommon/common.h>
+#include <cstring>
+#include <cgame_mp/cg_local_mp.h>
+#include <qcommon/statmonitor.h>
+#include <demo/demo_playback.h>
+#include <cgame_mp/cg_main_mp.h>
+
 
 void __cdecl CL_GetScreenDimensions(int *width, int *height, float *aspect)
 {
@@ -33,7 +42,7 @@ int __cdecl CL_GetUserCmd(int localClientNum, int cmdNumber, usercmd_s *ucmd)
 
     LocalClientGlobals = CL_GetLocalClientGlobals(localClientNum);
     if ( cmdNumber > LocalClientGlobals->cmdNumber )
-        Com_Error(ERR_DROP, &byte_C964A8, cmdNumber, LocalClientGlobals->cmdNumber);
+        Com_Error(ERR_DROP, "CL_GetUserCmd: %i >= %i", cmdNumber, LocalClientGlobals->cmdNumber);
     if ( cmdNumber <= LocalClientGlobals->cmdNumber - 128 )
         return 0;
     memcpy(ucmd, &LocalClientGlobals->cmds[cmdNumber & 0x7F], sizeof(usercmd_s));
@@ -49,7 +58,7 @@ void __cdecl CL_AdjustUserCmdAngles(int localClientNum, int cmdNumber, float *ad
 
     LocalClientGlobals = CL_GetLocalClientGlobals(localClientNum);
     if ( cmdNumber > LocalClientGlobals->cmdNumber )
-        Com_Error(ERR_DROP, &byte_C96500, cmdNumber, LocalClientGlobals->cmdNumber);
+        Com_Error(ERR_DROP, "CL_AdjustUserCmdAngles: %i >= %i", cmdNumber, LocalClientGlobals->cmdNumber);
     if ( cmdNumber > LocalClientGlobals->cmdNumber - 128 )
     {
         ucmd = &LocalClientGlobals->cmds[cmdNumber & 0x7F];
@@ -88,7 +97,7 @@ int __cdecl CL_GetSnapshot(int localClientNum, int snapshotNumber, snapshot_s *s
 
     LocalClientGlobals = CL_GetLocalClientGlobals(localClientNum);
     if ( snapshotNumber > LocalClientGlobals->snap.messageNum )
-        Com_Error(ERR_DROP, &byte_C965D8);
+        Com_Error(ERR_DROP, "CL_GetSnapshot: snapshotNumber > cl->snapshot.messageNum");
     if ( LocalClientGlobals->snap.messageNum - snapshotNumber >= 32 )
         return 0;
     clSnap = &LocalClientGlobals->snapshots[snapshotNumber & 0x1F];
@@ -112,7 +121,7 @@ int __cdecl CL_GetSnapshot(int localClientNum, int snapshotNumber, snapshot_s *s
     if ( count > 512 )
     {
         if ( com_statmon->current.enabled )
-            StatMon_Warning(4, 3000, "code_warning_snapshotents");
+            StatMon_Warning(4, 3000, (char*)"code_warning_snapshotents");
         else
             Com_DPrintf(14, "CL_GetSnapshot: truncated %i entities to %i\n", count, 512);
         count = 512;
@@ -301,10 +310,10 @@ int __cdecl CL_CGameNeedsServerCommand(int localClientNum, int serverCommandNumb
         Com_Printf(14, "===== CL_CGameNeedsServerCommand =====\n");
         Com_Printf(14, "serverCommandNumber: %d\n", serverCommandNumber & 0x7F);
         CL_DumpReliableCommands(localClientNum);
-        Com_Error(ERR_DROP, &byte_C966D4);
+        Com_Error(ERR_DROP, "CL_CGameNeedsServerCommand: EXE_ERR_RELIABLE_CYCLED_OUT");
     }
     if ( serverCommandNumber > clc->serverCommandSequence && !Demo_IsPlaying() )
-        Com_Error(ERR_DROP, &byte_C966A0);
+        Com_Error(ERR_DROP, "CL_CGameNeedsServerCommand: EXE_ERR_NOT_RECEIVED");
     s = clc->serverCommands[serverCommandNumber & 0x7F];
     clc->lastExecutedServerCommand = serverCommandNumber;
     if ( cl_showServerCommands->current.enabled )

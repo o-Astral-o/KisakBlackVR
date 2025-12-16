@@ -1,45 +1,65 @@
 #include "phys_main.h"
+#include "phys_effects.h"
+
+const dvar_t *phys_gravity;
+const dvar_t *phys_gravity_dir;
+const dvar_t *phys_vehicleGravityMultiplier;
+const dvar_t *phys_vehicleDamageFroceScale;
+const dvar_t *phys_vehicleUsePredictedPosition;
+const dvar_t *phys_bulletUpBias;
+const dvar_t *phys_bulletSpinScale;
+const dvar_t *phys_msecStep;
+const dvar_t *phys_drawcontacts;
+const dvar_t *phys_drawCollisionObj;
+const dvar_t *phys_debugBigQueries;
+const dvar_t *phys_debugCallback;
+const dvar_t *phys_debugDangerousRigidBodies;
+const dvar_t *phys_debugExpensivePushout;
+const dvar_t *phys_drawNitrousVehicle;
+const dvar_t *phys_drawNitrousVehicleEffects;
+const dvar_t *phys_entityCollision;
+const dvar_t *phys_vehicleWheelEntityCollision;
+const dvar_t *phys_vehicleFriction;
+const dvar_t *phys_ragdoll_joint_damp_scale;
+const dvar_t *phys_dragLinear;
+const dvar_t *phys_dragAngular;
+const dvar_t *phys_userRigidBodies;
+const dvar_t *phys_waterDragLinear;
+const dvar_t *phys_waterDragAngular;
+const dvar_t *phys_maxFloatTime;
+const dvar_t *phys_buoyancyDistanceCutoff;
+const dvar_t *phys_piecesSpawnDistanceCutoff;
+const dvar_t *phys_floatTimeVariance;
+const dvar_t *phys_buoyancyRippleFrequency;
+const dvar_t *phys_buoyancyRippleVariance;
+const dvar_t *phys_buoyancyFastComputation;
+const dvar_t *phys_buoyancy;
+const dvar_t *phys_ragdoll_buoyancy;
+const dvar_t *debug_trace;
+const dvar_t *g_bDebugRenderBulletMeshes;
+const dvar_t *g_bDebugRenderEntityBrushes;
+const dvar_t *g_bDebugRenderPatches;
+const dvar_t *g_bDebugRenderBrushes;
+const dvar_t *g_bDebugRenderColoredPatches;
+const dvar_t *g_debugRenderMask;
+const dvar_t *g_debugRenderCollisionDistance;
+const dvar_t *g_bDebugRenderStaticModelsBounds;
+const dvar_t *g_dumpStaticModels;
+const dvar_t *g_debugRenderGjkTraceGeom;
+const dvar_t *phys_player_collision_mode;
+const dvar_t *phys_player_collision_adjust_height;
+const dvar_t *phys_ai_collision_mode;
+const dvar_t *render_player_collision;
+const dvar_t *render_actor_collision;
+const dvar_t *render_bpi_env_collision;
+const dvar_t *enable_moving_paths;
+const dvar_t *enable_new_prone_check;
+const dvar_t *phys_heavyTankSwitch;
+const dvar_t *phys_fluid;
+
 
 cdl_proftimer proftimer_physics_frame_advance;
 PhysGlob physGlob;
-
-void __cdecl destroy_gjk_geom(gjk_aabb_t *geom)
-{
-    switch ( geom->get_type(geom) )
-    {
-        case 1u:
-            gjk_aabb_t::destroy(geom);
-            break;
-        case 2u:
-            gjk_brush_t::destroy((gjk_brush_t *)geom);
-            break;
-        case 3u:
-            gjk_partition_t::destroy((gjk_partition_t *)geom);
-            break;
-        case 4u:
-            gjk_double_sphere_t::destroy((gjk_double_sphere_t *)geom);
-            break;
-        case 5u:
-            gjk_cylinder_t::destroy((gjk_cylinder_t *)geom);
-            break;
-        case 6u:
-            gjk_obb_t::destroy((gjk_cylinder_t *)geom);
-            break;
-        case 7u:
-            gjk_polygon_cylinder_t::destroy((gjk_polygon_cylinder_t *)geom);
-            break;
-        default:
-            if ( _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
-                         403,
-                         "0",
-                         "Trying to free up unkownn geom. Leak!!!") )
-            {
-                __debugbreak();
-            }
-            break;
-    }
-}
 
 void __cdecl Phys_Init()
 {
@@ -68,9 +88,9 @@ void __cdecl Phys_Init()
                                          "Physics gravity in units/sec^2.");
         phys_gravity_dir = _Dvar_RegisterVec3(
                                                  "phys_gravity_dir",
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(0.0),
-                                                 COERCE_UNSIGNED_INT(1.0),
+                                                 (0.0),
+                                                 (0.0),
+                                                 (1.0),
                                                  -1.0,
                                                  1.0,
                                                  0x1000u,
@@ -898,10 +918,10 @@ PhysObjUserData * Phys_CreateUserBody@<eax>(
             {
                 __debugbreak();
             }
-            LODWORD(v7) = COERCE_UNSIGNED_INT(0.5 * (float)(cylinder_gjk_geom->m_aabb_mn_loc.y + y)) ^ _mask__NegFloat_;
-            LODWORD(v8) = COERCE_UNSIGNED_INT(0.5 * (float)(cylinder_gjk_geom->m_aabb_mn_loc.z + z)) ^ _mask__NegFloat_;
+            LODWORD(v7) = (0.5 * (float)(cylinder_gjk_geom->m_aabb_mn_loc.y + y)) ^ _mask__NegFloat_;
+            LODWORD(v8) = (0.5 * (float)(cylinder_gjk_geom->m_aabb_mn_loc.z + z)) ^ _mask__NegFloat_;
             p_w = &v26->cg2rb.w;
-            LODWORD(v26->cg2rb.w.x) = COERCE_UNSIGNED_INT(0.5 * (float)(cylinder_gjk_geom->m_aabb_mn_loc.x + x))
+            LODWORD(v26->cg2rb.w.x) = (0.5 * (float)(cylinder_gjk_geom->m_aabb_mn_loc.x + x))
                                                             ^ _mask__NegFloat_;
             p_w->y = v7;
             p_w->z = v8;

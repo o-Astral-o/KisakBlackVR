@@ -12,6 +12,18 @@
 #include <cgame_mp/cg_main_mp.h>
 #include <clientscript/scr_const.h>
 #include <game_mp/g_spawn_mp.h>
+#include <bgame/bg_public.h>
+#include <game/g_scr_vehicle.h>
+#include <DynEntity/DynEntity_client.h>
+#include <game/g_scr_mover.h>
+#include <universal/com_math_anglevectors.h>
+#include <cgame_mp/cg_pose_mp.h>
+#include <cgame_mp/cg_ents_mp.h>
+#include <client_mp/cl_cgame_mp.h>
+
+unsigned __int8 g_cgPieceArrayBuffer[73728];
+int s_num_destructible_gamestates[1];
+destructible_gamestate s_destructible_gamestates[1][32];
 
 int g_numDisabledLables;
 int g_disabledLabels[10];
@@ -972,8 +984,11 @@ bool __cdecl DamagePiece(
                         Scr_DestructibleCallback(self, scr_const.broken, (char *)notify, attacker);
                         if ( self->scr_vehicle )
                         {
-                            if ( self->scr_vehicle->nitrousVehicle )
-                                NitrousVehicle::destructible_damage(self->scr_vehicle->nitrousVehicle, notify, new_stage_index);
+                            if (self->scr_vehicle->nitrousVehicle)
+                            {
+                                //NitrousVehicle::destructible_damage(self->scr_vehicle->nitrousVehicle, notify, new_stage_index);
+                                self->scr_vehicle->nitrousVehicle->destructible_damage(notify, new_stage_index);
+                            }
                         }
                     }
                 }
@@ -1614,7 +1629,7 @@ unsigned int __cdecl CG_DestructibleUpdate(
     }
     else
     {
-        Com_Error(ERR_DROP, &byte_D14D38, 64, ddef->name);
+        Com_Error(ERR_DROP, "Hit max destructible count [%d] when creating %s", 64, ddef->name);
     }
     if ( numModels != 1
         && !Assert_MyHandler(

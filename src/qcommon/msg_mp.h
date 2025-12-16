@@ -11,6 +11,18 @@ enum netsrc_t : __int32
         NS_PACKET         = 0x2,
 };
 
+enum netFieldTypes_t : __int32
+{                                       // XREF: ?Demo_GetNetFieldListForType@@YAPBUNetFieldList@@W4netFieldTypes_t@@@Z/r
+                                        // ?MSG_GetNetFieldList@@YAPBUNetFieldList@@W4netFieldTypes_t@@_N@Z/r
+    NET_FIELD_TYPE_ARCHIVED_ENTITY = 0x0,
+    NET_FIELD_TYPE_CLIENT_STATE    = 0x1,
+    NET_FIELD_TYPE_PLAYERSTATE     = 0x2,
+    NET_FIELD_TYPE_OBJECTIVE       = 0x3,
+    NET_FIELD_TYPE_HUDELEMS        = 0x4,
+    NET_FIELD_TYPE_MATCHSTATE      = 0x5,
+    NET_FIELD_TYPE_COUNT           = 0x6,
+};
+
 struct __declspec(align(4)) msg_bookmark_t // sizeof=0x18
 {                                                                             // XREF: demoKeyFrame/r
                                                                                 // ?Demo_ProcessPlayback@@YAXXZ/r
@@ -45,6 +57,13 @@ struct msg_t // sizeof=0x30
         int lastEntityRef;
         int flush;
         netsrc_t targetLocalNetID;
+};
+
+struct NetFieldList // sizeof=0xC
+{                                       // XREF: .rdata:s_entityNetFieldList/r
+    const NetField *array;
+    unsigned int count;
+    const char *fieldArrayName;
 };
 
 struct NetField // sizeof=0x1C
