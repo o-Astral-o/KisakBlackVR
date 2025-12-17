@@ -1,4 +1,12 @@
 #include "stringed_remote.h"
+#include <win32/win_common.h>
+#include <string.h>
+#include <qcommon/common.h>
+
+int StringEdCommandCount;
+char StringEdCommands[4][128];
+
+EXT_List<LocalizeEntry> overrideLocalizedEntryList;
 
 char __cdecl ProcessStringEdCmds()
 {
@@ -36,7 +44,8 @@ char __cdecl ProcessStringEdCmds()
             I_strncpyz((char *)newEntrya->name, Reference, strlen(Reference) + 1);
             newEntrya->value = (const char *)Com_LiveAllocate(strlen(Value) + 1);
             I_strncpyz((char *)newEntrya->value, Value, strlen(Value) + 1);
-            EXT_List<LocalizeEntry>::Add(&overrideLocalizedEntryList, newEntrya, 0);
+            //EXT_List<LocalizeEntry>::Add(&overrideLocalizedEntryList, newEntrya, 0);
+            overrideLocalizedEntryList.Add(newEntrya, 0);
         }
     }
     StringEdCommandCount = 0;
@@ -62,51 +71,3 @@ char *__cdecl GetString(const char *PackageAndStringReference)
     Sys_LeaveCriticalSection(CRITSECT_STRINGED_COMMAND);
     return value;
 }
-
-EXT_Link<LocalizeEntry> *__thiscall EXT_List<LocalizeEntry>::Add(
-                EXT_List<LocalizeEntry> *this,
-                LocalizeEntry *m_Data,
-                bool First)
-{
-    EXT_Link<LocalizeEntry> *v4; // [esp+0h] [ebp-10h]
-    EXT_Link<LocalizeEntry> *v6; // [esp+8h] [ebp-8h]
-
-    v6 = (EXT_Link<LocalizeEntry> *)operator new(0xCu);
-    if ( v6 )
-    {
-        v6->m_Next = 0;
-        v6->m_Last = 0;
-        v6->m_Data = 0;
-        v4 = v6;
-    }
-    else
-    {
-        v4 = 0;
-    }
-    if ( !v4 )
-        return 0;
-    v4->m_Data = m_Data;
-    if ( this->m_Head && this->m_Tail )
-    {
-        if ( First )
-        {
-            this->m_Head->m_Last = v4;
-            v4->m_Next = this->m_Head;
-            this->m_Head = v4;
-        }
-        else
-        {
-            this->m_Tail->m_Next = v4;
-            v4->m_Last = this->m_Tail;
-            this->m_Tail = v4;
-        }
-    }
-    else
-    {
-        this->m_Head = v4;
-        this->m_Tail = v4;
-    }
-    ++this->m_Count;
-    return v4;
-}
-

@@ -1,4 +1,8 @@
 #include "stringed_interface.h"
+#include <universal/com_files.h>
+#include <universal/assertive.h>
+
+int giFilesFound;
 
 unsigned __int8 *__cdecl SE_LoadFileData(const char *psFileName)
 {
@@ -26,21 +30,22 @@ void __cdecl SE_FreeFileDataAfterLoad(unsigned __int8 *psLoadedFile)
 
 int __cdecl SE_BuildFileList(
                 const char *psStartDir,
-                std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName> > *strResults)
+                std::string *strResults)
 {
     giFilesFound = 0;
-    std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::assign(
-        strResults,
-        "",
-        "" + strlen("") + 1 - algn_C60BFA);
-    SE_R_ListFiles("str", psStartDir, strResults);
+    //std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::assign(
+    //    strResults,
+    //    "",
+    //    "" + strlen("") + 1 - algn_C60BFA);
+    strResults->assign("", 1);
+    SE_R_ListFiles((char*)"str", psStartDir, strResults);
     return giFilesFound;
 }
 
 void __cdecl SE_R_ListFiles(
                 char *psExtension,
                 const char *psDir,
-                std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName> > *strResults)
+                std::string *strResults)
 {
     char sFilename[64]; // [esp+54h] [ebp-98h] BYREF
     char sDirName[64]; // [esp+94h] [ebp-58h] BYREF
@@ -50,7 +55,7 @@ void __cdecl SE_R_ListFiles(
     const char **sysFiles; // [esp+E4h] [ebp-8h]
     const char **dirFiles; // [esp+E8h] [ebp-4h]
 
-    dirFiles = FS_ListFiles(psDir, "/", FS_LIST_PURE_ONLY, &numdirs);
+    dirFiles = FS_ListFiles(psDir, (char*)"/", FS_LIST_PURE_ONLY, &numdirs);
     for ( i = 0; i < numdirs; ++i )
     {
         if ( *dirFiles[i] )
@@ -66,11 +71,13 @@ void __cdecl SE_R_ListFiles(
     for ( i = 0; i < numSysFiles; ++i )
     {
         sprintf(sFilename, "%s/%s", psDir, sysFiles[i]);
-        std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::append(
-            strResults,
-            sFilename,
-            &sFilename[strlen(sFilename) + 1] - &sFilename[1]);
-        std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::append(strResults, 1u, 59);
+        strResults->append(sFilename, &sFilename[strlen(sFilename) + 1] - &sFilename[1]);
+        //std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::append(
+        //    strResults,
+        //    sFilename,
+        //    &sFilename[strlen(sFilename) + 1] - &sFilename[1]);
+        //std::basic_string<char,std::char_traits<char>,Allocator<char,LocalizeStringName>>::append(strResults, 1u, 59);
+        strResults->append(1, ';');
         ++giFilesFound;
     }
     FS_FreeFileList(sysFiles);

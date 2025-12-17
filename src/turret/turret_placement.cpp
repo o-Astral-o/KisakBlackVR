@@ -1,13 +1,37 @@
 #include "turret_placement.h"
+#include <qcommon/cm_trace.h>
+#include <universal/com_math_anglevectors.h>
+#include <game/g_debug.h>
+#include <cgame/cg_drawtools.h>
+
+#include <bgame/bg_public.h>
+#include <bgame/bg_local.h>
+#include <cgame_mp/cg_local_mp.h>
+#include <bgame/bg_misc.h>
+#include <qcommon/common.h>
+#include <game_mp/g_main_mp.h>
+
+const dvar_t *turret_placement_debug;
+const dvar_t *turret_placement_feet_offset;
+const dvar_t *turret_placement_feet_trace_dist_z;
+const dvar_t *turret_placement_trace_maxs;
+const dvar_t *turret_placement_trace_mins;
+const dvar_t *turret_placement_trace_radius_canon_safety;
+const dvar_t *turret_placement_trace_dist;
+const dvar_t *turret_placement_trace_pitch;
+const dvar_t *turret_placement_trace_min_normal;
+
+void(__cdecl *turretTraceHandlers[2])(trace_t *, const float *, const float *, const float *, const float *, int, int, col_context_t *)  { &CG_TraceCapsule, &G_TraceCapsule };
+
 
 void __cdecl Turret_PlaceTurret_RegisterDvars()
 {
     turret_placement_debug = _Dvar_RegisterBool("turret_placement_debug", 0, 0, "Enables turret placement debug lines");
     turret_placement_feet_offset = _Dvar_RegisterVec3(
                                                                      "turret_placement_feet_offset",
-                                                                     COERCE_UNSIGNED_INT(17.0),
-                                                                     COERCE_UNSIGNED_INT(20.0),
-                                                                     COERCE_UNSIGNED_INT(10.0),
+                                                                     (17.0),
+                                                                     (20.0),
+                                                                     (10.0),
                                                                      0.0,
                                                                      3.4028235e38,
                                                                      0,
@@ -141,17 +165,8 @@ int __cdecl Turret_PlaceTurret_Internal(
         CG_DebugBox(traceStart, mins, maxs, viewAngles[1], colorYellow, 0, 0);
         CG_DebugBox(traceEnd, mins, maxs, viewAngles[1], colorGreen, 0, 0);
     }
-    col_context_t::col_context_t(&context);
-    Turret_PlaceTurret_Trace(
-        handler,
-        &trace,
-        traceStart,
-        mins,
-        maxs,
-        traceEnd,
-        moverEntNum,
-        (int)&cls.recentServers[7647].hostName[20],
-        &context);
+    //col_context_t::col_context_t(&context);
+    Turret_PlaceTurret_Trace(handler, &trace, traceStart, mins, maxs, traceEnd, moverEntNum, 0x2818011, &context);
     Vec3Lerp(traceStart, traceEnd, trace.fraction, outOrigin);
     if ( trace.startsolid
         || trace.allsolid
@@ -349,7 +364,7 @@ bool __cdecl Turret_PlaceTurret_UpdateFooting(
         traceEnd[0] = (float)(v9 * (*outAxis)[6]) + legPosition[legIndex][0];
         traceEnd[1] = (float)(v9 * (*outAxis)[7]) + legPosition[legIndex][1];
         traceEnd[2] = (float)(v9 * (*outAxis)[8]) + legPosition[legIndex][2];
-        col_context_t::col_context_t(&context);
+        //col_context_t::col_context_t(&context);
         Turret_PlaceTurret_Trace(
             handler,
             trace,
@@ -358,7 +373,7 @@ bool __cdecl Turret_PlaceTurret_UpdateFooting(
             vec3_origin,
             traceEnd,
             moverEntNum,
-            (int)&cls.recentServers[7647].hostName[20],
+            0x2818011,
             &context);
         if ( trace->hitType )
         {
@@ -544,7 +559,7 @@ int __cdecl Turret_PlaceTurret_Server(playerState_s *ps, float *outOrigin, float
     if ( canPlace )
         v3 = ps->weapFlags & 0xFF7FFFFF;
     else
-        v3 = (unsigned int)&loc_800000 | ps->weapFlags;
+        v3 = ps->weapFlags | 0x800000;
     ps->weapFlags = v3;
     return canPlace;
 }

@@ -9,6 +9,12 @@ enum msgLocErrType_t : __int32
     LOCMSG_NOERR = 0x1,
 };
 
+struct LocalizeEntry // sizeof=0x8
+{                                       // XREF: XAssetPoolEntry<LocalizeEntry>/r
+    const char *value;
+    const char *name;
+};
+
 template <typename T>
 struct EXT_Link//<LocalizeEntry> // sizeof=0xC
 {

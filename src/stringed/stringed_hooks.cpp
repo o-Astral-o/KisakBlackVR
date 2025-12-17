@@ -3,6 +3,8 @@
 #include <universal/com_files.h>
 #include <qcommon/common.h>
 #include "stringed_ingame.h"
+#include "stringed_remote.h"
+#include <ui/ui_shared.h>
 
 const dvar_t *loc_language;
 const dvar_t *loc_forceEnglish;
@@ -11,6 +13,9 @@ const dvar_t *loc_warnings;
 const dvar_t *loc_warningsAsErrors;
 
 int g_currentAsian;
+
+char szStrings[10][1024];
+int iCurrString;
 
 languageInfo_t g_languages[13] =
 {
@@ -189,11 +194,12 @@ const char *__cdecl SEH_StringEd_GetString(char *pszReference)
     return pszReference;
 }
 
+char szErrorString[1024];
 char *__cdecl SEH_SafeTranslateString(const char *pszReference)
 {
     const char *pszTranslation; // [esp+0h] [ebp-4h]
 
-    pszTranslation = SEH_StringEd_GetString(pszReference);
+    pszTranslation = SEH_StringEd_GetString((char*)pszReference);
     if ( !pszTranslation )
     {
         if ( loc_warnings->current.enabled )
@@ -246,7 +252,7 @@ char __cdecl SEH_ReplaceDirective(
                 char *dstString,
                 unsigned int size)
 {
-    unsigned __int8 *v5; // eax
+    char *v5; // eax
     const char *v7; // eax
     const char *v8; // eax
     const char *v9; // eax
@@ -310,7 +316,7 @@ char __cdecl SEH_ReplaceDirective(
     }
     memcpy(srcString, (unsigned __int8 *)dstString, *dstLen);
     srcString[*dstLen] = 0;
-    strstr(&srcString[*searchPos], "[{");
+    v5 = strstr((char*) & srcString[*searchPos], "[{");
     startTokenPos = (const char *)v5;
     if ( !v5 )
         return 0;
@@ -415,7 +421,7 @@ void __cdecl SEH_ParseDirective(char *directive, char *resultName, char *resultA
     const char *v3; // eax
     const char *argpos; // [esp+4h] [ebp-4h]
 
-    strstr((unsigned __int8 *)directive, ":");
+    v3 = strstr((char*)directive, ":");
     argpos = v3;
     if ( v3 )
     {
@@ -498,7 +504,7 @@ char *__cdecl SEH_LocalizeTextMessage(const char *pszInputBuffer, const char *ps
                 }
                 for ( i = 0; i < iTokenLen - 2; ++i )
                 {
-                    if ( !strncmp(&szTokenBuf[i], AMPERSAND_2X, 2u) && isdigit(szTokenBuf[i + 2]) )
+                    if ( !strncmp(&szTokenBuf[i], "&&", 2u) && isdigit(szTokenBuf[i + 2]))
                     {
                         if ( bInsertEnabled )
                         {
@@ -526,7 +532,7 @@ char *__cdecl SEH_LocalizeTextMessage(const char *pszInputBuffer, const char *ps
                 {
                     for ( i = 0; i < iLen - 2; ++i )
                     {
-                        if ( !strncmp(&pszString[i], AMPERSAND_2X, 2u) && isdigit(pszString[i + 2]) )
+                        if ( !strncmp(&pszString[i], "&&", 2u) && isdigit(pszString[i + 2]))
                         {
                             digit = pszString[i + 2] - 48;
                             if ( !digit )
@@ -759,60 +765,3 @@ int __cdecl SEH_GetLanguageIndexForName(const char *pszLanguageName, int *piLang
     *piLanguageIndex = 0;
     return 0;
 }
-
-EXT_List<LocalizeEntry> *__thiscall EXT_List<LocalizeEntry>::EXT_List<LocalizeEntry>(EXT_List<LocalizeEntry> *this)
-{
-    this->m_Count = 0;
-    this->m_Head = 0;
-    this->m_Tail = 0;
-    return this;
-}
-
-void __thiscall EXT_List<LocalizeEntry>::~EXT_List<LocalizeEntry>(EXT_List<LocalizeEntry> *this)
-{
-    EXT_List<LocalizeEntry>::Empty(this, 0);
-}
-
-void __thiscall EXT_List<LocalizeEntry>::Empty(EXT_List<LocalizeEntry> *this, bool DeleteData)
-{
-    while ( this->m_Tail )
-        EXT_List<LocalizeEntry>::Remove(this, this->m_Tail, DeleteData);
-}
-
-char __thiscall EXT_List<LocalizeEntry>::Remove(
-                EXT_List<LocalizeEntry> *this,
-                EXT_Link<LocalizeEntry> *Link,
-                bool DeleteData)
-{
-    if ( Link->m_Last && Link->m_Next )
-    {
-        Link->m_Last->m_Next = Link->m_Next;
-        Link->m_Next->m_Last = Link->m_Last;
-    }
-    else if ( Link == this->m_Head && Link == this->m_Tail )
-    {
-        this->m_Head = 0;
-        this->m_Tail = 0;
-    }
-    else if ( Link == this->m_Head )
-    {
-        Link->m_Next->m_Last = 0;
-        this->m_Head = Link->m_Next;
-    }
-    else if ( Link == this->m_Tail )
-    {
-        Link->m_Last->m_Next = 0;
-        this->m_Tail = Link->m_Last;
-    }
-    if ( DeleteData )
-    {
-        if ( Link->m_Data )
-            operator delete(Link->m_Data);
-        Link->m_Data = 0;
-    }
-    if ( Link )
-        operator delete(Link);
-    --this->m_Count;
-    return 1;
-}
-

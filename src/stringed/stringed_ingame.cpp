@@ -385,7 +385,7 @@ const char *__thiscall CStringEdPackage::ParseLine(char *psLine, bool forceEngli
                         //    v14 = &sentence;
                         v14 = &sentence;
                         //if (!CStringEdPackage::IsStringFormatCorrect(v14->_Bx._Buf))
-                        if (!CStringEdPackage::IsStringFormatCorrect(v14->data()))
+                        if (!CStringEdPackage::IsStringFormatCorrect((char*)v14->data()))
                         {
                             //v15 = (std::string *)sentence._Bx._Ptr;
                             //if (sentence._Myres < 0x10)

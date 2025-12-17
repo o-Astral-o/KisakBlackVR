@@ -1,5 +1,20 @@
 #pragma once
 
+#include <universal/dvar.h>
+
+enum turret_handler : __int32
+{                                       // XREF: ?Turret_PlaceTurret_Internal@@YAHW4turret_handler@@HHQBM11QAM2@Z/r
+                                        // Turret_PlaceTurret_Trace/r ...
+    TURRET_HANDLER_CLIENT = 0x0,
+    TURRET_HANDLER_SERVER = 0x1,
+    TURRET_HANDLER_COUNT  = 0x2,
+};
+
+struct trace_t;
+struct col_context_t;
+struct entityState_s;
+struct playerState_s;
+
 void __cdecl Turret_PlaceTurret_RegisterDvars();
 int __cdecl Turret_PlaceTurret_Internal(
                 turret_handler handler,
