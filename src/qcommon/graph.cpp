@@ -3,6 +3,14 @@
 #include <universal/q_shared.h>
 #include <universal/com_loadutils.h>
 #include <universal/q_parse.h>
+#include "common.h"
+#include <devgui/devgui.h>
+#include <universal/com_files.h>
+
+#include <cstring>
+
+int gGraphsCount;
+GraphFloat gGraphs[8];
 
 void __cdecl GraphFloat_Load(GraphFloat *graph, char *fileName, float scale)
 {
@@ -51,13 +59,13 @@ void __cdecl GraphFloat_ParseBuffer(GraphFloat *graph, const char *buffer, const
             break;
         knots_4 = atof(tokena->token);
         if ( knotIndex >= 32 )
-            Com_Error(ERR_DROP, &byte_CD6700, fileName, 32);
+            Com_Error(ERR_DROP, "GraphFloat_ParseBuffer: File [%s] has too many knots.  Max is [%d]", fileName, 32);
         graph->knots[knotIndex][0] = knots;
         graph->knots[knotIndex][1] = knots_4;
     }
     Com_EndParseSession();
     if ( knotIndex != graph->knotCount )
-        Com_Error(ERR_DROP, &byte_CD66C8, fileName);
+        Com_Error(ERR_DROP, "GraphFloat_ParseBuffer: Error parsing graph file [%s]", fileName);
 }
 
 GraphFloat *__cdecl GraphFloat_Load(char *fileName)
@@ -146,7 +154,7 @@ void __cdecl GraphFloat_SaveToFile(const GraphFloat *graph)
 
     if ( !graph && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\graph.cpp", 167, 0, "%s", "graph") )
         __debugbreak();
-    fileHandle = FS_FOpenTextFileWrite(graph->name);
+    fileHandle = FS_FOpenTextFileWrite((char*)graph->name);
     if ( fileHandle )
     {
         if ( !graph->knotCount

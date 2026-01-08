@@ -3,6 +3,7 @@
 #include <cstring>
 #include <universal/com_memory.h>
 #include <client/cl_main.h>
+#include <client_mp/cl_main_mp.h>
 
 ClientGameState clientGameStates[1];
 

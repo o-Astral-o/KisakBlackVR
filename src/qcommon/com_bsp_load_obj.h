@@ -83,6 +83,27 @@ enum LumpType : __int32
     LUMP_HERO_ONLY_LIGHTS        = 0x4D,
 };
 
+struct BspLump // sizeof=0x8
+{                                       // XREF: OldBspHeader/r
+    unsigned int length;                // XREF: Com_ReadLumpOutOfBsp+B3/r
+    unsigned int offset;                // XREF: Com_ReadLumpOutOfBsp+B7/r
+};
+
+struct BspChunk // sizeof=0x8
+{                                       // XREF: BspHeader/r
+    LumpType type;                      // XREF: Com_ReadLumpOutOfBsp:loc_6CB05D/r
+    unsigned int length;                // XREF: Com_ReadLumpOutOfBsp+13D/r
+};
+
+struct BspHeader // sizeof=0x32C
+{                                       // XREF: ?Com_SaveLump@@YAXW4LumpType@@PBXIW4ComSaveLumpBehavior@@@Z/r
+    unsigned int ident;                 // XREF: Com_SaveLump(LumpType,void const *,uint,ComSaveLumpBehavior):loc_6CB821/w
+    unsigned int version;               // XREF: Com_SaveLump(LumpType,void const *,uint,ComSaveLumpBehavior)+BB/w
+    unsigned int chunkCount;            // XREF: Com_SaveLump(LumpType,void const *,uint,ComSaveLumpBehavior)+C5/w
+                                        // Com_SaveLump(LumpType,void const *,uint,ComSaveLumpBehavior)+14A/r ...
+    BspChunk chunks[100];               // XREF: Com_SaveLump(LumpType,void const *,uint,ComSaveLumpBehavior)+153/w
+};
+
 enum ComSaveLumpBehavior : __int32
 {                                       // XREF: ?Com_SaveLump@@YAXW4LumpType@@PBXIW4ComSaveLumpBehavior@@@Z/r
     COM_SAVE_LUMP_AND_CLOSE  = 0x0,
@@ -112,6 +133,67 @@ struct DiskPrimaryLight_Version16 // sizeof=0x60
     float cosHalfFovInner;
     int exponent;
     char defName[40];
+};
+
+struct DiskWaterCell // sizeof=0x8
+{
+    __int16 waterheight;
+    char flooroffset;
+    unsigned __int8 shoreDist;
+    unsigned __int8 color[4];
+};
+
+struct DiskBurnableBlock // sizeof=0x20
+{
+    DiskBurnableSample data[32];
+};
+
+struct DiskPrimaryLight_Version16 // sizeof=0x60
+{
+    unsigned __int16 falloffStart;
+    unsigned __int8 falloffSizeLessOne;
+    unsigned __int8 type;
+    float color[3];
+    float dir[3];
+    float origin[3];
+    float radius;
+    float cosHalfFovOuter;
+    float cosHalfFovInner;
+    int exponent;
+    char defName[40];
+};
+
+struct DiskPrimaryLight // sizeof=0x10C
+{
+    unsigned __int8 type;
+    unsigned __int8 canUseShadowMap;
+    __int16 cullDist;
+    char priority;
+    unsigned __int8 _pad[3];
+    float dir[3];
+    float origin[3];
+    float color[3];
+    float specularcolor[3];
+    float attenuation[3];
+    float angle[3];
+    float bouncecolor[3];
+    float intensity;
+    float cutOn;
+    float radius;
+    float nearEdge;
+    float farEdge;
+    float cosHalfFovOuter;
+    float cosHalfFovInner;
+    int exponent;
+    float rotationLimit;
+    float translationLimit;
+    float roundness;
+    float mipDistance;
+    float aAbB[4];
+    float cookieControl0[4];
+    float cookieControl1[4];
+    float cookieControl2[4];
+    char defName[64];
 };
 
 bool __cdecl Com_IsBspLoaded();

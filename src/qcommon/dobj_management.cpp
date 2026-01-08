@@ -1,4 +1,15 @@
 #include "dobj_management.h"
+#include <cgame_mp/cg_local_mp.h>
+
+int objFreeCount;
+__int16 clientObjMap[1537];
+__int16 serverObjMap[1024];
+unsigned int objBuf[3072][31];
+bool objAlloced[3072];
+
+int com_lastDObjIndex;
+
+int g_bDObjInited;
 
 DObj *__cdecl Com_GetServerDObj(unsigned int handle)
 {
@@ -121,7 +132,7 @@ DObj *__cdecl Com_ClientDObjCreate(
         __debugbreak();
     }
     if ( !objFreeCount )
-        Com_Error(ERR_DROP, &byte_CD5558);
+        Com_Error(ERR_DROP, "No free DObjs");
     return (DObj *)objBuf[index];
 }
 
@@ -269,7 +280,7 @@ DObj *__cdecl Com_ServerDObjCreate(
     }
     DObjCreateExt(dobjModels, numModels, tree, (unsigned __int8 *)objBuf[index], handle + 1, 1, 0, 0xFFu);
     if ( !objFreeCount )
-        Com_Error(ERR_DROP, &byte_CD5558);
+        Com_Error(ERR_DROP, "No free DObjs");
     return (DObj *)objBuf[index];
 }
 

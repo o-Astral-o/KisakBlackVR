@@ -1,4 +1,40 @@
 #include "com_bsp_load_obj.h"
+#include <universal/com_files.h>
+#include <universal/com_memory.h>
+#include "com_profilemapload.h"
+#include <gfx_d3d/r_water_sim.h>
+#include "com_bsp.h"
+
+const char *connectionString_126[11] =
+{
+  "CA_DISCONNECTED",
+  "CA_CINEMATIC",
+  "CA_UICINEMATIC",
+  "CA_LOGO",
+  "CA_CONNECTING",
+  "CA_CHALLENGING",
+  "CA_CONNECTED",
+  "CA_SENDINGSTATS",
+  "CA_LOADING",
+  "CA_PRIMED",
+  "CA_ACTIVE"
+};
+
+
+struct $770C4B51799C51B11A150CADEE7E2360 // sizeof=0x54
+{                                       // XREF: .data:comBspGlob/r
+    char name[64];                      // XREF: Com_UnloadBsp(void)+8C/w
+    BspHeader *header;                  // XREF: Com_IsBspLoaded(void)+5/r
+                                        // Com_GetBspLump(LumpType,uint,uint *):loc_6CABF5/r ...
+    unsigned int fileSize;              // XREF: Com_ValidateBspLumpData+45/r
+                                        // Com_CheckVersionLumpCountError+56/r ...
+    unsigned int checksum;              // XREF: Com_GetBspChecksum(void):loc_6CB265/r
+                                        // Com_LoadBsp(char const *)+182/w
+    LumpType loadedLumpType;            // XREF: Com_LoadBspLump(char const *,LumpType,uint,uint *)+12D/w
+                                        // Com_UnloadBspLump(LumpType):loc_6CB162/r ...
+    const void *loadedLumpData;         // XREF: Com_LoadBspLump(char const *,LumpType,uint,uint *)+13/r
+                                        // Com_LoadBspLump(char const *,LumpType,uint,uint *)+B4/w ...
+} comBspGlob;
 
 bool __cdecl Com_IsBspLoaded()
 {
@@ -62,7 +98,7 @@ char *__cdecl Com_GetBspLumpCountForVersion(int version)
     {
         __debugbreak();
     }
-    return connectionString_126[version + 8];
+    return (char*)connectionString_126[version + 8];
 }
 
 char *__cdecl Com_ValidateBspLumpData(
@@ -80,10 +116,10 @@ char *__cdecl Com_ValidateBspLumpData(
     if ( length )
     {
         if ( length + offset > comBspGlob.fileSize )
-            Com_Error(ERR_DROP, &byte_CD2778, type);
+            Com_Error(ERR_DROP, "LoadMap: lump %i extends past end of file", type);
         *count = length / elemSize;
         if ( elemSize * *count != length )
-            Com_Error(ERR_DROP, &byte_CD2754, type);
+            Com_Error(ERR_DROP, "LoadMap: lump %i has funny size", type);
         return (char *)comBspGlob.header + offset;
     }
     else
@@ -95,7 +131,7 @@ char *__cdecl Com_ValidateBspLumpData(
 
 const void *__cdecl Com_LoadBspLump(char *mapname, LumpType type, unsigned int elemSize, unsigned int *count)
 {
-    int v4; // eax
+    char *v4; // eax
     const char *v5; // eax
     char filename[260]; // [esp+28h] [ebp-110h] BYREF
     int fileSize; // [esp+130h] [ebp-8h]
@@ -113,7 +149,7 @@ const void *__cdecl Com_LoadBspLump(char *mapname, LumpType type, unsigned int e
     }
     if ( Com_IsBspLoaded() )
     {
-        strstr((unsigned __int8 *)&comBspGlob, (unsigned __int8 *)mapname);
+        v4 = strstr(comBspGlob.name, mapname);
         if ( !v4 )
         {
             v5 = va("%s, %s", comBspGlob.name, mapname);
@@ -209,7 +245,7 @@ unsigned __int8 *__cdecl Com_ReadLumpOutOfBspAtOffset(
     if ( !length )
         return 0;
     if ( length % elemSize )
-        Com_Error(ERR_DROP, &byte_CD2754, type);
+        Com_Error(ERR_DROP, "LoadMap: lump %i has funny size", type);
     FS_Seek(h, offset, 2);
     data = (unsigned __int8 *)Hunk_AllocateTempMemoryHigh(length, "Com_ReadLumpOutOfBsp");
     if ( FS_Read(data, length, h) != length )
@@ -357,7 +393,7 @@ void __cdecl Com_LoadBsp(char *filename)
     comBspGlob.fileSize = FS_FOpenFileRead(filename, &h);
     if ( !h )
     {
-        v1 = va(aExeErrCouldntL, filename);
+        v1 = va("EXE_ERR_COULDNT_LOAD", filename);
         Com_Error(ERR_DROP, v1);
     }
     comBspGlob.header = (BspHeader *)Z_MallocGarbage(comBspGlob.fileSize, "Com_LoadBsp", 11);
@@ -366,7 +402,7 @@ void __cdecl Com_LoadBsp(char *filename)
     if ( bytesRead != comBspGlob.fileSize )
     {
         Z_Free((char *)comBspGlob.header, 11);
-        v2 = va(aExeErrCouldntL, filename);
+        v2 = va("EXE_ERR_COULDNT_LOAD", filename);
         Com_Error(ERR_DROP, v2);
     }
     ProfLoad_Begin("Bsp checksum");
@@ -376,7 +412,7 @@ void __cdecl Com_LoadBsp(char *filename)
     {
         Z_Free((char *)comBspGlob.header, 11);
         comBspGlob.header = 0;
-        v3 = va(aExeErrWrongMap, filename);
+        v3 = va("EXE_ERR_WRONG_MAP_VERSION_NUM", filename);
         Com_Error(ERR_DROP, v3);
     }
     ProfLoad_End();
@@ -816,7 +852,7 @@ ComPrimaryLight *Com_LoadPrimaryLights()
     ComPrimaryLight *out; // [esp+48h] [ebp-14h]
     const DiskPrimaryLight *diskLights; // [esp+4Ch] [ebp-10h]
     unsigned int diskLightCount; // [esp+50h] [ebp-Ch] BYREF
-    const DiskPrimaryLight *in; // [esp+54h] [ebp-8h]
+    DiskPrimaryLight *in; // [esp+54h] [ebp-8h]
     unsigned int lightIndex; // [esp+58h] [ebp-4h]
 
     if ( comBspGlob.header->version <= 0xE )
@@ -828,7 +864,7 @@ ComPrimaryLight *Com_LoadPrimaryLights()
         Com_Error(ERR_DROP, "no primary lights in bsp\n");
     comWorld.primaryLightCount = diskLightCount;
     comWorld.primaryLights = (ComPrimaryLight *)Hunk_Alloc(220 * diskLightCount, "Com_LoadPrimaryLights", 14);
-    in = diskLights;
+    in = (DiskPrimaryLight*)diskLights;
     result = comWorld.primaryLights;
     out = comWorld.primaryLights;
     lightIndex = 0;
@@ -858,14 +894,15 @@ ComPrimaryLight *Com_LoadPrimaryLights()
         out->translationLimit = in->translationLimit;
         if ( in->type && in->type != 1 )
         {
-            out->defName = Com_GetLightDefName(in->defName, comWorld.primaryLights, lightIndex);
+            out->defName = Com_GetLightDefName((char*)in->defName, comWorld.primaryLights, lightIndex);
             if ( out->cosHalfFovOuter >= out->cosHalfFovInner )
                 out->cosHalfFovInner = (float)(out->cosHalfFovOuter * 0.75) + 0.25;
             if ( out->rotationLimit == 1.0 )
             {
                 out->cosHalfFovExpanded = out->cosHalfFovOuter;
             }
-            else if ( COERCE_FLOAT(LODWORD(out->cosHalfFovOuter) ^ _mask__NegFloat_) < out->rotationLimit )
+            //else if ( COERCE_FLOAT(LODWORD(out->cosHalfFovOuter) ^ _mask__NegFloat_) < out->rotationLimit )
+            else if ( (-(out->cosHalfFovOuter)) < out->rotationLimit )
             {
                 out->cosHalfFovExpanded = CosOfSumOfArcCos(out->cosHalfFovOuter, out->rotationLimit);
             }
@@ -973,7 +1010,7 @@ const DiskPrimaryLight_Version16 *Com_LoadPrimaryLights_Version16()
     ComPrimaryLight *out; // [esp+18h] [ebp-14h]
     const DiskPrimaryLight_Version16 *diskLights; // [esp+1Ch] [ebp-10h]
     unsigned int diskLightCount; // [esp+20h] [ebp-Ch] BYREF
-    const DiskPrimaryLight_Version16 *in; // [esp+24h] [ebp-8h]
+    DiskPrimaryLight_Version16 *in; // [esp+24h] [ebp-8h]
     unsigned int lightIndex; // [esp+28h] [ebp-4h]
 
     diskLights = (const DiskPrimaryLight_Version16 *)Com_GetBspLump(LUMP_PRIMARY_LIGHTS, 0x60u, &diskLightCount);
@@ -982,7 +1019,7 @@ const DiskPrimaryLight_Version16 *Com_LoadPrimaryLights_Version16()
     comWorld.primaryLightCount = diskLightCount;
     comWorld.primaryLights = (ComPrimaryLight *)Hunk_Alloc(220 * diskLightCount, "Com_LoadPrimaryLights", 14);
     result = diskLights;
-    in = diskLights;
+    in = (DiskPrimaryLight_Version16 *)diskLights;
     out = comWorld.primaryLights;
     lightIndex = 0;
     while ( lightIndex < diskLightCount )
@@ -1023,7 +1060,7 @@ const DiskPrimaryLight_Version16 *Com_LoadPrimaryLights_Version16()
 
 void __cdecl Com_LoadWorld_FastFile(const char *name)
 {
-    if ( DB_FindXAssetHeader(ASSET_TYPE_COMWORLD, name, 1, -1).comWorld != &comWorld
+    if ( DB_FindXAssetHeader(ASSET_TYPE_COMWORLD, (char*)name, 1, -1).comWorld != &comWorld
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\com_bsp_load_obj.cpp",
                     813,
@@ -1047,7 +1084,7 @@ void __cdecl Com_LoadWorld_FastFile(const char *name)
 
 void __cdecl Com_ShutdownWorld()
 {
-    int Target; // [esp+0h] [ebp-4h] BYREF
+    volatile unsigned int Target; // [esp+0h] [ebp-4h] BYREF
 
     comWorld.isInUse = 0;
     Target = 0;

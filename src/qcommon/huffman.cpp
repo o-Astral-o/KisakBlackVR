@@ -1,30 +1,32 @@
 #include "huffman.h"
+#include <universal/com_shared.h>
+#include <cstdlib>
+
+thread_local int bloc;
 
 int __cdecl get_bit(const unsigned __int8 *fin)
 {
     int t; // [esp+0h] [ebp-4h]
 
-    t = ((int)fin[*(int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) >> 3] >> (*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) & 7))
-        & 1;
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16)
-                                                                                                                                                                                + 1;
+    t = ((int)fin[bloc >> 3] >> (bloc & 7)) & 1; 
+    bloc = bloc + 1;
     return t;
 }
 
 void __cdecl Huff_offsetReceive(nodetype *node, int *ch, const unsigned __int8 *fin, int *offset)
 {
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) = *offset;
-    while ( node && node->symbol == 257 )
+    bloc = *offset;
+    while (node && node->symbol == 257)
     {
-        if ( get_bit(fin) )
+        if (get_bit(fin))
             node = node->right;
         else
             node = node->left;
     }
-    if ( node )
+    if (node)
     {
         *ch = node->symbol;
-        *offset = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16);
+        *offset = bloc;
     }
     else
     {
@@ -47,19 +49,17 @@ void __cdecl huffman_send(nodetype *node, nodetype *child, unsigned __int8 *fout
 
 void __cdecl add_bit(char bit, unsigned __int8 *fout)
 {
-    if ( (*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) & 7) == 0 )
-        fout[*(int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) >> 3] = 0;
-    fout[*(int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) >> 3] = (bit << (*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) & 7))
-                                                                                                                                                                                                | fout[*(int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) >> 3];
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16)
-                                                                                                                                                                                + 1;
+    if ((bloc & 7) == 0)
+        fout[bloc >> 3] = 0;
+    fout[bloc >> 3] = (bit << (bloc & 7)) | fout[bloc >> 3];
+    bloc = bloc + 1;
 }
 
 void __cdecl Huff_offsetTransmit(huff_t *huff, int ch, unsigned __int8 *fout, int *offset)
 {
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16) = *offset;
+    bloc = *offset;
     huffman_send(huff->loc[ch], 0, fout);
-    *offset = *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 16);
+    *offset = bloc;
 }
 
 void __cdecl Huff_Init(huffman_t *huff)

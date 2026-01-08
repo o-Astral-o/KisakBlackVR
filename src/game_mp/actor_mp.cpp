@@ -1,5 +1,22 @@
 #include "actor_mp.h"
 #include "g_main_mp.h"
+#include "g_utils_mp.h"
+#include <game/actor_spawner.h>
+#include <game/actor_orientation.h>
+#include <game/g_actor_prone.h>
+#include <game/actor_lookat.h>
+#include <bgame/bg_dog_animations_mp.h>
+#include <server/sv_world.h>
+#include <clientscript/cscr_stringlist.h>
+#include <qcommon/dobj_management.h>
+#include <clientscript/cscr_vm.h>
+#include <clientscript/scr_const.h>
+#include <client_mp/g_client_mp.h>
+#include "g_spawn_mp.h"
+#include <game/actor_state.h>
+
+const float actorMins[3] = { -15.0, -15.0, 0.0 };
+const float actorMaxs[3] = { 15.0, 15.0, 48.0 };
 
 void __fastcall VisCache_Update(vis_cache_t *pCache, bool bVisible)
 {
@@ -145,7 +162,7 @@ LABEL_2:
         Actor_InitPath(actor);
         actor->accuracy = 0.2f;
         actor->playerSightAccuracy = 1.0f;
-        actor->debugLastAccuracy = FLOAT_N6969_0;
+        actor->debugLastAccuracy = -6969.0f;
         actor->sideMove = 0.0f;
         actor->missCount = (__int64)(1.0 / actor->accuracy);
         actor->safeToChangeScript = 1;
@@ -224,7 +241,7 @@ LABEL_2:
             __debugbreak();
         }
         G_DObjUpdate(ent);
-        SV_LinkEntity((int)&savedregs, ent);
+        SV_LinkEntity(ent);
         Sentient_NearestNode(sentient);
         return 1;
     }
@@ -263,7 +280,7 @@ void __cdecl Actor_InitActorState(gentity_s *ent)
     {
         __debugbreak();
     }
-    ent->s.lerp.u.actor.index.actorNum = actorNum;
+    ent->s.lerp.u.actor.actorNum = actorNum;
 }
 
 actor_s *__cdecl Actor_Alloc()
@@ -305,6 +322,19 @@ void __cdecl Scr_FreeFields(const actor_field_t *fields, unsigned __int8 *base)
         ++fields;
     }
 }
+
+const actor_field_t actorFields_0[9] =
+{
+  { 540, { 2 }, AF_STRING },
+  { 516, { 2 }, AF_STRING },
+  { 518, { 2 }, AF_STRING },
+  { 520, { 2 }, AF_STRING },
+  { 236, { 2 }, AF_STRING },
+  { 5896, { 2 }, AF_STRING },
+  { 5992, { 2 }, AF_STRING },
+  { 5994, { 2 }, AF_STRING },
+  { 5996, { 2 }, AF_STRING }
+};
 
 void __cdecl Scr_FreeActorFields(actor_s *pActor)
 {
@@ -389,7 +419,7 @@ void __cdecl Actor_Free(actor_s *actor)
     Sentient_Free(actor->sentient);
     actor->sentient = 0;
     Scr_FreeActorFields(actor);
-    ent->s.lerp.u.actor.index.actorNum = 16;
+    ent->s.lerp.u.actor.actorNum = 16;
     memset((unsigned __int8 *)actor, 0xF0u, sizeof(actor_s));
     actor->inuse = 0;
 }
@@ -546,7 +576,7 @@ void __cdecl Actor_FreeExpendable()
         }
     }
     if ( !pExpendable )
-        Com_Error(ERR_DROP, &byte_D32F30);
+        Com_Error(ERR_DROP, "Tried to force spawning of an AI when all AI slots are used by undeletable AI");
     Com_Printf(18, "^3deleting entity %i\n", pExpendable->ent->s.number);
     Actor_ClearPath(pExpendable);
     Scr_Notify(pExpendable->ent, scr_const.death, 0);

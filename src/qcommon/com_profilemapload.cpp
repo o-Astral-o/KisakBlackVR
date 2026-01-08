@@ -1,5 +1,24 @@
 #include "com_profilemapload.h"
 
+#include <Windows.h>
+#include "threads.h"
+#include <universal/assertive.h>
+#include <universal/dvar.h>
+#include <universal/timing.h>
+#include "common.h"
+
+#include <algorithm>
+#include <gfx_d3d/r_font.h>
+#include <ui/ui_main.h>
+#include <ui/ui_atoms.h>
+
+const float PROFLOAD_BACKGROUND_COLOR[4] = { 0.0, 0.0, 0.0, 0.8f };
+const float PROFLOAD_TEXT_COLOR[4] = { 0.0, 1.0, 0.0, 1.0 };
+
+const dvar_t *com_profileLoading;
+
+mapLoadProfile_t mapLoadProfile;
+
 bool __cdecl ProfLoad_IsActive()
 {
     return mapLoadProfile.isLoading;
@@ -115,16 +134,16 @@ void __cdecl ProfLoad_Deactivate()
     v0 = (MapProfileEntry *)QueryPerformanceCounter(&PerformanceCount);
     mapLoadProfile.ticksFinish = PerformanceCount.QuadPart;
     mapLoadProfile.isLoading = 0;
-    ProfLoad_Print(v0);
+    ProfLoad_Print();
 }
 
-void    ProfLoad_Print(MapProfileEntry *a1@<eax>)
+void    ProfLoad_Print()
 {
     int fileReadCount; // [esp+6Ch] [ebp-18h]
     int fileOpenCount; // [esp+74h] [ebp-10h]
     int fileSeekCount; // [esp+80h] [ebp-4h]
 
-    ProfLoad_CalculateSelfTicks(a1);
+    ProfLoad_CalculateSelfTicks();
     ProfLoad_PrintTree();
     ProfLoad_PrintHotSpots();
     fileOpenCount = mapLoadProfile.elementAccessCount[0];
@@ -163,10 +182,9 @@ void    ProfLoad_Print(MapProfileEntry *a1@<eax>)
         fileReadCount);
 }
 
-MapProfileEntry * ProfLoad_CalculateSelfTicks@<eax>(MapProfileEntry *result@<eax>)
+void ProfLoad_CalculateSelfTicks()
 {
-    int v1; // ecx
-    unsigned __int64 v2; // kr00_8
+    int v0; // ecx
     MapProfileEntry *parentEntry; // [esp+8h] [ebp-10h]
     MapProfileEntry *entry; // [esp+Ch] [ebp-Ch]
     MapProfileEntry *entrya; // [esp+Ch] [ebp-Ch]
@@ -175,38 +193,29 @@ MapProfileEntry * ProfLoad_CalculateSelfTicks@<eax>(MapProfileEntry *result@<eax
     int elemIndex; // [esp+14h] [ebp-4h]
     int elemIndexa; // [esp+14h] [ebp-4h]
 
-    for ( entryIndex = 0; entryIndex < mapLoadProfile.profileEntryCount; ++entryIndex )
+    for (entryIndex = 0; entryIndex < mapLoadProfile.profileEntryCount; ++entryIndex)
     {
         entry = &mapLoadProfile.profileEntries[entryIndex];
         LODWORD(entry->ticksSelf) = entry->ticksTotal;
         HIDWORD(entry->ticksSelf) = HIDWORD(entry->ticksTotal);
-        for ( elemIndex = 0; elemIndex < 3; ++elemIndex )
+        for (elemIndex = 0; elemIndex < 3; ++elemIndex)
         {
-            v1 = elemIndex;
-            LODWORD(entry->elements[v1].ticksSelf) = entry->elements[elemIndex].ticksTotal;
-            HIDWORD(entry->elements[v1].ticksSelf) = HIDWORD(entry->elements[elemIndex].ticksTotal);
+            v0 = elemIndex;
+            LODWORD(entry->elements[v0].ticksSelf) = entry->elements[elemIndex].ticksTotal;
+            HIDWORD(entry->elements[v0].ticksSelf) = HIDWORD(entry->elements[elemIndex].ticksTotal);
         }
-        result = (MapProfileEntry *)(entryIndex + 1);
     }
-    for ( entryIndexa = 0; entryIndexa < mapLoadProfile.profileEntryCount; ++entryIndexa )
+    for (entryIndexa = 0; entryIndexa < mapLoadProfile.profileEntryCount; ++entryIndexa)
     {
-        result = &mapLoadProfile.profileEntries[entryIndexa];
-        entrya = result;
-        parentEntry = result->parent;
-        if ( parentEntry )
+        entrya = &mapLoadProfile.profileEntries[entryIndexa];
+        parentEntry = entrya->parent;
+        if (parentEntry)
         {
-            v2 = parentEntry->ticksSelf - result->ticksTotal;
-            result = (MapProfileEntry *)HIDWORD(v2);
-            parentEntry->ticksSelf = v2;
-            for ( elemIndexa = 0; elemIndexa < 3; ++elemIndexa )
-            {
-                result = (MapProfileEntry *)((parentEntry->elements[elemIndexa].ticksSelf
-                                                                        - entrya->elements[elemIndexa].ticksTotal) >> 32);
+            parentEntry->ticksSelf -= entrya->ticksTotal;
+            for (elemIndexa = 0; elemIndexa < 3; ++elemIndexa)
                 parentEntry->elements[elemIndexa].ticksSelf -= entrya->elements[elemIndexa].ticksTotal;
-            }
         }
     }
-    return result;
 }
 
 int ProfLoad_PrintTree()
@@ -278,11 +287,12 @@ void ProfLoad_PrintHotSpots()
         LODWORD(v11[v3].ticksFile) = v2;
         HIDWORD(v11[v3].ticksFile) = HIDWORD(v2);
     }
-    std::_Sort<MapProfileHotSpot *,int,bool (__cdecl *)(MapProfileHotSpot const &,MapProfileHotSpot const &)>(
-        v11,
-        &v11[mapLoadProfile.profileEntryCount],
-        24 * mapLoadProfile.profileEntryCount / 24,
-        (bool (__cdecl *)(const MapProfileHotSpot *, const MapProfileHotSpot *))ProfLoad_CompareHotSpotNames);
+    //std::_Sort<MapProfileHotSpot *,int,bool (__cdecl *)(MapProfileHotSpot const &,MapProfileHotSpot const &)>(
+    //    v11,
+    //    &v11[mapLoadProfile.profileEntryCount],
+    //    24 * mapLoadProfile.profileEntryCount / 24,
+    //    (bool (__cdecl *)(const MapProfileHotSpot *, const MapProfileHotSpot *))ProfLoad_CompareHotSpotNames);
+    std::sort(&v11[0], &v11[mapLoadProfile.profileEntryCount], ProfLoad_CompareHotSpotNames);
     v14 = 0;
     i = 0;
     while ( i != mapLoadProfile.profileEntryCount )
@@ -311,11 +321,12 @@ void ProfLoad_PrintHotSpots()
         }
         ++v14;
     }
-    std::_Sort<MapProfileHotSpot *,int,bool (__cdecl *)(MapProfileHotSpot const &,MapProfileHotSpot const &)>(
-        v11,
-        &v11[v14],
-        24 * v14 / 24,
-        ProfLoad_CompareHotSpotTicks);
+    //std::_Sort<MapProfileHotSpot *,int,bool (__cdecl *)(MapProfileHotSpot const &,MapProfileHotSpot const &)>(
+    //    v11,
+    //    &v11[v14],
+    //    24 * v14 / 24,
+    //    ProfLoad_CompareHotSpotTicks);
+    std::sort(&v11[0], &v11[v14], ProfLoad_CompareHotSpotTicks);
     Com_Printf(12, "\n\n^6---------- Load time hot spots ----------\n");
     if ( v14 > 16 )
         v10 = 16;
@@ -453,7 +464,7 @@ void __cdecl ProfLoad_DrawOverlay(rectDef_s *rect)
 
     if ( com_profileLoading->current.enabled )
     {
-        y = FLOAT_395_0;
+        y = 395.0f;
         profileFont = UI_GetFontHandle(&scrPlaceFull, 0, 0.36000001);
         UI_FillRect(
             &scrPlaceFull,
@@ -464,7 +475,7 @@ void __cdecl ProfLoad_DrawOverlay(rectDef_s *rect)
             rect->horzAlign,
             rect->vertAlign,
             PROFLOAD_BACKGROUND_COLOR);
-        ProfLoad_DrawTree(v1);
+        ProfLoad_DrawTree();
         fileOpenElement = mapLoadProfile.elements;
         fileOpenCount = mapLoadProfile.elementAccessCount[0];
         fileSeekCount = mapLoadProfile.elementAccessCount[1];
@@ -577,7 +588,7 @@ void __cdecl ProfLoad_DrawOverlay(rectDef_s *rect)
     }
 }
 
-int    ProfLoad_DrawTree@<eax>(MapProfileEntry *a1@<eax>)
+int    ProfLoad_DrawTree()
 {
     int result; // eax
     int v2; // [esp+1Ch] [ebp-124h]
@@ -588,7 +599,7 @@ int    ProfLoad_DrawTree@<eax>(MapProfileEntry *a1@<eax>)
     int textIndex; // [esp+138h] [ebp-8h]
     int profileIndex; // [esp+13Ch] [ebp-4h]
 
-    ProfLoad_CalculateSelfTicks(a1);
+    ProfLoad_CalculateSelfTicks();
     textIndex = 0;
     profileFont = UI_GetFontHandle(&scrPlaceFull, 0, 0.36000001);
     result = mapLoadProfile.profileEntryCount - 16;

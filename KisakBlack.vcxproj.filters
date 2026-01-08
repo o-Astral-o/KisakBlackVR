@@ -3123,6 +3123,9 @@
     <ClCompile Include="src\CubeMapGenLib\UIRegionManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\qcommon\md4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\libs\libtomcrypt-1.17\src\headers\tomcrypt.h">
@@ -5418,6 +5421,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\nvapi\nvapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\qcommon\md4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

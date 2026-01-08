@@ -36,6 +36,40 @@ struct MapProfileHotSpot // sizeof=0x18
     __int64 ticksFile;                  // XREF: std::_Insertion_sort1<MapProfileHotSpot *,bool (*)(MapProfileHotSpot const &,MapProfileHotSpot const &),MapProfileHotSpot>(MapProfileHotSpot *,MapProfileHotSpot *,bool (*)(MapProfileHotSpot const &,MapProfileHotSpot const &),MapProfileHotSpot *)+50/w
 };
 
+struct mapLoadProfile_t // sizeof=0xA880
+{                                       // XREF: .data:mapLoadProfile/r
+    bool isLoading;                     // XREF: ProfLoad_IsActive(void)+3/r
+                                        // ProfLoad_BeginTrackedValue(MapProfileTrackedValue)+6/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    int profileEntryCount;              // XREF: ProfLoad_CalculateSelfTicks+1D/r
+                                        // ProfLoad_CalculateSelfTicks+99/r ...
+    MapProfileEntry profileEntries[384];
+                                        // XREF: ProfLoad_CalculateSelfTicks+2B/o
+                                        // ProfLoad_CalculateSelfTicks+AB/o ...
+    MapProfileEntry *currentEntry;      // XREF: ProfLoad_BeginTrackedValue(MapProfileTrackedValue)+15/r
+                                        // ProfLoad_BeginTrackedValue(MapProfileTrackedValue)+7C/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    unsigned __int64 ticksStart;        // XREF: ProfLoad_Activate(void)+5F/w
+                                        // ProfLoad_Activate(void)+68/w ...
+    unsigned __int64 ticksFinish;       // XREF: ProfLoad_Activate(void)+73/w
+                                        // ProfLoad_Activate(void)+7E/w ...
+    unsigned __int64 ticksProfiled;     // XREF: ProfLoad_Print+A7/r
+                                        // ProfLoad_Print+AC/r ...
+    int elementAccessCount[3];          // XREF: ProfLoad_BeginTrackedValue(MapProfileTrackedValue)+68/r
+                                        // ProfLoad_BeginTrackedValue(MapProfileTrackedValue)+75/w ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    MapProfileElement elements[3];      // XREF: ProfLoad_BeginTrackedValue(MapProfileTrackedValue)+56/o
+                                        // ProfLoad_EndTrackedValue(MapProfileTrackedValue)+4E/o ...
+};
+
 bool __cdecl ProfLoad_IsActive();
 void __cdecl ProfLoad_BeginTrackedValue(MapProfileTrackedValue type);
 void __cdecl ProfLoad_BeginTrackedValueTicks(MapProfileElement *value, unsigned __int64 ticks);
@@ -45,7 +79,7 @@ void __cdecl ProfLoad_Init();
 void __cdecl ProfLoad_Activate();
 void __cdecl ProfLoad_Deactivate();
 void    ProfLoad_Print();
-MapProfileEntry * ProfLoad_CalculateSelfTicks();
+void ProfLoad_CalculateSelfTicks();
 int ProfLoad_PrintTree();
 void __cdecl ProfLoad_GetEntryRowText(const MapProfileEntry *entry, char *rowText, unsigned int sizeofRowText);
 void ProfLoad_PrintHotSpots();

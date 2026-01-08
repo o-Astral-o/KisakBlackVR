@@ -3,6 +3,14 @@
 #include <stdio.h> // FILE?
 #include <win32/win_common.h>
 
+enum FS_SERVER_COMPARE_RESULT : __int32
+{                                       // XREF: ?FS_CompareWithServerFiles@@YA?AW4FS_SERVER_COMPARE_RESULT@@PADHH@Z/r
+                                        // ?FS_CompareWithServerFiles@@YA?AW4FS_SERVER_COMPARE_RESULT@@PADHH@Z/r ...
+    FILES_MATCH      = 0x0,
+    NEED_DOWNLOAD    = 0x1,
+    NOT_DOWNLOADABLE = 0x2,
+};
+
 enum fsMode_t : __int32
 {                                       // XREF: ?FS_FOpenFileByMode@@YAHPBDPAHW4fsMode_t@@@Z/r
     FS_READ        = 0x0,
@@ -106,6 +114,14 @@ struct searchpath_s // sizeof=0x1C
     int ignore;
     int ignorePureCheck;
     int language;
+};
+
+struct iwd_pure_check_s // sizeof=0x208
+{                                       // XREF: iwd_pure_check_t/r
+    iwd_pure_check_s *next;
+    int checksum;
+    char iwdBasename[256];
+    char iwdGamename[256];
 };
 
 char *__cdecl FS_GetOsFolderPath(int folder, char *ospath);
@@ -228,6 +244,8 @@ unsigned int __cdecl FS_FTell(int f);
 void __cdecl FS_Flush(int f);
 void __cdecl Com_GetBspFilename(char *filename, unsigned int size, const char *mapname);
 
+extern int fs_numServerReferencedIwds;
+extern const char *fs_serverIwdNames[1024];
 extern int fs_numServerIwds;
 
 extern const dvar_t *fs_debug;
@@ -244,3 +262,8 @@ extern const dvar_t *fs_restrict;
 extern const dvar_t *fs_usedevdir;
 
 extern char fs_gamedir[256];
+
+
+extern fileHandleData_t fsh[70];
+
+extern searchpath_s *fs_searchpaths;

@@ -1,4 +1,5 @@
 #pragma once
+#include <xanim/dobj.h>
 
 DObj *__cdecl Com_GetServerDObj(unsigned int handle);
 DObj *__cdecl Com_ClientDObjCreate(

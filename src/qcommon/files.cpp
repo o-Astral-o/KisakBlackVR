@@ -1,8 +1,15 @@
 #include "files.h"
+#include <cstdio>
+#include <universal/com_files.h>
+#include <universal/com_fileaccess.h>
+#include "common.h"
+
+#include <cstring>
+#include "cmd.h"
 
 int __cdecl FS_SV_FileExists(char *file, char *dir)
 {
-    _iobuf *f; // [esp+4h] [ebp-10Ch]
+    FILE *f; // [esp+4h] [ebp-10Ch]
     char testpath[260]; // [esp+8h] [ebp-108h] BYREF
 
     FS_BuildOSPath((char *)fs_homepath->current.integer, dir, file, testpath);
@@ -41,42 +48,42 @@ int __cdecl FS_SV_FOpenFileRead(char *filename, char *dir, int *fp)
 
     f = 0;
     FS_CheckFileSystemStarted();
-    if ( fs_debug->current.integer )
+    if (fs_debug->current.integer)
         Com_Printf(10, "FS_SV_FOpenFileRead: opening %s\n", filename);
     basepath = fs_homepath->current.string;
     FS_BuildOSPath((char *)basepath, dir, filename, ospath);
     f = FS_HandleForFileCurrentThread(filename);
-    if ( !f )
+    if (!f)
         return 0;
-    dword_99D6E84[71 * f] = 0;
-    dword_99D6E78[71 * f] = 0;
+    fsh[f].zipFile = 0;
+    fsh[f].handleSync = 0;
     Binary = FS_FileOpenReadBinary(ospath);
     fsh[f].handleFiles.file.o = Binary;
-    if ( !fsh[f].handleFiles.file.o && I_stricmp(fs_homepath->current.string, fs_basepath->current.string) )
+    if (!fsh[f].handleFiles.file.o && I_stricmp(fs_homepath->current.string, fs_basepath->current.string))
     {
         FS_BuildOSPath((char *)fs_basepath->current.integer, dir, filename, ospath);
-        if ( fs_debug->current.integer )
+        if (fs_debug->current.integer)
             Com_Printf(10, "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath);
         v5 = FS_FileOpenReadBinary(ospath);
         fsh[f].handleFiles.file.o = v5;
     }
-    if ( !fsh[f].handleFiles.file.o )
+    if (!fsh[f].handleFiles.file.o)
     {
         FS_BuildOSPath((char *)fs_cdpath->current.integer, dir, filename, ospath);
-        if ( fs_debug->current.integer )
+        if (fs_debug->current.integer)
             Com_Printf(10, "FS_SV_FOpenFileRead (fs_cdpath) : %s\n", ospath);
         v6 = FS_FileOpenReadBinary(ospath);
         fsh[f].handleFiles.file.o = v6;
     }
-    if ( fsh[f].handleFiles.file.o )
+    if (fsh[f].handleFiles.file.o)
     {
-        I_strncpyz(&byte_99D6E8C[284 * f], filename, 256);
+        I_strncpyz(fsh[f].name, filename, 256);
         *fp = f;
         return FS_filelength(f);
     }
     else
     {
-        if ( fs_debug->current.integer )
+        if (fs_debug->current.integer)
             Com_Printf(10, "FS_SV_FOpenFileRead: failed to open %s\n", filename);
         *fp = 0;
         return 0;
@@ -113,7 +120,7 @@ int __cdecl FS_GetModList(char *listbuf, int bufsize)
     char v9; // [esp+33h] [ebp-151h]
     char *v10; // [esp+38h] [ebp-14Ch]
     char *v11; // [esp+3Ch] [ebp-148h]
-    _iobuf *file; // [esp+50h] [ebp-134h]
+    FILE *file; // [esp+50h] [ebp-134h]
     int nMods; // [esp+54h] [ebp-130h]
     int nDescLen; // [esp+58h] [ebp-12Ch]
     int nDescLena; // [esp+58h] [ebp-12Ch]
@@ -151,7 +158,7 @@ int __cdecl FS_GetModList(char *listbuf, int bufsize)
         }
         while ( v9 );
         I_strncat(descPath, 256, "/description.txt");
-        if ( FS_SV_FOpenFileRead(descPath, "mods", &descHandle) > 0 && descHandle )
+        if ( FS_SV_FOpenFileRead(descPath, (char*)"mods", &descHandle) > 0 && descHandle )
         {
             file = FS_FileForHandle(descHandle);
             Com_Memset((unsigned int *)descPath, 0, 256);
@@ -297,14 +304,14 @@ int __cdecl FS_iwIwd(char *iwd, char *base)
     const char *v2; // eax
     const char *v4; // eax
     const char *v5; // eax
-    int v6; // eax
+    char *v6; // eax
     char v7; // [esp+3h] [ebp-71h]
     char *v8; // [esp+8h] [ebp-6Ch]
     const char *v9; // [esp+Ch] [ebp-68h]
     char v10; // [esp+13h] [ebp-61h]
     char *v11; // [esp+18h] [ebp-5Ch]
     char *v12; // [esp+1Ch] [ebp-58h]
-    unsigned __int8 *str2; // [esp+20h] [ebp-54h]
+    char *str2; // [esp+20h] [ebp-54h]
     char szFile[68]; // [esp+24h] [ebp-50h] BYREF
     const char *pszLoc; // [esp+6Ch] [ebp-8h]
     int i; // [esp+70h] [ebp-4h]
@@ -315,7 +322,7 @@ int __cdecl FS_iwIwd(char *iwd, char *base)
         if ( !FS_FilenameCompare(iwd, v2) )
             return 1;
     }
-    strstr((unsigned __int8 *)iwd, "localized_");
+    v4 = strstr(iwd, "localized_");
     pszLoc = v4;
     if ( v4 )
     {
@@ -342,8 +349,8 @@ int __cdecl FS_iwIwd(char *iwd, char *base)
             I_strlwr(szFile);
             for ( i = 0; i < 28; ++i )
             {
-                str2 = (unsigned __int8 *)va("_iw%02d", i);
-                strstr((unsigned __int8 *)szFile, str2);
+                str2 = va("_iw%02d", i);
+                v6 = strstr(szFile, str2);
                 if ( v6 )
                     return 1;
             }
@@ -354,7 +361,7 @@ int __cdecl FS_iwIwd(char *iwd, char *base)
 
 bool __cdecl FS_serverPak(const char *pak)
 {
-    int v1; // eax
+    char *v1; // eax
     char v3; // [esp+3h] [ebp-55h]
     char *v4; // [esp+8h] [ebp-50h]
     char szFile[68]; // [esp+10h] [ebp-48h] BYREF
@@ -367,7 +374,7 @@ bool __cdecl FS_serverPak(const char *pak)
     }
     while ( v3 );
     I_strlwr(szFile);
-    strstr((unsigned __int8 *)szFile, "_svr_");
+    v1 = strstr(szFile, "_svr_");
     return v1 != 0;
 }
 
