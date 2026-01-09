@@ -1,57 +1,5 @@
 #include "cg_predict_mp.h"
 
-void __thiscall colgeom_visitor_inlined_t<200>::update(
-                colgeom_visitor_inlined_t<200> *this,
-                const float *start,
-                const float *end,
-                const float *mins,
-                const float *maxs,
-                int mask)
-{
-    float _mn[3]; // [esp+14h] [ebp-60h] BYREF
-    float extents_start[3]; // [esp+20h] [ebp-54h] BYREF
-    float extents_end[3]; // [esp+2Ch] [ebp-48h] BYREF
-    float _mx[3]; // [esp+38h] [ebp-3Ch] BYREF
-    float offset[3]; // [esp+44h] [ebp-30h]
-    float size[3]; // [esp+50h] [ebp-24h]
-    float expand_vec[3]; // [esp+5Ch] [ebp-18h] BYREF
-    float fudge[3]; // [esp+68h] [ebp-Ch]
-
-    fudge[0] = `colgeom_visitor_inlined_t<200>::update'::`2'::fFudge;
-    fudge[1] = `colgeom_visitor_inlined_t<200>::update'::`2'::fFudge;
-    fudge[2] = `colgeom_visitor_inlined_t<200>::update'::`2'::fFudge;
-    offset[0] = (float)(0.5 * *mins) + (float)(0.5 * *maxs);
-    offset[1] = (float)(0.5 * mins[1]) + (float)(0.5 * maxs[1]);
-    offset[2] = (float)(0.5 * mins[2]) + (float)(0.5 * maxs[2]);
-    size[0] = *maxs - offset[0];
-    size[1] = maxs[1] - offset[1];
-    size[2] = maxs[2] - offset[2];
-    extents_start[0] = *start + offset[0];
-    extents_start[1] = start[1] + offset[1];
-    extents_start[2] = start[2] + offset[2];
-    extents_end[0] = *end + offset[0];
-    extents_end[1] = end[1] + offset[1];
-    extents_end[2] = end[2] + offset[2];
-    Vec3Min(extents_start, extents_end, _mn);
-    Vec3Max(extents_start, extents_end, _mx);
-    _mn[0] = _mn[0] - size[0];
-    _mn[1] = _mn[1] - size[1];
-    _mn[2] = _mn[2] - size[2];
-    _mx[0] = _mx[0] + size[0];
-    _mx[1] = _mx[1] + size[1];
-    _mx[2] = _mx[2] + size[2];
-    _mn[0] = _mn[0] - fudge[0];
-    _mn[1] = _mn[1] - fudge[1];
-    _mn[2] = _mn[2] - fudge[2];
-    _mx[0] = _mx[0] + fudge[0];
-    _mx[1] = _mx[1] + fudge[1];
-    _mx[2] = _mx[2] + fudge[2];
-    expand_vec[0] = 70.0f;
-    expand_vec[1] = 70.0f;
-    expand_vec[2] = 20.0f;
-    this->update(this, _mn, _mx, mask, expand_vec);
-}
-
 int __cdecl CG_ItemListLocalClientNum()
 {
     return cg_itemLocalClientNum;

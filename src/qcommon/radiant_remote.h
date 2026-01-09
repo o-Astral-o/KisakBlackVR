@@ -13,6 +13,13 @@ enum RadiantCommandType : __int32
     RADIANT_COMMAND_CAMERA = 0x6,
 };
 
+enum CommandProcessorType : __int32
+{                                       // XREF: ?G_ProcessRadiantCmd@@YAXABURadiantCommand@@@Z/r
+    COMMAND_SERVER = 0x0,
+    COMMAND_CLIENT = 0x1,
+    COMMAND_BOTH   = 0x2,
+};
+
 struct RadiantCommand // sizeof=0x208
 {                                       // XREF: .data:cgCommands/r
     RadiantCommandType type;            // XREF: AddSavedCommand(RadiantCommand const &)+8D/r
@@ -26,6 +33,15 @@ struct RadaintToGameMapping // sizeof=0x10
     int liveUpdateId;
     int gameId;                         // XREF: G_AssignGameIdMapping(int,int)+15/w
     int cg_gameId;                      // XREF: CG_AssignGameIdMapping(int,int)+15/w
+};
+
+struct RadiantCommandProcessor // sizeof=0x10
+{                                       // XREF: .rdata:gCommandProcessors/r
+                                        // .rdata:cgCommandProcessors/r
+    void (__cdecl *processorFunc)(const RadiantCommand *, SpawnVar *);
+    void (__cdecl *clearSelectionFunc)();
+    bool (__cdecl *conditionFunc)(const SpawnVar *);
+    const char *classname;
 };
 
 char *__cdecl GetPairValue(const SpawnVar *spawnVar, const char *key);
@@ -61,6 +77,6 @@ void __cdecl G_ClearSelection(void (__cdecl *ignoreFunc)());
 void __cdecl CG_ClearSelection(void (__cdecl *ignoreFunc)());
 void __cdecl CG_ProcessRadiantCmd(const RadiantCommand *command);
 char __cdecl CG_ProcessRadiantCmds();
-int __cdecl GetCommandProcessorType(const SpawnVar *spawnVar);
+CommandProcessorType __cdecl GetCommandProcessorType(const SpawnVar *spawnVar);
 void __cdecl G_ProcessRadiantCmd(const RadiantCommand *command);
 char __cdecl G_ProcessRadiantCmds();

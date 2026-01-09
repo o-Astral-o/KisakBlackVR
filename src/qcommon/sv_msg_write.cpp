@@ -1,4 +1,10 @@
 #include "sv_msg_write.h"
+#include <demo/demo_version.h>
+#include <server_mp/sv_main_mp.h>
+#include "msg.h"
+#include <server_mp/sv_snapshot_profile_mp.h>
+#include <server_mp/sv_init_mp.h>
+#include <cgame/cg_draw_debug.h>
 
 const NetField hudElemFields[43] =
 {
@@ -49,6 +55,7 @@ const NetField hudElemFields[43] =
 
 
 
+bool offsetsTested;
 const NetFieldList *__cdecl MSG_GetStateFieldListForEntityType(int eType, bool isDemoSnapshot)
 {
     int v3; // [esp+0h] [ebp-4h]
@@ -145,6 +152,7 @@ void __cdecl MSG_LoopThroughFields(const NetFieldList *fieldToCheck)
     }
 }
 
+bool offsetsTested_0;
 const NetFieldList *__cdecl MSG_GetNetFieldList(netFieldTypes_t fieldType, bool isDemoSnapshot)
 {
     if ( (unsigned int)fieldType >= NET_FIELD_TYPE_COUNT
@@ -603,58 +611,42 @@ bool __cdecl MSG_ValuesAreEqual(int clientNum, int bits, int size, const int *fr
 
 void __cdecl MSG_WriteEntityIndex(const SnapshotInfo_s *snapInfo, msg_t *msg, int index, int indexBits)
 {
-    const char *v4; // eax
-    char *v5; // eax
+    // kcod4
+    iassert( !msg->readOnly );
 
-    if ( msg->readOnly
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp", 856, 0, "%s", "!msg->readOnly") )
+    // LWSS: in blops, these are stubbed out and outlined, could be a KISAKTODO
+    //if (msg_printEntityNums->current.enabled && SV_IsPacketDataNetworkData())
+    //    Com_Printf(15, "Writing entity num %i\n", index);
+
+    iassert(index - msg->lastEntityRef > 0);
+
+    if (index - msg->lastEntityRef == 1)
     {
-        __debugbreak();
-    }
-    //BLOPS_NULLSUB();
-    if ( index - msg->lastEntityRef <= 0 )
-    {
-        v4 = va((const char *)&cinfo.min_DCT_scaled_size, msg->lastEntityRef, index);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp",
-                        864,
-                        0,
-                        "%s\n\t%s",
-                        (const char *)&cinfo.arith_ac_K[14],
-                        v4) )
-            __debugbreak();
-    }
-    if ( index - msg->lastEntityRef == 1 )
-    {
-        //BLOPS_NULLSUB();
+        //if (msg_printEntityNums->current.enabled && SV_IsPacketDataNetworkData())
+        //    Com_Printf(16, "Wrote entity num: 1 bit (inc)\n");
         MSG_WriteBit1(msg);
     }
     else
     {
         MSG_WriteBit0(msg);
-        if ( indexBits == 10 && index - msg->lastEntityRef < 16 )
+        if (indexBits == 10 && index - msg->lastEntityRef < 16)
         {
-            //BLOPS_NULLSUB();
-            if ( index - msg->lastEntityRef <= 0 )
-            {
-                v5 = va((const char *)cinfo.quant_tbl_ptrs, index, msg->lastEntityRef);
-                if ( !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp",
-                                878,
-                                0,
-                                (const char *)&cinfo.image_width,
-                                &cinfo.rec_outbuf_height,
-                                v5) )
-                    __debugbreak();
-            }
+            //if (msg_printEntityNums->current.enabled && SV_IsPacketDataNetworkData())
+            //    Com_Printf(16, "Wrote entity num: %i bits (delta)\n", 6);
+            
+            iassert(index - msg->lastEntityRef > 0);
+
             MSG_WriteBit0(msg);
             MSG_WriteBits(msg, index - msg->lastEntityRef, 4u);
         }
         else
         {
-            //BLOPS_NULLSUB();
-            if ( indexBits == 10 )
+            //if (msg_printEntityNums->current.enabled && SV_IsPacketDataNetworkData())
+            //    Com_Printf(16, "Wrote entity num: %i bits (full)\n", indexBits + 2);
+
+            if (indexBits == 10)
                 MSG_WriteBit1(msg);
+
             MSG_WriteBits(msg, index, indexBits);
         }
     }
@@ -665,37 +657,15 @@ void __cdecl MSG_WriteLastChangedField(msg_t *msg, int lastChangedFieldNum, int 
 {
     unsigned int idealBits; // [esp+0h] [ebp-4h]
 
-    if ( msg->readOnly
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp", 904, 0, "%s", "!msg->readOnly") )
-    {
-        __debugbreak();
-    }
-    if ( lastChangedFieldNum > numFields
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp",
-                    905,
-                    0,
-                    "%s",
-                    (const char *)&cinfo.MCU_membership[5]) )
-    {
-        __debugbreak();
-    }
+    iassert(!msg->readOnly);
+    iassert(lastChangedFieldNum <= numFields);
     idealBits = GetMinBitCountForNum(numFields);
     MSG_WriteBits(msg, lastChangedFieldNum, idealBits);
 }
 
 void __cdecl MSG_WriteEventNum(int clientNum, msg_t *msg, unsigned __int8 eventNum)
 {
-    if ( msg->readOnly
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp",
-                    1035,
-                    0,
-                    "%s",
-                    "!msg->readOnly") )
-    {
-        __debugbreak();
-    }
+    iassert(!msg->readOnly);
     MSG_WriteByte(msg, eventNum);
 }
 
@@ -719,17 +689,7 @@ int __cdecl MSG_HighBitNumber(unsigned int v)
     unsigned int i; // [esp+0h] [ebp-4h]
     unsigned int va; // [esp+Ch] [ebp+8h]
 
-    if ( !v
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\sv_msg_write.cpp",
-                    1056,
-                    0,
-                    "%s\n\t%s",
-                    (const char *)&cinfo.unread_marker,
-                    (const char *)&cinfo.main) )
-    {
-        __debugbreak();
-    }
+    iassert(v);
     i = (v & 0xFFFF0000) != 0 ? 0x10 : 0;
     va = v >> ((v & 0xFFFF0000) != 0 ? 0x10 : 0);
     if ( (va & 0xFF00) != 0 )
@@ -1210,7 +1170,7 @@ char __cdecl MSG_WriteDeltaField_Internal(
             {
                 if ( value >= 4096 || value < -4096 )
                 {
-                    if ( value >= (int)&loc_800000 || value < -8388608 )
+                    if (value >= 0x800000 || value < (int)0xFF800000)
                     {
                         MSG_WriteBits(msg, 3, 2u);
                         MSG_WriteLong(msg, value);
@@ -2082,6 +2042,7 @@ void __cdecl MSG_WriteDeltaClient(
     }
 }
 
+bool do_it = true;
 bool __cdecl MSG_WithinAllowedPredictionError(float dist, const playerState_s *to)
 {
     if ( (to->eFlags & 0x4000) != 0 && do_it )
@@ -2133,6 +2094,7 @@ int __cdecl MSG_GetLastChangedField(
     return lc;
 }
 
+playerState_s dummy_1;
 void __cdecl MSG_WriteDeltaPlayerstate(
                 SnapshotInfo_s *snapInfo,
                 msg_t *msg,
@@ -2600,12 +2562,12 @@ void    MSG_WriteDeltaMatchState(
     unsigned __int8 v6[128]; // [esp-Ch] [ebp-10Ch] OVERLAPPED BYREF
     unsigned int count; // [esp+ECh] [ebp-14h]
     const NetField *array; // [esp+F0h] [ebp-10h]
-    int v9; // [esp+F4h] [ebp-Ch]
-    int numFields; // [esp+F8h] [ebp-8h]
-    int retaddr; // [esp+100h] [ebp+0h]
+    //int v9; // [esp+F4h] [ebp-Ch]
+    //int numFields; // [esp+F8h] [ebp-8h]
+    //int retaddr; // [esp+100h] [ebp+0h]
 
-    v9 = a1;
-    numFields = retaddr;
+    //v9 = a1;
+    //numFields = retaddr;
     MSG_PacketAnalyze_SetPacketEntityType(snapInfo, ANALYZE_DATATYPE_ENTITYTYPE_MATCHSTATE, 0);
     array = MSG_GetNetFieldList(NET_FIELD_TYPE_MATCHSTATE, snapInfo->demoSnapshot)->array;
     count = MSG_GetNetFieldList(NET_FIELD_TYPE_MATCHSTATE, snapInfo->demoSnapshot)->count;

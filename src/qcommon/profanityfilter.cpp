@@ -1,7 +1,9 @@
 #include "profanityfilter.h"
 
-char __cdecl isBadWord(int controllerIndex, char *testString)
+bool __cdecl isBadWord(int controllerIndex, char *testString)
 {
+    return false; // fuck off guys, it's an M-rated game, suck my balls.
+#if 0
     char *v2; // eax
     char *v4; // eax
     char *v5; // eax
@@ -66,5 +68,6 @@ char __cdecl isBadWord(int controllerIndex, char *testString)
         bdTaskResult::~bdTaskResult(&verified);
     }
     return 0;
+#endif
 }
 

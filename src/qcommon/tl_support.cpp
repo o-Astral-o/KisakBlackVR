@@ -1,4 +1,10 @@
 #include "tl_support.h"
+#include <tl/tl_system.h>
+#include <universal/mem_userhunk.h>
+#include "common.h"
+#include <win32/win_common.h>
+
+HunkUser *s_tlHunkUser;
 
 void __cdecl Sys_SetupTLCallbacks(int hunkMemSize)
 {

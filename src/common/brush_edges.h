@@ -1,5 +1,11 @@
 #pragma once
 
+struct winding_t // sizeof=0x34
+{
+    int numpoints;
+    float p[4][3];
+};
+
 struct adjacencyWinding_t // sizeof=0x34
 {                                       // XREF: Xmodel_ParsePhysicsBrush/r
     int numsides;                       // XREF: Xmodel_ParsePhysicsBrush+7D3/r

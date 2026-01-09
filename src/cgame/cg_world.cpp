@@ -970,7 +970,7 @@ void __cdecl CG_TraceCapsule(
     {
         moveclip_t clip; // [esp+4Ch] [ebp-78h] BYREF
 
-        //TraceExtents::TraceExtents(&clip.extents);
+        ////TraceExtents::TraceExtents(&clip.extents);
         clip.contentmask = contentMask;
         clip.passEntityNum = passEntityNum;
         clip.passOwnerNum = -1;
@@ -1555,7 +1555,7 @@ void __cdecl CG_TracePoint(
     {
         pointtrace_t clip; // [esp+58h] [ebp-58h] BYREF
 
-        //TraceExtents::TraceExtents(&clip.extents);
+        ////TraceExtents::TraceExtents(&clip.extents);
         if ( !staticModels )
             goto LABEL_34;
         CM_PointTraceStaticModels(results, start, end, contentMask);
@@ -1926,7 +1926,7 @@ bool __cdecl CG_SightTracePoint(int *hitNum, const float *start, const float *en
     TraceExtents extents; // [esp+16Ch] [ebp-38h] BYREF
     int oldHitNum; // [esp+1A0h] [ebp-4h]
 
-    //TraceExtents::TraceExtents(&extents);
+    ////TraceExtents::TraceExtents(&extents);
     *(_QWORD *)extents.start.vec.v = *(_QWORD *)start;
     extents.start.vec.v[2] = start[2];
     *(_QWORD *)extents.end.vec.v = *(_QWORD *)end;

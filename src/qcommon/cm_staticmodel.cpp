@@ -1,4 +1,6 @@
 #include "cm_staticmodel.h"
+#include <universal/com_memory.h>
+#include <xanim/xmodel.h>
 
 unsigned __int8 *__cdecl CM_Hunk_AllocXModel(unsigned int size)
 {

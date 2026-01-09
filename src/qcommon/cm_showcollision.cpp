@@ -1,4 +1,10 @@
 #include "cm_showcollision.h"
+#include <xanim/xanim.h>
+#include "common.h"
+#include <common/brush_edges.h>
+#include "cm_load.h"
+
+unsigned __int8 windingPool[12292];
 
 void __cdecl CM_GetPlaneVec4Form(
                 const cbrushside_t *sides,
@@ -43,51 +49,44 @@ void __cdecl CM_GetPlaneVec4Form(
 }
 
 void __cdecl CM_ShowSingleBrushCollision(
-                const cbrush_t *brush,
-                const float *color,
-                void (__cdecl *drawCollisionPoly)(int, float (*)[3], const float *))
+    const cbrush_t *brush,
+    const float *color,
+    void(__cdecl *drawCollisionPoly)(int, float (*)[3], const float *))
 {
     int ptCount; // [esp+30h] [ebp-506Ch]
     ShowCollisionBrushPt brushPts; // [esp+34h] [ebp-5068h] BYREF
     int sideIndex; // [esp+5038h] [ebp-64h]
-    _OWORD axialPlanes[6]; // [esp+503Ch] [ebp-60h] BYREF
+    float axialPlanes[4][4]; // [esp+503Ch] [ebp-60h] BYREF
 
-    if ( !brush
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_showcollision.cpp", 403, 0, "%s", "brush") )
+    if (!brush
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_showcollision.cpp", 403, 0, "%s", "brush"))
     {
         __debugbreak();
     }
-    if ( !color
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_showcollision.cpp", 404, 0, "%s", "color") )
+    if (!color
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_showcollision.cpp", 404, 0, "%s", "color"))
     {
         __debugbreak();
     }
-    CM_BuildAxialPlanes(brush, (float (*)[4])axialPlanes);
-    ptCount = CM_ForEachBrushPlaneIntersection(brush, (const float (*)[4])axialPlanes, &brushPts);
-    if ( ptCount >= 4 )
+    CM_BuildAxialPlanes(brush, axialPlanes);
+    ptCount = CM_ForEachBrushPlaneIntersection(brush, axialPlanes, &brushPts);
+    if (ptCount >= 4)
     {
-        for ( sideIndex = 0; (unsigned int)sideIndex < 6; ++sideIndex )
+        for (sideIndex = 0; (unsigned int)sideIndex < 6; ++sideIndex)
         {
-            if ( CM_BuildBrushWindingForSide(
-                         (winding_t *)windingPool,
-                         (float *)&axialPlanes[sideIndex],
-                         sideIndex,
-                         &brushPts,
-                         ptCount) )
-            {
-                drawCollisionPoly(*(unsigned int *)windingPool, (float (*)[3])&windingPool[4], color);
-            }
+            if (CM_BuildBrushWindingForSide((winding_t *)windingPool, axialPlanes[sideIndex], sideIndex, &brushPts, ptCount))
+                drawCollisionPoly(*(_DWORD *)windingPool, (float (*)[3]) & windingPool[4], color);
         }
-        for ( sideIndex = 6; sideIndex < brush->numsides + 6; ++sideIndex )
+        for (sideIndex = 6; sideIndex < brush->numsides + 6; ++sideIndex)
         {
-            if ( CM_BuildBrushWindingForSide(
-                         (winding_t *)windingPool,
-                         brush->sides[sideIndex - 6].plane->normal,
-                         sideIndex,
-                         &brushPts,
-                         ptCount) )
+            if (CM_BuildBrushWindingForSide(
+                (winding_t *)windingPool,
+                brush->sides[sideIndex - 6].plane->normal,
+                sideIndex,
+                &brushPts,
+                ptCount))
             {
-                drawCollisionPoly(*(unsigned int *)windingPool, (float (*)[3])&windingPool[4], color);
+                drawCollisionPoly(*(_DWORD *)windingPool, (float (*)[3]) & windingPool[4], color);
             }
         }
     }
@@ -547,10 +546,7 @@ double __cdecl CM_RepresentativeTriangleFromWinding(const winding_t *w, const fl
                 Vec3Cross(va, vb, vc);
                 if ( fabs((float)((float)(vc[0] * *normal) + (float)(vc[1] * normal[1])) + (float)(vc[2] * normal[2])) > areaBest )
                 {
-                    LODWORD(areaBest) = COERCE_UNSIGNED_INT(
-                                                                (float)((float)(vc[0] * *normal) + (float)(vc[1] * normal[1]))
-                                                            + (float)(vc[2] * normal[2]))
-                                                        & _mask__AbsFloat_;
+                    areaBest = -((float)((float)(vc[0] * *normal) + (float)(vc[1] * normal[1])) + (float)(vc[2] * normal[2]));
                     *i0 = i;
                     *i1 = j;
                     *i2 = k;
@@ -586,6 +582,28 @@ void __cdecl CM_ReverseWinding(winding_t *w)
         v1[1] = pt_4;
         v1[2] = pt_8;
     }
+}
+
+char __cdecl CM_BrushInView(const cbrush_t *brush, cplane_s *frustumPlanes, int frustumPlaneCount)
+{
+    int frustumPlaneIndex; // [esp+0h] [ebp-4h]
+
+    if (!frustumPlanes
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_showcollision.cpp",
+            49,
+            0,
+            "%s",
+            "frustumPlanes"))
+    {
+        __debugbreak();
+    }
+    for (frustumPlaneIndex = 0; frustumPlaneIndex < frustumPlaneCount; ++frustumPlaneIndex)
+    {
+        if ((BoxOnPlaneSide(brush->mins, brush->maxs, &frustumPlanes[frustumPlaneIndex]) & 1) == 0)
+            return 0;
+    }
+    return 1;
 }
 
 void __cdecl CM_ShowBrushCollision(

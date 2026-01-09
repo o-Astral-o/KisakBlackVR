@@ -5,8 +5,6 @@
 
 #include <cstring>
 
-__int16 g_commonAngleDeltas[7] = { 364, 546, 182, 1, 910, 1092, 729 }; // KISAKTODO: this is kinda interesting, look at this later
-
 int __cdecl MSG_ReadValueNoXor(msg_t *msg, int bits)
 {
     int v3; // [esp+0h] [ebp-10h]

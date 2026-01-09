@@ -1,4 +1,9 @@
 #pragma once
+#include <ddl/ddl_api.h>
+#include "live_storage.h"
+#include "live_pcache.h"
+#include <bgame/bg_local.h>
+
 
 void __cdecl PCache_ProfileInit();
 ddlDef_t *__cdecl PCache_GetPublicProfileDDL();

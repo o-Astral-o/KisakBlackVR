@@ -2462,7 +2462,7 @@ void __cdecl Phys_FindAndRenderBulletMesh(const float *start, const float *end)
     results.staticModel = 0;
     bHitDynEnt = 0;
     memset(&resultsDyn, 0, 16);
-    TraceExtents::TraceExtents(&clip.extents);
+    //TraceExtents::TraceExtents(&clip.extents);
     memset((unsigned __int8 *)&resultsDyn, 0, sizeof(resultsDyn));
     resultsDyn.fraction = 1.0f;
     *(_QWORD *)clip.extents.start.vec.v = *(_QWORD *)start;

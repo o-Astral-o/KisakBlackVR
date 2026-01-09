@@ -30,3 +30,6 @@ int __cdecl MSG_ReadDeltaStruct(
 void    MSG_ReadDeltaMatchState(msg_t *msg, int time, MatchState *from, MatchState *to);
 int __cdecl MSG_ReadDeltaClient(msg_t *msg, int time, clientState_s *from, clientState_s *to, unsigned int number);
 int __cdecl MSG_ReadDeltaEntity(msg_t *msg, int time, entityState_s *from, entityState_s *to, unsigned int number);
+
+
+static constexpr __int16 g_commonAngleDeltas[7] = { 364, 546, 182, 1, 910, 1092, 729 }; // KISAKTODO: this is kinda interesting, look at this later

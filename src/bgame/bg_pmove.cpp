@@ -111,7 +111,7 @@ void __cdecl PM_playerTrace(
 LABEL_9:
         if ( results->fraction > 0.0 )
         {
-            TraceExtents::TraceExtents(&clip.extents);
+            //TraceExtents::TraceExtents(&clip.extents);
             *(_QWORD *)clip.extents.start.vec.v = *(_QWORD *)start;
             clip.extents.start.vec.v[2] = start[2];
             *(_QWORD *)clip.extents.end.vec.v = *(_QWORD *)end;
@@ -126,23 +126,6 @@ LABEL_9:
             GlassSv_ClipMoveTrace(&clip, results);
         }
     }
-}
-
-TraceExtents *__thiscall TraceExtents::TraceExtents(TraceExtents *this)
-{
-    this->start.vec.u[0] = 0;
-    this->start.vec.u[1] = 0;
-    this->start.vec.u[2] = 0;
-    this->start.vec.u[3] = 0;
-    this->end.vec.u[0] = 0;
-    this->end.vec.u[1] = 0;
-    this->end.vec.u[2] = 0;
-    this->end.vec.u[3] = 0;
-    this->invDelta.vec.u[0] = 0;
-    this->invDelta.vec.u[1] = 0;
-    this->invDelta.vec.u[2] = 0;
-    this->invDelta.vec.u[3] = 0;
-    return this;
 }
 
 void __cdecl PM_AddEvent(playerState_s *ps, unsigned int newEvent)
@@ -5523,137 +5506,6 @@ void __cdecl Pmove(pmove_t *pm)
     Pmove_1(pm);
     gjkcc_epilog(&gjkcc_in, pm->ps->origin);
     pm->m_gjkcc_input = 0;
-}
-
-void bitarray<51>::bitarray<51>(bitarray<51> *this, unsigned int first, ...)
-{
-    unsigned int v2; // kr00_4
-    int i; // [esp+0h] [ebp-Ch]
-    char *argList; // [esp+8h] [ebp-4h]
-    va_list va; // [esp+1Ch] [ebp+10h] BYREF
-
-    va_start(va, first);
-    for ( i = 0; i < 2; ++i )
-        this->array[i] = 0;
-    bitarray<51>::setBit(this, first);
-    va_copy(argList, va);
-    while ( 1 )
-    {
-        v2 = va_arg(argList, unsigned int);
-        if ( v2 == -1 )
-            break;
-        bitarray<51>::setBit(this, v2);
-    }
-}
-
-void __thiscall bitarray<51>::setBit(bitarray<51> *this, unsigned int pos)
-{
-    if ( pos >= 0x33
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\universal\\../qcommon/bitarray.h",
-                    115,
-                    0,
-                    "%s",
-                    "pos < BIT_COUNT") )
-    {
-        __debugbreak();
-    }
-    this->array[pos >> 5] |= 0x80000000 >> (pos & 0x1F);
-}
-
-void __thiscall colgeom_visitor_inlined_t<200>::update(
-                colgeom_visitor_inlined_t<200> *this,
-                const float *start,
-                const float *end,
-                const float *mins,
-                const float *maxs,
-                int mask)
-{
-    float _mn[3]; // [esp+14h] [ebp-60h] BYREF
-    float extents_start[3]; // [esp+20h] [ebp-54h] BYREF
-    float extents_end[3]; // [esp+2Ch] [ebp-48h] BYREF
-    float _mx[3]; // [esp+38h] [ebp-3Ch] BYREF
-    float offset[3]; // [esp+44h] [ebp-30h]
-    float size[3]; // [esp+50h] [ebp-24h]
-    float expand_vec[3]; // [esp+5Ch] [ebp-18h] BYREF
-    float fudge[3]; // [esp+68h] [ebp-Ch]
-
-    fudge[0] = `colgeom_visitor_inlined_t<200>::update'::`2'::fFudge;
-    fudge[1] = `colgeom_visitor_inlined_t<200>::update'::`2'::fFudge;
-    fudge[2] = `colgeom_visitor_inlined_t<200>::update'::`2'::fFudge;
-    offset[0] = (float)(0.5 * *mins) + (float)(0.5 * *maxs);
-    offset[1] = (float)(0.5 * mins[1]) + (float)(0.5 * maxs[1]);
-    offset[2] = (float)(0.5 * mins[2]) + (float)(0.5 * maxs[2]);
-    size[0] = *maxs - offset[0];
-    size[1] = maxs[1] - offset[1];
-    size[2] = maxs[2] - offset[2];
-    extents_start[0] = *start + offset[0];
-    extents_start[1] = start[1] + offset[1];
-    extents_start[2] = start[2] + offset[2];
-    extents_end[0] = *end + offset[0];
-    extents_end[1] = end[1] + offset[1];
-    extents_end[2] = end[2] + offset[2];
-    Vec3Min(extents_start, extents_end, _mn);
-    Vec3Max(extents_start, extents_end, _mx);
-    _mn[0] = _mn[0] - size[0];
-    _mn[1] = _mn[1] - size[1];
-    _mn[2] = _mn[2] - size[2];
-    _mx[0] = _mx[0] + size[0];
-    _mx[1] = _mx[1] + size[1];
-    _mx[2] = _mx[2] + size[2];
-    _mn[0] = _mn[0] - fudge[0];
-    _mn[1] = _mn[1] - fudge[1];
-    _mn[2] = _mn[2] - fudge[2];
-    _mx[0] = _mx[0] + fudge[0];
-    _mx[1] = _mx[1] + fudge[1];
-    _mx[2] = _mx[2] + fudge[2];
-    expand_vec[0] = 70.0f;
-    expand_vec[1] = 70.0f;
-    expand_vec[2] = 20.0f;
-    this->update(this, _mn, _mx, mask, expand_vec);
-}
-
-void __thiscall colgeom_visitor_inlined_t<200>::update(
-                colgeom_visitor_inlined_t<200> *this,
-                const float *_mn,
-                const float *_mx,
-                int mask,
-                const float *expand_vec)
-{
-    bool v5; // [esp+0h] [ebp-58h]
-    float result[3]; // [esp+18h] [ebp-40h] BYREF
-    float b[3]; // [esp+24h] [ebp-34h] BYREF
-    float a[3]; // [esp+30h] [ebp-28h] BYREF
-    bool inside; // [esp+3Fh] [ebp-19h]
-    float mx[3]; // [esp+40h] [ebp-18h] BYREF
-    float mn[3]; // [esp+4Ch] [ebp-Ch] BYREF
-
-    a[0] = this->m_mn.vec.v[0] - *_mn;
-    a[1] = this->m_mn.vec.v[1] - _mn[1];
-    a[2] = this->m_mn.vec.v[2] - _mn[2];
-    b[0] = *_mx - this->m_mx.vec.v[0];
-    b[1] = _mx[1] - this->m_mx.vec.v[1];
-    b[2] = _mx[2] - this->m_mx.vec.v[2];
-    Vec3Max(a, b, result);
-    v5 = result[0] < 0.0 && result[1] < 0.0 && result[2] < 0.0;
-    inside = v5;
-    if ( this->m_mask != mask || !inside )
-    {
-        mn[0] = *_mn - *expand_vec;
-        mn[1] = _mn[1] - expand_vec[1];
-        mn[2] = _mn[2] - expand_vec[2];
-        mx[0] = *_mx + *expand_vec;
-        mx[1] = _mx[1] + expand_vec[1];
-        mx[2] = _mx[2] + expand_vec[2];
-        colgeom_visitor_inlined_t<500>::reset(this);
-        colgeom_visitor_t::intersect_box(this, mn, mx, mask);
-        if ( this->nprims == 200 )
-        {
-            StatMon_Warning(8, 3000, "code_warning_collision");
-            this->nprims = 0;
-            this->overflow = 1;
-        }
-    }
 }
 
 void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in)

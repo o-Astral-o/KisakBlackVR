@@ -2,6 +2,8 @@
 #include "common.h"
 #include <string.h>
 
+// LWSS: Downloader func's stubbed again
+
 int __cdecl DL_VPrintf(const char *fmt, char *argptr)
 {
     char msg[1028]; // [esp+10h] [ebp-408h] BYREF
@@ -13,13 +15,16 @@ int __cdecl DL_VPrintf(const char *fmt, char *argptr)
 
 int __cdecl terminate_handler(_HTRequest *request, struct _HTResponse *response, void *param, int status)
 {
+#if 0
     terminate_status = status;
     HTEventList_stopLoop();
+#endif
     return 0;
 }
 
 int __cdecl HTAlertCallback_progress(_HTRequest *request, _HTAlertOpcode op)
 {
+#if 0
     if ( op == HT_PROG_READ )
     {
         if ( dl_is_ftp )
@@ -36,11 +41,13 @@ int __cdecl HTAlertCallback_progress(_HTRequest *request, _HTAlertOpcode op)
             legacyHacks.cl_downloadCount = HTRequest_bytesRead((int)request);
         }
     }
+#endif
     return 1;
 }
 
 int __cdecl HTAlertCallback_confirm(_HTRequest *request, _HTAlertOpcode op, int msgnum)
 {
+#if 0
     if ( msgnum == 9 )
     {
         Com_Printf(0, "Replace existing download target file\n");
@@ -52,17 +59,21 @@ int __cdecl HTAlertCallback_confirm(_HTRequest *request, _HTAlertOpcode op, int 
         HTEventList_stopLoop();
         return 0;
     }
+#else
+    return 0;
+#endif
 }
 
 int __cdecl HTAlertCallback_prompt(_HTRequest *request, _HTAlertOpcode op, int msgnum)
 {
-    Com_Printf(0, "Aborting, libwww prompt message id: %d (prompted for a login/password?)\n", msgnum);
-    HTEventList_stopLoop();
+    //Com_Printf(0, "Aborting, libwww prompt message id: %d (prompted for a login/password?)\n", msgnum);
+    //HTEventList_stopLoop();
     return 0;
 }
 
 void __cdecl DL_CancelDownload()
 {
+#if 0
     if ( dl_running )
     {
         HTEventList_unregisterAll();
@@ -75,13 +86,15 @@ void __cdecl DL_CancelDownload()
         HTRequest_delete(dl_request);
         dl_request = 0;
     }
+#endif
 }
 
 void __cdecl DL_InitDownload()
 {
+#if 0
     if ( !dl_initialized )
     {
-        HT//Profile_newNoCacheClient("ID_DOWNLOAD", "1.0");
+        HTProfile_newNoCacheClient("ID_DOWNLOAD", "1.0");
         HTAlertInit();
         HTAlert_setInteractive(1);
         HTPrint_setCallback((int)DL_VPrintf);
@@ -93,10 +106,12 @@ void __cdecl DL_InitDownload()
         Com_Printf(0, "Client download subsystem initialized\n");
         dl_initialized = 1;
     }
+#endif
 }
 
 int __cdecl DL_BeginDownload(char *localName, char *remoteName)
 {
+#if 0
     char *v3; // eax
     char *v4; // eax
     char *v5; // eax
@@ -212,10 +227,13 @@ int __cdecl DL_BeginDownload(char *localName, char *remoteName)
         Com_DPrintf(0, "Empty download URL or empty local file name\n");
         return 0;
     }
+#endif
+    return 0;
 }
 
 int __cdecl DL_DownloadLoop()
 {
+#if 0
     if ( !dl_running
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\dl_main.cpp", 451, 0, "%s", "dl_running") )
     {
@@ -233,15 +251,23 @@ int __cdecl DL_DownloadLoop()
         return 1;
     Com_Printf(0, "DL_DownloadLoop: request terminated with failure status %d\n", terminate_status);
     return 2;
+#endif
+    return 0;
 }
 
 bool __cdecl DL_InProgress()
 {
+#if 0
     return dl_running > 0;
+#endif
+    return false;
 }
 
 bool __cdecl DL_DLIsMotd()
 {
+#if 0
     return dl_isMotd;
+#endif
+    return false;
 }
 

@@ -267,3 +267,13 @@ extern char fs_gamedir[256];
 extern fileHandleData_t fsh[70];
 
 extern searchpath_s *fs_searchpaths;
+
+extern const char *fs_serverReferencedIwdNames[1024];
+extern int fs_serverReferencedIwds[1024];
+extern int fs_numServerReferencedFFs;
+extern const char *fs_serverReferencedFFNames[32];
+extern int fs_serverReferencedFFCheckSums[32];
+extern iwd_pure_check_s *fs_iwdPureChecks;
+extern int fs_checksumFeed;
+extern int fs_fakeChkSum;
+extern int fs_serverIwds[1024];

@@ -1,5 +1,19 @@
 #pragma once
 
+struct traceWork_t;
+struct CollisionBorder;
+struct CollisionAabbTree;
+struct trace_t;
+
+enum SphereEdgeTraceResult : __int32
+{                                       // XREF: CM_TraceCapsuleThroughTriangle/r
+                                        // CM_TraceSphereThroughBorder/r
+    SPHERE_HITS_EDGE   = 0x0,
+    SPHERE_MISSES_EDGE = 0x1,
+    SPHERE_MAY_HIT_V0  = 0x2,
+    SPHERE_MAY_HIT_V1  = 0x3,
+};
+
 void __cdecl CM_TracePointThroughTriangle(const traceWork_t *tw, const unsigned __int16 *indices, trace_t *trace);
 void __cdecl CM_TraceThroughPartition(const traceWork_t *tw, int partitionIndex, trace_t *trace);
 void __cdecl CM_TraceCapsuleThroughTriangle(
@@ -7,7 +21,7 @@ void __cdecl CM_TraceCapsuleThroughTriangle(
                 int triIndex,
                 const unsigned __int16 *indices,
                 trace_t *trace);
-int __cdecl CM_TraceSphereThroughEdge(
+SphereEdgeTraceResult __cdecl CM_TraceSphereThroughEdge(
                 const traceWork_t *tw,
                 const float *sphereStart,
                 const float *v0,

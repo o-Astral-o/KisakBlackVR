@@ -394,3 +394,4 @@ void __cdecl Dvar_SetFloatIfChanged(dvar_s *dvar, float value);
 
 
 extern int dvar_modifiedFlags;
+extern int dvarCount;

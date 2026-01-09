@@ -290,7 +290,7 @@ void __cdecl Flame_Server_Trace(
     unsigned int entnum; // [esp+198h] [ebp-8h]
     svEntity_s *check; // [esp+19Ch] [ebp-4h]
 
-    //TraceExtents::TraceExtents(&clip.extents);
+    ////TraceExtents::TraceExtents(&clip.extents);
     trace_sphere(trace, startPos, endPos, radius_2, context);
     if ( trace->fraction > 0.0 )
     {
@@ -465,7 +465,7 @@ void __cdecl Flame_Client_Trace(
     trace_t trace2; // [esp+104h] [ebp-54h] BYREF
     float bounds[2][3]; // [esp+140h] [ebp-18h] BYREF
 
-    //TraceExtents::TraceExtents(&clip.extents);
+    ////TraceExtents::TraceExtents(&clip.extents);
     trace_sphere(trace, startPos, endPos, radius_3, context);
     if ( trace->fraction > 0.0 )
     {

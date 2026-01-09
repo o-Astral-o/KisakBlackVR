@@ -1,5 +1,17 @@
 #pragma once
 
+enum dlStatus_t : __int32
+{                                       // XREF: ?CL_WWWDownload@@YAXXZ/r
+    DL_CONTINUE = 0x0,
+    DL_DONE     = 0x1,
+    DL_FAILED   = 0x2,
+};
+
+// HACK
+typedef void *_HTRequest;
+typedef int _HTAlertOpcode;
+// HACK END
+
 int __cdecl DL_VPrintf(const char *fmt, char *argptr);
 int __cdecl terminate_handler(_HTRequest *request, struct _HTResponse *response, void *param, int status);
 int __cdecl HTAlertCallback_progress(_HTRequest *request, _HTAlertOpcode op);

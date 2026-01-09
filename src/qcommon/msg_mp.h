@@ -134,6 +134,18 @@ struct __declspec(align(2)) usercmd_s // sizeof=0x34
         // padding byte
 };
 
+struct netFieldOrderInfo_t // sizeof=0x79C
+{                                       // XREF: .data:netFieldOrderInfo_t orderInfo/r
+    int entState[79];
+    int arcEntState[10];                // XREF: MSG_DumpNetFieldChanges_f(void)+D/o
+    int matchState[17];
+    int clientState[52];                // XREF: MSG_DumpNetFieldChanges_f(void)+14/o
+    int playerState[179];               // XREF: MSG_DumpNetFieldChanges_f(void)+1B/o
+    int actorState[98];
+    int objective[9];                   // XREF: MSG_DumpNetFieldChanges_f(void)+22/o
+    int hudElem[43];                    // XREF: MSG_DumpNetFieldChanges_f(void)+29/o
+};
+
 struct playerState_s;
 struct hudelem_s;
 
@@ -193,7 +205,7 @@ int __cdecl MSG_ReadByte(msg_t *msg);
 int __cdecl MSG_ReadShort(msg_t *msg);
 int __cdecl MSG_ReadLong(msg_t *msg);
 unsigned __int64 __cdecl MSG_ReadInt64(msg_t *msg);
-double __cdecl MSG_ReadFloat(msg_t *msg);
+float __cdecl MSG_ReadFloat(msg_t *msg);
 char *__cdecl MSG_ReadString(msg_t *msg, char *string, unsigned int maxChars);
 char *__cdecl MSG_ReadBigString(msg_t *msg);
 char *__cdecl MSG_ReadStringLine(msg_t *msg, char *string, unsigned int maxChars);
@@ -280,3 +292,78 @@ void __cdecl MSG_ReadDeltaHudElems(msg_t *msg, int time, const hudelem_s *from, 
 void __cdecl MSG_InitHuffman();
 void MSG_initHuffmanInternal();
 void __cdecl MSG_DumpNetFieldChanges_f();
+
+// These prolly should use the const int as the array size, but yeah
+extern const int numEventEntityStateFields;
+extern const NetField eventEntityStateFields[69];
+extern const int numActorStateFields;
+extern const NetField actorStateFields[69];
+extern const int numVehicleEntityStateFields;
+extern const NetField vehicleEntityStateFields[71];
+extern const NetField planeStateFields[66];
+extern const NetField helicopterEntityStateFields[71];
+extern const int numTurretEntityStateFields;
+extern const NetField turretEntityStateFields[69];
+extern const int numLoopFxEntityStateFields;
+extern const NetField loopFxEntityStateFields[69];
+extern const NetField fxStateFields[68];
+extern const int numSoundBlendEntityStateFields;
+extern const NetField soundBlendEntityStateFields[68];
+extern const NetField scriptMoverStateFields[72];
+extern const int numMissileEntityStateFields;
+extern const NetField missileEntityStateFields[69];
+extern const int numItemEntityStateFields;
+extern const NetField itemEntityStateFields[69];
+extern const int numCorpseEntityStateFields;
+extern const NetField corpseEntityStateFields[68];
+extern const int numPlayerEntityStateFields;
+extern const NetField playerEntityStateFields[74];
+extern const int numArchivedEntityFields;
+extern const NetField archivedEntityFields[8];
+extern const NetField entityStateFields[69];
+
+extern const int numClientStateFields;
+extern const NetField clientStateFields[50];
+extern const int numPlayerStateFields;
+extern const NetField playerStateFields[179];
+extern const int numObjectiveFields;
+extern const NetField objectiveFields[9];
+extern const int numMatchStateFields;
+extern const NetField matchStateFields[15];
+
+
+static constexpr NetFieldList s_entityNetFieldList[22] =
+{
+  { entityStateFields, 69u, "entityStateFields" },
+  { playerEntityStateFields, 74u, "playerEntityStateFields" },
+  { corpseEntityStateFields, 68u, "corpseEntityStateFields" },
+  { itemEntityStateFields, 69u, "itemEntityStateFields" },
+  { missileEntityStateFields, 69u, "missileEntityStateFields" },
+  { entityStateFields, 69u, "entityStateFields" },
+  { scriptMoverStateFields, 72u, "scriptMoverStateFields" },
+  { soundBlendEntityStateFields, 68u, "soundBlendEntityStateFields" },
+  { fxStateFields, 68u, "fxStateFields" },
+  { loopFxEntityStateFields, 69u, "loopFxEntityStateFields" },
+  { entityStateFields, 69u, "entityStateFields" },
+  { turretEntityStateFields, 69u, "turretEntityStateFields" },
+  { helicopterEntityStateFields, 71u, "helicopterEntityStateFields" },
+  { planeStateFields, 66u, "planeStateFields" },
+  { vehicleEntityStateFields, 71u, "vehicleEntityStateFields" },
+  { entityStateFields, 69u, "entityStateFields" },
+  { entityStateFields, 69u, "entityStateFields" },
+  { actorStateFields, 69u, "actorStateFields" },
+  { actorStateFields, 69u, "actorStateFields" },
+  { actorStateFields, 69u, "actorStateFields" },
+  { entityStateFields, 69u, "entityStateFields" },
+  { eventEntityStateFields, 69u, "eventEntityStateFields" }
+};
+
+static constexpr NetFieldList s_otherNetFieldList[6] =
+{
+  { archivedEntityFields, 8u, "archivedEntityFields" },
+  { clientStateFields, 50u, "clientStateFields" },
+  { playerStateFields, 179u, "playerStateFields" },
+  { objectiveFields, 9u, "objectiveFields" },
+  { hudElemFields, 43u, "hudElemFields" },
+  { matchStateFields, 15u, "matchStateFields" }
+};

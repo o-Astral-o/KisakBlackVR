@@ -1,4 +1,12 @@
 #include "cm_world.h"
+#include "com_profilemapload.h"
+#include <cstring>
+#include "cm_load.h"
+#include <server_mp/sv_main_mp.h>
+#include <xanim/xmodel_utils.h>
+#include "cm_tracebox.h"
+
+cm_world_t cm_world;
 
 void __cdecl CM_LinkWorld()
 {
@@ -23,28 +31,10 @@ bool CM_ClearWorld()
                                                                                                                                                                                 - cm_world.mins[0]);
     result = (float)(cm_world.maxs[1] - cm_world.mins[1]) >= (float)(cm_world.maxs[0] - cm_world.mins[0]);
     cm_world.sectors[1].tree.dist = (float)(cm_world.maxs[result] + cm_world.mins[result]) * 0.5;
-    if ( cm_world.sectors[1].tree.child[0] )
-    {
-        LOBYTE(result) = Assert_MyHandler(
-                                             "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_world.cpp",
-                                             136,
-                                             0,
-                                             "%s",
-                                             "!cm_world.sectors[SECTOR_HEAD].tree.child[0]");
-        if ( !result )
-            __debugbreak();
-    }
-    if ( cm_world.sectors[1].tree.child[1] )
-    {
-        LOBYTE(result) = Assert_MyHandler(
-                                             "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_world.cpp",
-                                             137,
-                                             0,
-                                             "%s",
-                                             "!cm_world.sectors[SECTOR_HEAD].tree.child[1]");
-        if ( !result )
-            __debugbreak();
-    }
+
+    iassert(!cm_world.sectors[SECTOR_HEAD].tree.child[0]);
+    iassert(!cm_world.sectors[SECTOR_HEAD].tree.child[1]);
+
     return result;
 }
 
@@ -701,7 +691,7 @@ void __cdecl CM_PointTraceStaticModels(trace_t *results, const float *start, con
     _QWORD end_[2]; // [esp+5Ch] [ebp-10h] BYREF
 
     //PIXBeginNamedEvent(-1, "pointtracestaticmodels");
-    TraceExtents::TraceExtents(&tw.extents);
+    ////TraceExtents::TraceExtents(&tw.extents);
     tw.contents = contentmask;
     *(_QWORD *)tw.extents.start.vec.v = *(_QWORD *)start;
     tw.extents.start.vec.v[2] = start[2];
@@ -803,7 +793,7 @@ int __cdecl CM_PointTraceStaticModelsComplete(const float *start, const float *e
 {
     staticmodeltrace_t clip; // [esp+8h] [ebp-3Ch] BYREF
 
-    TraceExtents::TraceExtents(&clip.extents);
+    //TraceExtents::TraceExtents(&clip.extents);
     clip.contents = contentmask;
     *(_QWORD *)clip.extents.start.vec.v = *(_QWORD *)start;
     clip.extents.start.vec.v[2] = start[2];
@@ -970,7 +960,7 @@ void __cdecl CM_ClipMoveToEntities_r(
                 v8 = p2[node->tree.axis] - node->tree.dist;
             else
                 v8 = p[node->tree.axis] - node->tree.dist;
-            if ( COERCE_FLOAT(LODWORD(offset) ^ _mask__NegFloat_) < v8 )
+            if ( (-(offset)) < v8 )
             {
                 if ( p[3] >= trace->fraction )
                     return;
@@ -1005,7 +995,7 @@ void __cdecl CM_ClipMoveToEntities_r(
                 mid[1] = (float)((float)(p2[1] - p[1]) * v6) + p[1];
                 mid[2] = (float)((float)(p2[2] - p[2]) * v6) + p[2];
                 mid[3] = (float)((float)(p2[3] - p[3]) * v6) + p[3];
-                CM_ClipMoveToEntities_r(clip, node->tree.child[side], p, mid, trace);
+                CM_ClipMoveToEntities_r(clip, node->tree.child[side], (const float*)p, (const float *)mid, trace);
                 if ( frac2 > 1.0
                     && !Assert_MyHandler(
                                 "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\cm_world.cpp",
@@ -1099,7 +1089,7 @@ int __cdecl CM_ClipSightTraceToEntities_r(
                 nodeIndex = node->tree.child[0];
             }
             v8 = (float)(t1 - t2) < 0.0 ? p2[node->tree.axis] - node->tree.dist : p[node->tree.axis] - node->tree.dist;
-            if ( COERCE_FLOAT(LODWORD(offset) ^ _mask__NegFloat_) < v8 )
+            if ( (-(offset)) < v8 )
                 break;
             nodeIndex = node->tree.child[1];
         }

@@ -1,6 +1,8 @@
 #pragma once
 #include "live_storage.h"
 
+struct dwQoSMultiProbeListener;
+
 void __cdecl Live_ClearDWOverlappedTasks();
 char __cdecl Live_ContentRatingAllowed();
 bool __cdecl Live_IsUserSignedInToLive();
@@ -49,7 +51,7 @@ void __cdecl Live_DelayedComError(const char *comErrorString);
 void __cdecl Live_Frame();
 int __cdecl Live_FetchPartyPerformanceValuesComplete();
 taskCompleteResults __cdecl Live_UpdatePerformanceValuesComplete(int slot);
-MatchMakingInfo *Live_UpdateAveragePerformance();
+void Live_UpdateAveragePerformance();
 int __cdecl Live_GetAveragePerformance();
 char __cdecl Live_IsUserBlocked(int controllerIndex, unsigned __int64 xuid);
 bool __cdecl Live_CanConsoleViewContentFromUser(unsigned __int64 xuid);

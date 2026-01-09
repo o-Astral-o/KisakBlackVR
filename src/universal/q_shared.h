@@ -280,6 +280,9 @@ char *QDECL va(const char *format, ...);
 inline void BLOPS_NULLSUB(void *fakearg = nullptr)
 {
 }
+inline void BLOPS_NULLSUB()
+{
+}
 
 inline int RETURN_ZERO32()
 {

@@ -1,5 +1,24 @@
 #pragma once
 
+enum ThreadOwner : __int32
+{                                       // XREF: ?Sys_SuspendDiscReads@@YAXW4ThreadOwner@@@Z/r
+    THREAD_OWNER_NONE       = 0x0,
+    THREAD_OWNER_DATABASE   = 0x1,
+    THREAD_OWNER_CINEMATICS = 0x2,
+    THREAD_OWNER_SHUTDOWN   = 0x3,
+};
+
+#pragma pack(push, 8)
+typedef struct tagTHREADNAME_INFO
+{
+    DWORD dwType;     // Must be 0x1000.
+    LPCSTR szName;    // Pointer to name (in user addr space).
+    DWORD dwThreadID; // Thread ID (-1=caller thread).
+    DWORD dwFlags;    // Reserved for future use, must be zero.
+} THREADNAME_INFO;
+#pragma pack(pop)
+
+
 unsigned int __cdecl Sys_GetDefaultWorkerThreadsCount();
 unsigned int __cdecl Sys_GetCpuCount();
 void __cdecl Sys_InitMainThread();
@@ -35,10 +54,10 @@ bool __cdecl Sys_WaitForSingleObjectTimeout(void **event, unsigned intmsec);
 void __cdecl Sys_WakeRenderer(void *data);
 void __cdecl Sys_NotifyRenderer();
 void __cdecl Sys_SleepServer();
-bool __cdecl Sys_WaitServer(unsigned inttimeout);
+bool __cdecl Sys_WaitServer(unsigned int timeout);
 void __cdecl Sys_WakeServer();
 void __cdecl Sys_ServerCompleted();
-bool __cdecl Sys_WaitStartServer(unsigned inttimeout);
+bool __cdecl Sys_WaitStartServer(unsigned int timeout);
 bool __cdecl Sys_IsServerThread();
 void __cdecl Sys_DatabaseCompleted();
 void __cdecl Sys_WaitStartDatabase();
@@ -59,7 +78,7 @@ int __cdecl Sys_GetThreadContext();
 void __cdecl Sys_SetValue(int valueIndex, void *data);
 void *__cdecl Sys_GetValue(int valueIndex);
 void __cdecl Sys_SetWorkerCmdEvent();
-bool __cdecl Sys_WaitBackendEvent(unsigned intmsec);
+bool __cdecl Sys_WaitBackendEvent(unsigned int msec);
 void __cdecl Sys_SetUpdateSpotLightEffectEvent();
 void __cdecl Sys_ResetUpdateSpotLightEffectEvent();
 void __cdecl Sys_WaitUpdateNonDependentEffectsCompleted();
@@ -75,7 +94,7 @@ bool __cdecl Sys_QueryD3DDeviceOKEvent();
 void __cdecl Sys_WaitResourcesFlushedEvent();
 void __cdecl Sys_ClearResourcesFlushedEvent();
 void __cdecl Sys_SetResourcesFlushedEvent();
-void __cdecl Sys_WaitResourcesQueuedEvent(unsigned intmsec);
+void __cdecl Sys_WaitResourcesQueuedEvent(unsigned int msec);
 void __cdecl Sys_ClearResourcesQueuedEvent();
 void __cdecl Sys_SetResourcesQueuedEvent();
 void __cdecl Sys_SetD3DDeviceStartEvent();

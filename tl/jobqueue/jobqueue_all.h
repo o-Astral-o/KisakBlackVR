@@ -435,3 +435,6 @@ void __cdecl jqStop();
 void __cdecl jqAssistWithBatches(bool (__cdecl *callback)(void *), void *context, jqBatchGroup *GroupID);
 void __cdecl jqShutdown();
 void __cdecl jqStart();
+
+
+extern jqWorker *jqWorkers;

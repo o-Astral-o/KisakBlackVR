@@ -6,6 +6,10 @@
 
 #include <cstring>
 #include "cmd.h"
+#include <database/db_registry.h>
+#include <clientscript/cscr_main.h>
+#include <universal/com_memory.h>
+#include <sound/snd_public_async.h>
 
 int __cdecl FS_SV_FileExists(char *file, char *dir)
 {
@@ -421,7 +425,7 @@ int __cdecl FS_CompareWithServerFiles(char *neededFiles, int len, int dlstring)
     return 2;
 }
 
-int __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
+FS_SERVER_COMPARE_RESULT __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
 {
     int v4; // eax
     const char *v5; // eax
@@ -440,7 +444,7 @@ int __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
     int i; // [esp+134h] [ebp-4h]
 
     if ( !fs_numServerReferencedIwds )
-        return 0;
+        return FILES_MATCH;
     *needediwds = 0;
     userMapDirAdded = 0;
     string = fs_gameDirVar->current.string;
@@ -457,10 +461,10 @@ int __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
             isUserMapIWD = v4 + 1;
             if ( v4 != -1 && !userMapDirAdded )
             {
-                strchr((unsigned __int8 *)fs_serverReferencedIwdNames[i] + 9, 0x2Fu);
+                v5 = strchr(fs_serverReferencedIwdNames[i] + 9, '/');
                 dirNameEnd = v5;
                 if ( !v5 )
-                    Com_Error(ERR_DROP, &byte_CD632C, fs_serverReferencedIwdNames[i]);
+                    Com_Error(ERR_DROP, "Invalid IWD info from server: %s", fs_serverReferencedIwdNames[i]);
                 I_strncpyz(dirName, fs_serverReferencedIwdNames[i], dirNameEnd - fs_serverReferencedIwdNames[i] + 1);
                 FS_AddUserMapDirIWDs(dirName);
                 userMapDirAdded = 1;
@@ -478,11 +482,11 @@ int __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
                 if ( isBaseDir
                     || I_strnicmp(fs_serverReferencedIwdNames[i], fs_gameDirVar->current.string, gameDirNameLength)
                     && !isUserMapIWD
-                    || FS_iwIwd((char *)fs_serverReferencedIwdNames[i], "main") )
+                    || FS_iwIwd((char *)fs_serverReferencedIwdNames[i], (char*)"main") )
                 {
                     I_strncpyz(needediwds, fs_serverReferencedIwdNames[i], len);
                     I_strncat(needediwds, len, ".iwd");
-                    return 2;
+                    return NOT_DOWNLOADABLE;
                 }
                 if ( dlstring )
                 {
@@ -506,12 +510,12 @@ int __cdecl FS_CompareIwds(char *needediwds, int len, int dlstring)
         }
     }
     if ( !*needediwds )
-        return 0;
+        return FILES_MATCH;
     Com_Printf(10, "Need iwds: %s\n", needediwds);
-    return 1;
+    return NEED_DOWNLOAD;
 }
 
-int __cdecl FS_CompareFFs(char *neededFFs, int len, int dlstring)
+FS_SERVER_COMPARE_RESULT __cdecl FS_CompareFFs(char *neededFFs, int len, int dlstring)
 {
     bool v4; // [esp+10h] [ebp-16Ch]
     bool v5; // [esp+24h] [ebp-158h]
@@ -525,7 +529,7 @@ int __cdecl FS_CompareFFs(char *neededFFs, int len, int dlstring)
     FF_DIR ffDir; // [esp+178h] [ebp-4h]
 
     if ( !fs_numServerReferencedFFs )
-        return 0;
+        return FILES_MATCH;
     *neededFFs = 0;
     v6 = strlen(fs_gameDirVar->current.string);
     usermapDirNameLength = strlen(fs_usermapDir->current.string);
@@ -565,7 +569,7 @@ int __cdecl FS_CompareFFs(char *neededFFs, int len, int dlstring)
             {
                 I_strncpyz(neededFFs, fs_serverReferencedFFNames[i], len);
                 I_strncat(neededFFs, len, ".ff");
-                return 2;
+                return NOT_DOWNLOADABLE;
             }
             I_strncpyz(ffNameCopy, fs_serverReferencedFFNames[i], 256);
             if ( dlstring )
@@ -599,9 +603,9 @@ int __cdecl FS_CompareFFs(char *neededFFs, int len, int dlstring)
         }
     }
     if ( !*neededFFs )
-        return 0;
+        return FILES_MATCH;
     Com_Printf(10, "Need FFs: %s\n", neededFFs);
-    return 1;
+    return NEED_DOWNLOAD;
 }
 
 void __cdecl FS_RemoveCommands()
@@ -613,6 +617,11 @@ void __cdecl FS_RemoveCommands()
     Cmd_RemoveCommand("touchFile");
 }
 
+cmd_function_s FS_Path_f_VAR;
+cmd_function_s FS_FullPath_f_VAR;
+cmd_function_s FS_Dir_f_VAR;
+cmd_function_s FS_NewDir_f_VAR;
+cmd_function_s FS_TouchFile_f_VAR;
 void __cdecl FS_AddCommands()
 {
     Cmd_AddCommandInternal("path", FS_Path_f, &FS_Path_f_VAR);
@@ -634,9 +643,7 @@ void __cdecl FS_SetRestrictions()
         FS_Startup("demomain", 1);
         for ( path = fs_searchpaths; path; path = path->next )
         {
-            if ( FS_UseSearchPath(path)
-                && path->iwd
-                && ((unsigned int)&cls.wagerServers[11972].game[15] ^ path->iwd->checksum) != 0xB3D38C61 )
+            if (FS_UseSearchPath(path) && path->iwd && (path->iwd->checksum ^ 0x2261994) != 0xB3D38C61) // (KISAKTODO:) kinda interesting magic
             {
                 Com_Error(ERR_FATAL, "Corrupted iw0.iwd: %u", path->iwd->checksum);
             }
@@ -644,6 +651,8 @@ void __cdecl FS_SetRestrictions()
     }
 }
 
+char info2_0[16384];
+char info3[16384];
 void __cdecl FS_LoadedIwds(const char **checksums, const char **names)
 {
     const char *v2; // eax
@@ -666,6 +675,7 @@ void __cdecl FS_LoadedIwds(const char **checksums, const char **names)
     *names = info3;
 }
 
+char info4[16384];
 char *__cdecl FS_LoadedIwdPureChecksums()
 {
     const char *v0; // eax
@@ -686,6 +696,8 @@ char *__cdecl FS_LoadedIwdPureChecksums()
     return info4;
 }
 
+char info5[16384];
+char info8[16384];
 void __cdecl FS_ReferencedIwds(const char **checksums, const char **names)
 {
     const char *v2; // eax
@@ -729,6 +741,7 @@ void __cdecl FS_ReferencedIwds(const char **checksums, const char **names)
     *names = info8;
 }
 
+char info6[16384];
 char *__cdecl FS_ReferencedIwdPureChecksums()
 {
     const char *v0; // eax
@@ -950,6 +963,7 @@ void __cdecl FS_ServerSetReferencedFFs(const char *FFSums, const char *FFNames)
                                                                 fs_serverReferencedFFNames);
 }
 
+char basename[64];
 char *__cdecl FS_GetMapBaseName(char *mapname)
 {
     unsigned int v2; // [esp+0h] [ebp-18h]

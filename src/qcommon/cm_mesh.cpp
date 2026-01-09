@@ -1,4 +1,6 @@
 #include "cm_mesh.h"
+#include "cm_trace.h"
+#include "cm_load.h"
 
 void __cdecl CM_TracePointThroughTriangle(const traceWork_t *tw, const unsigned __int16 *indices, trace_t *trace)
 {
@@ -122,16 +124,19 @@ void __cdecl CM_TraceThroughPartition(const traceWork_t *tw, int partitionIndex,
                                                          + (float)(trace->normal.vec.v[1] * tw->delta.vec.v[1]))
                                          + (float)(trace->normal.vec.v[2] * tw->delta.vec.v[2])) > 0.0 )
                     {
-                        trace->normal.vec.u[0] ^= _mask__NegFloat_;
-                        trace->normal.vec.u[1] ^= _mask__NegFloat_;
-                        trace->normal.vec.u[2] ^= _mask__NegFloat_;
+                        //trace->normal.vec.u[0] ^= _mask__NegFloat_;
+                        //trace->normal.vec.u[1] ^= _mask__NegFloat_;
+                        //trace->normal.vec.u[2] ^= _mask__NegFloat_;
+                        trace->normal.vec.u[0] = -trace->normal.vec.u[0];
+                        trace->normal.vec.u[1] = -trace->normal.vec.u[1];
+                        trace->normal.vec.u[2] = -trace->normal.vec.u[2];
                     }
                 }
             }
             else
             {
                 for ( triIndex = partition->firstTri; triIndex < partition->firstTri + partition->triCount; ++triIndex )
-                    CM_TracePointThroughTriangle(tw, &cm.triIndices[3 * triIndex], trace);
+                    CM_TracePointThroughTriangle(tw, (const unsigned short*)&cm.triIndices[3 * triIndex], trace);
             }
         }
         else
@@ -220,8 +225,8 @@ void __cdecl CM_TraceCapsuleThroughTriangle(
                         + (float)(start_v0[2] * normal[2]);
         if ( hitDist >= 0.0 )
         {
-            hitFrac = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(hitDist - 0.125) ^ _mask__NegFloat_) * areaX2)
-                            / projTriAreaScaledByTraceLenX2;
+            //hitFrac = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(hitDist - 0.125) ^ _mask__NegFloat_) * areaX2) / projTriAreaScaledByTraceLenX2;
+            hitFrac = (float)((-(hitDist - 0.125)) * areaX2) / projTriAreaScaledByTraceLenX2;
             if ( hitFrac >= trace->fraction )
                 return;
             startSolid = 0;
@@ -235,9 +240,12 @@ void __cdecl CM_TraceCapsuleThroughTriangle(
                                 + (float)(start_v0[2] * normal[2]);
             if ( (float)(startDist * startDist) >= (float)(tw->radius * tw->radius) )
                 return;
-            start_v0[0] = (float)(COERCE_FLOAT(LODWORD(startDist) ^ _mask__NegFloat_) * normal[0]) + start_v0[0];
-            start_v0[1] = (float)(COERCE_FLOAT(LODWORD(startDist) ^ _mask__NegFloat_) * normal[1]) + start_v0[1];
-            start_v0[2] = (float)(COERCE_FLOAT(LODWORD(startDist) ^ _mask__NegFloat_) * normal[2]) + start_v0[2];
+            //start_v0[0] = (float)(COERCE_FLOAT(LODWORD(startDist) ^ _mask__NegFloat_) * normal[0]) + start_v0[0];
+            start_v0[0] = (float)(-((startDist)) * normal[0]) + start_v0[0];
+            //start_v0[1] = (float)(COERCE_FLOAT(LODWORD(startDist) ^ _mask__NegFloat_) * normal[1]) + start_v0[1];
+            start_v0[1] = (float)((-(startDist)) * normal[1]) + start_v0[1];
+            //start_v0[2] = (float)(COERCE_FLOAT(LODWORD(startDist) ^ _mask__NegFloat_) * normal[2]) + start_v0[2];
+            start_v0[2] = (float)((-(startDist)) * normal[2]) + start_v0[2];
             hitFrac = 0.0f;
             startSolid = 1;
         }
@@ -353,7 +361,7 @@ void __cdecl CM_TraceCapsuleThroughTriangle(
     }
 }
 
-int __cdecl CM_TraceSphereThroughEdge(
+SphereEdgeTraceResult __cdecl CM_TraceSphereThroughEdge(
                 const traceWork_t *tw,
                 const float *sphereStart,
                 const float *v0,
@@ -396,7 +404,7 @@ int __cdecl CM_TraceSphereThroughEdge(
     radiusSq = radius * radius;
     discriminant = (float)((float)(radius * radius) * perpendicularLenSq) - (float)(scaledDist * scaledDist);
     if ( discriminant <= 0.0 )
-        return 1;
+        return SPHERE_MISSES_EDGE;
     edgeLenSq = (float)((float)(*v0_v1 * *v0_v1) + (float)(v0_v1[1] * v0_v1[1])) + (float)(v0_v1[2] * v0_v1[2]);
     f = sqrtf(edgeLenSq * discriminant) / perpendicularLenSq;
     Vec3Cross(startDelta, v0_v1, edgeCrossDelta);
@@ -405,19 +413,16 @@ int __cdecl CM_TraceSphereThroughEdge(
     t = tScaled / perpendicularLenSq;
     fracLeave = (float)(tScaled / perpendicularLenSq) + f;
     if ( fracLeave < 0.0 )
-        return 1;
+        return SPHERE_MISSES_EDGE;
     fracEnter = t - f;
     if ( (float)(t - f) >= trace->fraction )
-        return 1;
+        return SPHERE_MISSES_EDGE;
     if ( fracEnter >= 0.0 )
     {
         hitDelta = (float)(fracEnter * tw->delta.vec.v[0]) + startDelta[0];
         hitDelta_4 = (float)(fracEnter * tw->delta.vec.v[1]) + startDelta[1];
         hitDelta_8 = (float)(fracEnter * tw->delta.vec.v[2]) + startDelta[2];
-        LODWORD(scaledProjectionDista) = COERCE_UNSIGNED_INT(
-                                                                             (float)((float)(hitDelta * *v0_v1) + (float)(hitDelta_4 * v0_v1[1]))
-                                                                         + (float)(hitDelta_8 * v0_v1[2]))
-                                                                     ^ _mask__NegFloat_;
+        scaledProjectionDista = -((float)((float)(hitDelta * *v0_v1) + (float)(hitDelta_4 * v0_v1[1])) + (float)(hitDelta_8 * v0_v1[2]));
         if ( scaledProjectionDista > 0.0 )
         {
             if ( scaledProjectionDista < edgeLenSq )
@@ -458,24 +463,21 @@ int __cdecl CM_TraceSphereThroughEdge(
                         __debugbreak();
                 }
                 trace->fraction = fracEnter;
-                return 0;
+                return SPHERE_HITS_EDGE;
             }
             else
             {
-                return 3;
+                return SPHERE_MAY_HIT_V1;
             }
         }
         else
         {
-            return 2;
+            return SPHERE_MAY_HIT_V0;
         }
     }
     else
     {
-        LODWORD(scaledProjectionDist) = COERCE_UNSIGNED_INT(
-                                                                            (float)((float)(startDelta[0] * *v0_v1) + (float)(startDelta[1] * v0_v1[1]))
-                                                                        + (float)(startDelta[2] * v0_v1[2]))
-                                                                    ^ _mask__NegFloat_;
+        scaledProjectionDist = -((float)((float)(startDelta[0] * *v0_v1) + (float)(startDelta[1] * v0_v1[1])) + (float)(startDelta[2] * v0_v1[2]));
         if ( scaledProjectionDist > 0.0 )
         {
             if ( scaledProjectionDist < edgeLenSq )
@@ -492,32 +494,28 @@ int __cdecl CM_TraceSphereThroughEdge(
                     trace->startsolid = (float)(edgeLenSq
                                                                         * (float)((float)((float)(tw->radius * tw->radius) * perpendicularLenSq)
                                                                                         - (float)(scaledDist * scaledDist))) > (float)(tScaled * tScaled);
-                    return 0;
+                    return SPHERE_HITS_EDGE;
                 }
                 else
                 {
-                    return 1;
+                    return SPHERE_MISSES_EDGE;
                 }
             }
             else
             {
-                return 3;
+                return SPHERE_MAY_HIT_V1;
             }
         }
         else
         {
-            return 2;
+            return SPHERE_MAY_HIT_V0;
         }
     }
 }
 
 bool __cdecl Vec3IsNormalizedEpsilon(const float *v, float epsilon)
 {
-    return (float)(2.0 * epsilon) > COERCE_FLOAT(
-                                                                        COERCE_UNSIGNED_INT(
-                                                                            (float)((float)((float)(*v * *v) + (float)(v[1] * v[1])) + (float)(v[2] * v[2]))
-                                                                        - 1.0)
-                                                                    & _mask__AbsFloat_);
+    return (float)(2.0 * epsilon) > (-((float)((float)((float)(*v * *v) + (float)(v[1] * v[1])) + (float)(v[2] * v[2])) - 1.0));
 }
 
 void __cdecl CM_TraceSphereThroughVertex(
@@ -581,7 +579,8 @@ void __cdecl CM_TraceSphereThroughVertex(
             discriminant = (float)(b * b) - (float)(a * c);
             if ( (float)((float)(b * b) * 0.001) <= discriminant )
             {
-                frac = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(sqrtf(discriminant)) ^ _mask__NegFloat_) - b) / a;
+                //frac = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(sqrtf(discriminant)) ^ _mask__NegFloat_) - b) / a;
+                frac = (float)((-(sqrtf(discriminant))) - b) / a;
                 if ( frac < trace->fraction )
                 {
                     trace->normal.vec.v[0] = (float)(frac * tw->delta.vec.v[0]) + delta;
@@ -601,14 +600,7 @@ void __cdecl CM_TraceSphereThroughVertex(
                     trace->normal.vec.v[2] = approxRecipLen * trace->normal.vec.v[2];
                     if ( !Vec3IsNormalizedEpsilon(trace->normal.vec.v, 0.003) )
                     {
-                        epsilon = (float)(COERCE_FLOAT(
-                                                                COERCE_UNSIGNED_INT(
-                                                                    (float)((float)((float)(trace->normal.vec.v[0] * trace->normal.vec.v[0])
-                                                                                                + (float)(trace->normal.vec.v[1] * trace->normal.vec.v[1]))
-                                                                                + (float)(trace->normal.vec.v[2] * trace->normal.vec.v[2]))
-                                                                - 1.0)
-                                                            & _mask__AbsFloat_)
-                                                        / 2.0);
+                        epsilon = (float)((-((float)((float)((float)(trace->normal.vec.v[0] * trace->normal.vec.v[0]) + (float)(trace->normal.vec.v[1] * trace->normal.vec.v[1]))+ (float)(trace->normal.vec.v[2] * trace->normal.vec.v[2])) - 1.0)) / 2.0);
                         v7 = (float)(tw->radius + 0.125);
                         v5 = Abs(trace->normal.vec.v);
                         v6 = va(
@@ -696,7 +688,7 @@ void __cdecl CM_TraceCapsuleThroughBorder(const traceWork_t *tw, const Collision
                                                         + (float)(tw->extents.start.vec.v[1] * border->distEq[1]))
                                         - border->distEq[2]))
         / traceDeltaDot;
-    if ( t >= trace->fraction || COERCE_FLOAT(LODWORD(radius) ^ _mask__NegFloat_) > (float)(t * tw->deltaLen) )
+    if ( t >= trace->fraction || (-(radius)) > (float)(t * tw->deltaLen) )
         return;
     endpos_8 = (float)(t * tw->delta.vec.v[2]) + tw->extents.start.vec.v[2];
     s = (float)((float)(border->distEq[1] * (float)((float)(t * tw->delta.vec.v[0]) + tw->extents.start.vec.v[0]))
@@ -778,7 +770,7 @@ void __cdecl CM_TraceCapsuleThroughBorder(const traceWork_t *tw, const Collision
         {
             __debugbreak();
         }
-        t = (float)(COERCE_FLOAT(LODWORD(deltaDotOffset) ^ _mask__NegFloat_) - sqrtf(discriminant)) / tw->deltaLenSq;
+        t = (float)((-(deltaDotOffset)) - sqrtf(discriminant)) / tw->deltaLenSq;
         if ( t >= trace->fraction || t <= 0.0 )
             return;
         endpos_8 = (float)(t * tw->delta.vec.v[2]) + tw->extents.start.vec.v[2];
@@ -804,7 +796,7 @@ LABEL_55:
         }
         if ( edgeZ <= tw->offsetZ )
         {
-            if ( COERCE_FLOAT(LODWORD(tw->offsetZ) ^ _mask__NegFloat_) <= edgeZ )
+            if ( (-(tw->offsetZ)) <= edgeZ )
             {
                 trace->fraction = t;
                 if ( (trace->fraction < 0.0 || trace->fraction > 1.0)
@@ -837,9 +829,9 @@ LABEL_55:
                         __debugbreak();
                 }
             }
-            else if ( edgeZ > (float)(COERCE_FLOAT(LODWORD(tw->offsetZ) ^ _mask__NegFloat_) - tw->radius) )
+            else if ( edgeZ > (float)((-(tw->offsetZ)) - tw->radius) )
             {
-                CM_TraceSphereThroughBorder(tw, border, COERCE_FLOAT(LODWORD(tw->offsetZ) ^ _mask__NegFloat_), trace);
+                CM_TraceSphereThroughBorder(tw, border, (-(tw->offsetZ)), trace);
             }
         }
         else if ( (float)(tw->offsetZ + tw->radius) > edgeZ )
@@ -925,7 +917,7 @@ LABEL_55:
         {
             __debugbreak();
         }
-        t = (float)(COERCE_FLOAT(LODWORD(deltaDotOffseta) ^ _mask__NegFloat_) - sqrtf(discriminanta)) / tw->deltaLenSq;
+        t = (float)((-(deltaDotOffseta)) - sqrtf(discriminanta)) / tw->deltaLenSq;
         if ( t < trace->fraction && t > 0.0 )
         {
             endpos_8 = (float)(t * tw->delta.vec.v[2]) + tw->extents.start.vec.v[2];
@@ -1086,7 +1078,7 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
     const CollisionAabbTree *aabbTreea; // [esp+3B4h] [ebp+Ch]
 
     v93 = 0;
-    halfSize = aabbTree->halfSize;
+    halfSize = (float*)aabbTree->halfSize;
     v88 = a;
     a[0] = aabbTree->halfSize[0];
     a[1] = aabbTree->halfSize[1];
@@ -1097,7 +1089,7 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
     v50 = aabbTree->origin[1];
     v51 = aabbTree->origin[2];
     v52 = 0;
-    p_midpoint = &tw->midpoint;
+    p_midpoint = (hybrid_vector*) & tw->midpoint;
     v80 = tw->midpoint.vec.v[0] - v49;
     v81 = tw->midpoint.vec.v[1] - v50;
     v82 = tw->midpoint.vec.v[2] - v51;
@@ -1185,7 +1177,7 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
                 do
                 {
                     localTree = --now;
-                    v46 = now->halfSize;
+                    v46 = (float*)now->halfSize;
                     v47 = &v8;
                     v8 = now->halfSize[0];
                     v9 = now->halfSize[1];
@@ -1196,11 +1188,11 @@ void __cdecl CM_TraceThroughAabbTree_r(const traceWork_t *tw, const CollisionAab
                     v5 = now->origin[1];
                     v6 = now->origin[2];
                     v7 = 0;
-                    v38 = &tw->midpoint;
+                    v38 = (hybrid_vector*)&tw->midpoint;
                     v39 = tw->midpoint.vec.v[0] - v4;
                     v40 = tw->midpoint.vec.v[1] - v5;
                     v41 = tw->midpoint.vec.v[2] - v6;
-                    p_size = &tw->size;
+                    p_size = (hybrid_vector *)&tw->size;
                     v42 = v8 + tw->size.vec.v[0];
                     v43 = v9 + tw->size.vec.v[1];
                     v44 = v10 + tw->size.vec.v[2];
@@ -1377,9 +1369,9 @@ void __cdecl CM_TraceThroughAabbTree_work(const traceWork_t *tw, const Collision
                                                          + (float)(trace->normal.vec.v[1] * tw->delta.vec.v[1]))
                                          + (float)(trace->normal.vec.v[2] * tw->delta.vec.v[2])) > 0.0 )
                     {
-                        trace->normal.vec.u[0] ^= _mask__NegFloat_;
-                        trace->normal.vec.u[1] ^= _mask__NegFloat_;
-                        trace->normal.vec.u[2] ^= _mask__NegFloat_;
+                        trace->normal.vec.u[0] = -trace->normal.vec.u[0];
+                        trace->normal.vec.u[1] = -trace->normal.vec.u[1];
+                        trace->normal.vec.u[2] = -trace->normal.vec.u[2];
                     }
                 }
             }
@@ -1505,11 +1497,11 @@ void __cdecl CM_PositionTestInAabbTree_r(const traceWork_t *tw, CollisionAabbTre
     v5 = aabbTree->origin[1];
     v6 = aabbTree->origin[2];
     v7 = 0;
-    p_midpoint = &tw->midpoint;
+    p_midpoint = (hybrid_vector *)&tw->midpoint;
     v39 = tw->midpoint.vec.v[0] - v4;
     v40 = tw->midpoint.vec.v[1] - v5;
     v41 = tw->midpoint.vec.v[2] - v6;
-    p_size = &tw->size;
+    p_size = (hybrid_vector *)&tw->size;
     v42 = v8 + tw->size.vec.v[0];
     v43 = v9 + tw->size.vec.v[1];
     v44 = v10 + tw->size.vec.v[2];
@@ -1745,8 +1737,8 @@ region_3:
             ua = 0.0f;
             if ( b1 < 0.0 )
             {
-                if ( COERCE_FLOAT(LODWORD(b1) ^ _mask__NegFloat_) < a11 )
-                    va = COERCE_FLOAT(LODWORD(b1) ^ _mask__NegFloat_) / a11;
+                if ( (-(b1)) < a11 )
+                    va = (-(b1)) / a11;
                 else
                     va = 1.0f;
             }
@@ -1766,8 +1758,8 @@ region_5:
         va = 0.0f;
         if ( b0 < 0.0 )
         {
-            if ( COERCE_FLOAT(LODWORD(b0) ^ _mask__NegFloat_) < a00 )
-                ua = COERCE_FLOAT(LODWORD(b0) ^ _mask__NegFloat_) / a00;
+            if ( (-(b0)) < a00 )
+                ua = (-(b0)) / a00;
             else
                 ua = 1.0f;
         }

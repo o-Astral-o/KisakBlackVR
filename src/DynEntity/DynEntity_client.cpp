@@ -689,20 +689,6 @@ void __cdecl DynEnt_FixupLightConstraints(int localClientNum, int entnum, int pr
     }
 }
 
-void __cdecl MatrixTransposeTransformVector(const float *in1, const float (*in2)[3], float *out)
-{
-    if ( in1 == out
-        && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\universal\\com_math.h", 1423, 0, "%s", "in1 != out") )
-    {
-        __debugbreak();
-    }
-    *out = (float)((float)(*in1 * (*in2)[0]) + (float)(in1[1] * (float)(*in2)[1])) + (float)(in1[2] * (float)(*in2)[2]);
-    out[1] = (float)((float)(*in1 * (float)(*in2)[3]) + (float)(in1[1] * (float)(*in2)[4]))
-                 + (float)(in1[2] * (float)(*in2)[5]);
-    out[2] = (float)((float)(*in1 * (float)(*in2)[6]) + (float)(in1[1] * (float)(*in2)[7]))
-                 + (float)(in1[2] * (float)(*in2)[8]);
-}
-
 void __cdecl DynEntCl_ProcessEntities(int localClientNum, int time)
 {
     DynEntityPose *dynEntPose; // [esp+18h] [ebp-20h]
@@ -2653,7 +2639,7 @@ char __cdecl DynEntCl_DynEntImpactEvent(
     unsigned __int16 dynEntId; // [esp+104h] [ebp-4h]
 
     //PIXBeginNamedEvent(-1, "DynEntCl_DynEntImpactEvent");
-    //TraceExtents::TraceExtents(&clip.extents);
+    ////TraceExtents::TraceExtents(&clip.extents);
     memset(&trace, 0, 16);
     if ( !start
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\DynEntity\\DynEntity_client.cpp", 2379, 0, "%s", "start") )

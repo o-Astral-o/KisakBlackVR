@@ -1,4 +1,7 @@
 #include "live_win.h"
+#include <win32/win_tasks.h>
+#include "live_steam.h"
+#include <DW/dwLogOn_pc.h>
 
 void __cdecl Live_ClearDWOverlappedTasks()
 {
@@ -1128,25 +1131,20 @@ taskCompleteResults __cdecl Live_UpdatePerformanceValuesComplete(int slot)
     return result;
 }
 
-MatchMakingInfo *Live_UpdateAveragePerformance()
+void Live_UpdateAveragePerformance()
 {
-    MatchMakingInfo *result; // eax
     int avgPerformance; // [esp+0h] [ebp-4h]
 
-    result = g_matchmakingInfo;
-    if ( g_matchmakingInfo->m_active )
+    if (g_matchmakingInfo->m_active)
     {
-        result = (MatchMakingInfo *)Live_GetAveragePerformance();
-        avgPerformance = (int)result;
-        if ( (MatchMakingInfo *)g_matchmakingInfo->m_memberSKILL != result )
+        avgPerformance = Live_GetAveragePerformance();
+        if (g_matchmakingInfo->m_memberSKILL != avgPerformance)
         {
-            Com_Printf(16, "Setting new session performance value %i\n", result);
+            Com_Printf(16, "Setting new session performance value %i\n", avgPerformance);
             g_matchmakingInfo->m_dirty = 1;
-            result = (MatchMakingInfo *)avgPerformance;
             g_matchmakingInfo->m_memberSKILL = avgPerformance;
         }
     }
-    return result;
 }
 
 int __cdecl Live_GetAveragePerformance()

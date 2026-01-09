@@ -1,4 +1,20 @@
 #pragma once
+#include <universal/dvar.h>
+
+struct DvarDumpInfo // sizeof=0xC
+{                                       // XREF: ?Com_DvarDump@@YAXHPBD@Z/r
+    int count;                          // XREF: Com_DvarDump(int,char const *)+45/w
+                                        // Com_DvarDump(int,char const *)+7C/r
+    int channel;                        // XREF: Com_DvarDump(int,char const *)+52/w
+    const char *match;                  // XREF: Com_DvarDump(int,char const *)+5B/w
+};
+
+struct DvarSetConfigInfo // sizeof=0xC
+{                                       // XREF: ?SV_SetConfig@@YAXHHH@Z/r
+    int start;                          // XREF: SV_SetConfig(int,int,int)+9/w
+    int max;                            // XREF: SV_SetConfig(int,int,int)+F/w
+    int bit;                            // XREF: SV_SetConfig(int,int,int)+15/w
+};
 
 int __cdecl Dvar_Command(bool restricted);
 void __cdecl Dvar_GetCombinedString(char *combined, int first);

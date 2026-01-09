@@ -1,4 +1,5 @@
 #include "cm_tracebox.h"
+#include "cm_trace.h"
 
 void __cdecl CM_CalcTraceExtents(TraceExtents *extents)
 {
@@ -175,9 +176,7 @@ bool __cdecl intersect_extents_sphere(const TraceExtents *extents, const float *
     delta = extents->end.vec.v[0] - extents->start.vec.v[0];
     delta_4 = extents->end.vec.v[1] - extents->start.vec.v[1];
     delta_8 = extents->end.vec.v[2] - extents->start.vec.v[2];
-    if ( COERCE_FLOAT(
-                 COERCE_UNSIGNED_INT((float)((float)(delta * delta) + (float)(delta_4 * delta_4)) + (float)(delta_8 * delta_8))
-             ^ _mask__NegFloat_) < 0.0 )
+    if ( (-((float)((float)(delta * delta) + (float)(delta_4 * delta_4)) + (float)(delta_8 * delta_8))) < 0.0 )
         v6 = (float)((float)(delta * delta) + (float)(delta_4 * delta_4)) + (float)(delta_8 * delta_8);
     else
         v6 = 1.0f;
@@ -199,22 +198,24 @@ bool __cdecl intersect_extents_sphere(const TraceExtents *extents, const float *
         v5 = v7;
     else
         v5 = 0.0f;
-    return (float)(radius * radius) > (float)((float)((float)((float)((float)(COERCE_FLOAT(LODWORD(v5) ^ _mask__NegFloat_)
+
+    // jesus someone clean this up
+    return (float)(radius * radius) > (float)((float)((float)((float)((float)((-(v5))
                                                                                                                                                     * delta)
                                                                                                                                     + startOffset)
-                                                                                                                    * (float)((float)(COERCE_FLOAT(LODWORD(v5) ^ _mask__NegFloat_)
+                                                                                                                    * (float)((float)((-(v5))
                                                                                                                                                     * delta)
                                                                                                                                     + startOffset))
-                                                                                                    + (float)((float)((float)(COERCE_FLOAT(LODWORD(v5) ^ _mask__NegFloat_)
+                                                                                                    + (float)((float)((float)((-(v5))
                                                                                                                                                     * delta_4)
                                                                                                                                     + startOffset_4)
-                                                                                                                    * (float)((float)(COERCE_FLOAT(LODWORD(v5) ^ _mask__NegFloat_)
+                                                                                                                    * (float)((float)((-(v5))
                                                                                                                                                     * delta_4)
                                                                                                                                     + startOffset_4)))
-                                                                                    + (float)((float)((float)(COERCE_FLOAT(LODWORD(v5) ^ _mask__NegFloat_)
+                                                                                    + (float)((float)((float)((-(v5))
                                                                                                                                     * delta_8)
                                                                                                                     + startOffset_8)
-                                                                                                    * (float)((float)(COERCE_FLOAT(LODWORD(v5) ^ _mask__NegFloat_)
+                                                                                                    * (float)((float)((-(v5))
                                                                                                                                     * delta_8)
                                                                                                                     + startOffset_8)));
 }

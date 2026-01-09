@@ -1,4 +1,13 @@
 #include "cm_staticmodel_load_obj.h"
+#include "com_bsp_load_obj.h"
+#include "cm_load.h"
+#include <universal/q_parse.h>
+#include "com_profilemapload.h"
+#include "cm_trace.h"
+#include "cm_staticmodel.h"
+#include <xanim/xmodel.h>
+#include <universal/com_math_anglevectors.h>
+#include <xanim/xmodel_load_obj.h>
 
 void __cdecl CM_LoadStaticModels()
 {
@@ -194,9 +203,9 @@ char __cdecl CM_CreateStaticModel(cStaticModel_s *staticModel, char *name, float
         __debugbreak();
     }
     if ( !name || !*name )
-        Com_Error(ERR_DROP, &byte_CD1070, *origin, origin[1], origin[2]);
+        Com_Error(ERR_DROP, "Missing model name at %.0f %.0f %.0f", *origin, origin[1], origin[2]);
     if ( scale == 0.0 )
-        Com_Error(ERR_DROP, &byte_CD104C, name);
+        Com_Error(ERR_DROP, "Static model [%s] has scale of 0.0", name);
     model = CM_XModelPrecache(name);
     if ( !model )
         return 0;

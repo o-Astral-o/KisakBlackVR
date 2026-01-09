@@ -818,7 +818,7 @@ int __cdecl SV_SightTracePointToEntity(const sightpointtrace_t *clip, int entnum
     int passEntityIdx; // [esp+110h] [ebp-18h]
     int partBits[5]; // [esp+114h] [ebp-14h] BYREF
 
-    TraceExtents::TraceExtents(&extents);
+    //TraceExtents::TraceExtents(&extents);
     touch = (gentity_s *)(sv.bpsWindow[8] + entnum * sv.bpsWindow[9]);
     if ( (touch->r.contents & clip->contentmask) == 0 )
         return 0;
@@ -1060,7 +1060,7 @@ void __cdecl SV_TracePoint(trace_t *results, const float *start, const float *en
             //D3DPERF_EndEvent();
         return;
     }
-    TraceExtents::TraceExtents(&clip.extents);
+    //TraceExtents::TraceExtents(&clip.extents);
     if ( context->staticmodels )
     {
         CM_PointTraceStaticModels(results, start, end, context->mask);
@@ -1271,7 +1271,7 @@ void __cdecl SV_TraceCapsule(
     }
     else
     {
-        TraceExtents::TraceExtents(&clip.extents);
+        //TraceExtents::TraceExtents(&clip.extents);
         clip.contentmask = context->mask;
         clip.passEntityNum = context->ignoreEntParams->baseEntity;
         if ( context->ignoreEntParams->baseEntity != 1023 && context->ignoreEntParams->parentEntity != -1 )

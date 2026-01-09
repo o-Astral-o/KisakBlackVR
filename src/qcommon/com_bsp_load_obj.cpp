@@ -4,6 +4,7 @@
 #include "com_profilemapload.h"
 #include <gfx_d3d/r_water_sim.h>
 #include "com_bsp.h"
+#include "md4.h"
 
 const char *connectionString_126[11] =
 {

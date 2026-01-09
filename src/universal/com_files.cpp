@@ -31,9 +31,11 @@ int fs_iwdFileCount;
 int fs_numServerReferencedIwds;
 const char *fs_serverIwdNames[1024];
 const char *fs_serverReferencedIwdNames[1024];
+int fs_serverReferencedIwds[1024];
 char szIwdLanguageName[2][64];
 int fs_numServerReferencedFFs;
 const char *fs_serverReferencedFFNames[32];
+int fs_serverReferencedFFCheckSums[32];
 
 searchpath_s *fs_searchpaths;
 int fs_numServerIwds;
@@ -1992,15 +1994,14 @@ void __cdecl FS_AddIwdFilesForGameDirectory(char *path, char *pszGameFolder)
     BOOL v8; // [esp+10h] [ebp-1148h]
     bool v9; // [esp+27h] [ebp-1131h]
     int iLanguage; // [esp+28h] [ebp-1130h]
-    BOOL v11; // [esp+2Ch] [ebp-112Ch]
-    char ospath; // [esp+30h] [ebp-1128h] BYREF
-    char v13[3]; // [esp+31h] [ebp-1127h] BYREF
-    iwd_t *v14; // [esp+134h] [ebp-1024h]
-    int v15; // [esp+138h] [ebp-1020h]
+    BOOL mainAndBase; // [esp+2Ch] [ebp-112Ch]
+    char ospath[256]; // [esp+30h] [ebp-1128h] BYREF
+    iwd_t *ZipFile; // [esp+134h] [ebp-1024h]
+    int v14; // [esp+138h] [ebp-1020h]
     char **list; // [esp+13Ch] [ebp-101Ch]
     char *pszLanguageName; // [esp+140h] [ebp-1018h]
     searchpath_s *search; // [esp+144h] [ebp-1014h]
-    bool v19; // [esp+14Bh] [ebp-100Dh]
+    bool v18; // [esp+14Bh] [ebp-100Dh]
     int i; // [esp+14Ch] [ebp-100Ch]
     int piLanguageIndex; // [esp+150h] [ebp-1008h] BYREF
     int numfiles; // [esp+154h] [ebp-1004h] BYREF
@@ -2015,10 +2016,10 @@ void __cdecl FS_AddIwdFilesForGameDirectory(char *path, char *pszGameFolder)
             v9 = 0;
         }
     }
-    v19 = v9;
-    FS_BuildOSPath(path, pszGameFolder, "", &ospath);
-    *((_BYTE *)&v11 + &v13[strlen(&ospath)] - v13 + 3) = 0;
-    list = Sys_ListFiles(&ospath, (char*)"iwd", 0, &numfiles, 0);
+    v18 = v9;
+    FS_BuildOSPath(path, pszGameFolder, (char*)"", ospath);
+    ospath[&ospath[strlen(ospath) + 1] - &ospath[1] - 1] = 0;
+    list = (char**)Sys_ListFiles(ospath, (char*)"iwd", 0, &numfiles, 0);
     if (numfiles > 1024)
     {
         Com_PrintWarning(
@@ -2031,7 +2032,7 @@ void __cdecl FS_AddIwdFilesForGameDirectory(char *path, char *pszGameFolder)
         numfiles = 1024;
     }
     v8 = !I_stricmp(pszGameFolder, "main") && !I_stricmp(path, fs_basepath->current.string);
-    v11 = v8;
+    mainAndBase = v8;
     for (i = 0; i < numfiles; ++i)
     {
         s0[i] = list[i];
@@ -2043,18 +2044,18 @@ void __cdecl FS_AddIwdFilesForGameDirectory(char *path, char *pszGameFolder)
     {
         if (I_strncmp(s0[i], TEN_SPACE, 10))
         {
-            if (v11 && I_strnicmp(s0[i], "iw_", 3))
+            if (mainAndBase && I_strnicmp(s0[i], "iw_", 3))
             {
                 Com_PrintWarning(10, "WARNING: Invalid IWD %s in \\main.\n", s0[i]);
                 continue;
             }
-            v15 = 0;
+            v14 = 0;
             piLanguageIndex = 0;
         }
         else
         {
             memcpy(s0[i], "localized_", 10);
-            v15 = 1;
+            v14 = 1;
             pszLanguageName = (char *)IwdFileLanguage(s0[i]);
             if (!*pszLanguageName)
             {
@@ -2088,25 +2089,27 @@ void __cdecl FS_AddIwdFilesForGameDirectory(char *path, char *pszGameFolder)
                 }
                 continue;
             }
-            if (piLanguageIndex == 3 && v19)
+            if (piLanguageIndex == 3 && v18)
                 piLanguageIndex = 4;
         }
-        FS_BuildOSPath(path, pszGameFolder, s0[i], &ospath);
-        v14 = FS_LoadZipFile(&ospath, s0[i]);
-        if (!v14)
-            v14 = FS_LoadFakeIwdFile(&ospath, s0[i]);
-        if (v14)
+        FS_BuildOSPath(path, pszGameFolder, s0[i], ospath);
+        ZipFile = FS_LoadZipFile(ospath, s0[i]);
+        if (!ZipFile)
+            ZipFile = FS_LoadFakeIwdFile(ospath, s0[i]);
+        if (ZipFile)
         {
             v7 = pszGameFolder;
-            iwdGamename = v14->iwdGamename;
+            iwdGamename = ZipFile->iwdGamename;
             do
             {
-                HIBYTE(v5) = *v7;
+                //HIBYTE(v5) = *v7;
+                v5 = *v7;
                 *iwdGamename++ = *v7++;
-            } while (HIBYTE(v5));
+                //} while (HIBYTE(v5));
+            } while (v5);
             search = (searchpath_s *)Z_Malloc(28, "FS_AddIwdFilesForGameDirectory", 3);
-            search->iwd = v14;
-            search->bLocalized = v15;
+            search->iwd = ZipFile;
+            search->bLocalized = v14;
             search->language = piLanguageIndex;
             FS_AddSearchPath(search);
         }
@@ -2181,9 +2184,9 @@ iwd_t *__cdecl FS_LoadZipFile(char *zipfile, const char *basename)
         }
         while ( v3 );
         namePtr += &filename_inzip[strlen(filename_inzip) + 1] - &filename_inzip[1] + 1;
-        unzGetCurrentFileInfoPosition(uf, &buildBuffer[i].pos);
+        unzGetCurrentFileInfoPosition(uf, (unsigned long*)&buildBuffer[i].pos);
         buildBuffer[i].next = *(fileInIwd_s **)(iwd[199] + 4 * hash);
-        *(unsigned int *)(iwd[199] + 4 * hash) = &buildBuffer[i];
+        *(unsigned int *)(iwd[199] + 4 * hash) = (unsigned int)&buildBuffer[i];
         unzGoToNextFile(uf);
     }
     iwd[193] = Com_BlockChecksumKey32((const unsigned __int8 *)fs_headerLongs, 4 * fs_numHeaderLongs, 0);

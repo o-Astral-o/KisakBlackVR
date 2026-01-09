@@ -1,5 +1,17 @@
 #pragma once
 
+struct cbrushside_t;
+struct winding_t;
+struct cbrush_t;
+
+struct __declspec(align(4)) ShowCollisionBrushPt // sizeof=0x14
+{                                       // XREF: ?CM_ShowSingleBrushCollision@@YAXPBUcbrush_t@@QBMP6AXHPAY02M1@Z@Z/r
+    float xyz[3];
+    __int16 sideIndex[3];
+    // padding byte
+    // padding byte
+};
+
 void __cdecl CM_GetPlaneVec4Form(
                 const cbrushside_t *sides,
                 const float (*axialPlanes)[4],

@@ -19,7 +19,7 @@ void __cdecl PM_playerTrace(
                 float *end,
                 int passEntityNum,
                 int contentMask);
-TraceExtents *__thiscall TraceExtents::TraceExtents(TraceExtents *this);
+TraceExtents *__thiscall //TraceExtents::TraceExtents(TraceExtents *this);
 void __cdecl PM_AddEvent(playerState_s *ps, unsigned int newEvent);
 void __cdecl PM_AddTouchEnt(pmove_t *pm, int entityNum);
 void __cdecl PM_AddTouchGlass(pmove_t *pm, unsigned int glassId);
@@ -154,20 +154,5 @@ void __cdecl TurretNVGTrigger(pmove_t *pm);
 void __cdecl PM_UpdatePush(pmove_t *pm, pml_t *pml);
 void __cdecl set_stance(pmove_t *pm);
 void __cdecl Pmove(pmove_t *pm);
-void bitarray<51>::bitarray<51>(bitarray<51> *this, unsigned int first, ...);
-void __thiscall bitarray<51>::setBit(bitarray<51> *this, unsigned int pos);
-void __thiscall colgeom_visitor_inlined_t<200>::update(
-                colgeom_visitor_inlined_t<200> *this,
-                const float *start,
-                const float *end,
-                const float *mins,
-                const float *maxs,
-                int mask);
 
-void __thiscall colgeom_visitor_inlined_t<200>::update(
-                colgeom_visitor_inlined_t<200> *this,
-                const float *_mn,
-                const float *_mx,
-                int mask,
-                const float *expand_vec);
 void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in);

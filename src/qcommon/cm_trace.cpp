@@ -3896,7 +3896,7 @@ double __cdecl CM_GetWaterHeight(const float *pos, float z_up, float z_down)
     {
         pointtrace_t clip; // [esp+20h] [ebp-B0h] BYREF
 
-        //TraceExtents::TraceExtents(&clip.extents);
+        ////TraceExtents::TraceExtents(&clip.extents);
         memset((unsigned __int8 *)&trace, 0, sizeof(trace));
         trace.fraction = 1.0f;
         check = (svEntity_s *)sv.svEntities[entnum].baseline.s.lerp.apos.trBase;

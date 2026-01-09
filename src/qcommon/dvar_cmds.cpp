@@ -1,4 +1,23 @@
 #include "dvar_cmds.h"
+#include "cmd.h"
+#include "common.h"
+#include <cstring>
+#include <universal/com_files.h>
+#include <universal/com_shared.h>
+#include <server_mp/sv_init_mp.h>
+#include <stringed/stringed_hooks.h>
+#include <win32/win_shared.h>
+#include <DW/dwUtils_pc.h>
+#include <live/live_win.h>
+#include <cgame_mp/cg_main_mp.h>
+#include <client/splitscreen.h>
+#include <live/live_pcache.h>
+#include <live/live_steam.h>
+#include <live/live_pcache_profile.h>
+#include <bgame/bg_emblems.h>
+
+char info1[1024];
+char info2[16384];
 
 int __cdecl Dvar_Command(bool restricted)
 {
@@ -464,7 +483,7 @@ void __cdecl Dvar_WriteSingleVariable(const dvar_s *dvar, int *userData)
         {
             f = *userData;
             v2 = Dvar_DisplayableLatchedValue(dvar);
-            FS_Printf(f, "seta %s \"%s\"\n", dvar->name, v2);
+            FS_Printf(f, (char*)"seta %s \"%s\"\n", dvar->name, v2);
         }
     }
 }
@@ -485,11 +504,12 @@ void __cdecl Dvar_WriteSingleDefault(const dvar_s *dvar, int *userData)
         {
             f = *userData;
             v2 = Dvar_DisplayableResetValue(dvar);
-            FS_Printf(f, "set %s \"%s\"\n", dvar->name, v2);
+            FS_Printf(f, (char *)"set %s \"%s\"\n", dvar->name, v2);
         }
     }
 }
 
+int dvar_count_local;
 void __cdecl Dvar_List_f()
 {
     char *match; // [esp+10h] [ebp-4h]
@@ -576,7 +596,7 @@ void __cdecl Com_DvarDump(int channel, const char *match)
 
     if ( channel != 6 || com_logfile && com_logfile->current.integer )
     {
-        Com_PrintMessage(channel, "=============================== DVAR DUMP ========================================\n", 0);
+        Com_PrintMessage(channel, (char*)"=============================== DVAR DUMP ========================================\n", 0);
         dumpInfo.count = 0;
         dumpInfo.channel = channel;
         dumpInfo.match = match;
@@ -585,7 +605,7 @@ void __cdecl Com_DvarDump(int channel, const char *match)
         Com_PrintMessage(channel, summary, 0);
         Com_PrintMessage(
             channel,
-            "=============================== END DVAR DUMP =====================================\n",
+            (char*)"=============================== END DVAR DUMP =====================================\n",
             0);
     }
 }
@@ -679,16 +699,16 @@ char *__cdecl Dvar_InfoString(int localClientNum, char bit)
     {
         index = localClientNum;
         Username = CL_ControllerIndex_GetUsername();
-        Info_SetValueForKey(info1, "name", Username);
+        Info_SetValueForKey(info1, (char*)"name", Username);
         if ( clanName && *(_BYTE *)clanName->current.integer )
         {
             I_strncpyz(tempbuf, clanName->current.string, 5);
             I_CleanStr(tempbuf);
-            Info_SetValueForKey(info1, "clanAbbrev", tempbuf);
+            Info_SetValueForKey(info1, (char *)"clanAbbrev", tempbuf);
         }
         else
         {
-            Info_SetValueForKey(info1, "clanAbbrev", "");
+            Info_SetValueForKey(info1, (char *)"clanAbbrev", "");
         }
         if ( Live_IsSignedInToLive() )
         {
@@ -699,13 +719,13 @@ char *__cdecl Dvar_InfoString(int localClientNum, char bit)
             {
                 PCache_GetProfileEmblem(profile, layers, 12, &backgroundID);
                 v4 = BG_EmblemsWriteString(backgroundID, layers, 12);
-                Info_SetValueForKey(info1, "emblem", v4);
+                Info_SetValueForKey(info1, (char *)"emblem", v4);
             }
             PCache_Unlock();
         }
         Uid = LiveSteam_GetUid();
         Int64ToString(Uid, clientSteamIDStr);
-        Info_SetValueForKey(info1, "steamid", clientSteamIDStr);
+        Info_SetValueForKey(info1, (char *)"steamid", clientSteamIDStr);
         if ( !clc->qport
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\dvar_cmds.cpp",
@@ -717,7 +737,8 @@ char *__cdecl Dvar_InfoString(int localClientNum, char bit)
             __debugbreak();
         }
         v6 = va("%i", clc->qport);
-        Info_SetValueForKey(info1, "qport", v6);
+        Info_SetValueForKey(info1, (char *)"qport", v6);
+#ifdef KISAK_LIVE_SERVICE
         if ( live_service && live_service->current.enabled )
         {
             memset((unsigned __int8 *)temp64buff, 0, 0xB1u);
@@ -745,6 +766,7 @@ char *__cdecl Dvar_InfoString(int localClientNum, char bit)
                 *(&clc->nonce + 1),
                 clc->nonce);
         }
+#endif
     }
     return info1;
 }
@@ -777,6 +799,25 @@ void __cdecl Dvar_InfoStringSingle_Big(const dvar_s *dvar, unsigned int *userDat
         Info_SetValueForKey_Big(info2, (char *)dvar->name, v2);
     }
 }
+
+cmd_function_s Dvar_Toggle_f_VAR;
+cmd_function_s Dvar_TogglePrint_f_VAR;
+cmd_function_s Dvar_Set_f_VAR;
+cmd_function_s Dvar_SetS_f_VAR;
+cmd_function_s Dvar_SetA_f_VAR;
+cmd_function_s Dvar_SetAdmin_f_VAR;
+cmd_function_s Dvar_SetFromDvar_f_VAR;
+cmd_function_s Dvar_SetFromLocalizedStr_f_VAR;
+cmd_function_s Dvar_SetToTime_f_VAR;
+cmd_function_s Dvar_Reset_f_VAR;
+cmd_function_s Dvar_List_f_VAR;
+cmd_function_s Dvar_Dump_f_VAR;
+cmd_function_s Dvar_RegisterBool_f_VAR;
+cmd_function_s Dvar_RegisterInt_f_VAR;
+cmd_function_s Dvar_RegisterFloat_f_VAR;
+cmd_function_s Dvar_RegisterColor_f_VAR;
+cmd_function_s Dvar_SetU_f_VAR;
+cmd_function_s Dvar_RestoreDvars_VAR;
 
 void __cdecl Dvar_AddCommands()
 {
@@ -1007,7 +1048,7 @@ void __cdecl Dvar_SetFromLocalizedStr_f()
 void __cdecl Dvar_SetToTime_f()
 {
     const char *v0; // eax
-    unsigned intv1; // eax
+    unsigned int v1; // eax
     const char *v2; // eax
     char *v3; // [esp-4h] [ebp-2Ch]
     const char *dvarName; // [esp+24h] [ebp-4h]

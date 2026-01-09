@@ -379,7 +379,7 @@ struct traceWork_t // sizeof=0xE0
         this->radiusOffset.vec.u[2] = 0.0f;
         this->radiusOffset.vec.u[3] = 0.0f;
 
-        //TraceExtents::TraceExtents(&this->extents);
+        ////TraceExtents::TraceExtents(&this->extents);
     }
 };
 

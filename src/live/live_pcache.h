@@ -1,4 +1,48 @@
 #pragma once
+#include <client/cl_compositing.h>
+
+struct __declspec(align(8)) PCacheComponent // sizeof=0x20
+{                                       // XREF: PCachePublicProfile/r
+                                        // PCachePlayerEmblem/r
+    unsigned __int64 xuid;
+    int controllerIndex;
+    int type;
+    unsigned int updateTime;
+    unsigned int touchTime;
+    unsigned int state;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct PCachePublicProfile // sizeof=0x120
+{                                       // XREF: .data:s_publicProfiles/r
+    PCacheComponent c;
+    char ddl[256];
+};
+
+struct PCacheEntry // sizeof=0x20
+{                                       // XREF: .data:s_entries/r
+    unsigned __int64 xuid;              // XREF: PCache_Init(void)+96/w
+    int controllerIndex;
+    unsigned int neighborhood;
+    unsigned int hash;
+    unsigned int touchTime;
+    PCacheComponent *components[2];
+};
+
+struct PCachePlayerEmblem // sizeof=0x1B0
+{                                       // XREF: .data:s_playerEmblems/r
+    PCacheComponent c;
+    CompositeEmblemLayer layers[12];
+    int jobID;
+    GfxImage *image;
+    __int16 backgroundID;
+    // padding byte
+    // padding byte
+    Material *background;
+};
 
 __int64 __cdecl PCache_Time();
 void __cdecl PCache_Lock();

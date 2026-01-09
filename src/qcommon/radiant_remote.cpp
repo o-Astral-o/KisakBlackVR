@@ -12,6 +12,10 @@
 #include <gfx_d3d/r_dvars.h>
 #include <clientscript/cscr_vm.h>
 #include <game/g_load_utils.h>
+#include <cgame/cg_scr_main.h>
+#include <xanim/xmodel.h>
+#include <cgame/cg_drawtools.h>
+#include <game/g_debug.h>
 
 int g_selected_misc_model = -1;
 int g_selected_corona = -1;
@@ -23,6 +27,66 @@ RadiantCommand savedCommands[128];
 RadaintToGameMapping gObjectMapping[128];
 int gObjectMappingCount;
 gentity_s *g_radiant_selected_ent;
+int cgSelectedScriptStruct;
+
+int gCommandCount;
+RadiantCommand gCommands[24];
+int cgCommandCount;
+RadiantCommand cgCommands[24];
+
+static void __cdecl NULLSUB(const RadiantCommand *command, SpawnVar *spawnVar)
+{
+
+}
+
+
+const RadiantCommandProcessor gCommandProcessors[9] =
+{
+  { &G_ProcessPathnodeCommand, &G_ClearSelectedPathNode, NULL, "node_" },
+  {
+    &G_ProcessVehicleNodeCommand,
+    &G_ClearSelectedVehicleNode,
+    NULL,
+    "info_vehicle_node"
+  },
+  {
+    &G_ProcessVehicleNodeCommand,
+    &G_ClearSelectedVehicleNode,
+    NULL,
+    "info_vehicle_node_rotate"
+  },
+  { &G_ProcessMiscModelCommand, &G_ClearSelectedMiscModel, NULL, "misc_model" },
+  {
+    &G_ProcessScriptStructCommand,
+    &G_ClearSelectedScriptStruct,
+    NULL,
+    "script_struct"
+  },
+  { &G_ProcessCoronaCommand, &G_ClearSelectedCorona, NULL, "info_corona" },
+  { &NULLSUB, &BLOPS_NULLSUB, NULL, "light" },
+  {
+    &G_ProcessEntityCommand,
+    &G_ClearSelectedEntity,
+    &IsEntityType,
+    ""
+  },
+  { NULL, NULL, NULL, NULL }
+};
+
+const RadiantCommandProcessor cgCommandProcessors[2] =
+{
+  {
+    &CG_ProcessScriptStructCommand,
+    &CG_ClearSelectedScriptStruct,
+    NULL,
+    "script_struct"
+  },
+  { NULL, NULL, NULL, NULL }
+};
+
+
+
+
 
 char *__cdecl GetPairValue(const SpawnVar *spawnVar, const char *key)
 {
@@ -935,16 +999,16 @@ char __cdecl CG_ProcessRadiantCmds()
     return 1;
 }
 
-int __cdecl GetCommandProcessorType(const SpawnVar *spawnVar)
+CommandProcessorType __cdecl GetCommandProcessorType(const SpawnVar *spawnVar)
 {
     char *classname; // [esp+0h] [ebp-4h]
 
     classname = GetPairValue(spawnVar, "classname");
     if ( IsClientOnlyEntity(spawnVar) )
-        return 1;
+        return COMMAND_CLIENT;
     if ( !classname || I_strcmp(classname, "script_struct") )
-        return 0;
-    return 2;
+        return COMMAND_SERVER;
+    return COMMAND_BOTH;
 }
 
 void __cdecl G_ProcessRadiantCmd(const RadiantCommand *command)

@@ -10,27 +10,6 @@ struct BackgroundPurchasedCount // sizeof=0x8
     int count;
 };
 
-struct __declspec(align(4)) CompositeEmblemLayer // sizeof=0x20
-{                                       // XREF: .data:s_emblem/r
-                                        // PCachePlayerEmblem/r ...
-    __int16 icon;                       // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+9D/w
-                                        // UI_DrawEmblemIconThumbnail(int,rectDef_s const *,float const * const)+66/w ...
-    // padding byte
-    // padding byte
-    int colorIdx;                       // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+96/w
-                                        // UI_DrawEmblemIconThumbnail(int,rectDef_s const *,float const * const)+5A/w
-    float pos[2];                       // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+48/w
-                                        // UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+55/w ...
-    float scale[2];                     // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+62/w
-                                        // UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+6F/w ...
-    float angle;                        // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+7C/w
-                                        // UI_DrawEmblemIconThumbnail(int,rectDef_s const *,float const * const)+4D/w
-    bool outline;                       // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+81/w
-    bool flip;                          // XREF: UI_DrawEmblemSelector(int,int,itemDef_s *,rectDef_s const *,float const * const)+85/w
-    // padding byte
-    // padding byte
-};
-
 struct ResultCache // sizeof=0x818
 {                                       // XREF: .data:s_resultCache/r
     int controllerIndex;

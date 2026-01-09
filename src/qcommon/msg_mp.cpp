@@ -1,4 +1,2446 @@
 #include "msg_mp.h"
+#include <server/sv_game.h>
+#include <cstring>
+#include <zlib/zlib.h>
+#include "net_chan_mp.h"
+#include "common.h"
+#include "huffman.h"
+#include "threads.h"
+#include <bgame/bg_local.h>
+#include "msg.h"
+#include "sv_msg_write.h"
+#include <bgame/bg_misc.h>
+#include <demo/demo_profile.h>
+#include <client_mp/cl_parse_mp.h>
+#include <win32/win_shared.h>
+
+const int msg_hData[256] =
+{
+  274054,
+  68777,
+  40460,
+  40266,
+  48059,
+  39006,
+  48630,
+  27692,
+  17712,
+  15439,
+  12386,
+  10758,
+  9420,
+  9979,
+  9346,
+  15256,
+  13184,
+  14319,
+  7750,
+  7221,
+  6095,
+  5666,
+  12606,
+  7263,
+  7322,
+  5807,
+  11628,
+  6199,
+  7826,
+  6349,
+  7698,
+  9656,
+  28968,
+  5164,
+  13629,
+  6058,
+  4745,
+  4519,
+  5199,
+  4807,
+  5323,
+  3433,
+  3455,
+  3563,
+  6979,
+  5229,
+  5002,
+  4423,
+  14108,
+  13631,
+  11908,
+  11801,
+  10261,
+  7635,
+  7215,
+  7218,
+  9353,
+  6161,
+  5689,
+  4649,
+  5026,
+  5866,
+  8002,
+  10534,
+  15381,
+  8874,
+  11798,
+  7199,
+  12814,
+  6103,
+  4982,
+  5972,
+  6779,
+  4929,
+  5333,
+  3503,
+  4345,
+  6098,
+  14117,
+  16440,
+  6446,
+  3062,
+  4695,
+  3085,
+  4198,
+  4013,
+  3878,
+  3414,
+  5514,
+  4092,
+  3261,
+  4740,
+  4544,
+  3127,
+  3385,
+  7688,
+  11126,
+  6417,
+  5297,
+  4529,
+  6333,
+  4210,
+  7056,
+  4658,
+  6190,
+  3512,
+  2843,
+  3479,
+  9369,
+  5203,
+  4980,
+  5881,
+  7509,
+  4292,
+  6097,
+  5492,
+  4648,
+  2996,
+  4988,
+  4163,
+  6534,
+  4001,
+  4342,
+  4488,
+  6039,
+  4827,
+  7112,
+  8654,
+  26712,
+  8688,
+  9677,
+  9368,
+  7209,
+  3399,
+  4473,
+  4677,
+  11087,
+  4094,
+  3404,
+  4176,
+  6733,
+  3702,
+  11420,
+  4867,
+  5968,
+  3475,
+  3722,
+  3560,
+  4571,
+  2720,
+  3189,
+  3099,
+  4595,
+  4044,
+  4402,
+  3889,
+  4989,
+  3186,
+  3153,
+  5387,
+  8020,
+  3322,
+  3775,
+  2886,
+  4191,
+  2879,
+  3110,
+  2576,
+  3693,
+  2436,
+  4935,
+  3017,
+  3538,
+  5688,
+  3444,
+  3410,
+  9170,
+  4708,
+  3425,
+  3273,
+  3684,
+  4564,
+  6957,
+  4817,
+  5224,
+  3285,
+  3143,
+  4227,
+  5630,
+  6053,
+  5851,
+  6507,
+  13692,
+  8270,
+  8260,
+  5583,
+  7568,
+  4082,
+  3984,
+  4574,
+  6440,
+  3533,
+  2992,
+  2708,
+  5190,
+  3889,
+  3799,
+  4582,
+  6020,
+  3464,
+  4431,
+  3495,
+  2906,
+  2243,
+  3856,
+  3321,
+  8759,
+  3928,
+  2905,
+  3875,
+  4382,
+  3885,
+  5869,
+  6235,
+  10685,
+  4433,
+  4639,
+  4305,
+  4683,
+  2849,
+  3379,
+  4683,
+  5477,
+  4127,
+  3853,
+  3515,
+  4913,
+  3601,
+  5237,
+  6617,
+  9019,
+  4857,
+  4112,
+  5180,
+  5998,
+  4925,
+  4986,
+  6365,
+  7930,
+  5948,
+  8085,
+  7732,
+  8643,
+  8901,
+  9653,
+  32647
+};
+
+
+const NetField entityStateFields[69] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lerp.u.anonymous.data[0]", 84, 4, 32, 0u, "32", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "enemyModel", 200, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "lerp.u.anonymous.data[1]", 88, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 0u, "32", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "faction", 215, 1, 7, 0u, "2 + CLIENT_BITS", "0" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" }
+};
+
+
+const int numArchivedEntityFields = 8;
+const NetField archivedEntityFields[8] =
+{
+  { "absmin[1]", 12, 4, 0, 0u, NULL, NULL },
+  { "absmax[1]", 24, 4, 0, 0u, NULL, NULL },
+  { "absmin[0]", 8, 4, 0, 0u, NULL, NULL },
+  { "absmax[0]", 20, 4, 0, 0u, NULL, NULL },
+  { "absmax[2]", 28, 4, 0, 0u, NULL, NULL },
+  { "absmin[2]", 16, 4, 0, 0u, NULL, NULL },
+  { "svFlags", 0, 4, 32, 0u, NULL, NULL },
+  { "clientMask[0]", 4, 4, 32, 0u, NULL, NULL }
+};
+
+const int numPlayerEntityStateFields = 74;
+const NetField playerEntityStateFields[74] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  {
+    "lerp.pos.trBase[0]",
+    24,
+    4,
+    -66,
+    2u,
+    "MSG_FIELD_ES_ORIGINX",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "lerp.pos.trBase[1]",
+    28,
+    4,
+    -65,
+    2u,
+    "MSG_FIELD_ES_ORIGINY",
+    "ALWAYS_CHANGES"
+  },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "lerp.u.player.movementDir", 88, 4, -60, 0u, "MSG_FIELD_MOVEMENTDIR", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "lerp.u.player.moveType", 92, 4, 5, 0u, "ANIM_MOVETYPE_BITS", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "lerp.u.player.primaryWeapon", 96, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "partBits[2]", 164, 4, 32, 0u, "32", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "partBits[3]", 168, 4, 32, 0u, "32", "0" },
+  { "lerp.u.player.stowedWeapon", 98, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  {
+    "lerp.u.player.stowedWeaponCamo",
+    109,
+    1,
+    6,
+    0u,
+    "RENDER_OPTIONS_CAMO_BITS",
+    "0"
+  },
+  { "partBits[4]", 172, 4, 32, 0u, "32", "0" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.u.player.offhandWeapon", 100, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.u.player.meleeWeapon", 102, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  {
+    "lerp.u.player.meleeWeaponModel",
+    105,
+    1,
+    4,
+    0u,
+    "MAX_WEAPONMODEL_BITS",
+    "0"
+  },
+  { "enemyModel", 200, 2, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "iHeadIcon", 214, 1, 4, 0u, "HEAD_ICON_BITS", "0" },
+  { "lastStandPrevWeapon", 204, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "faction", 215, 1, 2, 0u, "2", "0" },
+  { "lerp.u.player.leanf", 84, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.u.player.vehicleType", 106, 1, 3, 0u, "VEHICLE_TYPES_BITS", "0" },
+  { "lerp.u.player.vehicleAnimBoneIndex", 107, 1, 8, 0u, "MAX_BONE_BITS", "0" },
+  { "lerp.u.player.vehicleSeat", 108, 1, 4, 0u, "MAX_VEHICLE_SEAT_BITS", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "partBits[0]", 156, 4, 32, 0u, "32", "0" },
+  { "partBits[1]", 160, 4, 32, 0u, "32", "0" },
+  {
+    "lerp.pos.trDelta[1]",
+    40,
+    4,
+    -63,
+    1u,
+    "MSG_FIELD_ES_ORIGIN_DELTA",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.pos.trDelta[0]",
+    36,
+    4,
+    -63,
+    1u,
+    "MSG_FIELD_ES_ORIGIN_DELTA",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.pos.trDuration",
+    20,
+    4,
+    -67,
+    1u,
+    "MSG_FIELD_POS_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "lerp.pos.trTime", 16, 4, -68, 1u, "MSG_FIELD_POS_TRTIME", "NEVER_CHANGES" },
+  {
+    "lerp.pos.trDelta[2]",
+    44,
+    4,
+    -63,
+    1u,
+    "MSG_FIELD_ES_ORIGIN_DELTA",
+    "NEVER_CHANGES"
+  },
+  { "surfType", 212, 1, 8, 1u, "8", "NEVER_CHANGES" },
+  { "un1", 217, 1, 8, 1u, "8", "NEVER_CHANGES" },
+  { "index", 194, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDelta[0]",
+    72,
+    4,
+    -61,
+    1u,
+    "MSG_FIELD_ES_ANGLE_DELTA",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDelta[1]",
+    76,
+    4,
+    -61,
+    1u,
+    "MSG_FIELD_ES_ANGLE_DELTA",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDelta[2]",
+    80,
+    4,
+    -61,
+    1u,
+    "MSG_FIELD_ES_ANGLE_DELTA",
+    "NEVER_CHANGES"
+  },
+  { "time2", 120, 4, -97, 1u, "MSG_FIELD_TIME", "NEVER_CHANGES" },
+  { "loopSoundId", 124, 4, 32, 1u, "SOUNDALIAS_BITS", "NEVER_CHANGES" },
+  { "loopSoundFade", 208, 2, -16, 1u, "FADETIME_BITS", "NEVER_CHANGES" },
+  { "attackerEntityNum", 198, 2, 10, 1u, "GENTITYNUM_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trTime",
+    52,
+    4,
+    -70,
+    1u,
+    "MSG_FIELD_ANGLE_TRTIME",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDuration",
+    56,
+    4,
+    -69,
+    1u,
+    "MSG_FIELD_ANGLE_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "un3", 152, 4, 32, 1u, "32", "NEVER_CHANGES" }
+};
+
+const int numCorpseEntityStateFields = 68;
+const NetField corpseEntityStateFields[68] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.u.player.stowedWeapon", 98, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "partBits[0]", 156, 4, 32, 0u, "32", "0" },
+  { "partBits[1]", 160, 4, 32, 0u, "32", "0" },
+  { "partBits[2]", 164, 4, 32, 0u, "32", "0" },
+  { "partBits[3]", 168, 4, 32, 0u, "32", "0" },
+  { "partBits[4]", 172, 4, 32, 0u, "32", "0" },
+  { "targetname", 206, 2, 16, 1u, "16", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.u.player.movementDir",
+    88,
+    4,
+    -60,
+    1u,
+    "MSG_FIELD_MOVEMENTDIR",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.u.player.moveType",
+    92,
+    4,
+    5,
+    1u,
+    "ANIM_MOVETYPE_BITS",
+    "NEVER_CHANGES"
+  },
+  {
+    "eventSequence",
+    210,
+    2,
+    -59,
+    1u,
+    "MSG_FIELD_EVENTSEQUENCE",
+    "NEVER_CHANGES"
+  },
+  { "events[0]", 176, 1, -94, 1u, "MSG_FIELD_EVENT", "NEVER_CHANGES" },
+  { "events[1]", 177, 1, -94, 1u, "MSG_FIELD_EVENT", "NEVER_CHANGES" },
+  { "events[2]", 178, 1, -94, 1u, "MSG_FIELD_EVENT", "NEVER_CHANGES" },
+  { "events[3]", 179, 1, -94, 1u, "MSG_FIELD_EVENT", "NEVER_CHANGES" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "eventParms[1]", 182, 2, -93, 1u, "MSG_FIELD_EVENTPARAM", "NEVER_CHANGES" },
+  { "eventParms[0]", 180, 2, -93, 1u, "MSG_FIELD_EVENTPARAM", "NEVER_CHANGES" },
+  { "eventParms[2]", 184, 2, -93, 1u, "MSG_FIELD_EVENTPARAM", "NEVER_CHANGES" },
+  { "weapon", 202, 2, 11, 1u, "MAX_WEAPONS_BITS", "NEVER_CHANGES" },
+  { "weaponModel", 216, 1, 4, 1u, "MAX_WEAPONMODEL_BITS", "NEVER_CHANGES" },
+  { "eventParms[3]", 186, 2, -93, 1u, "MSG_FIELD_EVENTPARAM", "NEVER_CHANGES" },
+  { "solid", 128, 4, 24, 1u, "24", "NEVER_CHANGES" },
+  {
+    "lerp.pos.trDuration",
+    20,
+    4,
+    -67,
+    1u,
+    "MSG_FIELD_POS_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "eventParm", 188, 2, -93, 1u, "MSG_FIELD_EVENTPARAM", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" },
+  { "surfType", 212, 1, 8, 1u, "8", "NEVER_CHANGES" },
+  { "un1", 217, 1, 8, 1u, "8", "NEVER_CHANGES" },
+  { "otherEntityNum", 196, 2, 10, 1u, "GENTITYNUM_BITS", "NEVER_CHANGES" },
+  { "index", 194, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDelta[0]",
+    72,
+    4,
+    -61,
+    1u,
+    "MSG_FIELD_ES_ANGLE_DELTA",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDelta[1]",
+    76,
+    4,
+    -61,
+    1u,
+    "MSG_FIELD_ES_ANGLE_DELTA",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDelta[2]",
+    80,
+    4,
+    -61,
+    1u,
+    "MSG_FIELD_ES_ANGLE_DELTA",
+    "NEVER_CHANGES"
+  },
+  { "time2", 120, 4, -97, 1u, "MSG_FIELD_TIME", "NEVER_CHANGES" },
+  { "loopSoundId", 124, 4, 32, 1u, "SOUNDALIAS_BITS", "NEVER_CHANGES" },
+  { "loopSoundFade", 208, 2, -16, 1u, "FADETIME_BITS", "NEVER_CHANGES" },
+  { "attackerEntityNum", 198, 2, 10, 1u, "GENTITYNUM_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trTime",
+    52,
+    4,
+    -70,
+    1u,
+    "MSG_FIELD_ANGLE_TRTIME",
+    "NEVER_CHANGES"
+  },
+  { "lerp.u.player.leanf", 84, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDuration",
+    56,
+    4,
+    -69,
+    1u,
+    "MSG_FIELD_ANGLE_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "un3", 152, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" }
+};
+
+
+const int numItemEntityStateFields = 69;
+const NetField itemEntityStateFields[69] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.u.anonymous.data[0]", 84, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[1]", 88, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 0u, "32", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "partBits[0]", 156, 4, 32, 0u, "32", "0" },
+  { "partBits[1]", 160, 4, 32, 0u, "32", "0" },
+  { "partBits[2]", 164, 4, 32, 0u, "32", "0" },
+  { "partBits[3]", 168, 4, 32, 0u, "32", "0" },
+  { "partBits[4]", 172, 4, 32, 0u, "32", "0" },
+  { "index", 194, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  { "un2.anim.legsAnim", 136, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDuration",
+    56,
+    4,
+    -69,
+    1u,
+    "MSG_FIELD_ANGLE_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" }
+};
+
+
+const int numMissileEntityStateFields = 69;
+const NetField missileEntityStateFields[69] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.u.missile.launchTime", 84, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lerp.u.missile.forcedDud", 96, 4, 1, 0u, "1", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.u.missile.fuseTime", 92, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "un3", 152, 4, 1, 0u, "1", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.u.missile.parentClientNum", 88, 4, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "faction", 215, 1, 7, 0u, "2 + CLIENT_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDuration",
+    56,
+    4,
+    -69,
+    1u,
+    "MSG_FIELD_ANGLE_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" }
+};
+
+const NetField scriptMoverStateFields[72] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "partBits[2]", 164, 4, 32, 0u, "32", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "partBits[0]", 156, 4, 32, 0u, "32", "0" },
+  { "partBits[1]", 160, 4, 32, 0u, "32", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "faction", 215, 1, 7, 0u, "2 + CLIENT_BITS", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "lerp.u.scriptMover.exploderIndex", 104, 2, 12, 0u, "12", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "enemyModel", 200, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "lerp.u.scriptMover.attachModelIndex[0]", 92, 2, 9, 0u, "MODEL_BITS", "0" },
+  { "lerp.u.scriptMover.attachModelIndex[1]", 94, 2, 9, 0u, "MODEL_BITS", "0" },
+  { "lerp.u.scriptMover.attachModelIndex[2]", 96, 2, 9, 0u, "MODEL_BITS", "0" },
+  { "lerp.u.scriptMover.attachModelIndex[3]", 98, 2, 9, 0u, "MODEL_BITS", "0" },
+  { "lerp.u.scriptMover.animScriptedAnim", 100, 2, 11, 0u, "ANIM_BITS", "0" },
+  {
+    "lerp.u.scriptMover.attachedEntNum",
+    102,
+    2,
+    10,
+    0u,
+    "GENTITYNUM_BITS",
+    "0"
+  },
+  { "lerp.u.scriptMover.attachTagIndex[0]", 84, 1, 5, 0u, "TAG_BITS", "0" },
+  { "lerp.u.scriptMover.attachTagIndex[1]", 85, 1, 5, 0u, "TAG_BITS", "0" },
+  { "lerp.u.scriptMover.attachTagIndex[2]", 86, 1, 5, 0u, "TAG_BITS", "0" },
+  { "lerp.u.scriptMover.attachTagIndex[3]", 87, 1, 5, 0u, "TAG_BITS", "0" },
+  { "lerp.u.scriptMover.attachedTagIndex", 88, 4, 5, 0u, "TAG_BITS", "0" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 0u, "32", "0" },
+  { "partBits[4]", 172, 4, 32, 0u, "32", "0" }
+};
+
+
+const int numSoundBlendEntityStateFields = 68;
+const NetField soundBlendEntityStateFields[68] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "lerp.u.anonymous.data[1]", 88, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" }
+};
+
+const NetField fxStateFields[68] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.u.anonymous.data[0]", 84, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[1]", 88, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 0u, "32", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDuration",
+    56,
+    4,
+    -69,
+    1u,
+    "MSG_FIELD_ANGLE_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" }
+};
+
+
+
+const int numLoopFxEntityStateFields = 69;
+const NetField loopFxEntityStateFields[69] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.u.loopFx.cullDist", 84, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.u.loopFx.period", 88, 4, 32, 0u, "32", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" }
+};
+
+
+const int numTurretEntityStateFields = 69;
+const NetField turretEntityStateFields[69] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  {
+    "lerp.u.turret.gunAngles[0]",
+    84,
+    4,
+    -100,
+    0u,
+    "MSG_FIELD_ANGLE2SHORT",
+    "0"
+  },
+  {
+    "lerp.u.turret.gunAngles[1]",
+    88,
+    4,
+    -100,
+    0u,
+    "MSG_FIELD_ANGLE2SHORT",
+    "0"
+  },
+  {
+    "lerp.u.turret.gunAngles[2]",
+    92,
+    4,
+    -100,
+    0u,
+    "MSG_FIELD_ANGLE2SHORT",
+    "0"
+  },
+  { "lerp.u.turret.ownerNum", 96, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.u.turret.heatVal", 100, 4, -81, 0u, "MSG_FIELD_0TO1_P2", "0" },
+  { "lerp.u.turret.overheating", 104, 4, 1, 0u, "1", "0" },
+  { "lerp.u.turret.flags", 112, 4, 8, 0u, "MAX_TURRET_NETWORK_BITS", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.u.turret.pivotOffset", 108, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "un2.anim.legsAnim", 136, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "partBits[0]", 156, 4, 32, 0u, "32", "0" },
+  { "partBits[1]", 160, 4, 32, 0u, "32", "0" },
+  { "partBits[2]", 164, 4, 32, 0u, "32", "0" },
+  { "partBits[3]", 168, 4, 32, 0u, "32", "0" },
+  { "partBits[4]", 172, 4, 32, 0u, "32", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" }
+};
+
+const NetField helicopterEntityStateFields[71] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  {
+    "faction.teamAndOwnerIndex",
+    215,
+    1,
+    7,
+    2u,
+    "2 + CLIENT_BITS",
+    "ALWAYS_CHANGES"
+  },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  {
+    "lerp.u.vehicle.gunnerAngles[1].pitch",
+    96,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  { "lerp.u.vehicle.gunPitch", 110, 2, -75, 0u, "MSG_FIELD_PITCH_P1", "0" },
+  { "lerp.u.vehicle.gunYaw", 112, 2, -74, 0u, "MSG_FIELD_YAW_P1", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.u.vehicle.steerYaw", 84, 4, -77, 0u, "MSG_FIELD_NEG1TO1_P2", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "lerp.u.vehicle.throttle", 108, 2, -16, 0u, "-16", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lerp.u.vehicle.bodyRoll", 88, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  {
+    "lerp.u.vehicle.gunnerAngles[1].yaw",
+    98,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "un3", 152, 4, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  {
+    "un2.vehicleState.vehicleInfoIndex",
+    136,
+    1,
+    5,
+    0u,
+    "MAX_VEHICLE_FILES_BITS",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[0].pitch",
+    92,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[0].yaw",
+    94,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "iHeadIcon", 214, 1, 4, 0u, "HEAD_ICON_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  {
+    "lerp.u.vehicle.gunnerAngles[2].pitch",
+    100,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[3].pitch",
+    104,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[2].yaw",
+    102,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[3].yaw",
+    106,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  { "lerp.pos.trDelta[1]", 40, 4, -72, 0u, "MSG_FIELD_VEHICLE_TVEL", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -72, 0u, "MSG_FIELD_VEHICLE_TVEL", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -72, 0u, "MSG_FIELD_VEHICLE_TVEL", "0" },
+  { "enemyModel", 200, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  {
+    "lerp.apos.trDelta[1]",
+    76,
+    4,
+    -73,
+    1u,
+    "MSG_FIELD_VEHICLE_AVEL",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDelta[0]",
+    72,
+    4,
+    -73,
+    1u,
+    "MSG_FIELD_VEHICLE_AVEL",
+    "NEVER_CHANGES"
+  },
+  {
+    "lerp.apos.trDelta[2]",
+    80,
+    4,
+    -73,
+    1u,
+    "MSG_FIELD_VEHICLE_AVEL",
+    "NEVER_CHANGES"
+  },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" }
+};
+
+const NetField planeStateFields[66] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  { "lerp.pos.trBase[0]", 24, 4, 0, 2u, "MSG_FIELD_FLOAT", "ALWAYS_CHANGES" },
+  { "lerp.pos.trBase[1]", 28, 4, 0, 2u, "MSG_FIELD_FLOAT", "ALWAYS_CHANGES" },
+  { "lerp.pos.trBase[2]", 32, 4, 0, 2u, "MSG_FIELD_FLOAT", "ALWAYS_CHANGES" },
+  { "index", 194, 2, 10, 2u, "SUBMODEL_BITS", "ALWAYS_CHANGES" },
+  {
+    "lerp.pos.trDelta[0]",
+    36,
+    4,
+    -63,
+    2u,
+    "MSG_FIELD_ES_ORIGIN_DELTA",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "lerp.pos.trDelta[1]",
+    40,
+    4,
+    -63,
+    2u,
+    "MSG_FIELD_ES_ORIGIN_DELTA",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "lerp.pos.trTime",
+    16,
+    4,
+    -68,
+    2u,
+    "MSG_FIELD_POS_TRTIME",
+    "ALWAYS_CHANGES"
+  },
+  { "lerp.pos.trType", 12, 1, 8, 2u, "MSG_TRAJECTORY_BITS", "ALWAYS_CHANGES" },
+  {
+    "lerp.pos.trDuration",
+    20,
+    4,
+    -67,
+    2u,
+    "MSG_FIELD_POS_TRDURATION",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "faction.teamAndOwnerIndex",
+    215,
+    1,
+    7,
+    2u,
+    "2 + CLIENT_BITS",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "lerp.apos.trBase[1]",
+    64,
+    4,
+    -62,
+    2u,
+    "MSG_FIELD_ES_ANGLE",
+    "ALWAYS_CHANGES"
+  },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "lerp.u.anonymous.data[0]", 84, 4, 32, 0u, "32", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "iHeadIcon", 214, 1, 4, 0u, "HEAD_ICON_BITS", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "lerp.u.anonymous.data[1]", 88, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 0u, "32", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  {
+    "un2.vehicleState.vehicleInfoIndex",
+    136,
+    1,
+    5,
+    0u,
+    "MAX_VEHICLE_FILES_BITS",
+    "0"
+  },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" }
+};
+
+
+
+const int numVehicleEntityStateFields = 71;
+const NetField vehicleEntityStateFields[71] =
+{
+  { "eType", 190, 2, -58, 1u, "MSG_FIELD_ETYPE", "NEVER_CHANGES" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  {
+    "lerp.u.vehicle.gunnerAngles[1].pitch",
+    96,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  { "lerp.u.vehicle.gunPitch", 110, 2, -75, 0u, "MSG_FIELD_PITCH_P1", "0" },
+  { "lerp.u.vehicle.gunYaw", 112, 2, -74, 0u, "MSG_FIELD_YAW_P1", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.u.vehicle.steerYaw", 84, 4, -77, 0u, "MSG_FIELD_NEG1TO1_P2", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "lerp.u.vehicle.throttle", 108, 2, -16, 0u, "-16", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lerp.u.vehicle.bodyRoll", 88, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  {
+    "lerp.u.vehicle.gunnerAngles[1].yaw",
+    98,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "un3", 152, 4, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  {
+    "un2.vehicleState.vehicleInfoIndex",
+    136,
+    1,
+    5,
+    0u,
+    "MAX_VEHICLE_FILES_BITS",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[0].pitch",
+    92,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[0].yaw",
+    94,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "iHeadIcon", 214, 1, 4, 0u, "HEAD_ICON_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  {
+    "lerp.u.vehicle.gunnerAngles[2].pitch",
+    100,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[3].pitch",
+    104,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[2].yaw",
+    102,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  {
+    "lerp.u.vehicle.gunnerAngles[3].yaw",
+    106,
+    2,
+    -74,
+    0u,
+    "MSG_FIELD_YAW_P1",
+    "0"
+  },
+  { "faction.teamAndOwnerIndex", 215, 1, 7, 0u, "2 + CLIENT_BITS", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -72, 0u, "MSG_FIELD_VEHICLE_TVEL", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -72, 0u, "MSG_FIELD_VEHICLE_TVEL", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -72, 0u, "MSG_FIELD_VEHICLE_TVEL", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -73, 0u, "MSG_FIELD_VEHICLE_AVEL", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -73, 0u, "MSG_FIELD_VEHICLE_AVEL", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -73, 0u, "MSG_FIELD_VEHICLE_AVEL", "0" },
+  { "enemyModel", 200, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" }
+};
+
+
+const int numActorStateFields = 69;
+const NetField actorStateFields[69] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  {
+    "lerp.pos.trBase[1]",
+    28,
+    4,
+    -65,
+    2u,
+    "MSG_FIELD_ES_ORIGINY",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "lerp.pos.trBase[0]",
+    24,
+    4,
+    -66,
+    2u,
+    "MSG_FIELD_ES_ORIGINX",
+    "ALWAYS_CHANGES"
+  },
+  {
+    "lerp.apos.trBase[1]",
+    64,
+    4,
+    -62,
+    2u,
+    "MSG_FIELD_ES_ANGLE",
+    "ALWAYS_CHANGES"
+  },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "un2.animState.fLeanAmount", 140, 4, -77, 0u, "MSG_FIELD_NEG1TO1_P2", "0" },
+  { "un2.animState.state", 136, 4, 7, 0u, "ACTOR_ANIM_STATE_BITS", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "un2.animState.fAimUpDown", 144, 4, -77, 0u, "MSG_FIELD_NEG1TO1_P2", "0" },
+  {
+    "un2.animState.fAimLeftRight",
+    148,
+    4,
+    -77,
+    0u,
+    "MSG_FIELD_NEG1TO1_P2",
+    "0"
+  },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.u.actor.index.actorNum", 84, 4, 4, 0u, "ACTOR_BITS", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "enemyModel", 200, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  {
+    "lerp.u.actor.proneInfo.fBodyPitch",
+    100,
+    2,
+    -75,
+    0u,
+    "MSG_FIELD_PITCH_P1",
+    "0"
+  },
+  { "lerp.u.actor.enemy", 96, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.apos.trDuration", 56, 4, -69, 0u, "MSG_FIELD_ANGLE_TRDURATION", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.u.actor.species", 88, 4, 1, 0u, "AI_SPECIES_BITS", "0" },
+  { "lerp.u.actor.team", 92, 4, 2, 0u, "2", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 0u, "32", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" },
+  { "partBits[0]", 156, 4, 32, 0u, "32", "0" },
+  { "partBits[1]", 160, 4, 32, 0u, "32", "0" },
+  { "partBits[2]", 164, 4, 32, 0u, "32", "0" },
+  { "partBits[3]", 168, 4, 32, 0u, "32", "0" },
+  { "partBits[4]", 172, 4, 32, 0u, "32", "0" },
+  { "un3", 152, 4, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" }
+};
+
+
+const int numEventEntityStateFields = 69;
+const NetField eventEntityStateFields[69] =
+{
+  { "eType", 190, 2, -58, 0u, "MSG_FIELD_ETYPE", "0" },
+  { "lerp.pos.trBase[0]", 24, 4, -66, 0u, "MSG_FIELD_ES_ORIGINX", "0" },
+  { "lerp.pos.trBase[1]", 28, 4, -65, 0u, "MSG_FIELD_ES_ORIGINY", "0" },
+  { "lerp.pos.trBase[2]", 32, 4, -64, 0u, "MSG_FIELD_ES_ORIGINZ", "0" },
+  { "eventParm", 188, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "surfType", 212, 1, 8, 0u, "8", "0" },
+  { "otherEntityNum", 196, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "un1", 217, 1, 8, 0u, "8", "0" },
+  { "lerp.u.anonymous.data[0]", 84, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[1]", 88, 4, 32, 0u, "32", "0" },
+  { "attackerEntityNum", 198, 2, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "lerp.apos.trBase[0]", 60, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "clientNum", 213, 1, 6, 0u, "CLIENT_BITS+1", "0" },
+  { "weapon", 202, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "weaponModel", 216, 1, 4, 0u, "MAX_WEAPONMODEL_BITS", "0" },
+  { "renderOptions", 132, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "lerp.u.anonymous.data[2]", 92, 4, 32, 0u, "32", "0" },
+  { "index", 194, 2, 10, 0u, "SUBMODEL_BITS", "0" },
+  { "solid", 128, 4, 24, 0u, "24", "0" },
+  { "lerp.apos.trBase[1]", 64, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "lerp.apos.trBase[2]", 68, 4, -62, 0u, "MSG_FIELD_ES_ANGLE", "0" },
+  { "groundEntityNum", 192, 2, -96, 0u, "MSG_FIELD_GROUNDENTITY", "0" },
+  { "lerp.u.anonymous.data[4]", 100, 4, 32, 0u, "32", "0" },
+  { "lerp.u.anonymous.data[5]", 104, 4, 32, 0u, "32", "0" },
+  { "events[0]", 176, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[0]", 180, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.pos.trType", 12, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trType", 48, 1, 8, 0u, "MSG_TRAJECTORY_BITS", "0" },
+  { "lerp.apos.trTime", 52, 4, -70, 0u, "MSG_FIELD_ANGLE_TRTIME", "0" },
+  { "lerp.apos.trDelta[0]", 72, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.apos.trDelta[2]", 80, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "lerp.pos.trDelta[0]", 36, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[1]", 40, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "lerp.pos.trDelta[2]", 44, 4, -63, 0u, "MSG_FIELD_ES_ORIGIN_DELTA", "0" },
+  { "eventSequence", 210, 2, -59, 0u, "MSG_FIELD_EVENTSEQUENCE", "0" },
+  { "lerp.pos.trTime", 16, 4, -68, 0u, "MSG_FIELD_POS_TRTIME", "0" },
+  { "events[1]", 177, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "events[2]", 178, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[1]", 182, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "eventParms[2]", 184, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "events[3]", 179, 1, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "eventParms[3]", 186, 2, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "lerp.eFlags", 4, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "lerp.eFlags2", 8, 4, 32, 0u, "32", "0" },
+  { "lerp.pos.trDuration", 20, 4, -67, 0u, "MSG_FIELD_POS_TRDURATION", "0" },
+  { "lerp.apos.trDelta[1]", 76, 4, -61, 0u, "MSG_FIELD_ES_ANGLE_DELTA", "0" },
+  { "time2", 120, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "loopSoundId", 124, 4, 32, 0u, "SOUNDALIAS_BITS", "0" },
+  { "loopSoundFade", 208, 2, -16, 0u, "FADETIME_BITS", "0" },
+  { "un3", 152, 4, 32, 0u, "32", "0" },
+  { "targetname", 206, 2, 16, 0u, "16", "0" },
+  { "lerp.useCount", 116, 4, 6, 0u, "USE_COUNT_BITS", "0" },
+  { "clientLinkInfo", 218, 4, 26, 0u, "CLIENTLINKINFO_BITS", "0" },
+  { "enemyModel", 200, 2, 10, 1u, "SUBMODEL_BITS", "NEVER_CHANGES" },
+  { "un2.anim.torsoAnim", 140, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.legsAnim", 136, 4, 11, 1u, "ANIM_BITS", "NEVER_CHANGES" },
+  { "un2.anim.fWaistPitch", 148, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "un2.anim.fTorsoPitch", 144, 4, 0, 1u, "MSG_FIELD_FLOAT", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[3]", 96, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[6]", 108, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "lerp.u.anonymous.data[7]", 112, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "iHeadIcon", 214, 1, 4, 1u, "HEAD_ICON_BITS", "NEVER_CHANGES" },
+  { "faction", 215, 1, 7, 1u, "2 + CLIENT_BITS", "NEVER_CHANGES" },
+  {
+    "lerp.apos.trDuration",
+    56,
+    4,
+    -69,
+    1u,
+    "MSG_FIELD_ANGLE_TRDURATION",
+    "NEVER_CHANGES"
+  },
+  { "partBits[0]", 156, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[1]", 160, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[2]", 164, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[3]", 168, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "partBits[4]", 172, 4, 32, 1u, "32", "NEVER_CHANGES" }
+};
+
+const int numClientStateFields = 50;
+const NetField clientStateFields[50] =
+{
+  { "score.status_icon", 164, 4, 3, 0u, "STATUS_ICON_BITS", "0" },
+  { "score.place", 168, 4, 6, 0u, "CLIENT_BITS + 1", "0" },
+  { "score.score", 172, 4, -16, 0u, "SCORE_BITS", "0" },
+  { "score.deaths", 184, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "score.scoreboardColumns[1]", 192, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "score.kills", 176, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "score.scoreboardColumns[0]", 188, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "modelindex", 12, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "attachModelIndex[0]", 16, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "attachTagIndex[1]", 44, 4, 5, 0u, "TAG_BITS", "0" },
+  { "attachModelIndex[1]", 20, 4, 9, 0u, "MODEL_BITS", "0" },
+  {
+    "clientUIVisibilityFlags",
+    204,
+    4,
+    4,
+    0u,
+    "CLIENT_HUD_VISIBILITY_BITS",
+    "0"
+  },
+  { "score.assists", 180, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "rank", 100, 4, 8, 0u, "RANK_BITS", "0" },
+  { "team", 4, 4, 2, 0u, "2", "0" },
+  { "name[0]", 64, 4, 32, 0u, "32", "0" },
+  { "attachedVehEntNum", 144, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "xuid32[1]", 124, 4, 32, 0u, "32", "0" },
+  { "name[4]", 68, 4, 32, 0u, "32", "0" },
+  { "perks[0]", 128, 4, 32, 0u, "PERK0_BITS", "0" },
+  { "perks[1]", 132, 4, 32, 0u, "PERK1_BITS", "0" },
+  { "clanAbbrev[0]", 136, 4, 32, 0u, "32", "0" },
+  { "name[8]", 72, 4, 32, 0u, "32", "0" },
+  { "name[12]", 76, 4, 32, 0u, "32", "0" },
+  { "score.scoreboardColumns[2]", 196, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "score.scoreboardColumns[3]", 200, 4, 10, 0u, "ASSIST_BITS", "0" },
+  { "xuid32[0]", 120, 4, 32, 0u, "32", "0" },
+  { "prestige", 104, 4, 8, 0u, "PRESTIGE_BITS", "0" },
+  { "ffaTeam", 8, 4, 2, 0u, "2", "0" },
+  { "needsRevive", 152, 4, 1, 0u, "1", "0" },
+  { "maxSprintTimeMultiplier", 96, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "vehAnimState", 156, 4, 2, 0u, "MAX_BITS_VEHICLEANIMSTATE", "0" },
+  { "name[16]", 80, 4, 32, 0u, "32", "0" },
+  { "name[20]", 84, 4, 32, 0u, "32", "0" },
+  { "name[24]", 88, 4, 32, 0u, "32", "0" },
+  { "name[28]", 92, 4, 32, 0u, "32", "0" },
+  { "clanAbbrev[4]", 140, 4, 32, 0u, "32", "0" },
+  { "attachedVehSeat", 148, 4, 4, 0u, "VEHSLOT_BITS", "0" },
+  { "attachTagIndex[5]", 60, 4, 5, 0u, "TAG_BITS", "0" },
+  { "attachTagIndex[0]", 40, 4, 5, 0u, "TAG_BITS", "0" },
+  { "attachTagIndex[2]", 48, 4, 5, 0u, "TAG_BITS", "0" },
+  { "attachTagIndex[3]", 52, 4, 5, 0u, "TAG_BITS", "0" },
+  { "attachTagIndex[4]", 56, 4, 5, 0u, "TAG_BITS", "0" },
+  { "attachModelIndex[2]", 24, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "attachModelIndex[3]", 28, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "attachModelIndex[4]", 32, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "attachModelIndex[5]", 36, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "lastDamageTime", 108, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lastStandStartTime", 112, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "score.ping", 160, 4, 10, 0u, "PING_BITS", "0" }
+};
+
+
+const int numPlayerStateFields = 179;
+const NetField playerStateFields[179] =
+{
+  { "commandTime", 0, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "viewangles[1]", 388, 4, -87, 0u, "MSG_FIELD_VIEWANGLES", "0" },
+  { "viewangles[0]", 384, 4, -87, 0u, "MSG_FIELD_VIEWANGLES", "0" },
+  { "viewangles[2]", 392, 4, -87, 0u, "MSG_FIELD_VIEWANGLES", "0" },
+  {
+    "origin[0]",
+    36,
+    4,
+    -88,
+    3u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "CLIENT_PREDICTED"
+  },
+  {
+    "origin[1]",
+    40,
+    4,
+    -88,
+    3u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "CLIENT_PREDICTED"
+  },
+  { "bobCycle", 8, 4, 8, 3u, "8", "CLIENT_PREDICTED" },
+  {
+    "velocity[1]",
+    52,
+    4,
+    -88,
+    3u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "CLIENT_PREDICTED"
+  },
+  {
+    "velocity[0]",
+    48,
+    4,
+    -88,
+    3u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "CLIENT_PREDICTED"
+  },
+  { "vehicleType", 1096, 4, 3, 0u, "VEHICLE_TYPES_BITS", "0" },
+  { "movementDir", 220, 4, -8, 3u, "-8", "CLIENT_PREDICTED" },
+  {
+    "predictableEventSequence",
+    232,
+    2,
+    -59,
+    0u,
+    "MSG_FIELD_EVENTSEQUENCE",
+    "0"
+  },
+  {
+    "predictableEventSequenceOld",
+    234,
+    2,
+    -59,
+    0u,
+    "MSG_FIELD_EVENTSEQUENCE",
+    "0"
+  },
+  { "legsAnim", 188, 2, 11, 0u, "ANIM_BITS", "0" },
+  {
+    "origin[2]",
+    44,
+    4,
+    -88,
+    3u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "CLIENT_PREDICTED"
+  },
+  { "weaponTime", 60, 4, -16, 0u, "-16", "0" },
+  { "weaponTimeLeft", 68, 4, -16, 0u, "-16", "0" },
+  {
+    "weaponIdleTime",
+    76,
+    4,
+    -71,
+    3u,
+    "MSG_FIELD_WEAPON_IDLE_TIME",
+    "CLIENT_PREDICTED"
+  },
+  { "aimSpreadScale", 1308, 4, -106, 0u, "MSG_FIELD_AIM_SPREAD_SCALE", "0" },
+  { "torsoTimer", 184, 4, 16, 0u, "16", "0" },
+  { "pm_flags", 12, 4, 25, 0u, "PMF_BIT_COUNT", "0" },
+  { "weapAnim", 1300, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "weapAnimLeft", 1304, 4, 11, 0u, "ANIM_BITS", "0" },
+  { "weaponstate", 344, 4, 7, 0u, "WEAPON_STATE_BITS", "0" },
+  { "weaponstateLeft", 348, 4, 7, 0u, "WEAPON_STATE_BITS", "0" },
+  {
+    "velocity[2]",
+    56,
+    4,
+    -88,
+    3u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "CLIENT_PREDICTED"
+  },
+  { "viewAngleClampBase[1]", 420, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "viewAngleClampBase[0]", 416, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "predictableEventParms[0]", 252, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "predictableEventParms[1]", 256, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "predictableEvents[3]", 248, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "predictableEvents[2]", 244, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "predictableEvents[1]", 240, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "predictableEvents[0]", 236, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "predictableEventParms[2]", 260, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "predictableEventParms[3]", 264, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  {
+    "unpredictableEventSequence",
+    268,
+    2,
+    -59,
+    0u,
+    "MSG_FIELD_EVENTSEQUENCE",
+    "0"
+  },
+  {
+    "unpredictableEventSequenceOld",
+    270,
+    2,
+    -59,
+    0u,
+    "MSG_FIELD_EVENTSEQUENCE",
+    "0"
+  },
+  { "unpredictableEventParms[0]", 288, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "unpredictableEventParms[1]", 292, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "unpredictableEvents[3]", 284, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "unpredictableEvents[2]", 280, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "unpredictableEvents[1]", 276, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "unpredictableEvents[0]", 272, 4, -94, 0u, "MSG_FIELD_EVENT", "0" },
+  { "unpredictableEventParms[2]", 296, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "unpredictableEventParms[3]", 300, 4, -93, 0u, "MSG_FIELD_EVENTPARAM", "0" },
+  { "torsoAnim", 190, 2, 11, 0u, "ANIM_BITS", "0" },
+  {
+    "holdBreathScale",
+    1192,
+    4,
+    -88,
+    0u,
+    "MSG_FIELD_FLOAT_RARELYZERO_NONINT",
+    "0"
+  },
+  { "eFlags", 224, 4, -98, 0u, "MSG_FIELD_EFLAGS", "0" },
+  { "viewHeightCurrent", 400, 4, -107, 0u, "MSG_FIELD_VIEW_HEIGHT", "0" },
+  { "fWeaponPosFrac", 360, 4, -80, 0u, "MSG_FIELD_0TO1_P3", "0" },
+  { "moveType", 176, 4, 5, 0u, "ANIM_MOVETYPE_BITS", "0" },
+  { "legsTimer", 180, 4, 16, 0u, "16", "0" },
+  { "viewHeightTarget", 396, 4, -8, 0u, "-8", "0" },
+  { "sprintState.lastSprintStart", 1160, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "sprintState.lastSprintEnd", 1164, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "lastDtpEnd", 1180, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "weapon", 324, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "stowedWeapon", 332, 4, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "stowedWeaponCamo", 336, 1, 6, 0u, "RENDER_OPTIONS_CAMO_BITS", "0" },
+  { "lastWeaponAltModeSwitch", 328, 4, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "meleeWeapon", 340, 4, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "renderOptions", 320, 4, 32, 0u, "MAX_RENDER_OPTIONS_BITS", "0" },
+  { "weaponDelay", 64, 4, -16, 0u, "-16", "0" },
+  { "sprintState.sprintStartMaxLength", 1168, 4, 14, 0u, "14", "0" },
+  { "sprintState.sprintDuration", 1172, 4, 14, 0u, "14", "0" },
+  { "sprintState.sprintCooldown", 1176, 4, 14, 0u, "14", "0" },
+  { "weapFlags", 16, 4, 24, 0u, "PWF_BIT_COUNT", "0" },
+  { "weapLockFlags", 1248, 4, 6, 0u, "WEAPONLOCKFLAG_BITS", "0" },
+  { "groundEntityNum", 144, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "damageTimer", 200, 4, 10, 0u, "10", "0" },
+  { "delta_angles[1]", 136, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  { "offHandIndex", 308, 4, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "pm_time", 24, 4, -16, 0u, "-16", "0" },
+  { "otherFlags", 20, 4, 6, 0u, "POF_BIT_COUNT", "0" },
+  { "moveSpeedScaleMultiplier", 1200, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "perks[0]", 1256, 4, 32, 0u, "PERK0_BITS", "0" },
+  { "perks[1]", 1260, 4, 32, 0u, "PERK1_BITS", "0" },
+  { "visionSetLerpRatio", 1384, 4, -80, 0u, "MSG_FIELD_0TO1_P3", "0" },
+  { "poisoned", 1388, 4, 1, 2u, "1", "ALWAYS_CHANGES" },
+  { "killCamEntity", 2940, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "killCamTargetEntity", 2944, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "throwBackGrenadeOwner", 84, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "actionSlotType[2]", 1272, 4, 2, 0u, "MAX_BITS_ACTIONSLOTTYPE", "0" },
+  { "delta_angles[0]", 132, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  { "speed", 128, 4, 16, 0u, "16", "0" },
+  { "viewlocked_entNum", 1088, 2, 16, 0u, "16", "0" },
+  { "gravity", 120, 4, 16, 0u, "16", "0" },
+  { "actionSlotType[0]", 1264, 4, 2, 0u, "MAX_BITS_ACTIONSLOTTYPE", "0" },
+  { "dofNearBlur", 1340, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "dofFarBlur", 1344, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "eFlags2", 228, 4, 32, 0u, "32", "0" },
+  { "clientNum", 304, 1, 8, 0u, "8", "0" },
+  { "corpseIndex", 216, 4, 3, 0u, "CLIENT_CORPSE_INDEX_BITS", "0" },
+  { "damageEvent", 436, 4, 8, 0u, "8", "0" },
+  { "viewHeightLerpTarget", 408, 4, -8, 0u, "-8", "0" },
+  { "damageYaw", 440, 4, 8, 0u, "8", "0" },
+  { "viewmodelIndex", 380, 4, 9, 0u, "MODEL_BITS", "0" },
+  { "damageDuration", 204, 4, 16, 0u, "16", "0" },
+  { "damagePitch", 444, 4, 8, 0u, "8", "0" },
+  { "dmgDirection", 208, 4, 3, 0u, "3", "0" },
+  { "dmgType", 212, 4, 4, 0u, "4", "0" },
+  { "weaponShotCount", 352, 4, 3, 0u, "PLAYER_WEAPONSHOTCOUNT_BITS", "0" },
+  { "weaponShotCountLeft", 356, 4, 3, 0u, "PLAYER_WEAPONSHOTCOUNT_BITS", "0" },
+  { "stackFireCount", 432, 4, 3, 0u, "PLAYER_WEAPONSHOTCOUNT_BITS", "0" },
+  { "viewHeightLerpDown", 412, 4, 1, 2u, "1", "ALWAYS_CHANGES" },
+  { "cursorHint", 1120, 4, 11, 0u, "CURSOR_HINT_BITS", "0" },
+  { "cursorHintString", 1124, 4, -8, 0u, "-8", "0" },
+  { "cursorHintEntIndex", 1128, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "viewHeightLerpTime", 404, 4, 32, 0u, "32", "0" },
+  { "offhandSecondary", 312, 4, 1, 2u, "1", "ALWAYS_CHANGES" },
+  { "offhandPrimary", 316, 4, 1, 2u, "1", "ALWAYS_CHANGES" },
+  { "spyplaneTypeEnabled", 1136, 4, 2, 0u, "2", "0" },
+  { "satelliteTypeEnabled", 1140, 4, 2, 0u, "2", "0" },
+  { "pm_type", 4, 4, 8, 0u, "8", "0" },
+  { "fTorsoPitch", 1184, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "holdBreathTimer", 1196, 4, 16, 0u, "16", "0" },
+  { "actionSlotParam[2]", 1288, 4, 11, 0u, "MAX_BITS_ACTIONSLOTPARAM", "0" },
+  { "jumpTime", 164, 4, 32, 0u, "32", "0" },
+  { "slideTime", 172, 4, 32, 0u, "32", "0" },
+  { "mantleState.flags", 1216, 4, 12, 0u, "MANTLE_FLAG_BITS", "0" },
+  { "fWaistPitch", 1188, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "grenadeTimeLeft", 80, 4, -16, 0u, "-16", "0" },
+  { "proneDirection", 1072, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "mantleState.timer", 1208, 4, 32, 0u, "32", "0" },
+  { "damageCount", 448, 4, 7, 0u, "7", "0" },
+  { "shellshockTime", 1316, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "shellshockDuration", 1320, 4, 16, 2u, "16", "ALWAYS_CHANGES" },
+  {
+    "sprintState.sprintButtonUpRequired",
+    1152,
+    4,
+    1,
+    2u,
+    "1",
+    "ALWAYS_CHANGES"
+  },
+  { "shellshockIndex", 1312, 4, 4, 0u, "4", "0" },
+  { "proneTorsoPitch", 1080, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "sprintState.sprintDelay", 1156, 4, 1, 2u, "1", "ALWAYS_CHANGES" },
+  { "actionSlotParam[3]", 1292, 4, 11, 0u, "MAX_BITS_ACTIONSLOTPARAM", "0" },
+  { "actionSlotType[3]", 1276, 4, 2, 0u, "MAX_BITS_ACTIONSLOTTYPE", "0" },
+  { "proneDirectionPitch", 1076, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "jumpOriginZ", 168, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "mantleState.yaw", 1204, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "mantleState.transIndex", 1212, 4, 4, 0u, "MANTLE_TRANS_BITS", "0" },
+  { "throwBackGrenadeTimeLeft", 88, 4, -16, 0u, "-16", "0" },
+  { "foliageSoundTime", 116, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "vLadderVec[0]", 152, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "viewlocked", 1084, 4, 2, 0u, "MAX_BITS_PLAYERVIEWLOCK", "0" },
+  { "deltaTime", 2936, 4, 32, 0u, "32", "0" },
+  { "linkAngles[1]", 1112, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  { "viewAngleClampRange[1]", 428, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "viewAngleClampRange[0]", 424, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "vLadderVec[1]", 156, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  {
+    "locationSelectionInfo",
+    1148,
+    4,
+    8,
+    0u,
+    "LOC_SEL_MTL_BITS + LOC_SEL_RADIUS_BITS",
+    "0"
+  },
+  { "locationSelectionType", 1144, 4, 3, 0u, "3", "0" },
+  { "meleeChargeTime", 1244, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "meleeChargeYaw", 1236, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  { "meleeChargeDist", 1240, 4, 8, 0u, "8", "0" },
+  { "iCompassPlayerInfo", 1132, 4, 32, 0u, "32", "0" },
+  { "actionSlotType[1]", 1268, 4, 2, 0u, "MAX_BITS_ACTIONSLOTTYPE", "0" },
+  { "vLadderVec[2]", 160, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "weaponRestrictKickTime", 92, 4, -16, 0u, "-16", "0" },
+  { "delta_angles[2]", 140, 4, -100, 0u, "MSG_FIELD_ANGLE2SHORT", "0" },
+  { "spreadOverride", 368, 4, 6, 0u, "PLAYER_SPREAD_OVERRIDE_BITS", "0" },
+  {
+    "spreadOverrideState",
+    372,
+    4,
+    2,
+    0u,
+    "PLAYER_SPREAD_OVERRIDE_STATE_BITS",
+    "0"
+  },
+  { "actionSlotParam[0]", 1280, 4, 11, 0u, "MAX_BITS_ACTIONSLOTPARAM", "0" },
+  { "actionSlotParam[1]", 1284, 4, 11, 0u, "MAX_BITS_ACTIONSLOTPARAM", "0" },
+  { "dofNearStart", 1324, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "dofNearEnd", 1328, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "dofFarStart", 1332, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "dofFarEnd", 1336, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "dofViewmodelStart", 1348, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "dofViewmodelEnd", 1352, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "scriptedAnim", 1228, 4, 32, 0u, "32", "0" },
+  { "adsZoomSelect", 1368, 4, 32, 0u, "32", "0" },
+  { "adsZoomLatchState", 1376, 1, 1, 0u, "1", "0" },
+  { "leanf", 124, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "vehiclePos", 1092, 4, 4, 0u, "MAX_VEHICLE_SEAT_BITS", "0" },
+  {
+    "artilleryInboundIconLocation",
+    1380,
+    4,
+    19,
+    0u,
+    "ARTILLERY_LOCATION_MESSAGE_BITS",
+    "0"
+  },
+  { "weaponSpinLerp", 376, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "lastStandPrevWeapon", 326, 2, 11, 0u, "MAX_WEAPONS_BITS", "0" },
+  { "adsDelayTime", 364, 4, 32, 1u, "32", "NEVER_CHANGES" },
+  { "vehicleAnimBoneIndex", 1100, 4, 8, 1u, "MAX_BONE_BITS", "NEVER_CHANGES" },
+  {
+    "vehicleAnimStage",
+    1220,
+    4,
+    4,
+    1u,
+    "VEHICLE_ANIM_STAGE_BITS",
+    "NEVER_CHANGES"
+  },
+  {
+    "vehicleEntryPoint",
+    1224,
+    4,
+    3,
+    1u,
+    "VEHICLE_ENTRY_POINT_BITS",
+    "NEVER_CHANGES"
+  }
+};
+
+
+const int numObjectiveFields = 9;
+const NetField objectiveFields[9] =
+{
+  { "origin[0]", 4, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "origin[1]", 8, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "origin[2]", 12, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "size[0]", 16, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "size[1]", 20, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "icon", 32, 4, 12, 0u, "12", "0" },
+  { "color", 40, 4, -85, 0u, "MSG_FIELD_RGBA", "0" },
+  { "entNum", 24, 4, 10, 0u, "GENTITYNUM_BITS", "0" },
+  { "teamNum", 28, 4, 4, 0u, "4", "0" }
+};
+
+const int numMatchStateFields = 15;
+const NetField matchStateFields[15] =
+{
+  { "unarchivedState.alliesScore", 16, 4, -16, 0u, "SCORE_BITS", "0" },
+  { "unarchivedState.axisScore", 20, 4, -16, 0u, "SCORE_BITS", "0" },
+  {
+    "archivedState.matchUIVisibilityFlags",
+    4,
+    4,
+    13,
+    0u,
+    "MATCH_HUD_VISIBILITY_BITS",
+    "0"
+  },
+  {
+    "unarchivedState.matchUIVisibilityFlags",
+    28,
+    4,
+    13,
+    0u,
+    "MATCH_HUD_VISIBILITY_BITS",
+    "0"
+  },
+  { "unarchivedState.scoreLimit", 24, 4, -16, 0u, "SCORE_BITS", "0" },
+  { "unarchivedState.talkFlags", 60, 4, 5, 0u, "TALKFLAG_BITS", "0" },
+  {
+    "unarchivedState.scoreboardColumnTypes[0]",
+    32,
+    4,
+    5,
+    0u,
+    "COLUMN_TYPE_BITS",
+    "0"
+  },
+  {
+    "unarchivedState.scoreboardColumnTypes[1]",
+    36,
+    4,
+    5,
+    0u,
+    "COLUMN_TYPE_BITS",
+    "0"
+  },
+  {
+    "unarchivedState.scoreboardColumnTypes[2]",
+    40,
+    4,
+    5,
+    0u,
+    "COLUMN_TYPE_BITS",
+    "0"
+  },
+  {
+    "unarchivedState.scoreboardColumnTypes[3]",
+    44,
+    4,
+    5,
+    0u,
+    "COLUMN_TYPE_BITS",
+    "0"
+  },
+  { "unarchivedState.mapCenter[0]", 48, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "unarchivedState.mapCenter[1]", 52, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "unarchivedState.mapCenter[2]", 56, 4, 0, 0u, "MSG_FIELD_FLOAT", "0" },
+  { "archivedState.bombTimer[0]", 8, 4, -97, 0u, "MSG_FIELD_TIME", "0" },
+  { "archivedState.bombTimer[1]", 12, 4, -97, 0u, "MSG_FIELD_TIME", "0" }
+};
+
+
+unsigned int kbitmask[33] =
+{
+  0u,
+  1u,
+  3u,
+  7u,
+  15u,
+  31u,
+  63u,
+  127u,
+  255u,
+  511u,
+  1023u,
+  2047u,
+  4095u,
+  8191u,
+  16383u,
+  32767u,
+  65535u,
+  131071u,
+  262143u,
+  524287u,
+  1048575u,
+  2097151u,
+  4194303u,
+  8388607u,
+  16777215u,
+  33554431u,
+  67108863u,
+  134217727u,
+  268435455u,
+  536870911u,
+  1073741823u,
+  2147483647u,
+  4294967295u
+};
+
+
+
+int msgInit;
+huffman_t msgHuff;
+unsigned int huffBytesSeen[256];
+netFieldOrderInfo_t orderInfo;
 
 float (*__cdecl MSG_GetMapCenter())[3]
 {
@@ -9,8 +2451,12 @@ int __cdecl GetMinBitCountForNum(unsigned int num)
 {
     int v2; // eax
 
-    if ( !_BitScanReverse((unsigned int *)&v2, num) )
-        v2 = `CountLeadingZeros'::`2'::notFound;
+    if (!_BitScanReverse((unsigned long *)&v2, num))
+    {
+        //v2 = `CountLeadingZeros'::`2': : notFound;
+        v2 = 63;
+    }
+
     return 32 - (v2 ^ 0x1F);
 }
 
@@ -780,15 +3226,23 @@ unsigned __int64 __cdecl MSG_ReadInt64(msg_t *msg)
     }
 }
 
-double __cdecl MSG_ReadFloat(msg_t *msg)
+float  __cdecl MSG_ReadFloat(msg_t *msg)
 {
-    MSG_ReadFloat::__l2::<unnamed_type_dat> dat; // [esp+0h] [ebp-4h]
+    float result; // fp1
+    float f; // [sp+50h] [-20h]
 
-    dat.f = COERCE_FLOAT(MSG_ReadLong(msg));
-    if ( dat.f != NAN )
-        return dat.f;
-    msg->overflowed = 1;
-    return -1.0;
+    f = COERCE_FLOAT(MSG_ReadBits(msg, 0x20u));
+    if (f == NAN)
+    {
+        msg->overflowed = 1;
+        result = -1.0;
+    }
+    else
+    {
+        result = f;
+    }
+
+    return result;
 }
 
 char *__cdecl MSG_ReadString(msg_t *msg, char *string, unsigned int maxChars)
@@ -812,6 +3266,7 @@ char *__cdecl MSG_ReadString(msg_t *msg, char *string, unsigned int maxChars)
     return string;
 }
 
+char string[16384];
 char *__cdecl MSG_ReadBigString(msg_t *msg)
 {
     int c; // [esp+0h] [ebp-8h]
@@ -838,7 +3293,7 @@ char *__cdecl MSG_ReadBigString(msg_t *msg)
         if ( !c )
             break;
     }
-    byte_9763FCF = 0;
+    string[16383] = 0;
     return string;
 }
 
@@ -1034,25 +3489,25 @@ void __cdecl MSG_SetDefaultUserCmd(playerState_s *ps, usercmd_s *cmd)
     {
         if ( (ps->eFlags & 8) != 0 )
         {
-            bitarray<51>::setBit(&cmd->button_bits, 8u);
+            cmd->button_bits.setBit(8);
         }
         else if ( (ps->eFlags & 4) != 0 )
         {
-            bitarray<51>::setBit(&cmd->button_bits, 9u);
+            cmd->button_bits.setBit(9);
         }
         if ( ps->leanf <= 0.0 )
         {
             if ( ps->leanf < 0.0 )
-                bitarray<51>::setBit(&cmd->button_bits, 6u);
+               cmd->button_bits.setBit(6);
         }
         else
         {
-            bitarray<51>::setBit(&cmd->button_bits, 7u);
+           cmd->button_bits.setBit(7);
         }
         if ( ps->fWeaponPosFrac != 0.0 )
-            bitarray<51>::setBit(&cmd->button_bits, 0xBu);
+           cmd->button_bits.setBit(11);
         if ( (ps->pm_flags & 0x8000) != 0 )
-            bitarray<51>::setBit(&cmd->button_bits, 1u);
+           cmd->button_bits.setBit(1);
     }
 }
 
@@ -1070,7 +3525,7 @@ void __cdecl MSG_WriteDeltaUsercmdKey(
     bool v9; // [esp+8h] [ebp-28h]
     int i; // [esp+18h] [ebp-18h]
     bool noButtonChange; // [esp+1Eh] [ebp-12h]
-    bitarray<51> ignoreMask; // [esp+20h] [ebp-10h] BYREF
+    bitarray<51> ignoreMask(0, -1); // [esp+20h] [ebp-10h] BYREF
     unsigned int delta; // [esp+28h] [ebp-8h]
     bool buttonsAllEqual; // [esp+2Eh] [ebp-2h]
     bool noAngleChange; // [esp+2Fh] [ebp-1h]
@@ -1096,8 +3551,9 @@ void __cdecl MSG_WriteDeltaUsercmdKey(
     v9 = from->forwardmove == to->forwardmove && from->rightmove == to->rightmove;
     v8 = forceSendAngles && from->yawmove == to->yawmove && from->pitchmove == to->pitchmove;
     noAngleChange = v8;
-    bitarray<51>::bitarray<51>(&ignoreMask, 0, -1);
-    buttonsAllEqual = bitarray<51>::areAllBitsEqual(&from->button_bits, &to->button_bits, &ignoreMask);
+    //bitarray<51>::bitarray<51>(&ignoreMask, 0, -1);
+    //buttonsAllEqual = bitarray<51>::areAllBitsEqual(&from->button_bits, &to->button_bits, &ignoreMask);
+    buttonsAllEqual = from->button_bits.areAllBitsEqual(&to->button_bits, &ignoreMask);
     if ( buttonsAllEqual
         && from->weapon == to->weapon
         && from->offHandIndex == to->offHandIndex
@@ -1105,8 +3561,8 @@ void __cdecl MSG_WriteDeltaUsercmdKey(
         && from->meleeChargeYaw == to->meleeChargeYaw
         && from->meleeChargeDist == to->meleeChargeDist )
     {
-        v5 = bitarray<51>::testBit(&from->button_bits, 0);
-        noButtonChange = v5 == bitarray<51>::testBit(&to->button_bits, 0);
+        v5 = from->button_bits.testBit(0);
+        noButtonChange = v5 == to->button_bits.testBit(0);
         if ( from->angles[0] == to->angles[0] && from->angles[1] == to->angles[1] && noButtonChange && v9 && noAngleChange )
         {
             MSG_WriteKey(msg, key, 0, 1u);
@@ -1116,7 +3572,7 @@ void __cdecl MSG_WriteDeltaUsercmdKey(
             MSG_WriteKey(msg, key, 1, 1u);
             MSG_WriteKey(msg, key, 0, 1u);
             keyb = to->serverTime ^ key;
-            v6 = bitarray<51>::testBit(&to->button_bits, 0);
+            v6 = to->button_bits.testBit(0);
             MSG_WriteKey(msg, keyb, v6, 1u);
             MSG_WriteDeltaKeyShort(msg, keyb, from->angles[0], to->angles[0]);
             MSG_WriteDeltaKeyShort(msg, keyb, from->angles[1], to->angles[1]);
@@ -1130,7 +3586,7 @@ void __cdecl MSG_WriteDeltaUsercmdKey(
     {
         MSG_WriteKey(msg, key, 1, 1u);
         MSG_WriteKey(msg, key, 1, 1u);
-        v7 = bitarray<51>::testBit(&to->button_bits, 0);
+        v7 = to->button_bits.testBit(0);
         MSG_WriteKey(msg, key, v7, 1u);
         MSG_WriteDeltaKeyShort(msg, key, from->angles[0], to->angles[0]);
         MSG_WriteDeltaKeyShort(msg, key, from->angles[1], to->angles[1]);
@@ -1145,13 +3601,13 @@ void __cdecl MSG_WriteDeltaUsercmdKey(
         MSG_WriteDeltaKey(msg, keya, from->weapon, to->weapon, 0xBu);
         MSG_WriteDeltaKey(msg, keya, from->offHandIndex, to->offHandIndex, 0xBu);
         MSG_WriteDeltaKey(msg, keya, from->lastWeaponAltModeSwitch, to->lastWeaponAltModeSwitch, 0xBu);
-        if ( bitarray<51>::testBit(&to->button_bits, 0x10u) )
+        if ( to->button_bits.testBit(16) )
         {
             MSG_WriteDeltaKeyByte(msg, keya, from->selectedLocation[0], to->selectedLocation[0]);
             MSG_WriteDeltaKeyByte(msg, keya, from->selectedLocation[1], to->selectedLocation[1]);
             MSG_WriteDeltaKeyByte(msg, keya, from->selectedYaw, to->selectedYaw);
         }
-        if ( bitarray<51>::testBit(&to->button_bits, 2u) )
+        if ( to->button_bits.testBit(2) )
         {
             MSG_WriteDeltaKeyShort(
                 msg,
@@ -1177,7 +3633,7 @@ void __cdecl MSG_ReadDeltaUsercmdKey(msg_t *msg, int key, const usercmd_s *from,
         to->serverTime = MSG_ReadLong(msg);
     if ( MSG_ReadKey(msg, key, 1u) )
     {
-        bitarray<51>::resetBit(&to->button_bits, 0);
+        to->button_bits.resetBit(0);
         if ( MSG_ReadKey(msg, key, 1u) )
         {
             set_attack = MSG_ReadKey(msg, key, 1u);
@@ -1192,17 +3648,17 @@ void __cdecl MSG_ReadDeltaUsercmdKey(msg_t *msg, int key, const usercmd_s *from,
             for ( i = 0; i < 2; ++i )
                 to->button_bits.array[i] = MSG_ReadDeltaKey(msg, keyb, from->button_bits.array[i], 0x20u);
             if ( set_attack )
-                bitarray<51>::setBit(&to->button_bits, 0);
+               to->button_bits.setBit(0);
             to->weapon = MSG_ReadDeltaKey(msg, keyb, from->weapon, 0xBu);
             to->offHandIndex = MSG_ReadDeltaKey(msg, keyb, from->offHandIndex, 0xBu);
             to->lastWeaponAltModeSwitch = MSG_ReadDeltaKey(msg, keyb, from->lastWeaponAltModeSwitch, 0xBu);
-            if ( bitarray<51>::testBit(&to->button_bits, 0x10u) )
+            if ( to->button_bits.testBit(16) )
             {
                 to->selectedLocation[0] = MSG_ReadDeltaKeyByte(msg, keyb, from->selectedLocation[0]);
                 to->selectedLocation[1] = MSG_ReadDeltaKeyByte(msg, keyb, from->selectedLocation[1]);
                 to->selectedYaw = MSG_ReadDeltaKeyByte(msg, keyb, from->selectedYaw);
             }
-            if ( bitarray<51>::testBit(&to->button_bits, 2u) )
+            if ( to->button_bits.testBit(2) )
             {
                 to->meleeChargeYaw = (float)MSG_ReadDeltaKeyShort(
                                                                             msg,
@@ -1216,7 +3672,7 @@ void __cdecl MSG_ReadDeltaUsercmdKey(msg_t *msg, int key, const usercmd_s *from,
         {
             keya = to->serverTime ^ key;
             if ( MSG_ReadKey(msg, keya, 1u) )
-                bitarray<51>::setBit(&to->button_bits, 0);
+               to->button_bits.setBit(0);
             to->angles[0] = (unsigned __int16)MSG_ReadDeltaKeyShort(msg, keya, from->angles[0]);
             to->angles[1] = (unsigned __int16)MSG_ReadDeltaKeyShort(msg, keya, from->angles[1]);
             to->forwardmove = MSG_ReadDeltaKeyByte(msg, keya, from->forwardmove);
@@ -2228,7 +4684,7 @@ int __cdecl MSG_ReadDeltaArchivedEntity(
                 archivedEntity_s *to,
                 unsigned int number)
 {
-    if ( MSG_ReadDeltaEntity(msg, time, &from->s, &to->s, number) )
+    if ( MSG_ReadDeltaEntity(msg, time, (entityState_s*)&from->s, &to->s, number))
         return 1;
     else
         return MSG_ReadAppendedDeltaStruct(
@@ -2328,7 +4784,7 @@ void __cdecl MSG_ReadDeltaPlayerstate(
 
     if ( !predictedFieldsIgnoreXor )
     {
-        *(unsigned int *)&predictedFieldsIgnoreXor = dst;
+        *(unsigned int *)&predictedFieldsIgnoreXor = (unsigned int)dst;
         memset(dst, 0, 0x26A4u);
     }
     memcpy((unsigned __int8 *)src_4, (unsigned __int8 *)predictedFieldsIgnoreXor, 0x26A4u);
@@ -2383,7 +4839,7 @@ void __cdecl MSG_ReadDeltaPlayerstate(
                 for ( fieldNum = v36 + 1; fieldNum < v37; ++fieldNum )
                 {
                     if ( stateFields[fieldNum].changeHints != 2 )
-                        MSG_CopyFieldOver(stateFields, (const void *)predictedFieldsIgnoreXor, (void *)src_4, fieldNum);
+                        MSG_CopyFieldOver(stateFields, (char *)predictedFieldsIgnoreXor, (char *)src_4, fieldNum);
                 }
                 field = &stateFields[v37];
                 if ( v37 > LastChangedField )
@@ -2424,8 +4880,8 @@ void __cdecl MSG_ReadDeltaPlayerstate(
                 MSG_ReadDeltaField(
                     msg,
                     (const int)from,
-                    (const void *)predictedFieldsIgnoreXor,
-                    (void *)src_4,
+                    (char *)predictedFieldsIgnoreXor,
+                    (char *)src_4,
                     field,
                     print,
                     v33);
@@ -2480,7 +4936,7 @@ void __cdecl MSG_ReadDeltaPlayerstate(
             }
         }
         for ( fieldNum = v36 + 1; fieldNum < count; ++fieldNum )
-            MSG_CopyFieldOver(stateFields, (const void *)predictedFieldsIgnoreXor, (void *)src_4, fieldNum);
+            MSG_CopyFieldOver(stateFields, (char *)predictedFieldsIgnoreXor, (char *)src_4, fieldNum);
         for ( fieldNum = 0; fieldNum < LastChangedField; ++fieldNum )
         {
             fielda = &stateFields[fieldNum];
@@ -2490,8 +4946,8 @@ void __cdecl MSG_ReadDeltaPlayerstate(
                 MSG_ReadDeltaField(
                     msg,
                     (const int)from,
-                    (const void *)predictedFieldsIgnoreXor,
-                    (void *)src_4,
+                    (char *)predictedFieldsIgnoreXor,
+                    (char *)src_4,
                     fielda,
                     print,
                     v32);
@@ -2626,12 +5082,11 @@ void __cdecl MSG_ReadDeltaPlayerstate(
                 MSG_ReadDeltaFields(
                     msg,
                     (const int)from,
-                    (const void *)(predictedFieldsIgnoreXor + 48 * fieldNum + 1400),
-                    (void *)(src_4 + 48 * fieldNum + 1400),
+                    (char *)(predictedFieldsIgnoreXor + 48 * fieldNum + 1400),
+                    (char *)(src_4 + 48 * fieldNum + 1400),
                     numFields,
                     array,
-                    1,
-                    0);
+                    1);
             }
         }
         if ( Demo_IsPlaying() )
@@ -2844,8 +5299,8 @@ void __cdecl MSG_InitHuffman()
 
 void MSG_initHuffmanInternal()
 {
-    unsigned inttime2; // [esp+0h] [ebp-8h]
-    unsigned inttime; // [esp+4h] [ebp-4h]
+    unsigned int time2; // [esp+0h] [ebp-8h]
+    unsigned int time; // [esp+4h] [ebp-4h]
 
     Huff_Init(&msgHuff);
     time = Sys_Milliseconds();
@@ -2900,19 +5355,3 @@ void __cdecl MSG_DumpNetFieldChanges_f()
     Com_Printf(0, "========================================\n");
     Com_Printf(0, "========================================\n");
 }
-
-char __thiscall bitarray<51>::areAllBitsEqual(
-                bitarray<51> *this,
-                const bitarray<51> *otherBitSet,
-                const bitarray<51> *ignoreMaskBitSet)
-{
-    int i; // [esp+Ch] [ebp-4h]
-
-    for ( i = 0; i < 2; ++i )
-    {
-        if ( (this->array[i] & ~ignoreMaskBitSet->array[i]) != (otherBitSet->array[i] & ~ignoreMaskBitSet->array[i]) )
-            return 0;
-    }
-    return 1;
-}
-

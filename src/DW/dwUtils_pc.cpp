@@ -1,5 +1,26 @@
 #include "dwUtils_pc.h"
 
+// LWSS: I have modified this crap function a bit
+void __cdecl bdGetRandomUChar8(BYTE *pbBuffer, DWORD dwLen)
+{
+    static HCRYPTPROV hProv = 0;
+
+    if (!hProv)
+    {
+        CryptAcquireContext(
+            &hProv,
+            NULL,
+            NULL,
+            PROV_RSA_FULL,
+            CRYPT_VERIFYCONTEXT | CRYPT_SILENT
+        );
+    }
+
+    //CryptGenRandom(hProv, size, (BYTE *)out);
+
+    CryptGenRandom(hProv, dwLen, pbBuffer);
+}
+
 char __cdecl dwGetOnlineUserID(int controllerIndex, unsigned __int64 *userID)
 {
     if ( g_bdUserID )

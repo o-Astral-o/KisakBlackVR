@@ -1,5 +1,85 @@
 #include "threads.h"
 
+#include <Windows.h>
+#include <universal/q_shared.h>
+#include "common.h"
+#include <tl/jobqueue/jobqueue_all.h>
+#include <gfx_d3d/r_singlethreaded_device_pc.h>
+#include <live/live_win_common.h>
+#include <gfx_d3d/r_cinematic.h>
+#include <gfx_d3d/rb_resource.h>
+
+const char *s_threadNames[15] =
+{
+  "Main",
+  "Backend",
+  "Worker0",
+  "Worker1",
+  "Worker2",
+  "Worker3",
+  "Worker4",
+  "Worker5",
+  "Worker6",
+  "Worker7",
+  "Server",
+  "occlusion",
+  "TitleServer",
+  "Database",
+  "Stream"
+};
+
+unsigned int s_cpuCount;
+unsigned int threadId[15];
+void *threadHandle[15];
+void *g_threadValues[15][5];
+
+thread_local void **g_dwTlsIndex;
+thread_local unsigned int g_currentThreadId;
+
+DWORD_PTR s_affinityMaskForProcess;
+unsigned int s_affinityMaskForCpu[8];
+
+void(__cdecl *threadFunc[15])(unsigned int);
+
+void *demoStreamingReady;
+unsigned int g_networkOverrideThread;
+ThreadOwner g_discReadsOwner;
+
+LONG smpData;
+int g_databaseStopServer;
+volatile unsigned int s_winThreadLock;
+
+void *wakeServerEvent;
+void *serverCompletedEvent;
+void *allowServerNetworkEvent;
+void *serverNetworkCompletedEvent;
+
+void *sndInitializedEvent;
+void *streamCompletedEvent;
+void *streamEvent;
+void *occlusionEvent;
+
+void *wakeDatabaseEvent;
+void *databaseCompletedEvent;
+void *databaseCompletedEvent2;
+void *resumedDatabaseEvent;
+
+void *renderPausedEvent;
+void *renderCompletedEvent;
+void *resourcesFlushedEvent;
+void *resourcesQueuedEvent;
+void *rendererRunningEvent;
+void *backendEvent[2];
+void *updateSpotLightEffectEvent;
+void *updateEffectsEvent;
+void *d3dDeviceOKEvent;
+void *d3dDeviceHardStartEvent;
+void *d3dShutdownEvent;
+void *d3dDeviceWinMessageEvent;
+void *win32QuitEvent;
+void *win32ScriptDebuggerDrawEvent;
+void *rgRegisteredEvent;
+void *renderEvent;
 unsigned int __cdecl Sys_GetDefaultWorkerThreadsCount()
 {
     unsigned int cpuCount; // [esp+0h] [ebp-4h]
@@ -28,31 +108,28 @@ void __cdecl Sys_InitMainThread()
     DuplicateHandle(process, pseudoHandle, process, threadHandle, 0, 0, 2u);
     Win_InitThreads();
     SetThreadIdealProcessor(threadHandle[0], 0);
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 20) = g_threadValues;
+    g_dwTlsIndex = g_threadValues[0];
     Com_InitThreadData(0);
 }
 
 unsigned int __cdecl Sys_GetCurrentThreadId()
 {
-    int v0; // esi
-
-    if ( !*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 24) )
+    if (!g_currentThreadId)
     {
-        v0 = *((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index);
-        *(unsigned int *)(v0 + 24) = GetCurrentThreadId();
+        g_currentThreadId = GetCurrentThreadId();
     }
-    return *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 24);
+    return g_currentThreadId;
 }
 
 unsigned int Win_InitThreads()
 {
     HANDLE CurrentProcess; // eax
-    unsigned int result; // eax
-    unsigned int cpuCount; // [esp+0h] [ebp-94h]
-    unsigned int systemAffinityMask; // [esp+4h] [ebp-90h] BYREF
-    unsigned int threadAffinityMask; // [esp+8h] [ebp-8Ch]
-    unsigned int affinityMaskBits[33]; // [esp+Ch] [ebp-88h]
-    unsigned int processAffinityMask; // [esp+90h] [ebp-4h] BYREF
+    DWORD result; // eax
+    DWORD cpuCount; // [esp+0h] [ebp-94h]
+    DWORD systemAffinityMask; // [esp+4h] [ebp-90h] BYREF
+    DWORD threadAffinityMask; // [esp+8h] [ebp-8Ch]
+    DWORD affinityMaskBits[33]; // [esp+Ch] [ebp-88h]
+    DWORD processAffinityMask; // [esp+90h] [ebp-4h] BYREF
 
     CurrentProcess = GetCurrentProcess();
     result = GetProcessAffinityMask(CurrentProcess, &processAffinityMask, &systemAffinityMask);
@@ -112,7 +189,7 @@ unsigned int Win_InitThreads()
 
 void __cdecl Sys_InitThread(int threadContext)
 {
-    *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 20) = g_threadValues[threadContext];
+    g_dwTlsIndex = g_threadValues[threadContext];
     Com_InitThreadData(threadContext);
 }
 
@@ -124,7 +201,7 @@ char __cdecl Sys_SpawnRenderThread(void (__cdecl *function)(unsigned int))
     Sys_CreateEvent(1, 0, &resourcesQueuedEvent);
     Sys_CreateEvent(1, 1, &rendererRunningEvent);
     Sys_CreateEvent(0, 0, &backendEvent[1]);
-    Sys_CreateEvent(1, 0, backendEvent);
+    Sys_CreateEvent(1, 0, &backendEvent[0]);
     Sys_CreateEvent(1, 1, &updateSpotLightEffectEvent);
     Sys_CreateEvent(1, 1, &updateEffectsEvent);
     Sys_CreateEvent(1, 1, &d3dDeviceOKEvent);
@@ -154,7 +231,7 @@ void __cdecl Sys_CreateEvent(bool manualReset, bool initialState, void **event)
 
 void __cdecl Sys_CreateThread(void (__cdecl *function)(unsigned int), unsigned int threadContext)
 {
-    unsigned intLastError; // eax
+    unsigned int LastError; // eax
 
     if ( threadFunc[threadContext]
         && !Assert_MyHandler(
@@ -205,14 +282,15 @@ void __cdecl Sys_CreateThread(void (__cdecl *function)(unsigned int), unsigned i
 void __cdecl SetThreadName(unsigned int dwThreadID, const char *szThreadName)
 {
     tagTHREADNAME_INFO info; // [esp+10h] [ebp-28h] BYREF
-    CPPEH_RECORD ms_exc; // [esp+20h] [ebp-18h]
+    //CPPEH_RECORD ms_exc; // [esp+20h] [ebp-18h]
 
-    info.dwType = 4096;
+    info.dwType = 0x1000;
     info.szName = szThreadName;
     info.dwThreadID = dwThreadID;
     info.dwFlags = 0;
-    ms_exc.registration.TryLevel = 0;
-    RaiseException(0x406D1388u, 0, 4u, &info.dwType);
+    //ms_exc.registration.TryLevel = 0;
+    //RaiseException(0x406D1388u, 0, 4u, &info.dwType);
+    RaiseException(0x406D1388, 0, sizeof(info) / sizeof(DWORD), (ULONG_PTR *)&info);
 }
 
 unsigned int __stdcall Sys_ThreadMain(int parameter)
@@ -256,7 +334,7 @@ void __cdecl Sys_WaitForDemoStreamingEvent()
 
 void __cdecl Sys_WaitForSingleObject(void **event)
 {
-    unsigned intresult; // [esp+0h] [ebp-4h]
+    unsigned int result; // [esp+0h] [ebp-4h]
 
     result = WaitForSingleObject(*event, 0xFFFFFFFF);
     if ( result )
@@ -442,7 +520,7 @@ int __cdecl Sys_WaitRenderer()
     return 0;
 }
 
-bool __cdecl Sys_WaitForSingleObjectTimeout(void **event, unsigned intmsec)
+bool __cdecl Sys_WaitForSingleObjectTimeout(void **event, unsigned int msec)
 {
     if ( msec == -1
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\qcommon\\threads.cpp", 287, 0, "%s", "msec != INFINITE") )
@@ -456,7 +534,7 @@ void __cdecl Sys_WakeRenderer(void *data)
 {
     Sys_ResetEvent(&renderCompletedEvent);
     smpData = (int)data;
-    PIXSetMarker(-1, "set smpData");
+    //PIXSetMarker(-1, "set smpData");
     Sys_SetEvent(&backendEvent[1]);
     Sys_SetWorkerCmdEvent();
 }
@@ -488,7 +566,7 @@ void __cdecl Sys_SleepServer()
         Sys_ResetEvent(&wakeServerEvent);
 }
 
-bool __cdecl Sys_WaitServer(unsigned inttimeout)
+bool __cdecl Sys_WaitServer(unsigned int timeout)
 {
     return Sys_WaitForSingleObjectTimeout(&serverCompletedEvent, timeout);
 }
@@ -503,7 +581,7 @@ void __cdecl Sys_ServerCompleted()
     Sys_SetEvent(&serverCompletedEvent);
 }
 
-bool __cdecl Sys_WaitStartServer(unsigned inttimeout)
+bool __cdecl Sys_WaitStartServer(unsigned int timeout)
 {
     bool start; // [esp+0h] [ebp-4h]
 
@@ -640,13 +718,14 @@ int __cdecl Sys_GetThreadContext()
 
 void __cdecl Sys_SetValue(int valueIndex, void *data)
 {
-    *(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 20) + 4 * valueIndex) = data;
+    //*(unsigned int *)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 20) + 4 * valueIndex) = data;
+    g_dwTlsIndex[valueIndex] = data;
 }
 
 void *__cdecl Sys_GetValue(int valueIndex)
 {
-    return *(void **)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 20)
-                                    + 4 * valueIndex);
+    //return *(void **)(*(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 20) + 4 * valueIndex);
+    return g_dwTlsIndex[valueIndex];
 }
 
 void __cdecl Sys_SetWorkerCmdEvent()
@@ -654,7 +733,7 @@ void __cdecl Sys_SetWorkerCmdEvent()
     Sys_SetEvent(backendEvent);
 }
 
-bool __cdecl Sys_WaitBackendEvent(unsigned intmsec)
+bool __cdecl Sys_WaitBackendEvent(unsigned int msec)
 {
     return Sys_WaitForSingleObjectTimeout(&backendEvent[1], msec);
 }
@@ -745,7 +824,7 @@ void __cdecl Sys_SetResourcesFlushedEvent()
     Sys_SetEvent(&resourcesFlushedEvent);
 }
 
-void __cdecl Sys_WaitResourcesQueuedEvent(unsigned intmsec)
+void __cdecl Sys_WaitResourcesQueuedEvent(unsigned int msec)
 {
     Sys_WaitForSingleObjectTimeout(&resourcesQueuedEvent, msec);
 }
