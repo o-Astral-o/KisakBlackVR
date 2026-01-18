@@ -1,4 +1,5 @@
 #pragma once
+#include "live_storage.h"
 
 void __cdecl LiveGroups_Init();
 void __cdecl LiveGroups_SetGroupsComplete(TaskRecord *task);

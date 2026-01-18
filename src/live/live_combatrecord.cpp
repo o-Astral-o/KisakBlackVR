@@ -1,4 +1,122 @@
 #include "live_combatrecord.h"
+#include <ui/ui_main.h>
+#include <universal/com_stringtable.h>
+#include <cstring>
+#include <bgame/bg_unlockable_items.h>
+#include <ddl/ddl_api.h>
+#include "live_stats.h"
+#include "live_storage.h"
+#include <qcommon/com_gamemodes.h>
+
+const int sortedStatLoadoutSlots[9] =
+{ 0, 12, 30, 31, 32, 33, 29, 24, 25 };
+
+const char *lbWagerGameModeEnum_5[5] =
+{ "oic", "hlnd", "gun", "shrp", NULL };
+
+
+const char *lbTypeEnum_5[17] =
+{
+  "tdm",
+  "dm",
+  "ctf",
+  "dom",
+  "sab",
+  "sd",
+  "koth",
+  "dem",
+  "hctdm",
+  "hcdm",
+  "hcctf",
+  "hcdom",
+  "hcsab",
+  "hcsd",
+  "hckoth",
+  "hcdem",
+  NULL
+};
+
+const char *CombatRecordViews[23] =
+{
+  "SUMMARY_CAPS",
+  "RECENT_PERFORMANCE_CAPS",
+  "PERSONAL_BESTS_CAPS",
+  "COMBAT_SUMMARY_CAPS",
+  "HIT_LOCATION_HEATMAP_CAPS",
+  "KILL_DEATH_RATIO_CAPS",
+  "ACCURACY_CAPS",
+  "TOTAL_KILLS_CAPS",
+  "TOTAL_DEATHS_CAPS",
+  "HEADSHOT_KILLS_CAPS",
+  "TIMES_KILLED_BY_CAPS",
+  "EQUIPMENT_KILLS_CAPS",
+  "EQUIPMENT_KILLED_BY_CAPS",
+  "EQUIPMENT_USAGE_CAPS",
+  "MATCH_PERFORMANCE_CAPS",
+  "HEAT_MAP_CAPS",
+  "WAGER_EARNINGS_CAPS",
+  "CONTRACTS_CAPS",
+  "KILLSTREAKS_FAVORITES_CAPS",
+  "KILLSTREAKS_CALLED_CAPS",
+  "KILLSTREAKS_KILLS_CAPS",
+  "KILLSTREAKS_KILLED_BY_CAPS",
+  NULL
+};
+
+const char *hitLocationImages[19] =
+{
+  "NULL",
+  "menu_mp_heatmap_1",
+  "menu_mp_heatmap_2",
+  "menu_mp_heatmap_3",
+  "menu_mp_heatmap_4",
+  "menu_mp_heatmap_5",
+  "menu_mp_heatmap_6",
+  "menu_mp_heatmap_7",
+  "menu_mp_heatmap_8",
+  "menu_mp_heatmap_9",
+  "menu_mp_heatmap_10",
+  "menu_mp_heatmap_11",
+  "menu_mp_heatmap_12",
+  "menu_mp_heatmap_13",
+  "menu_mp_heatmap_14",
+  "menu_mp_heatmap_15",
+  "menu_mp_heatmap_16",
+  "menu_mp_heatmap_17",
+  "NULL"
+};
+
+const char *combatRecordEquipmentUsageStrings[14][2] =
+{
+  { "WEAPON_FRAGGRENADE", "TOSSED" },
+  { "WEAPON_STICKY_GRENADE", "TOSSED" },
+  { "WEAPON_CLAYMORE", "DEPLOYED" },
+  { "WEAPON_SATCHEL_CHARGE", "DEPLOYED" },
+  { "WEAPON_HATCHET", "THROWN" },
+  { "WEAPON_WILLY_PETE", "TOSSED" },
+  { "WEAPON_TABUN_GRENADE", "POISONED" },
+  { "WEAPON_FLASHBANG", "FLASHED" },
+  { "WEAPON_STUN_GRENADE", "STUNNED" },
+  { "WEAPON_NIGHTINGALE", "USED" },
+  { "WEAPON_SCRAMBLER", "DEPLOYED" },
+  { "WEAPON_TACTICAL_INSERTION", "SPAWNS" },
+  { "WEAPON_CAMERA_SPIKE", "DEPLOYED" },
+  { "WEAPON_ACOUSTIC_SENSOR", "DEPLOYED" }
+};
+
+const char *combatRecordPersonalBestStats[5] =
+{ "KILLS", "DEATHS", "SCORE", "ASSISTS", "REVIVES" };
+
+sortedItemsData_t s_otherPlayerSortedItemList[256];
+sortedItemsData_t s_sortedItemList[256];
+
+const dvar_t *ui_showFriendsCombatRecord;
+const dvar_t *ui_combatRecordOpen;
+const dvar_t *ui_combatCurrView;
+const dvar_t *ui_combatCurrViewNum;
+const dvar_t *ui_combatComparisonModeOn;
+const dvar_t *ui_combatOtherPlayerStatsAvailable;
+const dvar_t *ui_combatHistogramCurrGametype;
 
 void __cdecl LiveCombatRecord_OpenFriendsCombatRecord(int localClientNum)
 {
@@ -93,6 +211,7 @@ const char *__cdecl LiveCombatRecord_GetPersonalBestStatNameByIndex(int index)
     return combatRecordPersonalBestStats[index];
 }
 
+const char *gameTypeNames[16];
 const char *__cdecl LiveCombatRecord_GetGameTypeName(unsigned int index)
 {
     if ( index < 0x10 )
@@ -101,6 +220,7 @@ const char *__cdecl LiveCombatRecord_GetGameTypeName(unsigned int index)
         return "";
 }
 
+int gameTypeLbIndex[16];
 int __cdecl LiveCombatRecord_GetGameTypeLbIndex(unsigned int index)
 {
     if ( index < 0x10 )
@@ -109,6 +229,7 @@ int __cdecl LiveCombatRecord_GetGameTypeLbIndex(unsigned int index)
         return 0;
 }
 
+int totalGametypeCount;
 int __cdecl LiveCombatRecord_GetGameTypeCount()
 {
     return totalGametypeCount;
@@ -132,6 +253,7 @@ const char *__cdecl LiveCombatRecord_GetHitLocationImageRef(hitLocation_t hitLoc
         return 0;
 }
 
+cmd_function_s LiveCombatRecord_CombatRecordViewUpdateCmd_VAR;
 void __cdecl LiveCombatRecord_Init()
 {
     const char *v0; // eax
@@ -214,6 +336,32 @@ void __cdecl LiveCombatRecord_Init()
                                                                          "Current scroll bar Position for combat record");
 }
 
+const int CombatRecordStatParams[22][2] =
+{
+  { -1, -1 },
+  { 2, -1 },
+  { -1, -1 },
+  { 26, -1 },
+  { -1, -1 },
+  { 16, 18 },
+  { 25, 24 },
+  { 16, -1 },
+  { 18, -1 },
+  { 19, -1 },
+  { 17, -1 },
+  { 16, -1 },
+  { 17, -1 },
+  { 27, -1 },
+  { -1, -1 },
+  { -1, -1 },
+  { 2, -1 },
+  { -1, -1 },
+  { 26, -1 },
+  { 27, -1 },
+  { 16, -1 },
+  { 17, -1 }
+};
+
 void __cdecl LiveCombatRecord_CombatRecordViewUpdateCmd()
 {
     playerStatsKeyIndex_t param1; // [esp+8h] [ebp-Ch]
@@ -221,8 +369,8 @@ void __cdecl LiveCombatRecord_CombatRecordViewUpdateCmd()
     playerStatsKeyIndex_t param2; // [esp+10h] [ebp-4h]
 
     criterion = CRITERION_NULL;
-    param1 = CombatRecordStatParams[ui_combatCurrView->current.integer][0];
-    param2 = CombatRecordStatParams[ui_combatCurrView->current.integer][1];
+    param1 = (playerStatsKeyIndex_t)CombatRecordStatParams[ui_combatCurrView->current.integer][0];
+    param2 = (playerStatsKeyIndex_t)CombatRecordStatParams[ui_combatCurrView->current.integer][1];
     switch ( ui_combatCurrView->current.integer )
     {
         case 1:
@@ -620,8 +768,8 @@ int __cdecl LiveCombatRecord_CompareItemsByStats(float *arg0, float *arg1)
     }
     else
     {
-        group0 = BG_UnlockablesGetItemGroupEnum(*(unsigned int *)arg0);
-        group1 = BG_UnlockablesGetItemGroupEnum(*(unsigned int *)arg1);
+        group0 = (itemGroup_t)BG_UnlockablesGetItemGroupEnum(*(unsigned int *)arg0);
+        group1 = (itemGroup_t)BG_UnlockablesGetItemGroupEnum(*(unsigned int *)arg1);
         count0 = BG_UnlockablesGetItemCount(*(unsigned int *)arg0);
         count1 = BG_UnlockablesGetItemCount(*(unsigned int *)arg1);
         if ( group0 == ITEMGROUP_GLOBAL_ITEMS_START && group1 == ITEMGROUP_GLOBAL_ITEMS_START )
@@ -644,8 +792,8 @@ int __cdecl LiveCombatRecord_CompareItemsByStats(float *arg0, float *arg1)
                      || group1 == ITEMGROUP_GRENADE
                      || group1 == ITEMGROUP_EXPLOSIVE )
         {
-            loadoutSlot0 = BG_UnlockablesGetItemLoadoutSlot(*(unsigned int *)arg0);
-            loadoutSlot1 = BG_UnlockablesGetItemLoadoutSlot(*(unsigned int *)arg1);
+            loadoutSlot0 = (loadoutSlot_t)BG_UnlockablesGetItemLoadoutSlot(*(unsigned int *)arg0);
+            loadoutSlot1 = (loadoutSlot_t)BG_UnlockablesGetItemLoadoutSlot(*(unsigned int *)arg1);
             if ( loadoutSlot0 == loadoutSlot1 )
                 return *(unsigned int *)arg0 - *(unsigned int *)arg1;
             else
@@ -755,10 +903,10 @@ void __cdecl LiveCombatRecord_BuildSortedItem(
     char *v62; // [esp-8h] [ebp-9DBCh]
     char *v63; // [esp-8h] [ebp-9DBCh]
     const char *v64; // [esp-4h] [ebp-9DB8h]
-    char *v65; // [esp-4h] [ebp-9DB8h]
-    char *v66; // [esp-4h] [ebp-9DB8h]
-    char *v67; // [esp-4h] [ebp-9DB8h]
-    char *v68; // [esp-4h] [ebp-9DB8h]
+    const char *v65; // [esp-4h] [ebp-9DB8h]
+    const char *v66; // [esp-4h] [ebp-9DB8h]
+    const char *v67; // [esp-4h] [ebp-9DB8h]
+    const char *v68; // [esp-4h] [ebp-9DB8h]
     __int64 v69; // [esp+4h] [ebp-9DB0h]
     __int64 v70; // [esp+Ch] [ebp-9DA8h]
     __int64 v71; // [esp+14h] [ebp-9DA0h]
@@ -781,10 +929,10 @@ void __cdecl LiveCombatRecord_BuildSortedItem(
     int i; // [esp+90h] [ebp-9D24h]
     char backupBuffer[40172]; // [esp+94h] [ebp-9D20h] BYREF
     int HeaderVersion; // [esp+9D84h] [ebp-30h]
-    char *PlayerStatStringByKey; // [esp+9D88h] [ebp-2Ch]
+    const char *PlayerStatStringByKey; // [esp+9D88h] [ebp-2Ch]
     char *buffer; // [esp+9D8Ch] [ebp-28h]
     int v93; // [esp+9D90h] [ebp-24h]
-    char *v94; // [esp+9D94h] [ebp-20h]
+    const char *v94; // [esp+9D94h] [ebp-20h]
     ddlState_t resultState; // [esp+9D98h] [ebp-1Ch] BYREF
     sortedItemsData_t *v96; // [esp+9DA8h] [ebp-Ch]
     int v97; // [esp+9DACh] [ebp-8h]
@@ -974,7 +1122,7 @@ void __cdecl LiveCombatRecord_BuildSortedItem(
                         }
                         else if ( v96[index].param1 )
                         {
-                            v96[index].sortKey = FLOAT_2_1474836e9;
+                            v96[index].sortKey = 2.1474836e9;
                         }
                         else
                         {
@@ -1183,8 +1331,8 @@ bool __cdecl LiveCombatRecord_FilterCurrentSortedItem(
     if ( BG_UnlockablesIsItemClassifiedGeneric(controllerIndex, itemNumber) )
         return 0;
     isItemValid = 0;
-    loadoutSlot = BG_UnlockablesGetItemLoadoutSlot(itemNumber);
-    group = BG_UnlockablesGetItemGroupEnum(itemNumber);
+    loadoutSlot = (loadoutSlot_t)BG_UnlockablesGetItemLoadoutSlot(itemNumber);
+    group = (itemGroup_t)BG_UnlockablesGetItemGroupEnum(itemNumber);
     isPassive = BG_UnlockablesIsItemPassive(itemNumber);
     cost = BG_UnlockablesGetItemCost(itemNumber);
     switch ( criterion )

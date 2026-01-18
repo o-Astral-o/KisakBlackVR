@@ -3716,7 +3716,7 @@ void __thiscall fileSharePrivateData::~fileSharePrivateData(fileSharePrivateData
     for ( i = &this->descriptorCount; --v4 >= 0; bdVoteRankStatsInfo::~bdVoteRankStatsInfo((bdStatsInfo *)i) )
         i -= 50;
     v2 = 20;
-    for ( j = this->fileRatings; --v2 >= 0; bdFileMetaData::~bdFileMetaData(j) )
+    for ( j = this->fileRatings; --v2 >= 0; //bdFileMetaData::~bdFileMetaData(j) )
         j = (bdVoteRankStatsInfo *)((char *)j - 2104);
 }
 
@@ -3734,7 +3734,7 @@ void __thiscall playerFileOperations::~playerFileOperations(playerFileOperations
         (void (__thiscall *)(void *))bdRatingInfo::~bdRatingInfo);
     bdFileID::~bdFileID(&this->fileShareTransferTask.outFileID);
     bdFileID::~bdFileID(&this->fileShareWriteFileTask.outFileID);
-    bdFileMetaData::~bdFileMetaData(&this->fileShareReadFileTask.descriptor);
+    //bdFileMetaData::~bdFileMetaData(&this->fileShareReadFileTask.descriptor);
     bdFileInfo::~bdFileInfo(&this->demoFileInfo.fileTask.m_fileInfo);
     bdFileData::~bdFileData(&this->demoFileInfo.fileTask.m_fileData);
     bdFileInfo::~bdFileInfo(&this->contractsFileInfo.fileTask.m_fileInfo);

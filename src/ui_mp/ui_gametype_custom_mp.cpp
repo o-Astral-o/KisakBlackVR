@@ -163,7 +163,6 @@ const dvar_t *custom_class_speed;
 const dvar_t *custom_class_sprint_speed;
 const dvar_t *custom_class_damage;
 const dvar_t *custom_class_explosive_damage;
-
 const dvar_t *ui_items_no_cost;
 const dvar_t *custom_killstreak_mode;
 const dvar_t *custom_killstreak_numkills;

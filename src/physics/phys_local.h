@@ -23,60 +23,80 @@ struct phys_vec3 // sizeof=0x10
 
     inline phys_vec3 &operator*=(float d)
     {
-        this->x = this->x * d;
-        this->y = this->y * d;
-        this->z = d * this->z;
-
+        x *= d;
+        y *= d;
+        z *= d;
         return *this;
     }
 
-    inline phys_vec3 &operator+=(const phys_vec3 *v)
+    inline phys_vec3 &operator+=(const phys_vec3 &v)
     {
-        this->x = this->x + v->x;
-        this->y = this->y + v->y;
-        this->z = this->z + v->z;
+        x += v.x;
+        y += v.y;
+        z += v.z;
         return *this;
     }
 
-    inline phys_vec3 &operator-=(const phys_vec3 *v)
+    inline phys_vec3 &operator-=(const phys_vec3 &v)
     {
-        this->x = this->x - v->x;
-        this->y = this->y - v->y;
-        this->z = this->z - v->z;
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
         return *this;
     }
 
-    inline phys_vec3 &operator/=(const float d)
+    inline phys_vec3 &operator/=(float d)
     {
-        float d_inv; // [esp+8h] [ebp+8h]
-
-        d_inv = 1.0 / d;
-        this->x = this->x * d_inv;
-        this->y = this->y * d_inv;
-        this->z = d_inv * this->z;
+        float inv = 1.0f / d;
+        x *= inv;
+        y *= inv;
+        z *= inv;
         return *this;
     }
 
-    inline phys_vec3 &operator=(const phys_vec3 *v)
+    inline phys_vec3 &operator=(const phys_vec3 &v)
     {
-        this->x = v->x;
-        this->y = v->y;
-        this->z = v->z;
+        x = v.x;
+        y = v.y;
+        z = v.z;
         return *this;
     }
 
-    inline float *operator[](unsigned int i)
+    inline float &operator[](unsigned int i)
     {
-        iassert(i >= 0 && i < 3);
-        return (float *)this + i;
+        iassert(i < 3);
+        return reinterpret_cast<float *>(this)[i];
     }
 
-    //inline const float * operator[](unsigned int i)
-    //{
-    //    iassert(i >= 0 && i < 3);
-    //    return (const float *)this + i;
-    //}
+    inline const float &operator[](unsigned int i) const
+    {
+        iassert(i < 3);
+        return reinterpret_cast<const float *>(this)[i];
+    }
+
 };
+
+// KISAKTODO: operator cleanup
+inline phys_vec3 operator+(const phys_vec3 &a, const phys_vec3 &b)
+{
+    return { a.x + b.x, a.y + b.y, a.z + b.z, 0.0f };
+}
+
+inline phys_vec3 operator-(const phys_vec3 &a, const phys_vec3 &b)
+{
+    return { a.x - b.x, a.y - b.y, a.z - b.z, 0.0f };
+}
+
+inline phys_vec3 operator*(const phys_vec3 &a, float d)
+{
+    return { a.x * d, a.y * d, a.z * d, 0.0f };
+}
+
+inline phys_vec3 operator/(const phys_vec3 &a, float d)
+{
+    float inv = 1.0f / d;
+    return { a.x * inv, a.y * inv, a.z * inv, 0.0f };
+}
 
 struct bpei_database_id // sizeof=0x8
 {                                       // XREF: broad_phase_environment_info/r

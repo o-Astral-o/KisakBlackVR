@@ -4,6 +4,87 @@
 #include "live_win.h"
 #include <qcommon/com_gamemodes.h>
 #include <ui_mp/ui_gametype_custom_mp.h>
+#include <qcommon/md4.h>
+#include <client/cl_rank.h>
+#include <qcommon/com_clients.h>
+#include <cgame/cg_draw_names.h>
+#include <bgame/bg_unlockable_items.h>
+#include "live_contracts.h"
+#include "live_counter.h"
+#include <DW/MatchRecorder.h>
+#include <cgame/cg_compass.h>
+#include <ui_mp/ui_gametype_variants_mp.h>
+#include <client_mp/cl_main_pc_mp.h>
+#include <server_mp/sv_main_mp.h>
+#include "live_storage_win.h"
+#include <ddl/ddl_cmd.h>
+
+const char *lbTypeEnum_7[17] =
+{
+  "tdm",
+  "dm",
+  "ctf",
+  "dom",
+  "sab",
+  "sd",
+  "koth",
+  "dem",
+  "hctdm",
+  "hcdm",
+  "hcctf",
+  "hcdom",
+  "hcsab",
+  "hcsd",
+  "hckoth",
+  "hcdem",
+  NULL
+};
+
+const char *playerStatKeys[40] =
+{
+  "RANKXP",
+  "PLEVEL",
+  "SCORE",
+  "TIME_PLAYED_TOTAL",
+  "GAMETYPEBAN",
+  "TIMEWHENNEXTHOST",
+  "BADHOSTCOUNT",
+  "LEADERBOARDFAILURES",
+  "LASTSTATSBACKUP",
+  "MAPPACKMASK",
+  "STATSBACKUPVERSION",
+  "MP_AIRFIELD_SKIP_PASSED",
+  "MAK_SKIP_PASSED",
+  "CODPOINTS",
+  "CURRENCYSPENT",
+  "STATS_VERSION",
+  "KILLS",
+  "DEATHS",
+  "DEATHSDURINGUSE",
+  "HEADSHOTS",
+  "KDRATIO",
+  "HIGHEST_KDRATIO",
+  "ACCURACY",
+  "HIGHEST_ACCURACY",
+  "SHOTS",
+  "HITS",
+  "TIMEUSED",
+  "USED",
+  "DESTROYED",
+  "GAMETYPE",
+  "WINS",
+  "LOSSES",
+  "TIES",
+  "LIFETIME_EARNINGS",
+  "LIFETIME_BUYIN",
+  "CONTRACTS_PURCHASED",
+  "CONTRACTS_COMPLETED",
+  "LAST_ESCROW",
+  "WEEKLY_TIMESTAMP",
+  "MONTHLY_TIMESTAMP"
+};
+
+
 
 ddlDef_t *g_statsDDL;
 
@@ -13,6 +94,29 @@ const dvar_t *ui_numPersonalBests;
 const dvar_t *ui_challengeSort;
 const dvar_t *recordPointsSpent;
 const dvar_t *ui_challengeGameMode;
+
+ddlState_t g_statsRootState;
+
+bool s_stableStatsBufferInitialized[1];
+
+unsigned int s_numSortedChallenges;
+unsigned int s_numSortedGlobalChallenges;
+unsigned int s_numSortedWeaponGroup;
+unsigned int s_numSortedAttachments;
+challengeInfo_t s_sortedChallengeList[1000];
+challengeInfo_t s_sortedWeaponGroupList[16];
+challengeInfo_t s_sortedAttachmentsList[24];
+challengeInfo_t s_sortedGlobalChallengeList[50];
+unsigned int s_currentPersonalBest[1];
+personalBest_t s_personalBests[1][1000];
+unsigned int s_numRecentlyUnlockedItems[1];
+int s_recentlyUnlockedItems[1][256];
+unsigned int s_totalNumberOfUnlockedItems;
+ddlState_t g_statsCacState;
+ddlState_t g_statsRankXPState;
+bool s_statsBufferInitialised[1];
+ddlState_t g_statsActiveContractsState;
+ddlState_t g_statsContractsState;
 
 int __cdecl LiveStats_GetDDLHeaderVersion(unsigned __int8 *statsBuffer)
 {
@@ -459,7 +563,7 @@ char __cdecl LiveStats_GetIntOtherPlayerStatByKey(int controllerIndex, int *outI
     return LiveStats_GetIntOtherPlayerStat(controllerIndex, outInt, playerStatKeys[keyIndex]);
 }
 
-char *__cdecl LiveStats_GetPlayerStatStringByKey(playerStatsKeyIndex_t keyIndex)
+const char *__cdecl LiveStats_GetPlayerStatStringByKey(playerStatsKeyIndex_t keyIndex)
 {
     return playerStatKeys[keyIndex];
 }
@@ -779,6 +883,7 @@ bool __cdecl LiveStats_IsStableStatsBufferInitialized(int controllerIndex)
     return s_stableStatsBufferInitialized[controllerIndex];
 }
 
+bool s_statsalreadycompared = true;
 void __cdecl LiveStats_MakeStableGlobalStatsBuffer(int controllerIndex)
 {
     persistentStats *v1; // eax
@@ -935,6 +1040,7 @@ int __cdecl LiveStats_GetTotalMatchesPlayedByGameMode(int controllerIndex, const
     return numMatches + ties + losses + wins;
 }
 
+unsigned int s_currentStatsMilestone[1];
 unsigned int __cdecl LiveStats_GetNumStatsMilestones(int controllerIndex)
 {
     if ( controllerIndex
@@ -973,6 +1079,7 @@ unsigned int __cdecl LiveStats_GetStatsMilestoneTier(int controllerIndex, unsign
         return 0;
 }
 
+statsMilestone_t s_statsMilestonesCompleted[1][1000];
 statsMilestone_t *__cdecl LiveStats_GetStatsMilestone(int controllerIndex, unsigned int statsMilestoneNum)
 {
     statsMilestone_t *statsMilestone; // [esp+0h] [ebp-4h]
@@ -2929,11 +3036,11 @@ void __cdecl LiveStats_BuildChallengeListCmd()
     if ( Cmd_Argc() >= 4 )
     {
         v0 = Cmd_Argv(1);
-        challengeType = atoi(v0);
+        challengeType = (statsMilestoneTypes_t)atoi(v0);
         v1 = Cmd_Argv(2);
-        sortOrder = atoi(v1);
+        sortOrder = (challengeSortOrder_e)atoi(v1);
         v2 = Cmd_Argv(3);
-        weaponGroup = atoi(v2);
+        weaponGroup = (itemGroup_t)atoi(v2);
         if ( challengeType >= MILESTONE_COUNT || challengeType < MILESTONE_INVALID )
         {
             Com_PrintError(15, "Invalid Challenge Type %d\n", challengeType);
@@ -3149,7 +3256,7 @@ void __cdecl LiveStats_BuildKillstreakChallengeListCmd()
     if ( Cmd_Argc() == 3 )
     {
         v0 = Cmd_Argv(2);
-        sortOrder = atoi(v0);
+        sortOrder = (challengeSortOrder_e)atoi(v0);
         if ( sortOrder >= SORTORDER_COUNT || sortOrder < SORTORDER_INVALID )
         {
             Com_PrintError(15, "Invalid Sort Order %d\n", sortOrder);
@@ -3474,7 +3581,7 @@ void __cdecl LiveStats_BuildGlobalChallengesListCmd()
     if ( Cmd_Argc() == 3 )
     {
         v0 = Cmd_Argv(2);
-        v2 = atoi(v0);
+        v2 = (challengeSortOrder_e)atoi(v0);
         v1 = Cmd_Argv(1);
         LiveStats_BuildGlobalChallengesList(0, v1, v2);
     }
@@ -3669,7 +3776,7 @@ void __cdecl LiveStats_BuildAttachmentsListCmd()
     if ( Cmd_Argc() == 2 )
     {
         v0 = Cmd_Argv(1);
-        sortOrder = atoi(v0);
+        sortOrder = (challengeSortOrder_e)atoi(v0);
         LiveStats_BuildAttachmentsList(0, sortOrder);
     }
     else
@@ -3865,8 +3972,10 @@ void __cdecl LiveStats_ValidateStats(int controllerIndex)
                      STATS_LOCATION_FORCE_NORMAL,
                      statsKeys[currentStatsKey]) )
         {
-            if ( currentStatsValue < backupStatsValue )
+            if (currentStatsValue < backupStatsValue)
+            {
                 //BLOPS_NULLSUB();
+            }
         }
         else
         {
@@ -3886,8 +3995,10 @@ void __cdecl LiveStats_ValidateStats(int controllerIndex)
         &statsInitialVersion,
         STATS_LOCATION_FORCE_NORMAL,
         MP_PLAYERSTATSKEY_STATS_VERSION);
-    if ( statsBackupVersion != statsInitialVersion )
+    if (statsBackupVersion != statsInitialVersion)
+    {
         //BLOPS_NULLSUB();
+    }
 }
 
 char __cdecl LiveStats_GetIntPlayerStatByKey(
@@ -4153,7 +4264,7 @@ void __cdecl LiveStats_ResetBasicTrainingStats(int controllerIndex)
             StatsBuffer = LiveStorage_GetStatsBuffer(controllerIndex, STATS_LOCATION_NORMAL, 1);
             memset(StatsBuffer->statsBuffer, 0, StatsBufferSize);
             LiveStorage_ValidateWithDDL(controllerIndex, STATS_LOCATION_BASICTRAINING);
-            Cmd_ExecuteSingleCommand(-1, controllerIndex, "exec mp/stats_init.cfg");
+            Cmd_ExecuteSingleCommand(-1, controllerIndex, (char*)"exec mp/stats_init.cfg");
             v6 = LiveStorage_GetStatsBufferSize();
             v2 = LiveStorage_GetStatsBuffer(controllerIndex, STATS_LOCATION_NORMAL, 1);
             LiveStats_WriteChecksumToBuffer(v2->statsBuffer, v6);
@@ -4202,8 +4313,8 @@ void __cdecl LiveStats_InitStatsBuffer(int controllerIndex)
     StatsBuffer = LiveStorage_GetStatsBuffer(controllerIndex, STATS_LOCATION_NORMAL, 1);
     memset(StatsBuffer->statsBuffer, 0, StatsBufferSize);
     LiveStorage_ValidateWithDDL(controllerIndex, STATS_LOCATION_NORMAL);
-    Cmd_ExecuteSingleCommand(-1, controllerIndex, "exec mp/stats_init.cfg");
-    Cmd_ExecuteSingleCommand(-1, controllerIndex, "updateprofilefromstats");
+    Cmd_ExecuteSingleCommand(-1, controllerIndex, (char*)"exec mp/stats_init.cfg");
+    Cmd_ExecuteSingleCommand(-1, controllerIndex, (char*)"updateprofilefromstats");
     Dvar_SetInt((dvar_s *)ui_items_no_cost, savedUiItemsNoCost);
     Dvar_SetInt((dvar_s *)custom_class_mode, savedCustomClassMode);
     Dvar_SetInt((dvar_s *)custom_killstreak_mode, savedCustomKillstreakMode);
@@ -4225,9 +4336,9 @@ void __cdecl LiveStats_ResetStats(int controllerIndex, bool versionChanged)
     Dvar_SetBool((dvar_s *)xblive_basictraining, 0);
     LiveStats_InitStatsBuffer(controllerIndex);
     LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-    Cmd_ExecuteSingleCommand(LocalClientNum, controllerIndex, "updategamerprofile");
+    Cmd_ExecuteSingleCommand(LocalClientNum, controllerIndex, (char *)"updategamerprofile");
     v3 = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-    Cmd_ExecuteSingleCommand(v3, controllerIndex, "updatedvarsfromprofile");
+    Cmd_ExecuteSingleCommand(v3, controllerIndex, (char *)"updatedvarsfromprofile");
     StatsBufferSize = LiveStorage_GetStatsBufferSize();
     StatsBuffer = LiveStorage_GetStatsBuffer(controllerIndex, STATS_LOCATION_NORMAL, 1);
     LiveStats_WriteChecksumToBuffer(StatsBuffer->statsBuffer, StatsBufferSize);
@@ -4662,6 +4773,7 @@ cmd_function_s LiveStats_BuildGlobalChallengesListCmd_VAR;
 cmd_function_s LiveStats_BuildAttachmentsListCmd_VAR;
 cmd_function_s LiveStats_PresetigeStatsResetCmd_VAR;
 
+bool s_initCalledOnce = false;
 void __cdecl LiveStats_Init()
 {
     g_statsDDL = DDL_LoadAsset("ddl_mp/stats.ddl");

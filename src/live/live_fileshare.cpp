@@ -3,6 +3,85 @@
 #include "live_win.h"
 #include "live_stats.h"
 #include "live_fileshare_search.h"
+#include <cgame/cg_compass.h>
+#include <ui/ui_feeders.h>
+#include <universal/com_shared.h>
+#include <ui/ui_atoms.h>
+#include <client_mp/cl_cgame_mp.h>
+#include <qcommon/com_clients.h>
+#include <server_mp/sv_main_pc_mp.h>
+#include <client/cl_keys.h>
+
+const char *fileShareKeyNames[30] =
+{
+  "slot",
+  "ingameSlot",
+  "slotOccupied",
+  "datetime",
+  "length",
+  "size",
+  "author",
+  "map",
+  "mapName",
+  "gameType",
+  "gameTypeName",
+  "fileID",
+  "fileSize",
+  "fileType",
+  "fileName",
+  "hasSummary",
+  "gameTypeAndMapName",
+  "rating",
+  "typeIconName",
+  "selectedImageName",
+  "name",
+  "isModifiedName",
+  "description",
+  "isModifiedDescription",
+  "userTag",
+  "userTagIndex",
+  "gameTypeImage",
+  "getTotalVotes",
+  "isSummaryCached",
+  "isSummaryLoaded"
+};
+
+
+bool(__cdecl *fileShareKeyFunctions[30])(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *) =
+{
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetSlot,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetIngameSlot,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_IsSlotOccupied,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetDate,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetLength,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetSize,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetOwnerName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetMap,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetMapName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetGameType,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetGameTypeName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetFileID,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetFileSize,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetFileType,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetFileName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_HasSummary,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetGameTypeAndMapName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetRating,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetTypeIconName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetSelectedImageName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetIsModifiedName,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetDescription,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetIsModifiedDescription,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetUserTag,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetUserTagIndex,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetGameTypeImage,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_GetTotalVotes,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_IsSummaryCached,
+  (bool(*)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **, float *))Live_FileShare_IsSummaryLoaded
+};
+
+
 
 const char *s_fsSearchRowTextDvarNames[7] =
 {
@@ -25,6 +104,8 @@ const char *s_fsSearchRowValueDvarNames[7] =
   "fsSearchRowValue5",
   "fsSearchRowValue6"
 };
+
+unsigned int s_fileShareFileRatingPreview;
 
 int dword_A4C8928;
 
@@ -50,7 +131,6 @@ const dvar_t *fsPrivateSlotCol;
 const dvar_t *fsOtherUserPrivateSlotCol;
 const dvar_t *fsMaxPrivateSlotRowsOther;
 const dvar_t *fsOtherUserSlotSelected;
-
 const dvar_t *fsSlotEmptyHiddenColor;
 const dvar_t *fsSlotEmptyShowColorBg;
 const dvar_t *fsSlotEmptyMainColor;
@@ -61,30 +141,28 @@ const dvar_t *fsSlotEmptyShowColor;
 const dvar_t *fsSlotMainColor;
 const dvar_t *fsSlotHighlightedColor;
 const dvar_t *fsSlotHighlightedColorNoSel;
-
 const dvar_t *fsDebugRatingValue;
 const dvar_t *fsStarHighlightColor;
 const dvar_t *fsStarPreviewColor;
 const dvar_t *fsStarAvgColor;
 const dvar_t *fshOldItemColor;
-
 const dvar_t *fsSelectedFileID;
 const dvar_t *fsSelectedFileName;
 const dvar_t *fsIsSelectedFileNameModified;
 const dvar_t *fsSelectedFileDescription;
 const dvar_t *fsIsSelectedFileDescriptionModified;
 const dvar_t *fsSelectedFileTagIndex;
-
 const dvar_t *fshSelectLastSlotRow;
 const dvar_t *fshSelectFirstSlotRow;
 const dvar_t *fshLiveBlurb;
 const dvar_t *fshDebugFileList;
-
 const dvar_t *fsRecents;
 const dvar_t *fsRecentsCount;
-
 const dvar_t *s_fsSearchRowTextDvars[7];
 const dvar_t *s_fsSearchRowValueDvars[7];
+
+
+char s_gamerTag[32];
 
 
 fileShareLastPlayedGame_t *__cdecl Live_FileShare_GetLastPlayedGame()
@@ -727,7 +805,7 @@ char __cdecl Live_FileShare_FileIDFromSlot(
     return 0;
 }
 
-char __cdecl Live_FileShare_IsSlotOccupied(int slot, fileShareBufferLocation location)
+static bool __cdecl Live_FileShare_IsSlotOccupied(int slot, fileShareBufferLocation location)
 {
     int i; // [esp+0h] [ebp-8h]
     fileSharePrivateData *fileShareData; // [esp+4h] [ebp-4h]
@@ -760,10 +838,10 @@ const char *__cdecl Live_FileShare_GetSelectedImage(bdFileMetaData *descriptors,
     return "";
 }
 
-unsigned int __cdecl Live_FileShare_GetRating()
-{
-    return s_fileShareFileRating;
-}
+//unsigned int __cdecl Live_FileShare_GetRating()
+//{
+//    return s_fileShareFileRating;
+//}
 
 char *__cdecl Live_FileShare_LocalizedGameTypeAndMap(int gameTypeIndex, int mapIndex)
 {
@@ -978,7 +1056,7 @@ char *__cdecl Live_FileShare_SearchResultsItemText(
     //bdFileMetaData::bdFileMetaData(&descriptor);
     if ( !Live_FileShareSearch_GetDescriptor(controllerIndex, itemIndex, &descriptor) )
     {
-        //bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
 LABEL_10:
         *useOwnerDraw = 1;
         return (char *)"";
@@ -986,7 +1064,7 @@ LABEL_10:
     if ( fshDebugFileList && fshDebugFileList->current.enabled )
     {
         v7 = va("%lld", descriptor.m_fileID);
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
         return v7;
     }
     else if ( Live_FileShare_GetName(
@@ -998,13 +1076,13 @@ LABEL_10:
                             &floatRes) )
     {
         v6 = stringRes;
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
         return (char *)v6;
     }
     else
     {
         Live_FileShareSearch_MarkItemCorrupt(controllerIndex, itemIndex);
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
         return (char *)"";
     }
 }
@@ -1886,7 +1964,7 @@ char __cdecl Live_FileShare_GetIngameSlot(
     return 1;
 }
 
-char __cdecl Live_FileShare_IsSlotOccupied(
+bool __cdecl Live_FileShare_IsSlotOccupied(
                 bdFileMetaData *descriptors,
                 int descriptorCount,
                 int index,
@@ -2382,7 +2460,7 @@ char __cdecl Live_FileShare_GetItemInfo(
     int i; // [esp+20h] [ebp-844h]
     bdFileMetaData descriptor; // [esp+24h] [ebp-840h] BYREF
 
-    bdFileMetaData::bdFileMetaData(&descriptor);
+    //bdFileMetaData::bdFileMetaData(&descriptor);
     if ( location == FILESHARE_INFOLOCATION_SEARCHRESULTS )
     {
         if ( Live_FileShareSearch_GetDescriptor(controllerIndex, index, &descriptor) )
@@ -2436,7 +2514,7 @@ char __cdecl Live_FileShare_GetItemInfo(
                              index,
                              location,
                              stringResult);
-                bdFileMetaData::~bdFileMetaData(&descriptor);
+                ////bdFileMetaData::~bdFileMetaData(&descriptor);
                 return v9;
             }
             if ( !Live_FileShare_IsSlotOccupied(slot, bufferLocation) )
@@ -2462,7 +2540,7 @@ char __cdecl Live_FileShare_GetItemInfo(
             goto LABEL_35;
         }
 LABEL_16:
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
         return 0;
     }
 LABEL_35:
@@ -2473,7 +2551,7 @@ LABEL_36:
 LABEL_25:
         *stringResult = "";
         *floatResult = 0.0f;
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
         return 0;
     }
     v8 = ((char (__cdecl *)(bdFileMetaData *, int, int, fileShareInfoLocation, const char **))fileShareKeyFunctions[keyIndex])(
@@ -2482,7 +2560,7 @@ LABEL_25:
                  index,
                  location,
                  stringResult);
-    bdFileMetaData::~bdFileMetaData(&descriptor);
+    ////bdFileMetaData::~bdFileMetaData(&descriptor);
     return v8;
 }
 
@@ -2513,7 +2591,7 @@ char __cdecl Live_FileShare_GetMySlotInfo(
     for ( i = 0; i < 30; ++i )
     {
         if ( !I_stricmp(field, fileShareKeyNames[i]) )
-            keyIndex = i;
+            keyIndex = (fileShareKeyIndex)i;
     }
     data = LiveStorage_FileShare_GetFileShareData(FILESHARE_BUFFER_PRIMARY);
     if ( !Live_FileShare_IsSlotOccupied(slotNum, FILESHARE_BUFFER_PRIMARY) )
@@ -2560,7 +2638,7 @@ char __cdecl Live_FileShare_GetFeederData(
     for ( i = 0; i < 30; ++i )
     {
         if ( !I_stricmp(field, fileShareKeyNames[i]) )
-            keyIndex = i;
+            keyIndex = (fileShareKeyIndex)i;
     }
     if ( (unsigned int)keyIndex > FILESHARE_KEY_COUNT )
         return 0;
@@ -3042,6 +3120,37 @@ int __cdecl Live_FileShare_SetSpinnerDvars(int offset, int max, dvar_s *valueDva
     return value;
 }
 
+cmd_function_s Live_FileShare_Read_f_VAR;
+cmd_function_s Live_FileShare_GetSummary_f_VAR;
+cmd_function_s Live_FileShare_TransferFromPooled_f_VAR;
+cmd_function_s Live_FileShare_TransferFromUser_f_VAR;
+cmd_function_s Live_FileShare_TransferFromCommunity_f_VAR;
+cmd_function_s Live_FileShare_TransferLastUploaded_f_VAR;
+cmd_function_s Live_FileShare_EditInfo_f_VAR;
+cmd_function_s Live_FileShare_Remove_f_VAR;
+cmd_function_s Live_FileShare_AbortOperation_f_VAR;
+cmd_function_s Live_FileShare_GetRecentGames_f_VAR;
+cmd_function_s Live_FileShare_ClearSearchDvars_f_VAR;
+cmd_function_s Live_FileShare_SearchShiftRight_f_VAR;
+cmd_function_s Live_FileShare_SearchShiftLeft_f_VAR;
+cmd_function_s Live_FileShare_Search_f_VAR;
+cmd_function_s Live_FileShare_DecreaseRating_f_VAR;
+cmd_function_s Live_FileShare_IncreaseRating_f_VAR;
+cmd_function_s Live_FileShare_ResetRating_f_VAR;
+cmd_function_s Live_FileShare_SubmitRating_f_VAR;
+cmd_function_s Live_FileShare_GetTopRated_f_VAR;
+cmd_function_s Live_FileShare_SetRating_f_VAR;
+cmd_function_s Live_FileShare_SetRatingPreview_f_VAR;
+cmd_function_s Live_FileShare_ResetRatingPreview_f_VAR;
+cmd_function_s Live_FileShare_ReadUserTag_f_VAR;
+cmd_function_s Live_FileShare_UserTagLeft_f_VAR;
+cmd_function_s Live_FileShare_UserTagRight_f_VAR;
+cmd_function_s Live_FileShare_FilterBackup_f_VAR;
+cmd_function_s Live_FileShare_FilterRestore_f_VAR;
+cmd_function_s Live_FileShare_SetPooledFileContext_f_VAR;
+cmd_function_s Live_FileShare_ExpireFileDetails_f_VAR;
+cmd_function_s Live_FileShare_GetLastPlayedGame_f_VAR;
+
 void __cdecl Live_FileShare_Init()
 {
     char *v0; // eax
@@ -3483,6 +3592,350 @@ void __cdecl Live_FileShare_SearchShiftRight_f()
     }
 }
 
+char fileShareSortBy[1][64] =
+{
+  {
+    'M',
+    'E',
+    'N',
+    'U',
+    '_',
+    'F',
+    'I',
+    'L',
+    'E',
+    'S',
+    'H',
+    'A',
+    'R',
+    'E',
+    '_',
+    'M',
+    'O',
+    'S',
+    'T',
+    'P',
+    'O',
+    'P',
+    'U',
+    'L',
+    'A',
+    'R',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0'
+  }
+};
+
+char fileShareAgeSearch[3][64] =
+{
+  {
+    'M',
+    'E',
+    'N',
+    'U',
+    '_',
+    'F',
+    'I',
+    'L',
+    'E',
+    'S',
+    'H',
+    'A',
+    'R',
+    'E',
+    '_',
+    'W',
+    'E',
+    'E',
+    'K',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0'
+  },
+  {
+    'M',
+    'E',
+    'N',
+    'U',
+    '_',
+    'F',
+    'I',
+    'L',
+    'E',
+    'S',
+    'H',
+    'A',
+    'R',
+    'E',
+    '_',
+    'M',
+    'O',
+    'N',
+    'T',
+    'H',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0'
+  },
+  {
+    'M',
+    'E',
+    'N',
+    'U',
+    '_',
+    'F',
+    'I',
+    'L',
+    'E',
+    'S',
+    'H',
+    'A',
+    'R',
+    'E',
+    '_',
+    'Y',
+    'E',
+    'A',
+    'R',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0'
+  }
+};
+
+
+char fshPlayerSearchPreference[1][64] =
+{
+  {
+    'M',
+    'E',
+    'N',
+    'U',
+    '_',
+    'F',
+    'I',
+    'L',
+    'E',
+    'S',
+    'H',
+    'A',
+    'R',
+    'E',
+    '_',
+    'S',
+    'E',
+    'A',
+    'R',
+    'C',
+    'H',
+    'M',
+    'E',
+    'O',
+    'N',
+    'L',
+    'Y',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0',
+    '\0'
+  }
+};
+
+
 void __cdecl Live_FileShare_SetSearchRowOffset(int row, int offset)
 {
     char *v2; // eax
@@ -3756,16 +4209,16 @@ void __cdecl Live_FileShare_GetRecentGames(int localControllerIndex, unsigned __
     bdTag tags[1]; // [esp+14h] [ebp-18h] BYREF
     int savedregs; // [esp+2Ch] [ebp+0h] BYREF
 
-    v4 = 1;
-    for ( i = tags; --v4 >= 0; ++i )
-        bdTag::bdTag(i);
+    //v4 = 1;
+    //for ( i = tags; --v4 >= 0; ++i )
+    //    bdTag::bdTag(i);
     numTags = 0;
     Live_FileShare_AddTag(4u, playerXuid, &numTags, tags, 40);
     if ( numTags > 0 )
         Live_FileShareSearch_SetContext(localControllerIndex, tags, numTags, FILESHARE_LOCATION_POOLEDSTORAGE, 0, -1);
     v2 = 1;
-    for ( j = (bdTaskResult *)&savedregs; --v2 >= 0; bdTag::~bdTag(j) )
-        j -= 6;
+    //for ( j = (bdTaskResult *)&savedregs; --v2 >= 0; bdTag::~bdTag(j) )
+    //    j -= 6;
 }
 
 void __cdecl Live_FileShare_Remove_f()
@@ -3893,9 +4346,9 @@ void __cdecl Live_FileShare_DvarSearch(int controllerIndex)
     bdTag tags[40]; // [esp+1Ch] [ebp-3C0h] BYREF
     int savedregs; // [esp+3DCh] [ebp+0h] BYREF
 
-    v4 = 40;
-    for ( i = tags; --v4 >= 0; ++i )
-        bdTag::bdTag(i);
+    //v4 = 40;
+    //for ( i = tags; --v4 >= 0; ++i )
+    //    bdTag::bdTag(i);
     if ( s_fsSearchRowValueDvars[1]->current.integer <= 0 )
     {
         numPastDays = -1;
@@ -3927,9 +4380,9 @@ void __cdecl Live_FileShare_DvarSearch(int controllerIndex)
     {
         Live_FileShareSearch_SetContext(0, tags, 0, FILESHARE_LOCATION_USERSTORAGE, 1, -1);
     }
-    v2 = 40;
-    for ( j = (bdTaskResult *)&savedregs; --v2 >= 0; bdTag::~bdTag(j) )
-        j -= 6;
+    //v2 = 40;
+    //for ( j = (bdTaskResult *)&savedregs; --v2 >= 0; bdTag::~bdTag(j) )
+    //    j -= 6;
 }
 
 void __cdecl Live_FileShare_SubmitRating_f()
@@ -4069,11 +4522,11 @@ void __cdecl Live_FileShare_ReadUserTag_f()
         value = StringTable_Lookup(fileShareTable, 0, "1", 1);
 }
 
-void __thiscall Live_FileShare_UserTagLeft_f(const StringTable *this)
+void Live_FileShare_UserTagLeft_f(const StringTable *table)
 {
     const StringTable *fileShareTable; // [esp+0h] [ebp-4h] BYREF
 
-    fileShareTable = this;
+    fileShareTable = table;
     StringTable_GetAsset("mp/fileShareTags.csv", (XAssetHeader *)&fileShareTable);
     if ( fsSelectedFileTagIndex->current.integer )
         Dvar_SetInt((dvar_s *)fsSelectedFileTagIndex, fsSelectedFileTagIndex->current.integer - 1);
@@ -4081,12 +4534,12 @@ void __thiscall Live_FileShare_UserTagLeft_f(const StringTable *this)
         Dvar_SetInt((dvar_s *)fsSelectedFileTagIndex, fileShareTable->rowCount);
 }
 
-void __thiscall Live_FileShare_UserTagRight_f(const StringTable *this)
+void Live_FileShare_UserTagRight_f(const StringTable *table)
 {
     const StringTable *v1; // ecx
     const StringTable *fileShareTable; // [esp+0h] [ebp-4h] BYREF
 
-    fileShareTable = this;
+    fileShareTable = table;
     if ( Key_IsDown(0, 201) )
     {
         Live_FileShare_UserTagLeft_f(v1);
@@ -4100,6 +4553,7 @@ void __thiscall Live_FileShare_UserTagRight_f(const StringTable *this)
     }
 }
 
+fileShareFilter s_fileShareFilterBackup;
 void __cdecl Live_FileShare_FilterBackup_f()
 {
     s_fileShareFilterBackup.mapName = s_fsSearchRowValueDvars[2]->current.integer;

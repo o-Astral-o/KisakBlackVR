@@ -8,6 +8,8 @@
 #include <demo/demo_playback.h>
 #include <qcommon/com_gamemodes.h>
 #include <DW/dwLogOn_pc.h>
+#include <DemonWare/bdLobbyService.h>
+#include <DW/dwUtils.h>
 
 int __cdecl Live_CountGuestsInUse()
 {

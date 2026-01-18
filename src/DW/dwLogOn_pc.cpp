@@ -627,7 +627,7 @@ void __cdecl DWDedicatedLobbyPump()
     SV_AP_Frame();
 }
 
-bool __thiscall Com_CanWriteLeaderboards(void *this)
+bool Com_CanWriteLeaderboards(void *thisptr)
 {
     bdInetAddr v2; // [esp-Ch] [ebp-28h] BYREF
     int v3; // [esp-8h] [ebp-24h]

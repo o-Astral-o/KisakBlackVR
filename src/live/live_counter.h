@@ -1,4 +1,16 @@
 #pragma once
+#include "live_storage.h"
+
+struct bdCounterValue : bdTaskResult // sizeof=0x10
+{                                       // XREF: .data:s_serverCounters/r
+    unsigned int m_counterID;           // XREF: LiveCounter_UploadAllCounters(int)+57/r
+    __int64 m_counterValue;             // XREF: LiveCounter_UploadAllCounters(int)+36/r
+};
+
+struct bdCounter // sizeof=0x4
+{
+    bdRemoteTaskManager *m_remoteTaskManager;
+};
 
 TaskRecord *__cdecl LiveCounter_IncrementCounters(
                 const TaskDefinition *definition,

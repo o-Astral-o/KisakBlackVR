@@ -4,6 +4,7 @@
 #include <ui/ui_shared.h>
 #include <bgame/bg_weapons_attachment.h>
 #include <universal/dvar.h>
+#include <client/cl_milestone.h>
 
 enum sortedChallengeParams_t : __int32
 {                                       // XREF: ?LiveStats_GetChallengeInfoParam@@YA_NW4sortedChallengeParams_t@@IPAPBDPAHH@Z/r
@@ -170,7 +171,7 @@ char __cdecl LiveStats_GetIntOtherPlayerStatByGameMode(
                 const char *statName);
 char __cdecl LiveStats_GetIntPlayerStatByKey(int controllerIndex, int *outInt, playerStatsKeyIndex_t keyIndex);
 char __cdecl LiveStats_GetIntOtherPlayerStatByKey(int controllerIndex, int *outInt, playerStatsKeyIndex_t keyIndex);
-char *__cdecl LiveStats_GetPlayerStatStringByKey(playerStatsKeyIndex_t keyIndex);
+const char *__cdecl LiveStats_GetPlayerStatStringByKey(playerStatsKeyIndex_t keyIndex);
 char __cdecl LiveStats_SetIntPlayerStatInternal(
                 int controllerIndex,
                 int pathDepth,

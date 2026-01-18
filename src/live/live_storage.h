@@ -570,6 +570,16 @@ struct __declspec(align(8)) bdVoteRankStatsInfo : bdStatsInfo // sizeof=0xC8
     // padding byte
     // padding byte
     // padding byte
+
+    bdVoteRankStatsInfo() : bdStatsInfo()
+    {
+        this->m_fileOwnerID = 0;
+        this->m_totalVotes = 0;
+        this->m_avgVoteValue = 0;
+        memset((unsigned __int8 *)this->m_fileOwnerName, 0, sizeof(this->m_fileOwnerName));
+    }
+
+    ~bdVoteRankStatsInfo() = default;
 };
 
 struct __declspec(align(8)) fileSharePrivateData // sizeof=0xB418

@@ -1,13 +1,26 @@
 #include "live_fileshare_search.h"
+#include <win32/win_shared.h>
+#include <cgame/cg_compass.h>
+#include "live_storage.h"
+#include "live_fileshare.h"
+#include <universal/com_shared.h>
+
+unsigned __int64 s_summaryFileID;
+bool s_summaryFileLoaded;
+int s_summaryFileRequestTime;
+
+fileShareSearchBackoff_t s_searchBackoff;
+fshSearch_t s_fshSearch;
 
 void __cdecl Live_FileShareSearch_LoadSummary(int controllerIndex, int itemIndex)
 {
-    if ( (_S6 & 1) == 0 )
-    {
-        _S6 |= 1u;
-        bdFileMetaData::bdFileMetaData(&descriptor);
-        atexit(Live_FileShareSearch_LoadSummary_::_2_::_dynamic_atexit_destructor_for__descriptor__);
-    }
+    //if ( (_S6 & 1) == 0 )
+    //{
+    //    _S6 |= 1u;
+    //    bdFileMetaData::bdFileMetaData(&descriptor);
+    //    atexit(Live_FileShareSearch_LoadSummary_::_2_::_dynamic_atexit_destructor_for__descriptor__);
+    //}
+    static bdFileMetaData descriptor;
     if ( Live_FileShareSearch_GetDescriptor(controllerIndex, itemIndex, &descriptor)
         && (!descriptor.m_fileID || descriptor.m_fileID != s_summaryFileID || !s_summaryFileLoaded)
         && !CG_IsShowingZombieMap() )
@@ -32,6 +45,7 @@ void __cdecl Live_FileShareSearch_LoadSummary(int controllerIndex, int itemIndex
     }
 }
 
+int s_lastTaskTime;
 char __cdecl Live_FileShareSearch_IsTaskPermitted()
 {
     signed int v0; // esi
@@ -102,11 +116,11 @@ void __cdecl Live_FileShareSearch_SetIndexOverride(int controllerIndex, int item
     int maxDiff; // [esp+30h] [ebp-844h]
     bdFileMetaData descriptor; // [esp+34h] [ebp-840h] BYREF
 
-    bdFileMetaData::bdFileMetaData(&descriptor);
+    //bdFileMetaData::bdFileMetaData(&descriptor);
     if ( s_fshSearch.context.maxPastDays == -1 )
     {
         s_fshSearch.context.totalOverride = -1;
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
     }
     else
     {
@@ -121,7 +135,7 @@ void __cdecl Live_FileShareSearch_SetIndexOverride(int controllerIndex, int item
                 s_fshSearch.context.totalOverride = itemIndex;
             }
         }
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
     }
 }
 
@@ -167,15 +181,15 @@ void __cdecl Live_FileShareSearch_SetContext(
         s_fshSearch.context.fileType = fsSearchFileType->current.integer;
         s_fshSearch.context.isValid = 0;
         s_fshSearch.context.maxPastDays = numPastDays;
-        for ( i = 0; i < numTags; ++i )
-        {
-            v6 = &s_fshSearch.context.tags[i].__vftable;
-            v7 = &tags[i];
-            v6[2] = v7->m_priTag;
-            v6[3] = HIDWORD(v7->m_priTag);
-            v6[4] = v7->m_secTag;
-            v6[5] = HIDWORD(v7->m_secTag);
-        }
+        //for ( i = 0; i < numTags; ++i )
+        //{
+        //    v6 = &s_fshSearch.context.tags[i].__vftable;
+        //    v7 = &tags[i];
+        //    v6[2] = v7->m_priTag;
+        //    v6[3] = HIDWORD(v7->m_priTag);
+        //    v6[4] = v7->m_secTag;
+        //    v6[5] = HIDWORD(v7->m_secTag);
+        //}
         Live_FileShareSearch_LoadBook(controllerIndex, 0, 1);
     }
     else
@@ -529,52 +543,15 @@ char __cdecl Live_FileShareSearch_FindDescriptor(
             && s_fshSearch.pages[i].startIndex <= itemIndex
             && itemIndex < s_fshSearch.pages[i].numDescriptors + s_fshSearch.pages[i].startIndex )
         {
-            bdFileMetaData::operator=(
-                outDescriptor,
-                (const bdFileMetaData *)(21056 * i + 2104 * (itemIndex - s_fshSearch.pages[i].startIndex) + 172815696));
+            //bdFileMetaData::operator=(
+            //    outDescriptor,
+            //    (const bdFileMetaData *)(21056 * i + 2104 * (itemIndex - s_fshSearch.pages[i].startIndex) + 172815696));
+            *outDescriptor = s_fshSearch.pages[i].descriptors[itemIndex - s_fshSearch.pages[i].startIndex];
             *page = &s_fshSearch.pages[i];
             return 1;
         }
     }
     return 0;
-}
-
-bdFileMetaData *__thiscall bdFileMetaData::operator=(bdFileMetaData *this, const bdFileMetaData *__that)
-{
-    bdTag *v2; // eax
-    unsigned int _S5; // [esp+Ch] [ebp-14h]
-    unsigned int _S4; // [esp+10h] [ebp-10h]
-    unsigned int _S3; // [esp+14h] [ebp-Ch]
-    unsigned int _S2; // [esp+18h] [ebp-8h]
-    unsigned int _S1; // [esp+1Ch] [ebp-4h]
-
-    this->m_fileID = __that->m_fileID;
-    this->m_createTime = __that->m_createTime;
-    this->m_modifedTime = __that->m_modifedTime;
-    this->m_fileSize = __that->m_fileSize;
-    this->m_ownerID = __that->m_ownerID;
-    for ( _S1 = 0; _S1 < 0x40; ++_S1 )
-        this->m_ownerName[_S1] = __that->m_ownerName[_S1];
-    this->m_fileSlot = __that->m_fileSlot;
-    for ( _S2 = 0; _S2 < 0x80; ++_S2 )
-        this->m_fileName[_S2] = __that->m_fileName[_S2];
-    for ( _S3 = 0; _S3 < 0x180; ++_S3 )
-        this->m_url[_S3] = __that->m_url[_S3];
-    this->m_category = __that->m_category;
-    this->m_numTags = __that->m_numTags;
-    for ( _S4 = 0; _S4 < 0x200; ++_S4 )
-        this->m_metaData[_S4] = __that->m_metaData[_S4];
-    this->m_metaDataSize = __that->m_metaDataSize;
-    this->m_summaryFileSize = __that->m_summaryFileSize;
-    for ( _S5 = 0; _S5 < 0x28; ++_S5 )
-    {
-        v2 = &this->m_tags[_S5];
-        LODWORD(v2->m_priTag) = __that->m_tags[_S5].m_priTag;
-        HIDWORD(v2->m_priTag) = HIDWORD(__that->m_tags[_S5].m_priTag);
-        LODWORD(v2->m_secTag) = __that->m_tags[_S5].m_secTag;
-        HIDWORD(v2->m_secTag) = HIDWORD(__that->m_tags[_S5].m_secTag);
-    }
-    return this;
 }
 
 char __cdecl Live_FileShareSearch_GetDesriptorByID(
@@ -605,7 +582,8 @@ char __cdecl Live_FileShareSearch_FindDescriptorByID(
                          HIDWORD(s_fshSearch.pages[i].descriptors[j].m_fileID),
                          s_fshSearch.pages[i].descriptors[j].m_fileID) == fileID )
             {
-                bdFileMetaData::operator=(outDescriptor, (const bdFileMetaData *)(21056 * i + 2104 * j + 172815696));
+                //bdFileMetaData::operator=(outDescriptor, (const bdFileMetaData *)(21056 * i + 2104 * j + 172815696));
+                *outDescriptor = s_fshSearch.pages[i].descriptors[j];
                 return 1;
             }
         }
@@ -654,10 +632,10 @@ char __cdecl Live_FileShareSearch_FeederItemEnabled(int index)
     int maxDiff; // [esp+34h] [ebp-844h]
     bdFileMetaData descriptor; // [esp+38h] [ebp-840h] BYREF
 
-    bdFileMetaData::bdFileMetaData(&descriptor);
+    //bdFileMetaData::bdFileMetaData(&descriptor);
     if ( s_fshSearch.context.maxPastDays == -1 )
     {
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        ////bdFileMetaData::~bdFileMetaData(&descriptor);
         return 1;
     }
     else if ( Live_FileShareSearch_GetDescriptor(0, index, &descriptor)
@@ -666,12 +644,12 @@ char __cdecl Live_FileShareSearch_FeederItemEnabled(int index)
                          maxDiff = 86400 * s_fshSearch.context.maxPastDays,
                          now - createTime > 86400 * s_fshSearch.context.maxPastDays) )
     {
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        //bdFileMetaData::~bdFileMetaData(&descriptor);
         return 0;
     }
     else
     {
-        bdFileMetaData::~bdFileMetaData(&descriptor);
+        //bdFileMetaData::~bdFileMetaData(&descriptor);
         return 1;
     }
 }
@@ -700,78 +678,3 @@ char __cdecl Live_FileShareSearch_FeederColor(
     }
     return 1;
 }
-
-fshSearch_t *__thiscall fshSearch_t::fshSearch_t(fshSearch_t *this)
-{
-    int v3; // [esp+8h] [ebp-20h]
-    fshSearchContext_t *j; // [esp+Ch] [ebp-1Ch]
-    int v5; // [esp+10h] [ebp-18h]
-    fshSearchPage_t *i; // [esp+14h] [ebp-14h]
-
-    fshSearchBookFiles_t::fshSearchBookFiles_t(&this->bookFiles);
-    v5 = 3;
-    for ( i = this->pages; --v5 >= 0; ++i )
-        `vector constructor iterator'(i->descriptors, 0x838u, 10, bdFileMetaData::bdFileMetaData);
-    v3 = 40;
-    for ( j = &this->context; --v3 >= 0; j = (fshSearchContext_t *)((char *)j + 24) )
-        bdTag::bdTag((bdTaskResult *)j);
-    return this;
-}
-
-fshSearchBookFiles_t *__thiscall fshSearchBookFiles_t::fshSearchBookFiles_t(fshSearchBookFiles_t *this)
-{
-    int v3; // [esp+4h] [ebp-10h]
-    bdVoteRankStatsInfo *j; // [esp+8h] [ebp-Ch]
-    int v5; // [esp+Ch] [ebp-8h]
-    bdFileID *i; // [esp+10h] [ebp-4h]
-
-    v5 = 100;
-    for ( i = this->fileIDs; --v5 >= 0; ++i )
-        bdFileID::bdFileID(i);
-    v3 = 100;
-    for ( j = this->ratings; --v3 >= 0; ++j )
-        bdVoteRankStatsInfo::bdVoteRankStatsInfo(j);
-    return this;
-}
-
-void __thiscall fshSearch_t::~fshSearch_t(fshSearch_t *this)
-{
-    int v2; // [esp+14h] [ebp-10h]
-    fshSearchContext_t *i; // [esp+18h] [ebp-Ch]
-
-    fshSearchContext_t::~fshSearchContext_t(&this->context);
-    v2 = 3;
-    for ( i = &this->context;
-                --v2 >= 0;
-                `vector destructor iterator'((char *)&i->tags[0].m_secTag, 0x838u, 10, bdFileMetaData::~bdFileMetaData) )
-    {
-        i = (fshSearchContext_t *)((char *)i - 21056);
-    }
-    fshSearchBookFiles_t::~fshSearchBookFiles_t(&this->bookFiles);
-}
-
-void __thiscall fshSearchBookFiles_t::~fshSearchBookFiles_t(fshSearchBookFiles_t *this)
-{
-    int v2; // [esp+4h] [ebp-10h]
-    bdFileID *j; // [esp+8h] [ebp-Ch]
-    int v4; // [esp+Ch] [ebp-8h]
-    bdStatsInfo *i; // [esp+10h] [ebp-4h]
-
-    v4 = 100;
-    for ( i = (bdStatsInfo *)&this[1]; --v4 >= 0; bdVoteRankStatsInfo::~bdVoteRankStatsInfo(i) )
-        i = (bdStatsInfo *)((char *)i - 200);
-    v2 = 100;
-    for ( j = (bdFileID *)&this->needToReadRatings; --v2 >= 0; bdFileID::~bdFileID(j) )
-        --j;
-}
-
-void __thiscall fshSearchContext_t::~fshSearchContext_t(fshSearchContext_t *this)
-{
-    int v1; // [esp+4h] [ebp-8h]
-    fileShareLocation *i; // [esp+8h] [ebp-4h]
-
-    v1 = 40;
-    for ( i = &this->location; --v1 >= 0; bdTag::~bdTag((bdTaskResult *)i) )
-        i -= 6;
-}
-

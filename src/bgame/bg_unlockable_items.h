@@ -1,4 +1,117 @@
 #pragma once
+#include <ui/ui_shared.h>
+#include "bg_weapons_attachment.h"
+#include <live/live_combatrecord.h>
+
+enum clanTagFeatureColumn_t : __int32
+{                                       // XREF: ?BG_UnlockablesGetClanTagFeature@@YAPBDIW4clanTagFeatureColumn_t@@@Z/r
+    CLANTAG_COL_INDEX      = 0x0,
+    CLANTAG_COL_NAME       = 0x1,
+    CLANTAG_COL_UNLOCKLVL  = 0x2,
+    CLANTAG_COL_UNLOCKPLVL = 0x3,
+    CLANTAG_COL_COST       = 0x4,
+    CLANTAG_COL_TYPE       = 0x5,
+    CLANTAG_COL_DATA       = 0x6,
+    CLANTAG_COL_NUMFRAMES  = 0x7,
+    CLANTAG_COL_PHASE      = 0x8,
+    CLANTAG_COL_FRAME1     = 0x9,
+    CLANTAG_COL_FRAME2     = 0xA,
+    CLANTAG_COL_FRAME3     = 0xB,
+    CLANTAG_COL_FRAME4     = 0xC,
+    CLANTAG_COL_FRAME5     = 0xD,
+    CLANTAG_COL_FRAME6     = 0xE,
+    CLANTAG_COL_FRAME7     = 0xF,
+    CLANTAG_COL_FRAME8     = 0x10,
+};
+
+enum defaultClass_t : __int32
+{                                       // XREF: itemInfo_t/r
+                                        // BG_UnlockablesBuildDefaultClasses/r ...
+    CLASS_FIRST          = 0x0,
+    CLASS_SMG            = 0x0,
+    CLASS_CQB            = 0x1,
+    CLASS_ASSAULT        = 0x2,
+    CLASS_LMG            = 0x3,
+    CLASS_SNIPER         = 0x4,
+    CLASS_CUSTOM_SMG     = 0x5,
+    CLASS_CUSTOM_CQB     = 0x6,
+    CLASS_CUSTOM_ASSAULT = 0x7,
+    CLASS_CUSTOM_LMG     = 0x8,
+    CLASS_CUSTOM_SNIPER  = 0x9,
+    CLASS_WAGER1         = 0xA,
+    CLASS_WAGER2         = 0xB,
+    CLASS_WAGER3         = 0xC,
+    CLASS_WAGER4         = 0xD,
+    CLASS_WAGER5         = 0xE,
+    CLASS_WAGER6         = 0xF,
+    CLASS_WAGER7         = 0x10,
+    CLASS_WAGER8         = 0x11,
+    CLASS_WAGER9         = 0x12,
+    CLASS_WAGER10        = 0x13,
+    CLASS_COUNT          = 0x14,
+    CLASS_NONE           = 0xFFFFFFFF,
+};
+
+enum customClass_t : __int32
+{                                       // XREF: BG_UnlockablesGetCustomClassName/r
+    CUSTOM_CLASS_INVALID     = 0xFFFFFFFF,
+    CUSTOM_CLASS_1           = 0x0,
+    CUSTOM_CLASS_FIRST       = 0x0,
+    CUSTOM_CLASS_2           = 0x1,
+    CUSTOM_CLASS_3           = 0x2,
+    CUSTOM_CLASS_4           = 0x3,
+    CUSTOM_CLASS_5           = 0x4,
+    BASIC_CUSTOM_CLASS_COUNT = 0x5,
+    PRESTIGE_CLASS_1         = 0x5,
+    PRESTIGE_CLASS_2         = 0x6,
+    PRESTIGE_CLASS_3         = 0x7,
+    PRESTIGE_CLASS_4         = 0x8,
+    PRESTIGE_CLASS_5         = 0x9,
+    CUSTOM_CLASS_COUNT       = 0xA,
+};
+
+struct __declspec(align(4)) itemInfo_t // sizeof=0x128
+{                                       // XREF: unlockableItemsData/r
+    int index;                          // XREF: BG_UnlockablesBuildItemListForGroupForWeaponTable(itemGroup_t)+70/r
+                                        // BG_UnlockablesBuildItemListForGroupForWeaponTable(itemGroup_t)+A5/r
+    int dwIndex;
+    int dwBaseIndex;
+    bool isPassive;
+    // padding byte
+    // padding byte
+    // padding byte
+    itemGroup_t group;
+    const char *name;
+    const char *reference;
+    int count;
+    const char *imageRef;
+    const char *desc;
+    int numAttachments[5];
+    eAttachment attachments[24];
+    int unlockLevel;
+    int unlockPLevel;
+    defaultClass_t defaultClass[20];
+    bool isDefaultGlobalItem;
+    // padding byte
+    // padding byte
+    // padding byte
+    int cost;
+    int dwCost;
+    loadoutSlot_t loadoutSlot;
+    int unclassifyAt;
+    int sortKey;
+    int challengeIndices[3];            // XREF: clientStatic_t::clientStatic_t(void)+D6/o
+    bool isNullItem;
+    // padding byte
+    // padding byte
+    // padding byte
+    int nameHash;
+    int refHash;
+    bool isValid;
+    // padding byte
+    // padding byte
+    // padding byte
+};
 
 const char *__cdecl BG_UnlockablesGetCustomClassNameForInt(customClass_t customClassNum);
 const char *__cdecl BG_UnlockablesGetCustomClassName(customClass_t customClassNum);

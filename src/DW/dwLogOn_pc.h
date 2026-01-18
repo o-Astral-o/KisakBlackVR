@@ -1,4 +1,5 @@
 #pragma once
+#include <DemonWare/bdLobbyService.h>
 
 bool __cdecl SV_IsConnectedToDW();
 void __cdecl dwInit();
@@ -21,6 +22,6 @@ bool __cdecl dwDNSInit(char *authAddr, int controllerIndex);
 int __cdecl dwDNSPump(int localControllerIndex, bdInetAddr *authAddr, bdInetAddr *lsgAddr);
 void __cdecl DWDedicatedLogon();
 void __cdecl DWDedicatedLobbyPump();
-bool __thiscall Com_CanWriteLeaderboards(void *this);
+bool Com_CanWriteLeaderboards(void *thisptr);
 bool __cdecl isOfficialServer(int licensetype);
 bool __cdecl isOfficialRentedServer(int licensetype);

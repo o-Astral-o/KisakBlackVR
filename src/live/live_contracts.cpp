@@ -1,4 +1,62 @@
 #include "live_contracts.h"
+#include <ui/ui_playlists.h>
+#include <universal/q_parse.h>
+#include <stringed/stringed_hooks.h>
+#include <ui_mp/ui_main_mp.h>
+#include "live_stats.h"
+#include "live_win.h"
+#include <qcommon/com_clients.h>
+#include <client/client.h>
+#include <server_mp/sv_main_mp.h>
+#include <client_mp/sv_client_mp.h>
+
+const char *CONTRACT_STAT_LAST_TIME_DEACTIVATED = "lastTimeDeactivated";
+const char *CONTRACT_STAT_INDEX = "contractIndex";
+const char *CONTRACT_STAT_PROGRESS = "progress";
+const char *CONTRACT_STAT_TIME_PLAYED = "startingTime";
+const char *CONTRACT_STAT_NUM_PURCHASED = "CONTRACTS_PURCHASED";
+const char *CONTRACT_STAT_CP_SPENT = "CONTRACTS_CP_SPENT";
+const char *CONTRACT_STAT_TIMES_PURCHASED = "timesPurchased";
+const char *CONTRACT_STAT_LAST_TIME_DEACTIVATED = "lastTimeDeactivated";
+
+const char *validExpirationTypes[1] =
+{ "playtime" };
+
+const char *validRequirementTypes[11] =
+{
+  "map",
+  "gametype",
+  "head",
+  "body",
+  "baseweapon",
+  "weapon_substr",
+  "perk",
+  "kdratio",
+  "ads",
+  "inventorytype",
+  "nonkillstreak"
+};
+
+const char *validStatTypes[3] =
+{ "player", "gametype", "weapon" };
+
+int s_contractCycleInterval = 86400;
+int s_contractCycle = -1;
+
+
+
+contractInfo_t contracts[512];
+const char *s_contractCycleTickerMessages[32][3];
+int s_contractDisplayOrder[512];
+unsigned __int8 s_contractsBuffer[65536];
+int s_contractFilteredList[512];
+int s_numContractCycles;
+int s_contractCycleOffset;
+int s_numContracts;
+unsigned int s_contractFilteredListCount;
+int s_contractFilter;
+int s_contractsStringBufferLen;
+int contractSortControllerIndex;
 
 void __cdecl LiveContracts_ParseContracts(char *buffer)
 {
@@ -1174,6 +1232,7 @@ bool __cdecl LiveContracts_IsContractLocked(int controllerIndex, int contractInd
     return UnlockLevel > LiveStats_GetRank(controllerIndex) + 1;
 }
 
+const char *CONTRACT_STAT_TIMES_PURCHASED = "timesPurchased";
 unsigned int __cdecl LiveContracts_GetTimesPurchased(int controllerIndex, int contractIndex)
 {
     persistentStats *statBuffer; // [esp+0h] [ebp-4h]
@@ -1593,17 +1652,17 @@ char *__cdecl LiveContracts_SV_GetStatBuffer(unsigned int clientNum)
     {
         __debugbreak();
     }
-    if ( (LODWORD(svs.clients[clientNum].statPacketsReceived) != -1
-         || HIDWORD(svs.clients[clientNum].statPacketsReceived) != 7)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\live\\live_contracts.cpp",
-                    1138,
-                    0,
-                    "%s",
-                    "svs.clients[clientNum].statPacketsReceived == ALL_STATS_PACKETS_RECEIVED") )
-    {
-        __debugbreak();
-    }
+    //iassert(svs.clients[clientNum].statPacketsReceived == ALL_STATS_PACKETS_RECEIVED);
+    //if ( (LODWORD(svs.clients[clientNum].statPacketsReceived) != -1 || HIDWORD(svs.clients[clientNum].statPacketsReceived) != 7)
+    //    && !Assert_MyHandler(
+    //                "C:\\projects_pc\\cod\\codsrc\\src\\live\\live_contracts.cpp",
+    //                1138,
+    //                0,
+    //                "%s",
+    //                "svs.clients[clientNum].statPacketsReceived == ALL_STATS_PACKETS_RECEIVED") )
+    //{
+    //    __debugbreak();
+    //}
     if ( svs.clients[clientNum].header.state < 2
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\live\\live_contracts.cpp",

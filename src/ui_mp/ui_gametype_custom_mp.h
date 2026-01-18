@@ -141,3 +141,18 @@ void __cdecl UI_Gametype_CopyCustomClass_f();
 void __cdecl UI_Gametype_Custom_Init();
 void __cdecl UI_Gametype_CustomGameModeDataToDvars();
 void __cdecl UI_Gametype_DvarsToCustomGameModeData(CustomGameModeData *customGameModeData);
+
+extern const dvar_t *custom_class_name;
+extern const dvar_t *custom_class_create_enabled;
+extern const dvar_t *custom_class_team;
+extern const dvar_t *custom_class_health;
+extern const dvar_t *custom_class_health_regen;
+extern const dvar_t *custom_class_health_vampirism;
+extern const dvar_t *custom_class_speed;
+extern const dvar_t *custom_class_sprint_speed;
+extern const dvar_t *custom_class_damage;
+extern const dvar_t *custom_class_explosive_damage;
+extern const dvar_t *ui_items_no_cost;
+extern const dvar_t *custom_killstreak_mode;
+extern const dvar_t *custom_killstreak_numkills;
+extern const dvar_t *ui_useCustomClassInfo;

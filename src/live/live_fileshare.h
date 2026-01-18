@@ -101,6 +101,22 @@ struct fileSharePooledDetails_t // sizeof=0x34
                                         // Live_FileShare_SetPooledFileDetailsContext(fileSharePooledFileContext_t)+21/w
 };
 
+struct fileShareFilter // sizeof=0x1C
+{                                       // XREF: .data:s_fileShareFilterBackup/r
+    int fileType;
+    int mapName;                        // XREF: Live_FileShare_FilterBackup_f+B/w
+                                        // Live_FileShare_FilterRestore_f+8/r
+    int gameType;                       // XREF: Live_FileShare_FilterBackup_f+1A/w
+                                        // Live_FileShare_FilterRestore_f+22/r
+    int age;                            // XREF: Live_FileShare_FilterBackup_f+28/w
+                                        // Live_FileShare_FilterRestore_f+3B/r
+    int userTag;                        // XREF: Live_FileShare_FilterBackup_f+36/w
+                                        // Live_FileShare_FilterRestore_f+54/r
+    int playerPref;                     // XREF: Live_FileShare_FilterBackup_f+45/w
+                                        // Live_FileShare_FilterRestore_f+6E/r
+    int sortBy;                         // XREF: Live_FileShare_FilterBackup_f+53/w
+};
+
 fileShareLastPlayedGame_t *__cdecl Live_FileShare_GetLastPlayedGame();
 void __cdecl Live_FileShare_SetLiveBlurb(const char *blurb);
 char __cdecl Live_FileShare_GetTag(
@@ -148,9 +164,9 @@ char __cdecl Live_FileShare_FileIDFromSlot(
                 int descriptorCount,
                 int slot,
                 unsigned __int64 *fileID);
-char __cdecl Live_FileShare_IsSlotOccupied(int slot, fileShareBufferLocation location);
+//char __cdecl Live_FileShare_IsSlotOccupied(int slot, fileShareBufferLocation location);
 const char *__cdecl Live_FileShare_GetSelectedImage(bdFileMetaData *descriptors, int index);
-unsigned int __cdecl Live_FileShare_GetRating();
+//unsigned int __cdecl Live_FileShare_GetRating();
 char *__cdecl Live_FileShare_LocalizedGameTypeAndMap(int gameTypeIndex, int mapIndex);
 void __cdecl Live_FileShare_InitRatingHistory();
 void __cdecl Live_FileShare_SaveRating(int controllerIndex, unsigned __int64 fileID, unsigned __int8 rating);
@@ -356,7 +372,7 @@ char __cdecl Live_FileShare_GetIngameSlot(
                 fileShareInfoLocation location,
                 const char **stringResult,
                 float *floatResult);
-char __cdecl Live_FileShare_IsSlotOccupied(
+bool __cdecl Live_FileShare_IsSlotOccupied(
                 bdFileMetaData *descriptors,
                 int descriptorCount,
                 int index,
@@ -520,11 +536,49 @@ void __cdecl Live_FileShare_SetRating_f();
 void __cdecl Live_FileShare_SetRatingPreview_f();
 void __cdecl Live_FileShare_ResetRatingPreview_f();
 void __cdecl Live_FileShare_ReadUserTag_f();
-void __thiscall Live_FileShare_UserTagLeft_f(const StringTable *this);
-void __thiscall Live_FileShare_UserTagRight_f(const StringTable *this);
+void Live_FileShare_UserTagLeft_f(const StringTable *table);
+void Live_FileShare_UserTagRight_f(const StringTable *table);
 void __cdecl Live_FileShare_FilterBackup_f();
 void __cdecl Live_FileShare_FilterRestore_f();
 void __cdecl Live_FileShare_GetTopRated_f();
 void __cdecl Live_FileShare_ExpireFileDetails_f();
 void __cdecl Live_FileShare_GetLastPlayedGame_f();
 void __cdecl Live_FileShare_SetPooledFileContext_f();
+
+
+extern const dvar_t *fsSearchFileType;
+extern const dvar_t *fsSearchSelectedRow;
+extern const dvar_t *fsShowStreamingGraph;
+extern const dvar_t *fsPrivateSlotCol;
+extern const dvar_t *fsOtherUserPrivateSlotCol;
+extern const dvar_t *fsMaxPrivateSlotRowsOther;
+extern const dvar_t *fsOtherUserSlotSelected;
+extern const dvar_t *fsSlotEmptyHiddenColor;
+extern const dvar_t *fsSlotEmptyShowColorBg;
+extern const dvar_t *fsSlotEmptyMainColor;
+extern const dvar_t *fsSlotEmptyNotSubscribedColor;
+extern const dvar_t *fsSlotNumMainColor;
+extern const dvar_t *fsSlotNumNoSubsribeColor;
+extern const dvar_t *fsSlotEmptyShowColor;
+extern const dvar_t *fsSlotMainColor;
+extern const dvar_t *fsSlotHighlightedColor;
+extern const dvar_t *fsSlotHighlightedColorNoSel;
+extern const dvar_t *fsDebugRatingValue;
+extern const dvar_t *fsStarHighlightColor;
+extern const dvar_t *fsStarPreviewColor;
+extern const dvar_t *fsStarAvgColor;
+extern const dvar_t *fshOldItemColor;
+extern const dvar_t *fsSelectedFileID;
+extern const dvar_t *fsSelectedFileName;
+extern const dvar_t *fsIsSelectedFileNameModified;
+extern const dvar_t *fsSelectedFileDescription;
+extern const dvar_t *fsIsSelectedFileDescriptionModified;
+extern const dvar_t *fsSelectedFileTagIndex;
+extern const dvar_t *fshSelectLastSlotRow;
+extern const dvar_t *fshSelectFirstSlotRow;
+extern const dvar_t *fshLiveBlurb;
+extern const dvar_t *fshDebugFileList;
+extern const dvar_t *fsRecents;
+extern const dvar_t *fsRecentsCount;
+extern const dvar_t *s_fsSearchRowTextDvars[7];
+extern const dvar_t *s_fsSearchRowValueDvars[7];

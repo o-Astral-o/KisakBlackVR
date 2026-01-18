@@ -77,7 +77,7 @@ const char *__cdecl BG_GetAttachmentName(eAttachment index)
         return s_attachmentNames[index];
 }
 
-int __cdecl BG_GetAttachmentIndex(const char *name)
+eAttachment __cdecl BG_GetAttachmentIndex(const char *name)
 {
     int index; // [esp+0h] [ebp-4h]
 

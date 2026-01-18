@@ -1,4 +1,11 @@
 #include "live_fileshare_cache.h"
+#include <universal/com_memory.h>
+
+fshCacheFileDetails_t *s_fshCache;
+fshCacheRatingDetails_t *s_fshRatingCache;
+
+int s_fshCacheFileCount;
+int s_fshCacheRatingCount;
 
 bool __cdecl Live_FileShare_CacheInit()
 {

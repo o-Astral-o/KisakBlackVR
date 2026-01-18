@@ -680,6 +680,7 @@ DObj *__cdecl CG_ScriptMover_GetDObj(int localClientNum, centity_s *cent)
     return CG_PreProcess_GetDObj(localClientNum, cent->nextState.number, cent->nextState.eType, model, 0);
 }
 
+#if 0
 // local variable allocation has failed, the output may be wrong!
 void    CG_AdjustPositionForMover(
                 int localClientNum,
@@ -795,6 +796,118 @@ void    CG_AdjustPositionForMover(
         out[2] = in[2];
     }
 }
+#endif
+
+// aislop
+void CG_AdjustPositionForMover(
+    int localClientNum,
+    const float *in,
+    int moverNum,
+    int fromTime,
+    int toTime,
+    float *out,
+    float *outDeltaAngles)
+{
+    if (outDeltaAngles)
+        Vec3Clear(outDeltaAngles);
+
+    if (moverNum <= 0 || moverNum >= 1022)
+    {
+        Vec3Copy(in, out);
+        return;
+    }
+
+    const centity_s *cent = CG_GetEntity(localClientNum, moverNum);
+    if (!cent || (!ShouldAdjustPositionForMover(cent) && !vehicle_riding->current.enabled))
+    {
+        Vec3Copy(in, out);
+        return;
+    }
+
+    cg_s *cg = CG_GetLocalClientGlobals(localClientNum);
+
+    int snapDelta = cg->nextSnap->serverTime - cg->snap->serverTime;
+
+    float fracFrom = 0.0f;
+    float fracTo = 0.0f;
+
+    if (snapDelta > 0)
+    {
+        fracFrom = (float)(fromTime - cg->snap->serverTime) / snapDelta;
+        fracTo = (float)(toTime - cg->snap->serverTime) / snapDelta;
+    }
+
+    float moverPosFrom[3], moverPosTo[3];
+    float moverAngFrom[3], moverAngTo[3];
+
+    /* --- POSITION --- */
+    if (cent->currentState.pos.trType == TR_INTERPOLATE)
+    {
+        float p0[3], p1[3];
+        BG_EvaluateTrajectory(&cent->currentState.pos, fromTime, p0);
+        BG_EvaluateTrajectory(&cent->nextState.lerp.pos, toTime, p1);
+
+        Vec3Lerp(p0, p1, fracFrom, moverPosFrom);
+        Vec3Lerp(p0, p1, fracTo, moverPosTo);
+    }
+    else
+    {
+        BG_EvaluateTrajectory(&cent->currentState.pos, fromTime, moverPosFrom);
+        BG_EvaluateTrajectory(&cent->currentState.pos, toTime, moverPosTo);
+    }
+
+    /* --- ANGLES --- */
+    if (cent->currentState.apos.trType == TR_INTERPOLATE)
+    {
+        float a0[3], a1[3];
+        BG_EvaluateTrajectory(&cent->currentState.apos, fromTime, a0);
+        BG_EvaluateTrajectory(&cent->nextState.lerp.apos, toTime, a1);
+
+        LerpAngleVector(a0, a1, fracFrom, moverAngFrom);
+        LerpAngleVector(a0, a1, fracTo, moverAngTo);
+    }
+    else
+    {
+        BG_EvaluateTrajectory(&cent->currentState.apos, fromTime, moverAngFrom);
+        BG_EvaluateTrajectory(&cent->currentState.apos, toTime, moverAngTo);
+    }
+
+    /* --- Build physics transforms --- */
+    phys_mat44 matFrom, matTo;
+    phys_vec3 originFrom, originTo, input;
+
+    float axis[3][3];
+
+    AnglesToAxis(moverAngFrom, axis);
+    Phys_AxisToNitrousMat(axis, &matFrom);
+    Phys_Vec3ToNitrousVec(moverPosFrom, &originFrom);
+
+    AnglesToAxis(moverAngTo, axis);
+    Phys_AxisToNitrousMat(axis, &matTo);
+    Phys_Vec3ToNitrousVec(moverPosTo, &originTo);
+
+    Phys_Vec3ToNitrousVec(in, &input);
+
+    /* --- Transform point from old mover space to new --- */
+    phys_vec3 local = input - originFrom;
+    phys_vec3 localInv;
+    phys_inv_multiply(&localInv, &matFrom, &local);
+
+    phys_vec3 world;
+    phys_multiply(&world, &matTo, &localInv);
+    world += originTo;
+
+    Phys_NitrousVecToVec3(&world, out);
+
+    /* --- Delta angles --- */
+    if (outDeltaAngles)
+    {
+        outDeltaAngles[0] = moverAngTo[0] - moverAngFrom[0];
+        outDeltaAngles[1] = moverAngTo[1] - moverAngFrom[1];
+        outDeltaAngles[2] = moverAngTo[2] - moverAngFrom[2];
+    }
+}
+
 
 void __cdecl LerpAngleVector(float *from, const float *to, float frac, float *result)
 {

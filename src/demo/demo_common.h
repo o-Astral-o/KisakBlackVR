@@ -141,6 +141,43 @@ struct bdFileMetaData : bdTaskResult // sizeof=0x838
             //return this;
         }
         virtual ~bdFileMetaData();
+
+        // aislop 
+        bdFileMetaData &operator=(const bdFileMetaData &that)
+        {
+            if (this == &that)
+                return *this;
+
+            // Base class
+            bdTaskResult::operator=(that);
+
+            // Scalars
+            m_fileID = that.m_fileID;
+            m_createTime = that.m_createTime;
+            m_modifedTime = that.m_modifedTime;
+            m_fileSize = that.m_fileSize;
+            m_ownerID = that.m_ownerID;
+            m_fileSlot = that.m_fileSlot;
+            m_category = that.m_category;
+            m_numTags = that.m_numTags;
+            m_metaDataSize = that.m_metaDataSize;
+            m_summaryFileSize = that.m_summaryFileSize;
+
+            // Fixed-size arrays
+            memcpy(m_ownerName, that.m_ownerName, sizeof(m_ownerName));
+            memcpy(m_fileName, that.m_fileName, sizeof(m_fileName));
+            memcpy(m_url, that.m_url, sizeof(m_url));
+            memcpy(m_metaData, that.m_metaData, sizeof(m_metaData));
+
+            // Tags
+            for (unsigned int i = 0; i < 40; ++i)
+            {
+                m_tags[i] = that.m_tags[i];
+            }
+
+            return *this;
+        }
+
 };
 
 struct demoConnectedPlayersInfo // sizeof=0x18

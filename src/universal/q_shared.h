@@ -298,6 +298,27 @@ inline int RETURN_ZERO32()
 
 //=============================================
 
+enum trType_t : __int32
+{                                       // XREF: ?Actor_BecomeCorpse@@YAHPAUgentity_s@@@Z/r
+    TR_STATIONARY = 0x0,
+    TR_INTERPOLATE = 0x1,
+    TR_INTERPOLATE_MOVER = 0x2,
+    TR_LINEAR = 0x3,
+    TR_LINEAR_STOP = 0x4,
+    TR_SINE = 0x5,
+    TR_GRAVITY = 0x6,
+    TR_LOW_GRAVITY = 0x7,
+    TR_ACCELERATE = 0x8,
+    TR_DECELERATE = 0x9,
+    TR_PHYSICS = 0xA,
+    TR_XDOLL = 0xB,
+    TR_FIRST_RAGDOLL = 0xC,
+    TR_RAGDOLL = 0xC,
+    TR_RAGDOLL_GRAVITY = 0xD,
+    TR_RAGDOLL_INTERPOLATE = 0xE,
+    TR_LAST_RAGDOLL = 0xE,
+    NUM_TRTYPES = 0xF,
+};
 
 
 union FloatWriteSwap_union // sizeof=0x4
