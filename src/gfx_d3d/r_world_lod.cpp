@@ -2,6 +2,7 @@
 #include <universal/q_shared.h>
 #include "r_init.h"
 #include <universal/com_memory.h>
+#include "r_dvars.h"
 
 unsigned __int8 *s_lodVals;
 LodChainState *s_lodState[1];
@@ -253,12 +254,12 @@ void    UpdateChain(int index, const float *inputCamPos, float dt, int localClie
     float v31; // [esp+9Ch] [ebp-18h]
     GfxWorldLodChain *v32; // [esp+A0h] [ebp-14h]
     LodChainState *v33; // [esp+A4h] [ebp-10h]
-    int v34; // [esp+A8h] [ebp-Ch]
-    const GfxWorldLodChain *lodChain; // [esp+ACh] [ebp-8h]
-    const GfxWorldLodChain *retaddr; // [esp+B4h] [ebp+0h]
+    //int v34; // [esp+A8h] [ebp-Ch]
+    //const GfxWorldLodChain *lodChain; // [esp+ACh] [ebp-8h]
+    //const GfxWorldLodChain *retaddr; // [esp+B4h] [ebp+0h]
 
-    v34 = a1;
-    lodChain = retaddr;
+    //v34 = a1;
+    //lodChain = retaddr;
     v33 = &s_lodState[localClientNum][index];
     v32 = &rgp.world->worldLodChains[index];
     v31 = *inputCamPos;
@@ -305,8 +306,10 @@ void    UpdateChain(int index, const float *inputCamPos, float dt, int localClie
     {
         v5 = 1;
     }
-    LodChainState::UpdateLevel(v33, v5, localClientNum);
-    LodChainState::UpdateFade(v33, dt, localClientNum);
+    v33->UpdateLevel(v5, localClientNum);
+    v33->UpdateFade(dt, localClientNum);
+    //LodChainState::UpdateLevel(v33, v5, localClientNum);
+    //LodChainState::UpdateFade(v33, dt, localClientNum);
 }
 
 double __cdecl math::Abs(const math::Dir3 *_v)

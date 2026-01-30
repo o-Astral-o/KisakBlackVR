@@ -250,7 +250,7 @@ struct __declspec(align(64)) GfxScene // sizeof=0x1B0000
                                         // R_GetPointLightPartitions(GfxLight *)+194/w ...
     unsigned int *entOverflowedDrawBuf; // XREF: R_AddAllSceneEntSurfacesSpotShadow(GfxViewInfo const *,uint,uint)+27F/r
                                         // R_DrawAllSceneEnt(GfxViewInfo const *)+C4E/r ...
-    volatile int sceneDObjCount;        // XREF: R_AddAllSceneEntSurfacesCamera(GfxViewInfo const *)+B6/r
+    volatile unsigned int sceneDObjCount;        // XREF: R_AddAllSceneEntSurfacesCamera(GfxViewInfo const *)+B6/r
                                         // R_AddAllSceneEntSurfacesCamera(GfxViewInfo const *)+CB/r ...
     GfxSceneEntity sceneDObj[1024];     // XREF: LaunchDobjLightingJobs+3D/o
                                         // FinishDobjLighting+4C/o ...
@@ -443,7 +443,7 @@ unsigned int __cdecl R_AllocSceneDObj();
 struct GfxParticleCloud *__cdecl R_AddParticleCloudToScene(Material *material);
 void __cdecl R_AddOmniLightToScene(const float *org, const float (*axis)[3], int radius, float r, float g, float b);
 void __cdecl R_AddSpotLightToScene(const float *org, const float (*axis)[3], float radius, float r, float g, float b);
-double __cdecl R_GetDefaultNearClip();
+float __cdecl R_GetDefaultNearClip();
 void __cdecl R_SetupViewProjectionMatrices(GfxViewParms *viewParms, bool offsetmatrix);
 void __cdecl R_AddBModelSurfacesCamera(
                 BModelDrawInfo *bmodelInfo,

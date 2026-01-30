@@ -1,4 +1,11 @@
 #include "r_ui3d.h"
+#include "rb_backend.h"
+#include "r_dvars.h"
+#include "r_foliage.h"
+#include "rb_draw3d.h"
+#include "r_state_utils.h"
+#include "r_state.h"
+#include "rb_imagefilter.h"
 
 GfxUI3DStack g_ui3dStack;
 Ui3dTextureWindow g_ui3d_windows[6];
@@ -65,26 +72,26 @@ void __cdecl R_UI3D_CheckRenderTarget()
     ScreenPlacement *scrPlace; // [esp+10h] [ebp-Ch]
     signed int i; // [esp+18h] [ebp-4h]
 
-    if ( g_ui3dStatus.useDisplaySize )
+    if (g_ui3dStatus.useDisplaySize)
     {
         g_ui3dStatus.width = vidConfig.displayWidth;
         g_ui3dStatus.height = vidConfig.displayHeight;
     }
-    if ( !image.width && g_ui3dStatus.initialized )
+    if (!gfxRenderTargets[20].width && g_ui3dStatus.initialized)
     {
         R_InitUI3DRenderTarget(
             g_ui3dStatus.width,
             g_ui3dStatus.height,
             g_ui3dStatus.pmemLocation,
             g_ui3dStatus.hasPingPongBuffer);
-        for ( i = 0; i < 6; ++i )
+        for (i = 0; i < 6; ++i)
             R_UI3D_SetupTextureWindow(
                 i,
                 g_ui3d_windows[i].normX,
                 g_ui3d_windows[i].normY,
                 g_ui3d_windows[i].normW,
                 g_ui3d_windows[i].normH);
-        if ( r_glob.isMultiplayer )
+        if (r_glob.isMultiplayer)
         {
             scrPlace = R_UI3D_ScrPlaceFromTextureWindow(0);
             ScrPlace_SetupUI3DForFullscreen(scrPlace, &scrPlaceFull);
@@ -150,7 +157,7 @@ void __cdecl R_UI3D_PerframeInit()
             r_ui3d_x->current.value,
             r_ui3d_y->current.value,
             r_ui3d_w->current.value,
-            *(float *)(LODWORD(r_lightTweakSunDirection.vector[1]) + 24));
+            r_ui3d_h->current.value);
 }
 
 void __cdecl R_InitUI3DStack(GfxUI3DStack *stack)
@@ -334,7 +341,7 @@ void __cdecl RB_UI3D_SetShaderConstants(GfxCmdBufSourceState *source, const GfxU
     if ( rbUI3D )
     {
         for ( i = 0; i < 6; ++i )
-            R_SetCodeConstantFromVec4(source, i + 173, rbUI3D->uvSetup[i]);
+            R_SetCodeConstantFromVec4(source, i + 173, (float*)rbUI3D->uvSetup[i]);
     }
     else
     {
@@ -349,9 +356,9 @@ void __cdecl RB_UI3D_SetShaderConstants(GfxCmdBufSourceState *source, const GfxU
 
 void __cdecl RB_SetUI3DSamplerAndConstants(GfxCmdBufSourceState *cmdBufSrcState, const GfxUI3DBackend *rbUI3D)
 {
-    if ( image.image )
-        R_SetCodeImageTexture(cmdBufSrcState, 0x27u, image.image);
-    if ( rbUI3D )
+    if (gfxRenderTargets[20].image)
+        R_SetCodeImageTexture(cmdBufSrcState, 0x27u, gfxRenderTargets[20].image);
+    if (rbUI3D)
         RB_UI3D_SetShaderConstants(cmdBufSrcState, rbUI3D);
 }
 
@@ -366,7 +373,7 @@ void __cdecl RB_UI3D_RenderToTexture(const void *cmds, const GfxUI3DBackend *rbU
   int v9; // [esp+28h] [ebp-B4h]
   int x; // [esp+2Ch] [ebp-B0h]
   int ui3dTextureWindow; // [esp+70h] [ebp-6Ch] BYREF
-  GfxViewport *viewport; // [esp+74h] [ebp-68h]
+  const GfxViewport *viewport; // [esp+74h] [ebp-68h]
   int i; // [esp+78h] [ebp-64h]
   int wIdx; // [esp+7Ch] [ebp-60h]
   const GfxViewport *vp; // [esp+80h] [ebp-5Ch]
@@ -392,7 +399,7 @@ void __cdecl RB_UI3D_RenderToTexture(const void *cmds, const GfxUI3DBackend *rbU
         g_ui3dStatus.rendering = 1;
         if ( g_ui3dStatus.initialized )
         {
-          PIXBeginNamedEvent(-1, "RB_UI3D_RenderToTexture");
+          //PIXBeginNamedEvent(-1, "RB_UI3D_RenderToTexture");
           R_InitCmdBufSourceState(&gfxCmdBufSourceState, input, 0);
           gfxCmdBufSourceState.input.data = backEndData;
           R_InitLocalCmdBufState(&gfxCmdBufState);
@@ -469,17 +476,17 @@ void __cdecl RB_UI3D_RenderToTexture(const void *cmds, const GfxUI3DBackend *rbU
           }
           R_HW_DisableScissor(gfxCmdBufContext.state->prim.device);
           memcpy(gfxCmdBufState.refSamplerState, gfxCmdBufState.refSamplerState, sizeof(gfxCmdBufState));
-          if ( rbUI3D->blurRadius > 0.0
-            && stru_B50E9D4.image
-            && stru_B50E9D4.width == image.width
-            && stru_B50E9D4.height == image.height )
+          if (rbUI3D->blurRadius > 0.0
+              && gfxRenderTargets[21].image
+              && gfxRenderTargets[21].width == gfxRenderTargets[20].width
+              && gfxRenderTargets[21].height == gfxRenderTargets[20].height)
           {
             RB_GaussianFilterImage(rbUI3D->blurRadius, 0x14u, 0x15u);
             RB_GaussianFilterImage(rbUI3D->blurRadius, 0x15u, 0x14u);
           }
           g_ui3dStatus.rendering = 0;
-          if ( g_DXDeviceThread == GetCurrentThreadId() )
-            D3DPERF_EndEvent();
+          //if ( g_DXDeviceThread == GetCurrentThreadId() )
+          //  D3DPERF_EndEvent();
         }
         else
         {

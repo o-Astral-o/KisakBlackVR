@@ -5,6 +5,42 @@
 #include "r_model_lighting.h"
 #include <universal/com_workercmds.h>
 
+const unsigned __int16 templateIndices_high[24] =
+{
+  0u,
+  1u,
+  5u,
+  1u,
+  6u,
+  5u,
+  1u,
+  2u,
+  6u,
+  2u,
+  7u,
+  6u,
+  2u,
+  3u,
+  7u,
+  3u,
+  8u,
+  7u,
+  3u,
+  4u,
+  8u,
+  4u,
+  9u,
+  8u
+};
+
+const unsigned __int16 templateIndices_low[6] =
+{ 0u, 1u, 2u, 1u, 3u, 2u };
+
+
+float gRopeLOD = 150.0f;
+GfxLightingInfo lightingInfo_0;
+RopeRenderInfo g_ropeInfo;
+
 void __cdecl R_Rope_GenerateVerts_Camera(RopeGenerateVertsCmd *cmd)
 {
     R_Rope_GenerateVerts_Internal(cmd, 0, 9u, 0);
@@ -309,10 +345,10 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                     nrm0.u[1] = -perpDir.v[1];
                     nrm0.u[2] = -perpDir.v[2];
                     nrm0.u[3] = -perpDir.v[3];
-                    tpos0.v[0] = (float)(COERCE_FLOAT(perpDir.u[0] ^ _mask__NegFloat_) * lerpedRadius.v[0]) + basePos.v[0];
-                    tpos0.v[1] = (float)(COERCE_FLOAT(perpDir.u[1] ^ _mask__NegFloat_) * lerpedRadius.v[1]) + basePos.v[1];
-                    tpos0.v[2] = (float)(COERCE_FLOAT(perpDir.u[2] ^ _mask__NegFloat_) * lerpedRadius.v[2]) + basePos.v[2];
-                    tpos0.v[3] = (float)(COERCE_FLOAT(perpDir.u[3] ^ _mask__NegFloat_) * lerpedRadius.v[3]) + basePos.v[3];
+                    tpos0.v[0] = (float)(-(perpDir.v[0]) * lerpedRadius.v[0]) + basePos.v[0];
+                    tpos0.v[1] = (float)(-(perpDir.v[1]) * lerpedRadius.v[1]) + basePos.v[1];
+                    tpos0.v[2] = (float)(-(perpDir.v[2]) * lerpedRadius.v[2]) + basePos.v[2];
+                    tpos0.v[3] = (float)(-(perpDir.v[3]) * lerpedRadius.v[3]) + basePos.v[3];
                     nrm1 = perpDir;
                     tpos1.v[0] = (float)(perpDir.v[0] * lerpedRadius.v[0]) + basePos.v[0];
                     tpos1.v[1] = (float)(perpDir.v[1] * lerpedRadius.v[1]) + basePos.v[1];
@@ -324,10 +360,10 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                     tpos2.v[1] = (float)(perpUpDir.v[1] * lerpedRadius.v[1]) + basePos.v[1];
                     tpos2.v[2] = (float)(perpUpDir.v[2] * lerpedRadius.v[2]) + basePos.v[2];
                     tpos2.v[3] = (float)(perpUpDir.v[3] * lerpedRadius.v[3]) + basePos.v[3];
-                    nrm3.v[0] = COERCE_FLOAT(perpDir.u[0] ^ _mask__NegFloat_) * 0.70710677;
-                    nrm3.v[1] = COERCE_FLOAT(perpDir.u[1] ^ _mask__NegFloat_) * 0.70710677;
-                    nrm3.v[2] = COERCE_FLOAT(perpDir.u[2] ^ _mask__NegFloat_) * 0.70710677;
-                    nrm3.v[3] = COERCE_FLOAT(perpDir.u[3] ^ _mask__NegFloat_) * 0.70710677;
+                    nrm3.v[0] = (-perpDir.v[0]) * 0.70710677;
+                    nrm3.v[1] = (-perpDir.v[1]) * 0.70710677;
+                    nrm3.v[2] = (-perpDir.v[2]) * 0.70710677;
+                    nrm3.v[3] = (-perpDir.v[3]) * 0.70710677;
                     nrm3.v[0] = (float)(perpUpDir.v[0] * 0.70710677) + nrm3.v[0];
                     nrm3.v[1] = (float)(perpUpDir.v[1] * 0.70710677) + nrm3.v[1];
                     nrm3.v[2] = (float)(perpUpDir.v[2] * 0.70710677) + nrm3.v[2];
@@ -393,8 +429,8 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         v31.array[2] = (int)(float)((float)(segDiff.v[2] * 127.0) + 127.5);
                         v31.array[3] = 63;
                         verts->tangent = v31;
-                        if ( (int)((2 * LODWORD(0.2f)) ^ 0x80000000) >> 14 < 0x3FFF )
-                            v30 = (int)((2 * LODWORD(0.2f)) ^ 0x80000000) >> 14;
+                        if ( (int)((2 * int(0.2f)) ^ 0x80000000) >> 14 < 0x3FFF )
+                            v30 = (int)((2 * int(0.2f)) ^ 0x80000000) >> 14;
                         else
                             v30 = 0x3FFF;
                         if ( v30 > -16384 )
@@ -410,7 +446,7 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         else
                             v11 = -16384;
                         verts->texCoord.packed = (v11 & 0x3FFF | (ropeTextureUDist >> 16) & 0xC000)
-                                                                     + ((v12 & 0x3FFF | (SLODWORD(0.2f) >> 16) & 0xC000) << 16);
+                                                                     + ((v12 & 0x3FFF | (int(0.2f) >> 16) & 0xC000) << 16);
                         ++verts;
                         *(_QWORD *)verts->xyz = *(_QWORD *)tpos2.v;
                         LODWORD(verts->xyz[2]) = tpos2.u[2];
@@ -426,8 +462,8 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         v27.array[2] = (int)(float)((float)(segDiff.v[2] * 127.0) + 127.5);
                         v27.array[3] = 63;
                         verts->tangent = v27;
-                        if ( (int)((2 * LODWORD(0.4f)) ^ 0x80000000) >> 14 < 0x3FFF )
-                            v26 = (int)((2 * LODWORD(0.4f)) ^ 0x80000000) >> 14;
+                        if ( (int)((2 * int(0.4f)) ^ 0x80000000) >> 14 < 0x3FFF )
+                            v26 = (int)((2 * int(0.4f)) ^ 0x80000000) >> 14;
                         else
                             v26 = 0x3FFF;
                         if ( v26 > -16384 )
@@ -443,7 +479,7 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         else
                             v9 = -16384;
                         verts->texCoord.packed = (v9 & 0x3FFF | (ropeTextureUDist >> 16) & 0xC000)
-                                                                     + ((v10 & 0x3FFF | (SLODWORD(0.4f) >> 16) & 0xC000) << 16);
+                                                                     + ((v10 & 0x3FFF | (int(0.4f) >> 16) & 0xC000) << 16);
                         ++verts;
                         *(_QWORD *)verts->xyz = *(_QWORD *)tpos4.v;
                         LODWORD(verts->xyz[2]) = tpos4.u[2];
@@ -459,8 +495,8 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         v23.array[2] = (int)(float)((float)(segDiff.v[2] * 127.0) + 127.5);
                         v23.array[3] = 63;
                         verts->tangent = v23;
-                        if ( (int)((2 * LODWORD(0.8f)) ^ 0x80000000) >> 14 < 0x3FFF )
-                            v22 = (int)((2 * LODWORD(0.8f)) ^ 0x80000000) >> 14;
+                        if ( (int)((2 * int(0.8f)) ^ 0x80000000) >> 14 < 0x3FFF )
+                            v22 = (int)((2 * int(0.8f)) ^ 0x80000000) >> 14;
                         else
                             v22 = 0x3FFF;
                         if ( v22 > -16384 )
@@ -476,7 +512,7 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         else
                             v7 = -16384;
                         verts->texCoord.packed = (v7 & 0x3FFF | (ropeTextureUDist >> 16) & 0xC000)
-                                                                     + ((v8 & 0x3FFF | (SLODWORD(0.8f) >> 16) & 0xC000) << 16);
+                                                                     + ((v8 & 0x3FFF | (int(0.8f) >> 16) & 0xC000) << 16);
                         ++verts;
                     }
                     *(_QWORD *)verts->xyz = *(_QWORD *)tpos1.v;
@@ -493,8 +529,8 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                     v19.array[2] = (int)(float)((float)(segDiff.v[2] * 127.0) + 127.5);
                     v19.array[3] = 63;
                     verts->tangent = v19;
-                    if ( (int)((2 * LODWORD(1.0f)) ^ 0x80000000) >> 14 < 0x3FFF )
-                        v18 = (int)((2 * LODWORD(1.0f)) ^ 0x80000000) >> 14;
+                    if ( (int)((2 * int(1.0f)) ^ 0x80000000) >> 14 < 0x3FFF )
+                        v18 = (int)((2 * int(1.0f)) ^ 0x80000000) >> 14;
                     else
                         v18 = 0x3FFF;
                     if ( v18 > -16384 )
@@ -509,8 +545,7 @@ void __cdecl R_Rope_GenerateVerts_Internal(
                         v5 = v17;
                     else
                         v5 = -16384;
-                    verts->texCoord.packed = (v5 & 0x3FFF | (ropeTextureUDist >> 16) & 0xC000)
-                                                                 + ((v6 & 0x3FFF | (SLODWORD(1.0f) >> 16) & 0xC000) << 16);
+                    verts->texCoord.packed = (v5 & 0x3FFF | (ropeTextureUDist >> 16) & 0xC000) + ((v6 & 0x3FFF | (int(1.0f) >> 16) & 0xC000) << 16);
                     ++verts;
                 }
                 baseArgs = (float4 *)R_GetCodeMeshArgs(argOffset);

@@ -1,5 +1,13 @@
 #include "r_xsurface_load_obj.h"
 
+#include <universal/aabbtree.h>
+#include <universal/com_memory.h>
+#include "r_xsurface.h"
+#include "r_dvars.h"
+#include <qcommon/com_bsp_load_obj.h>
+#include <set>
+
+#if 0
 void __cdecl XModelReadSurface(XModel *model, unsigned __int8 **pos, void *(__cdecl *Alloc)(int), XSurface *surface)
 {
     int vertCount; // edx
@@ -911,6 +919,233 @@ void __cdecl XModelReadSurface(XModel *model, unsigned __int8 **pos, void *(__cd
     }
     for ( vertListIter = 0; vertListIter != surface->vertListCount; ++vertListIter )
         XModelReadSurface_BuildCollisionTree(surface, vertListIter, Alloc);
+    Hunk_FreeTempMemory((char *)surfVerts);
+}
+#endif
+
+// aislop
+void XModelReadSurface(
+    XModel *model,
+    unsigned char **pos,
+    void *(*Alloc)(int),
+    XSurface *surface)
+{
+    unsigned int i, j;
+
+    memset(surface->vertInfo.vertCount, 0, sizeof(surface->vertInfo.vertCount));
+
+    surface->flags = 0;
+    surface->tileMode = *(*pos)++;
+    *pos += 2; /* unused */
+
+    surface->vertCount = *(uint16_t *)*pos; *pos += 2;
+    surface->triCount = *(uint16_t *)*pos; *pos += 2;
+
+    iassert(surface->triCount > 0);
+
+    /* ------------------------------------------------------------
+       Read rigid vertex lists
+       ------------------------------------------------------------ */
+    XRigidVertList rigidLists[161];
+    unsigned int vertListCount = 0;
+    unsigned int rigidVertCount = 0;
+
+    for (;;)
+    {
+        iassert(vertListCount < ARRAY_COUNT(rigidLists));
+
+        XRigidVertList *list = &rigidLists[vertListCount];
+
+        list->vertCount = *(uint16_t *)*pos; *pos += 2;
+        if (!list->vertCount)
+            break;
+
+        uint16_t boneIndex = *(uint16_t *)*pos; *pos += 2;
+        list->boneOffset = boneIndex << 6;
+
+        rigidVertCount += list->vertCount;
+        vertListCount++;
+    }
+
+    bool deformed = (rigidVertCount != surface->vertCount);
+    if (deformed)
+    {
+        surface->flags |= XSURFACE_FLAG_DEFORMED | XSURFACE_FLAG_SKINNED;
+        vertListCount = 0;
+    }
+
+    int numBlends = 0;
+
+    if (vertListCount == 1)
+    {
+        int bone = rigidLists[0].boneOffset >> 6;
+        surface->partBits[bone >> 5] |= 0x80000000 >> (bone & 31);
+    }
+    else
+    {
+        surface->flags |= XSURFACE_FLAG_SKINNED;
+        numBlends = *(uint16_t *)*pos; *pos += 2;
+    }
+
+    /* ------------------------------------------------------------
+       Load packed vertex stream
+       ------------------------------------------------------------ */
+    int surfSize = (surface->vertCount << 6) + 4 * numBlends;
+    XVertexBuffer *surfVerts = (XVertexBuffer *)Hunk_AllocateTempMemory(surfSize, "XModelReadSurface");
+
+    XVertexInfo_s *v = &surfVerts->v;
+
+    for (i = 0; i < surface->vertCount; i++, v++)
+    {
+        v->normal[0] = *(float *)*pos; *pos += 4;
+        v->normal[1] = *(float *)*pos; *pos += 4;
+        v->normal[2] = *(float *)*pos; *pos += 4;
+
+        if (r_modelVertColor->current.enabled)
+            Byte4CopyBgraToVertexColor(*pos, v->color);
+        else
+            *(uint32_t *)v->color = 0xFFFFFFFF;
+        *pos += 4;
+
+        v->texCoordX = *(float *)*pos; *pos += 4;
+        v->texCoordY = *(float *)*pos; *pos += 4;
+
+        v->binormal[0] = *(float *)*pos; *pos += 4;
+        v->binormal[1] = *(float *)*pos; *pos += 4;
+        v->binormal[2] = *(float *)*pos; *pos += 4;
+
+        v->tangent[0] = *(float *)*pos; *pos += 4;
+        v->tangent[1] = *(float *)*pos; *pos += 4;
+        v->tangent[2] = *(float *)*pos; *pos += 4;
+
+        float marker = *(float *)*pos; *pos += 4;
+
+        if (marker == 27397.0f)
+        {
+            if (!surface->vertInfo.tensionData)
+            {
+                surface->vertInfo.tensionData =
+                    (float *)Alloc(48 * surface->vertCount);
+                memset(surface->vertInfo.tensionData, 0, 48 * surface->vertCount);
+            }
+
+            for (j = 0; j < 12; j++)
+            {
+                float val = *(float *)*pos; *pos += 4;
+                surface->vertInfo.tensionData[i * 12 + j] =
+                    (val == 0.0f) ? 1.0f : (1.0f / val);
+            }
+        }
+        else if (marker != 27398.0f)
+        {
+            *pos -= 4;
+        }
+
+        if (vertListCount == 1)
+        {
+            iassert(!deformed);
+
+            v->numWeights = 0;
+            v->boneOffset = rigidLists[0].boneOffset;
+
+            v->offset[0] = *(float *)*pos; *pos += 4;
+            v->offset[1] = *(float *)*pos; *pos += 4;
+            v->offset[2] = *(float *)*pos; *pos += 4;
+        }
+        else
+        {
+            v->numWeights = *(*pos)++;
+            iassert(v->numWeights < 4);
+
+            surface->vertInfo.vertCount[v->numWeights]++;
+
+            uint16_t bone = *(uint16_t *)*pos; *pos += 2;
+            v->boneOffset = bone << 6;
+            surface->partBits[bone >> 5] |= 0x80000000 >> (bone & 31);
+
+            v->offset[0] = *(float *)*pos; *pos += 4;
+            v->offset[1] = *(float *)*pos; *pos += 4;
+            v->offset[2] = *(float *)*pos; *pos += 4;
+
+            for (j = 0; j < v->numWeights; j++)
+            {
+                ReadBlend(surface, surface->partBits,
+                    (XBlendLoadInfo *)v, pos);
+                v = (XVertexInfo_s *)((char *)v + 4);
+            }
+        }
+    }
+
+    /* ------------------------------------------------------------
+       Triangle indices
+       ------------------------------------------------------------ */
+    int allocCount = (surface->triCount + 1) & ~1;
+    surface->triIndices =
+        (uint16_t *)Alloc(sizeof(uint16_t) * 3 * allocCount);
+
+    for (i = 0; i < surface->triCount * 3; i++)
+    {
+        surface->triIndices[i] = *(uint16_t *)*pos;
+        *pos += 2;
+
+        iassert(surface->triIndices[i] < surface->vertCount);
+    }
+
+    /* ------------------------------------------------------------
+       Duplicate triangle removal (rigid only)
+       ------------------------------------------------------------ */
+    if (vertListCount == 1)
+    {
+        std::set<uint64_t> triSet;
+        int write = 0;
+
+        for (i = 0; i < surface->triCount * 3; i += 3)
+        {
+            uint16_t a = surface->triIndices[i + 0];
+            uint16_t b = surface->triIndices[i + 1];
+            uint16_t c = surface->triIndices[i + 2];
+
+            uint16_t lo = min(a, min(b, c));
+            uint16_t hi = max(a, max(b, c));
+            uint16_t mid = a ^ b ^ c ^ lo ^ hi;
+
+            uint64_t key =
+                ((uint64_t)lo << 32) |
+                ((uint64_t)mid << 16) |
+                hi;
+
+            if (triSet.insert(key).second)
+            {
+                surface->triIndices[write++] = a;
+                surface->triIndices[write++] = b;
+                surface->triIndices[write++] = c;
+            }
+        }
+
+        surface->triCount = write / 3;
+    }
+
+    /* ------------------------------------------------------------
+       Final surface buffers
+       ------------------------------------------------------------ */
+    surface->vertListCount = vertListCount;
+    surface->vertList =
+        vertListCount ? (XRigidVertList *)Alloc(12 * vertListCount) : NULL;
+
+    memcpy(surface->vertList, rigidLists, 12 * vertListCount);
+
+    surface->verts0 =
+        (GfxPackedVertex *)Alloc(32 * surface->vertCount);
+
+    memset(surface->verts0, 0, 32 * surface->vertCount);
+    model->memUsage += 32 * surface->vertCount;
+
+    XSurfaceTransfer(surfVerts, surface->verts0,
+        surface->verts0, surface->vertCount);
+
+    for (i = 0; i < surface->vertListCount; i++)
+        XModelReadSurface_BuildCollisionTree(surface, i, Alloc);
+
     Hunk_FreeTempMemory((char *)surfVerts);
 }
 

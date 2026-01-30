@@ -235,6 +235,16 @@ struct GfxPackedVertex // sizeof=0x20
         PackedUnitVec tangent;                            // XREF: R_GenerateQuadStampCodeMeshVertsArray(Material *,renderQuad_t *,int,float (* const)[3])+419/w
 };
 
+//https://github.com/Laupetin/OpenAssetTools/blob/a74b04259d00ed3823b9cfe00436f96549535c33/src/Common/Game/T5/T5_Assets.h#L548
+enum XSurfaceFlag
+{
+    XSURFACE_FLAG_QUANTIZED = 0x1,
+    XSURFACE_FLAG_SKINNED = 0x2,
+    XSURFACE_FLAG_CONSTANT_COLOR = 0x4,
+    XSURFACE_FLAG_DEFORMED = 0x80,
+    XSURFACE_FLAG_STREAMED = 0x8000,
+};
+
 struct XSurface // sizeof=0x44
 {
         unsigned __int8 tileMode;

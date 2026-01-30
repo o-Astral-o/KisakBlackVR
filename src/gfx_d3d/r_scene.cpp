@@ -11,6 +11,17 @@
 #include "r_shader_constant_set.h"
 #include <cgame_mp/cg_ents_mp.h>
 #include <ragdoll/ragdoll_controller.h>
+#include "r_drawsurf.h"
+#include "r_light.h"
+#include "r_draw_method.h"
+#include "r_dobj_skin.h"
+#include <xanim/xmodel_utils.h>
+#include "r_xsurface.h"
+#include <win32/win_shared.h>
+#include <win32/win_net.h>
+#include <client/cl_compositing.h>
+#include <EffectsCore/fx_marks.h>
+#include "r_state.h"
 
 GfxScene scene;
 
@@ -335,7 +346,7 @@ void __cdecl R_AddDObjToScene(
                 sceneEnt->obj = obj;
                 sceneEnt->entnum = entnum;
                 scene.dpvs.sceneDObjIndex[entnum] = sceneEntIndexa;
-                sceneEnt->info.pose = pose;
+                sceneEnt->info.pose = (cpose_t*)pose;
                 if ( sceneEnt->cull.state
                     && !Assert_MyHandler(
                                 "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_scene.cpp",
@@ -351,9 +362,9 @@ void __cdecl R_AddDObjToScene(
                 CG_GetPoseOrigin(pose, sceneEnt->placement.base.origin);
                 CG_GetPoseQuat(pose, sceneEnt->placement.base.quat);
                 sceneEnt->placement.scale = scale;
-                sceneEnt->cull.mins[0] = sceneEnt->placement.base.origin[0] + -radiusa);
-                sceneEnt->cull.mins[1] = sceneEnt->placement.base.origin[1] + -radiusa);
-                sceneEnt->cull.mins[2] = sceneEnt->placement.base.origin[2] + -radiusa);
+                sceneEnt->cull.mins[0] = sceneEnt->placement.base.origin[0] + -radiusa;
+                sceneEnt->cull.mins[1] = sceneEnt->placement.base.origin[1] + -radiusa;
+                sceneEnt->cull.mins[2] = sceneEnt->placement.base.origin[2] + -radiusa;
                 sceneEnt->cull.maxs[0] = sceneEnt->placement.base.origin[0] + radiusa;
                 sceneEnt->cull.maxs[1] = sceneEnt->placement.base.origin[1] + radiusa;
                 sceneEnt->cull.maxs[2] = sceneEnt->placement.base.origin[2] + radiusa;
@@ -380,7 +391,7 @@ void __cdecl R_AddDObjToScene(
                 sceneModel->obj = obj;
                 sceneModel->entnum = entnum;
                 scene.dpvs.sceneXModelIndex[entnum] = sceneEntIndex;
-                sceneModel->cachedLightingHandle = Ragdoll_HandleBody(pose);
+                sceneModel->cachedLightingHandle = (unsigned short*)Ragdoll_HandleBody(pose);
                 sceneModel->lightingOriginToleranceSq = lightingOriginToleranceSq;
                 radius = XModelGetRadius(model);
                 CG_GetPoseOrigin(pose, sceneModel->placement.base.origin);
@@ -708,7 +719,6 @@ void __cdecl R_AddSpotLightToScene(const float *org, const float (*axis)[3], flo
                 light->falloff[2] = (float)((float)(radiusa - 0.0) * 0.0) + 0.0;
                 light->falloff[3] = (float)((float)(radiusa - 0.0) * 0.0) + 0.0;
                 SpotLightViewMatrixDir3(
-                    (unsigned int)&savedregs,
                     (const float *)axis,
                     &(*axis)[3],
                     &(*axis)[6],
@@ -726,7 +736,8 @@ void __cdecl R_AddSpotLightToScene(const float *org, const float (*axis)[3], flo
     }
 }
 
-double __cdecl R_GetDefaultNearClip()
+const float MINIMUM_Z_NEAR = 1.0f;
+float __cdecl R_GetDefaultNearClip()
 {
     if ( (float)(1.0 - r_znear->current.value) < 0.0 )
         return r_znear->current.value;
@@ -2275,7 +2286,7 @@ void __cdecl R_GenerateMarkVertsForDynamicModels(const GfxLight *visibleLights, 
     FX_EndGeneratingMarkVertsForEntModels(scene.dpvs.localClientNum);
 }
 
-void    R_SetSkyDynamicIntensity(float a1@<ebp>, const float *viewForward, GfxCmdBufInput *input)
+void    R_SetSkyDynamicIntensity(const float *viewForward, GfxCmdBufInput *input)
 {
     float value; // xmm0_4
     long double v4; // [esp+1Ch] [ebp-8Ch] BYREF

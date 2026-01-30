@@ -13,6 +13,11 @@
 #include <EffectsCore/fx_update.h>
 #include <qcommon/threads.h>
 #include <EffectsCore/fx_draw.h>
+#include "r_dobj_skin.h"
+#include "r_model_pose.h"
+#include "r_model_lighting.h"
+#include <EffectsCore/fx_marks.h>
+#include "r_staticmodelcache.h"
 
 
 volatile unsigned int g_waterLock;
@@ -204,7 +209,7 @@ int __cdecl r_dpvs_dynbrushCallback(jqBatch *batch)
 
     //PIXBeginNamedEvent(-1, "r_dpvs_dynbrush");
     data = jqLockData(batch);
-    R_AddCellDynBrushSurfacesInFrustumCmd((const DpvsPlane **)data);
+    R_AddCellDynBrushSurfacesInFrustumCmd((DpvsPlane**)data);
     jqUnlockData(batch);
     ////if ( GetCurrentThreadId() == g_DXDeviceThread )
     //    //D3DPERF_EndEvent();

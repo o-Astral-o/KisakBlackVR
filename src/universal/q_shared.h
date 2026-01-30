@@ -246,6 +246,10 @@ typedef ull                         uint64;
 #define __PAIR64__(high, low)     (((uint64) (high) << 32) | (uint32)(low))
 #define __PAIR128__(high, low)    (((uint128)(high) << 64) | (uint64)(low))
 
+#define arr_esize(a) (sizeof((a)[0]))
+#define arr_cnt(a) (sizeof(a)/arr_esize(a))
+#define ARRAY_COUNT(a) arr_cnt(a)
+
 // rotate left
 template<class T> T __ROL__(T value, int count)
 {

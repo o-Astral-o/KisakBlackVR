@@ -38,6 +38,26 @@ void __cdecl R_WorldLod_Init();
 void __cdecl R_WorldLod_FrameUpdate(float curTime, float *camPos, int localClientNum);
 // local variable allocation has failed, the output may be wrong!
 void    UpdateChain(int index, const float *inputCamPos, float dt, int localClientNum);
-//double __cdecl math::Abs(const math::Dir3 *_v);
+
+namespace math // KISAKTODO: absolutely retarded
+{
+    struct Float4 // sizeof=0x10
+    {                                       // XREF: .rdata:Float4_Zero/r
+        float x;                            // XREF: math::Abs(math::Dir3 const &)+5A/w
+        float y;                            // XREF: math::Abs(math::Dir3 const &)+50/w
+        float z;                            // XREF: math::Abs(math::Dir3 const &)+46/w
+        float w;                            // XREF: math::Abs(math::Dir3 const &)+3C/w
+    };
+    struct Dir3 // sizeof=0x10
+    {                                       // XREF: math::Mat43/r
+                                            // math::Mat43/r ...
+        math::Float4 v;
+    };
+    struct Position3 // sizeof=0x10
+    {                                       // XREF: math::Mat43/r
+        math::Float4 v;
+    };
+    double Abs(const math::Dir3 *_v);
+}
 
 extern unsigned __int8 *s_lodVals;

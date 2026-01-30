@@ -425,7 +425,7 @@ void __cdecl R_WaterSimulationNotifyExplosion(const float *hitpos);
 void R_WaterSimulationApplyWaveSeed();
 int __cdecl water_rand();
 void __cdecl R_WaterSimulationCmd(const WaterSimulationCmd *rawdata);
-unsigned intLockUpdateMutex();
+unsigned int LockUpdateMutex();
 bool UnlockUpdateMutex();
 void    R_WaterSimulationSkinMesh(const WaterSimulationCmd *cmd);
 float4 *__cdecl ReadValue(float4 *result, unsigned __int8 u, int v, unsigned int bufnum);
