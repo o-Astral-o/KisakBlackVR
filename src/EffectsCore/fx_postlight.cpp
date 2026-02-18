@@ -1,4 +1,7 @@
 #include "fx_postlight.h"
+#include <gfx_d3d/r_drawsurf.h>
+
+FxPostLightInfo g_postLightInfo;
 
 void __cdecl FX_PostLight_GenerateVerts(FxPostLightInfo *postLightInfoAddr, FxSystem *system)
 {
@@ -50,7 +53,7 @@ void __cdecl FX_PostLight_GenerateVerts(FxPostLightInfo *postLightInfoAddr, FxSy
     int POINTS_AROUND; // [esp+10Ch] [ebp-4h]
 
     POINTS_AROUND = 8;
-    POLYGON_RADIUS_GROW = 1.4f142135;
+    POLYGON_RADIUS_GROW = 1.4142135f;
     VERT_COUNT = 16;
     IND_COUNT = 84;
     postLightInfo = postLightInfoAddr;
@@ -119,9 +122,7 @@ void __cdecl FX_PostLight_GenerateVerts(FxPostLightInfo *postLightInfoAddr, FxSy
                 unitOffset_8 = (float)(s * ortho0[2]) + (float)(c * ortho1[2]);
                 v6 = -radius;
                 v7 = radius * POLYGON_RADIUS_GROW;
-                verts->xyz[0] = (float)((float)(COERCE_FLOAT(LODWORD(radius) ^ _mask__NegFloat_) * normalizedDelta[0])
-                                                            + postLight->begin[0])
-                                            + (float)((float)(radius * POLYGON_RADIUS_GROW) * unitOffset);
+                verts->xyz[0] = (float)((float)((-(radius)) * normalizedDelta[0]) + postLight->begin[0]) + (float)((float)(radius * POLYGON_RADIUS_GROW) * unitOffset);
                 verts->xyz[1] = (float)((float)(v6 * normalizedDelta[1]) + postLight->begin[1]) + (float)(v7 * unitOffset_4);
                 verts->xyz[2] = (float)((float)(v6 * normalizedDelta[2]) + postLight->begin[2]) + (float)(v7 * unitOffset_8);
                 end = postLight->end;

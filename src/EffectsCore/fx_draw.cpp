@@ -1,4 +1,31 @@
 #include "fx_draw.h"
+#include "fx_random.h"
+#include "fx_dvars.h"
+#include "fx_update_util.h"
+#include "fx_archive.h"
+#include <gfx_d3d/r_drawsurf.h>
+#include <gfx_d3d/r_dvars.h>
+#include "fx_system.h"
+#include "fx_sprite.h"
+#include "fx_beam.h"
+#include "fx_postlight.h"
+#include <glass/glass_client.h>
+
+void(__cdecl *const s_drawElemHandler[10])(FxDrawState *) =
+{
+  &FX_DrawElem_BillboardSprite,
+  &FX_DrawElem_OrientedSprite,
+  &FX_DrawElem_RotatedSprite,
+  &FX_DrawElem_Tail,
+  &FX_DrawElem_Line,
+  NULL,
+  &FX_DrawElem_Cloud,
+  &FX_DrawElem_Model,
+  &FX_DrawElem_Light,
+  &FX_DrawElem_SpotLight
+};
+
+
 
 int __cdecl FX_RegionForReflect(const FxReflectParams *reflect)
 {
@@ -23,14 +50,14 @@ void __cdecl FX_EvaluateVisAlpha(FxElemPreVisualState *preVisState, FxElemVisual
 {
     float valueLerp; // [esp+34h] [ebp-4h]
 
-    valueLerp = *(float *)&dword_CAEB3C[preVisState->randomSeed];
+    valueLerp = fx_randomTable[preVisState->randomSeed + 23];
     visState->color[3] = FX_InterpolateColor(
-                                                 preVisState->refState,
-                                                 valueLerp,
-                                                 1.0 - valueLerp,
-                                                 preVisState->sampleLerp,
-                                                 preVisState->sampleLerpInv,
-                                                 3);
+        preVisState->refState,
+        valueLerp,
+        1.0 - valueLerp,
+        preVisState->sampleLerp,
+        preVisState->sampleLerpInv,
+        3);
 }
 
 unsigned __int8 __cdecl FX_InterpolateColor(
@@ -66,7 +93,7 @@ void __cdecl FX_SetupVisualState(
     preVisState->sampleLerpInv = 1.0 - preVisState->sampleLerp;
     preVisState->elemDef = elemDef;
     preVisState->effect = effect;
-    preVisState->refState = &elemDef->visSamples[v5];
+    preVisState->refState = &elemDef->visSamples[(int)v5];
     preVisState->randomSeed = randomSeed;
     preVisState->distanceFade = 255;
 }
@@ -76,22 +103,22 @@ void __cdecl FX_EvaluateSize(FxElemPreVisualState *preVisState, FxElemVisualStat
     float v2; // [esp+Ch] [ebp-14h]
     float v3; // [esp+1Ch] [ebp-4h]
 
-    v3 = *(float *)&dword_CAEB48[preVisState->randomSeed];
+    v3 = fx_randomTable[preVisState->randomSeed + 26];
     visState->size[0] = (float)((float)((float)(v3 * preVisState->refState->amplitude.size[0])
-                                                                        + preVisState->refState->base.size[0])
-                                                        * preVisState->sampleLerpInv)
-                                        + (float)((float)((float)(v3 * preVisState->refState[1].amplitude.size[0])
-                                                                        + preVisState->refState[1].base.size[0])
-                                                        * preVisState->sampleLerp);
-    if ( (preVisState->elemDef->flags & 0x10000000) != 0 )
+        + preVisState->refState->base.size[0])
+        * preVisState->sampleLerpInv)
+        + (float)((float)((float)(v3 * preVisState->refState[1].amplitude.size[0])
+            + preVisState->refState[1].base.size[0])
+            * preVisState->sampleLerp);
+    if ((preVisState->elemDef->flags & 0x10000000) != 0)
     {
-        v2 = *(float *)&dword_CAEB4C[preVisState->randomSeed];
+        v2 = fx_randomTable[preVisState->randomSeed + 27];
         visState->size[1] = (float)((float)((float)(v2 * preVisState->refState->amplitude.size[1])
-                                                                            + preVisState->refState->base.size[1])
-                                                            * preVisState->sampleLerpInv)
-                                            + (float)((float)((float)(v2 * preVisState->refState[1].amplitude.size[1])
-                                                                            + preVisState->refState[1].base.size[1])
-                                                            * preVisState->sampleLerp);
+            + preVisState->refState->base.size[1])
+            * preVisState->sampleLerpInv)
+            + (float)((float)((float)(v2 * preVisState->refState[1].amplitude.size[1])
+                + preVisState->refState[1].base.size[1])
+                * preVisState->sampleLerp);
     }
     else
     {
@@ -100,10 +127,10 @@ void __cdecl FX_EvaluateSize(FxElemPreVisualState *preVisState, FxElemVisualStat
 }
 
 void __cdecl FX_EvaluateVisualState(
-                int localClientNum,
-                FxElemPreVisualState *preVisState,
-                float msecLifeSpan,
-                FxElemVisualState *visState)
+    int localClientNum,
+    FxElemPreVisualState *preVisState,
+    float msecLifeSpan,
+    FxElemVisualState *visState)
 {
     float t; // [esp+A8h] [ebp-50h]
     float exposure; // [esp+B0h] [ebp-48h]
@@ -123,27 +150,27 @@ void __cdecl FX_EvaluateVisualState(
     float sampleLerp; // [esp+F0h] [ebp-8h]
 
     elemDef = preVisState->elemDef;
-    if ( !elemDef
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp", 257, 0, "%s", "elemDef") )
+    if (!elemDef
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp", 257, 0, "%s", "elemDef"))
     {
         __debugbreak();
     }
     refState = preVisState->refState;
     randomSeed = preVisState->randomSeed;
-    valueLerp = *(float *)&dword_CAEB3C[randomSeed];
+    valueLerp = fx_randomTable[randomSeed + 23];
     sampleLerp = preVisState->sampleLerp;
     sampleLerpInv = preVisState->sampleLerpInv;
     visState->color[0] = FX_InterpolateColor(
-                                                 refState,
-                                                 valueLerp,
-                                                 1.0 - valueLerp,
-                                                 preVisState->sampleLerp,
-                                                 sampleLerpInv,
-                                                 0);
+        refState,
+        valueLerp,
+        1.0 - valueLerp,
+        preVisState->sampleLerp,
+        sampleLerpInv,
+        0);
     visState->color[1] = FX_InterpolateColor(refState, valueLerp, 1.0 - valueLerp, sampleLerp, sampleLerpInv, 1);
     visState->color[2] = FX_InterpolateColor(refState, valueLerp, 1.0 - valueLerp, sampleLerp, sampleLerpInv, 2);
     visState->color[3] = FX_InterpolateColor(refState, valueLerp, 1.0 - valueLerp, sampleLerp, sampleLerpInv, 3);
-    if ( elemDef->lightingFrac )
+    if (elemDef->lightingFrac)
     {
         tintColor = (float)visState->color[2];
         tintColor_4 = (float)visState->color[1];
@@ -159,15 +186,15 @@ void __cdecl FX_EvaluateVisualState(
         visState->color[1] = (int)tintColor_4a;
         visState->color[0] = (int)tintColor_8a;
     }
-    visState->rotationTotal = (float)(*(float *)&dword_CAEB40[randomSeed] * elemDef->initialRotation.amplitude)
-                                                    + elemDef->initialRotation.base;
+    visState->rotationTotal = (float)(fx_randomTable[randomSeed + 24] * elemDef->initialRotation.amplitude)
+        + elemDef->initialRotation.base;
     visState->rotationTotal = FX_IntegrateRotationFromZero(
-                                                            refState,
-                                                            randomSeed,
-                                                            FXRAND_ROTATION_DELTA,
-                                                            sampleLerp,
-                                                            msecLifeSpan)
-                                                    + visState->rotationTotal;
+        refState,
+        randomSeed,
+        FXRAND_ROTATION_DELTA,
+        sampleLerp,
+        msecLifeSpan)
+        + visState->rotationTotal;
     visState->color[3] = (unsigned __int16)(LOWORD(preVisState->distanceFade) * visState->color[3]) >> 8;
 }
 
@@ -270,14 +297,14 @@ unsigned int __cdecl FX_CullElementForDraw_FrustumPlaneCount(const FxDrawState *
 
 void __cdecl FX_DrawElem_BillboardSprite_NoCull(FxDrawState *draw)
 {
-    float *v1; // edx
-    float *origin; // edx
+    const float *v1; // edx
+    const float *origin; // edx
     const FxCamera *v3; // edx
     unsigned int v4; // [esp+0h] [ebp-98h]
     const FxCamera *camera; // [esp+28h] [ebp-70h]
     const FxCamera *v6; // [esp+64h] [ebp-34h]
-    float *v7; // [esp+6Ch] [ebp-2Ch]
-    float *v8; // [esp+70h] [ebp-28h]
+    const float *v7; // [esp+6Ch] [ebp-2Ch]
+    const float *v8; // [esp+70h] [ebp-28h]
     float normal[3]; // [esp+74h] [ebp-24h] BYREF
     float tangent[3]; // [esp+80h] [ebp-18h] BYREF
     float binormal[3]; // [esp+8Ch] [ebp-Ch] BYREF
@@ -335,13 +362,22 @@ void __cdecl FX_DrawElem_BillboardSprite_NoCull(FxDrawState *draw)
     else
     {
         v8 = draw->camera->axis[0];
-        LODWORD(normal[0]) = *(unsigned int *)v8 ^ _mask__NegFloat_;
-        LODWORD(normal[1]) = *((unsigned int *)v8 + 1) ^ _mask__NegFloat_;
-        LODWORD(normal[2]) = *((unsigned int *)v8 + 2) ^ _mask__NegFloat_;
+        //LODWORD(normal[0]) = *(unsigned int *)v8 ^ _mask__NegFloat_;
+        //LODWORD(normal[1]) = *((unsigned int *)v8 + 1) ^ _mask__NegFloat_;
+        //LODWORD(normal[2]) = *((unsigned int *)v8 + 2) ^ _mask__NegFloat_;
+        normal[0] = -draw->camera->axis[0][0];
+        normal[1] = -draw->camera->axis[0][1];
+        normal[2] = -draw->camera->axis[0][2];
+
         v7 = draw->camera->axis[1];
-        LODWORD(tangent[0]) = *(unsigned int *)v7 ^ _mask__NegFloat_;
-        LODWORD(tangent[1]) = *((unsigned int *)v7 + 1) ^ _mask__NegFloat_;
-        LODWORD(tangent[2]) = *((unsigned int *)v7 + 2) ^ _mask__NegFloat_;
+
+        //LODWORD(tangent[0]) = *(unsigned int *)v7 ^ _mask__NegFloat_;
+        //LODWORD(tangent[1]) = *((unsigned int *)v7 + 1) ^ _mask__NegFloat_;
+        //LODWORD(tangent[2]) = *((unsigned int *)v7 + 2) ^ _mask__NegFloat_;
+        tangent[0] = -draw->camera->axis[1][0];
+        tangent[0] = -draw->camera->axis[1][1];
+        tangent[0] = -draw->camera->axis[1][2];
+
         v1 = draw->camera->origin;
         binormal[0] = v1[34];
         binormal[1] = v1[35];
@@ -422,7 +458,7 @@ void __cdecl FX_GenSpriteVerts(FxDrawState *draw, const float *tangent, const fl
     GfxPackedVertex *baseVerts; // [esp+2C0h] [ebp-4h]
 
     system = draw->system;
-    sprite = &system->sprite;
+    sprite = (FxSpriteInfo*)&system->sprite;
     visuals.anonymous = FX_GetElemVisuals(draw->elemDef, draw->randomSeed).anonymous;
     if ( !visuals.anonymous
         && !Assert_MyHandler(
@@ -480,12 +516,9 @@ void __cdecl FX_GenSpriteVerts(FxDrawState *draw, const float *tangent, const fl
         rotatedTangent[0] = (float)(cosRot * *tangent) + (float)(sinRot * *binormal);
         rotatedTangent[1] = (float)(cosRot * tangent[1]) + (float)(sinRot * binormal[1]);
         rotatedTangent[2] = (float)(cosRot * tangent[2]) + (float)(sinRot * binormal[2]);
-        rotatedBinormal[0] = (float)(sinRot * *tangent)
-                                             + (float)(COERCE_FLOAT(LODWORD(cosRot) ^ _mask__NegFloat_) * *binormal);
-        rotatedBinormal[1] = (float)(sinRot * tangent[1])
-                                             + (float)(COERCE_FLOAT(LODWORD(cosRot) ^ _mask__NegFloat_) * binormal[1]);
-        rotatedBinormal[2] = (float)(sinRot * tangent[2])
-                                             + (float)(COERCE_FLOAT(LODWORD(cosRot) ^ _mask__NegFloat_) * binormal[2]);
+        rotatedBinormal[0] = (float)(sinRot * *tangent) +   (float)((-(cosRot)) * *binormal);
+        rotatedBinormal[1] = (float)(sinRot * tangent[1]) + (float)((-(cosRot)) * binormal[1]);
+        rotatedBinormal[2] = (float)(sinRot * tangent[2]) + (float)((-(cosRot)) * binormal[2]);
         v38 = draw->visState.size[0];
         left[0] = v38 * rotatedTangent[0];
         left[1] = v38 * rotatedTangent[1];
@@ -590,24 +623,24 @@ void __cdecl FX_GenSpriteVerts(FxDrawState *draw, const float *tangent, const fl
         verts->xyz[1] = (float)(v32 * left[1]) + verts->xyz[1];
         verts->xyz[2] = (float)(v32 * left[2]) + verts->xyz[2];
         verts->color.packed = *(unsigned int *)draw->visState.color;
-        if ( (int)((2 * COERCE_INT((float)(v58 * bottomSideSoffset) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
-            v31 = (int)((2 * COERCE_INT((float)(v58 * bottomSideSoffset) + s0)) ^ 0x80000000) >> 14;
+
+        if ( (int)((2 * int((float)(v58 * bottomSideSoffset) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
+            v31 = (int)((2 * int((float)(v58 * bottomSideSoffset) + s0)) ^ 0x80000000) >> 14;
         else
             v31 = 0x3FFF;
         if ( v31 > -16384 )
             v11 = v31;
         else
             v11 = -16384;
-        if ( (int)((2 * COERCE_INT(*(float *)&t0 + dt)) ^ 0x80000000) >> 14 < 0x3FFF )
-            v30 = (int)((2 * COERCE_INT(*(float *)&t0 + dt)) ^ 0x80000000) >> 14;
+        if ( (int)((2 * int(*(float *)&t0 + dt)) ^ 0x80000000) >> 14 < 0x3FFF )
+            v30 = (int)((2 * int(*(float *)&t0 + dt)) ^ 0x80000000) >> 14;
         else
             v30 = 0x3FFF;
         if ( v30 > -16384 )
             v10 = v30;
         else
             v10 = -16384;
-        verts->texCoord.packed = (v10 & 0x3FFF | (COERCE_INT(*(float *)&t0 + dt) >> 16) & 0xC000)
-                                                     + ((v11 & 0x3FFF | (COERCE_INT((float)(v58 * bottomSideSoffset) + s0) >> 16) & 0xC000) << 16);
+        verts->texCoord.packed = (v10 & 0x3FFF | (int(*(float *)&t0 + dt) >> 16) & 0xC000) + ((v11 & 0x3FFF | (int((float)(v58 * bottomSideSoffset) + s0) >> 16) & 0xC000) << 16);
         v29 = verts + 1;
         verts[1].xyz[0] = leftSide[0] - up[0];
         v29->xyz[1] = leftSide[1] - up[1];
@@ -619,8 +652,8 @@ void __cdecl FX_GenSpriteVerts(FxDrawState *draw, const float *tangent, const fl
         v26->xyz[1] = (float)(v27 * left[1]) + v28->xyz[1];
         v26->xyz[2] = (float)(v27 * left[2]) + v28->xyz[2];
         verts[1].color.packed = *(unsigned int *)draw->visState.color;
-        if ( (int)((2 * COERCE_INT((float)(v58 * topSideSoffset) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
-            v25 = (int)((2 * COERCE_INT((float)(v58 * topSideSoffset) + s0)) ^ 0x80000000) >> 14;
+        if ( (int)((2 * int((float)(v58 * topSideSoffset) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
+            v25 = (int)((2 * int((float)(v58 * topSideSoffset) + s0)) ^ 0x80000000) >> 14;
         else
             v25 = 0x3FFF;
         if ( v25 > -16384 )
@@ -636,20 +669,21 @@ void __cdecl FX_GenSpriteVerts(FxDrawState *draw, const float *tangent, const fl
         else
             v8 = -16384;
         verts[1].texCoord.packed = (v8 & 0x3FFF | (t0 >> 16) & 0xC000)
-                                                         + ((v9 & 0x3FFF | (COERCE_INT((float)(v58 * topSideSoffset) + s0) >> 16) & 0xC000) << 16);
+                                                         + ((v9 & 0x3FFF | (int((float)(v58 * topSideSoffset) + s0) >> 16) & 0xC000) << 16);
         v23 = verts + 2;
         verts[2].xyz[0] = rightSide[0] - up[0];
         v23->xyz[1] = rightSide[1] - up[1];
         v23->xyz[2] = rightSide[2] - up[2];
         v20 = verts + 2;
-        LODWORD(v21) = COERCE_UNSIGNED_INT(1.0 - topSideWidth) ^ _mask__NegFloat_;
+        //LODWORD(v21) = COERCE_UNSIGNED_INT(1.0 - topSideWidth) ^ _mask__NegFloat_;
+        v21 = -(1.0 - topSideWidth);
         v22 = verts + 2;
         verts[2].xyz[0] = (float)(v21 * left[0]) + verts[2].xyz[0];
         v20->xyz[1] = (float)(v21 * left[1]) + v22->xyz[1];
         v20->xyz[2] = (float)(v21 * left[2]) + v22->xyz[2];
         verts[2].color.packed = *(unsigned int *)draw->visState.color;
-        if ( (int)((2 * COERCE_INT((float)((float)(1.0 - topSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
-            v19 = (int)((2 * COERCE_INT((float)((float)(1.0 - topSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14;
+        if ( (int)((2 * int((float)((float)(1.0 - topSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
+            v19 = (int)((2 * int((float)((float)(1.0 - topSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14;
         else
             v19 = 0x3FFF;
         if ( v19 > -16384 )
@@ -664,38 +698,37 @@ void __cdecl FX_GenSpriteVerts(FxDrawState *draw, const float *tangent, const fl
             v6 = v18;
         else
             v6 = -16384;
-        verts[2].texCoord.packed = (v6 & 0x3FFF | (t0 >> 16) & 0xC000)
-                                                         + ((v7 & 0x3FFF
-                                                             | (COERCE_INT((float)((float)(1.0 - topSideSoffset) * v58) + s0) >> 16) & 0xC000) << 16);
+        verts[2].texCoord.packed = (v6 & 0x3FFF | (t0 >> 16) & 0xC000) + ((v7 & 0x3FFF | (int((float)((float)(1.0 - topSideSoffset) * v58) + s0) >> 16) & 0xC000) << 16);
         v17 = verts + 3;
         verts[3].xyz[0] = rightSide[0] + up[0];
         v17->xyz[1] = rightSide[1] + up[1];
         v17->xyz[2] = rightSide[2] + up[2];
         v14 = verts + 3;
-        LODWORD(v15) = COERCE_UNSIGNED_INT(1.0 - bottomSideWidth) ^ _mask__NegFloat_;
+        //LODWORD(v15) = COERCE_UNSIGNED_INT(1.0 - bottomSideWidth) ^ _mask__NegFloat_;
+        v15 = -(1.0 - bottomSideWidth);
         v16 = verts + 3;
         verts[3].xyz[0] = (float)(v15 * left[0]) + verts[3].xyz[0];
         v14->xyz[1] = (float)(v15 * left[1]) + v16->xyz[1];
         v14->xyz[2] = (float)(v15 * left[2]) + v16->xyz[2];
-        if ( (int)((2 * COERCE_INT((float)((float)(1.0 - bottomSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
-            v13 = (int)((2 * COERCE_INT((float)((float)(1.0 - bottomSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14;
+        if ( (int)((2 * int((float)((float)(1.0 - bottomSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14 < 0x3FFF )
+            v13 = (int)((2 * int((float)((float)(1.0 - bottomSideSoffset) * v58) + s0)) ^ 0x80000000) >> 14;
         else
             v13 = 0x3FFF;
         if ( v13 > -16384 )
             v5 = v13;
         else
             v5 = -16384;
-        if ( (int)((2 * COERCE_INT(*(float *)&t0 + dt)) ^ 0x80000000) >> 14 < 0x3FFF )
-            v12 = (int)((2 * COERCE_INT(*(float *)&t0 + dt)) ^ 0x80000000) >> 14;
+        if ( (int)((2 * int(*(float *)&t0 + dt)) ^ 0x80000000) >> 14 < 0x3FFF )
+            v12 = (int)((2 * int(*(float *)&t0 + dt)) ^ 0x80000000) >> 14;
         else
             v12 = 0x3FFF;
         if ( v12 > -16384 )
             v4 = v12;
         else
             v4 = -16384;
-        verts[3].texCoord.packed = (v4 & 0x3FFF | (COERCE_INT(*(float *)&t0 + dt) >> 16) & 0xC000)
+        verts[3].texCoord.packed = (v4 & 0x3FFF | (int(*(float *)&t0 + dt) >> 16) & 0xC000)
                                                          + ((v5 & 0x3FFF
-                                                             | (COERCE_INT((float)((float)(1.0 - bottomSideSoffset) * v58) + s0) >> 16) & 0xC000) << 16);
+                                                             | (int((float)((float)(1.0 - bottomSideSoffset) * v58) + s0) >> 16) & 0xC000) << 16);
     }
 }
 
@@ -901,11 +934,11 @@ char __cdecl FX_CullCylinder(
         if ( (float)((float)((float)((float)(camera->frustum[planeIndex][0] * *posWorld0)
                                                              + (float)(camera->frustum[planeIndex][1] * posWorld0[1]))
                                              + (float)(camera->frustum[planeIndex][2] * posWorld0[2]))
-                             - camera->frustum[planeIndex][3]) <= COERCE_FLOAT(LODWORD(radius) ^ _mask__NegFloat_)
+                             - camera->frustum[planeIndex][3]) <= (-(radius))
             && (float)((float)((float)((float)(camera->frustum[planeIndex][0] * *posWorld1)
                                                              + (float)(camera->frustum[planeIndex][1] * posWorld1[1]))
                                              + (float)(camera->frustum[planeIndex][2] * posWorld1[2]))
-                             - camera->frustum[planeIndex][3]) <= COERCE_FLOAT(LODWORD(radius) ^ _mask__NegFloat_) )
+                             - camera->frustum[planeIndex][3]) <= (-(radius)) )
         {
             return 1;
         }
@@ -1004,12 +1037,12 @@ void __cdecl FX_DrawElem_RotatedSprite_NoCull(FxDrawState *draw)
     float angles[3]; // [esp+2Ch] [ebp-30h] BYREF
     float axis[3][3]; // [esp+38h] [ebp-24h] BYREF
 
-    angles[0] = (float)(*(float *)&dword_CAEB10[draw->randomSeed] * draw->elemDef->spawnAngles[0].amplitude)
-                        + draw->elemDef->spawnAngles[0].base;
-    angles[1] = (float)(*(float *)&dword_CAEB14[draw->randomSeed] * draw->elemDef->spawnAngles[1].amplitude)
-                        + draw->elemDef->spawnAngles[1].base;
-    angles[2] = (float)(*(float *)&dword_CAEB18[draw->randomSeed] * draw->elemDef->spawnAngles[2].amplitude)
-                        + draw->elemDef->spawnAngles[2].base;
+    angles[0] = (float)(fx_randomTable[draw->randomSeed + 12] * draw->elemDef->spawnAngles[0].amplitude)
+        + draw->elemDef->spawnAngles[0].base;
+    angles[1] = (float)(fx_randomTable[draw->randomSeed + 13] * draw->elemDef->spawnAngles[1].amplitude)
+        + draw->elemDef->spawnAngles[1].base;
+    angles[2] = (float)(fx_randomTable[draw->randomSeed + 14] * draw->elemDef->spawnAngles[2].amplitude)
+        + draw->elemDef->spawnAngles[2].base;
     FX_AnglesToOrientedAxis(angles, &draw->orient, axis);
     *(_QWORD *)&draw->orient.axis[0][0] = *(_QWORD *)&axis[0][0];
     draw->orient.axis[0][2] = axis[0][2];
@@ -1024,9 +1057,9 @@ void __cdecl FX_DrawElem_RotatedSprite_NoCull(FxDrawState *draw)
 
 void __cdecl FX_DrawElem_Cloud(FxDrawState *draw)
 {
-    float v1; // [esp+20h] [ebp-10h]
+    float v2; // [esp+20h] [ebp-10h]
 
-    if ( fx_drawClouds->current.enabled )
+    if (fx_drawClouds->current.enabled)
     {
         FX_GetVelocityAtTime(
             draw->elemDef,
@@ -1037,14 +1070,14 @@ void __cdecl FX_DrawElem_Cloud(FxDrawState *draw)
             draw->elem->baseVel,
             draw->velDirWorld);
         Vec3Normalize(draw->velDirWorld);
-        v1 = dword_CAEB50[draw->preVisState.randomSeed];
-        draw->visState.scale = (float)((float)((float)(v1 * draw->preVisState.refState->amplitude.scale)
-                                                                                 + draw->preVisState.refState->base.scale)
-                                                                 * draw->preVisState.sampleLerpInv)
-                                                 + (float)((float)((float)(v1 * draw->preVisState.refState[1].amplitude.scale)
-                                                                                 + draw->preVisState.refState[1].base.scale)
-                                                                 * draw->preVisState.sampleLerp);
-        if ( draw->visState.scale != 0.0 && !FX_CullElementForDraw_Cloud(draw) )
+        v2 = fx_randomTable[draw->preVisState.randomSeed + 28];
+        draw->visState.scale = (float)((float)((float)(v2 * draw->preVisState.refState->amplitude.scale)
+            + draw->preVisState.refState->base.scale)
+            * draw->preVisState.sampleLerpInv)
+            + (float)((float)((float)(v2 * draw->preVisState.refState[1].amplitude.scale)
+                + draw->preVisState.refState[1].base.scale)
+                * draw->preVisState.sampleLerp);
+        if (draw->visState.scale != 0.0 && !FX_CullElementForDraw_Cloud(draw))
             FX_DrawElem_Cloud_Main(draw);
     }
 }
@@ -1070,7 +1103,7 @@ void __cdecl FX_DrawElem_Cloud_Main(FxDrawState *draw)
     if ( v1 )
     {
         offset = ((1024 - v1 + 1) * LOWORD(fx_randomTable[draw->randomSeed + 29])) >> 16;
-        _InterlockedExchangeAdd(&draw->system->gfxCloudCount, 1u);
+        _InterlockedExchangeAdd((volatile unsigned long long* )&draw->system->gfxCloudCount, 1u);
         visuals.anonymous = FX_GetElemVisuals(draw->elemDef, draw->randomSeed).anonymous;
         if ( !visuals.anonymous
             && !Assert_MyHandler(
@@ -1148,41 +1181,41 @@ bool __cdecl FX_CullElementForDraw_Cloud(const FxDrawState *draw)
 
 void __cdecl FX_DrawElem_Model(FxDrawState *draw)
 {
-    float v1; // [esp+18h] [ebp-30h]
+    float v2; // [esp+18h] [ebp-30h]
     FxElemVisuals visuals; // [esp+20h] [ebp-28h]
     GfxScaledPlacement placement; // [esp+28h] [ebp-20h] BYREF
 
-    v1 = dword_CAEB50[draw->preVisState.randomSeed];
-    draw->visState.scale = (float)((float)((float)(v1 * draw->preVisState.refState->amplitude.scale)
-                                                                             + draw->preVisState.refState->base.scale)
-                                                             * draw->preVisState.sampleLerpInv)
-                                             + (float)((float)((float)(v1 * draw->preVisState.refState[1].amplitude.scale)
-                                                                             + draw->preVisState.refState[1].base.scale)
-                                                             * draw->preVisState.sampleLerp);
-    if ( draw->visState.scale != 0.0 )
+    v2 = fx_randomTable[draw->preVisState.randomSeed + 28];
+    draw->visState.scale = (float)((float)((float)(v2 * draw->preVisState.refState->amplitude.scale)
+        + draw->preVisState.refState->base.scale)
+        * draw->preVisState.sampleLerpInv)
+        + (float)((float)((float)(v2 * draw->preVisState.refState[1].amplitude.scale)
+            + draw->preVisState.refState[1].base.scale)
+            * draw->preVisState.sampleLerp);
+    if (draw->visState.scale != 0.0)
     {
         FX_SetPlacement(draw, &placement);
-        if ( draw->elemDef->elemType != 7
+        if (draw->elemDef->elemType != 7
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp",
-                        1260,
-                        0,
-                        "%s\n\t(draw->elemDef->elemType) = %i",
-                        "(draw->elemDef->elemType == FX_ELEM_TYPE_MODEL)",
-                        draw->elemDef->elemType) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp",
+                1260,
+                0,
+                "%s\n\t(draw->elemDef->elemType) = %i",
+                "(draw->elemDef->elemType == FX_ELEM_TYPE_MODEL)",
+                draw->elemDef->elemType))
         {
             __debugbreak();
         }
-        if ( (draw->elemDef->flags & 0x8000000) != 0 )
+        if ((draw->elemDef->flags & 0x8000000) != 0)
             FX_SetPlacementFromPhysics(draw, &placement.base);
         visuals.anonymous = FX_GetElemVisuals(draw->elemDef, draw->randomSeed).anonymous;
-        if ( !visuals.anonymous
+        if (!visuals.anonymous
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp",
-                        1265,
-                        0,
-                        "%s",
-                        "visuals.model") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp",
+                1265,
+                0,
+                "%s",
+                "visuals.model"))
         {
             __debugbreak();
         }
@@ -1227,7 +1260,7 @@ void __cdecl FX_DrawElem_Light_NoCull(FxDrawState *draw)
     R_AddOmniLightToScene(
         draw->posWorld,
         dummyAxis,
-        COERCE_INT(draw->visState.size[0]),
+        int(draw->visState.size[0]),
         (float)draw->visState.color[2] * 0.0039215689,
         (float)draw->visState.color[1] * 0.0039215689,
         (float)draw->visState.color[0] * 0.0039215689);
@@ -1349,6 +1382,83 @@ void __cdecl FX_DrawNonSpriteEffect(
                 FX_DrawElement(system, elemDef, elem, &drawState);
             elemHandle = *(_WORD *)&elem[1].defIndex;
         }
+    }
+}
+
+void __cdecl FX_DrawElement_Setup_1_(
+    FxSystem *system,
+    FxDrawState *draw,
+    int elemMsecBegin,
+    int elemSequence,
+    const float *elemOrigin,
+    float elemWindInterp,
+    float *outRealNormTime)
+{
+    float opacity; // [esp+4h] [ebp-8Ch]
+    float axis[3][3]; // [esp+5Ch] [ebp-34h] BYREF
+    int msecElapsed; // [esp+80h] [ebp-10h]
+    float normTime; // [esp+84h] [ebp-Ch]
+    float msecElapsedFloat; // [esp+88h] [ebp-8h]
+    unsigned int scaledAlpha; // [esp+8Ch] [ebp-4h]
+
+    draw->randomSeed = (elemMsecBegin + (unsigned int)draw->effect->randomSeed + 296 * elemSequence) % 0x1DF;
+    draw->msecLifeSpan = (float)FX_GetElemLifeSpanMsec(draw->randomSeed, elemWindInterp, draw->elemDef);
+    msecElapsed = draw->msecDraw - elemMsecBegin;
+    msecElapsedFloat = (float)msecElapsed;
+    normTime = (float)msecElapsed / draw->msecLifeSpan;
+    if (outRealNormTime)
+        *outRealNormTime = normTime;
+    if (msecElapsed < (int)draw->msecLifeSpan)
+    {
+        if (msecElapsed > (int)draw->msecLifeSpan
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp",
+                1438,
+                0,
+                "msecElapsed <= static_cast< int >( draw->msecLifeSpan )\n\t%i, %i",
+                msecElapsed,
+                (int)draw->msecLifeSpan))
+        {
+            __debugbreak();
+        }
+        draw->msecElapsed = msecElapsedFloat;
+        draw->normTimeUpdateEnd = normTime;
+    }
+    else
+    {
+        draw->msecElapsed = draw->msecLifeSpan - 0.0099999998;
+        draw->normTimeUpdateEnd = 1.0f;
+    }
+    FX_GetOrientation(
+        draw->elemDef,
+        &draw->effect->frameAtSpawn,
+        &draw->effect->frameNow,
+        draw->randomSeed,
+        &draw->orient);
+    FX_OrientationPosToWorldPos(&draw->orient, elemOrigin, draw->posWorld);
+    if ((0x800000 & draw->elemDef->flags) != 0)
+    {
+        MatrixMultiply(draw->rotationAxis, draw->orient.axis, axis);
+        *(_QWORD *)&draw->orient.axis[0][0] = *(_QWORD *)&axis[0][0];
+        draw->orient.axis[0][2] = axis[0][2];
+        draw->orient.axis[1][0] = axis[1][0];
+        draw->orient.axis[1][1] = axis[1][1];
+        draw->orient.axis[1][2] = axis[1][2];
+        draw->orient.axis[2][0] = axis[2][0];
+        draw->orient.axis[2][1] = axis[2][1];
+        draw->orient.axis[2][2] = axis[2][2];
+    }
+    FX_SetupVisualState(draw->elemDef, draw->effect, draw->randomSeed, draw->normTimeUpdateEnd, &draw->preVisState);
+    FX_EvaluateSize(&draw->preVisState, &draw->visState);
+    if ((draw->elemDef->flags & 0x1000) != 0)
+        FX_EvaluateVisAlpha(&draw->preVisState, &draw->visState);
+    draw->camera = &draw->system->camera;
+    FX_EvaluateDistanceFade(draw);
+    if ((draw->elemDef->flags & 0x1000) != 0)
+    {
+        scaledAlpha = (draw->preVisState.distanceFade * draw->visState.color[3]) >> 8;
+        opacity = (double)scaledAlpha * 0.0039215689;
+        FX_AddVisBlocker(system, draw->posWorld, draw->visState.size[0], opacity);
     }
 }
 
@@ -2054,12 +2164,9 @@ void __cdecl FX_GenTrail_VertsForSegment(const FxTrailSegmentDrawState *segmentD
     left = (float)(cosRot * segmentDrawState->basis[0][0]) + (float)(sinRot * segmentDrawState->basis[1][0]);
     left_4 = (float)(cosRot * segmentDrawState->basis[0][1]) + (float)(sinRot * segmentDrawState->basis[1][1]);
     left_8 = (float)(cosRot * segmentDrawState->basis[0][2]) + (float)(sinRot * segmentDrawState->basis[1][2]);
-    up = (float)(sinRot * segmentDrawState->basis[0][0])
-         + (float)(COERCE_FLOAT(LODWORD(cosRot) ^ _mask__NegFloat_) * segmentDrawState->basis[1][0]);
-    up_4 = (float)(sinRot * segmentDrawState->basis[0][1])
-             + (float)(COERCE_FLOAT(LODWORD(cosRot) ^ _mask__NegFloat_) * segmentDrawState->basis[1][1]);
-    up_8 = (float)(sinRot * segmentDrawState->basis[0][2])
-             + (float)(COERCE_FLOAT(LODWORD(cosRot) ^ _mask__NegFloat_) * segmentDrawState->basis[1][2]);
+    up = (float)(sinRot * segmentDrawState->basis[0][0]) +   (float)((-(cosRot)) * segmentDrawState->basis[1][0]);
+    up_4 = (float)(sinRot * segmentDrawState->basis[0][1]) + (float)((-(cosRot)) * segmentDrawState->basis[1][1]);
+    up_8 = (float)(sinRot * segmentDrawState->basis[0][2]) + (float)((-(cosRot)) * segmentDrawState->basis[1][2]);
     uCoord = segmentDrawState->uCoord;
     vertCount = trailDef->vertCount;
     for ( vertIter = 0; vertIter != vertCount; ++vertIter )
@@ -2216,7 +2323,7 @@ void __cdecl FX_FillGenerateVertsCmd(int localClientNum, FxGenerateVertsCmd *cmd
 
     if ( !cmd && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_draw.cpp", 2362, 0, "%s", "cmd") )
         __debugbreak();
-    cmd->system = FX_GetSystem(localClientNum);
+    cmd->system = &FX_GetSystem(localClientNum)->system;
     cmd->beamInfo = FX_Beam_GetInfo();
     cmd->postLightInfo = FX_PostLight_GetInfo();
     cmd->spriteInfo = FX_SpriteGetInfo();
@@ -2231,49 +2338,49 @@ void __cdecl FX_FillGenerateVertsCmd(int localClientNum, FxGenerateVertsCmd *cmd
     AxisCopy(cgameGlob->refdef.viewaxis, cmd->viewaxis);
 }
 
-FxPool<FxTrailElem,FxTrailElem> *__cdecl FX_PoolFromHandle_Generic<FxTrailElem,FxTrailElem,2048>(
-                FxPool<FxTrailElem,FxTrailElem> *poolArray,
-                unsigned __int16 handle)
-{
-    const char *v2; // eax
-
-    if ( handle >= 0x4000u || handle % 8u )
-    {
-        v2 = va("%p %i size=%d limit=%d handlescale=%d", poolArray, handle, 32, 2048, 4);
-        if ( !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
-                        465,
-                        0,
-                        "%s\n\t%s",
-                        "handle < LIMIT * sizeof( CONTAINER_TYPE ) / ITEM_TYPE::HANDLE_SCALE && handle % (sizeof( CONTAINER_TYPE ) / "
-                        "ITEM_TYPE::HANDLE_SCALE) == 0",
-                        v2) )
-            __debugbreak();
-    }
-    return (FxPool<FxTrailElem,FxTrailElem> *)((char *)poolArray + 4 * handle);
-}
-
-FxPool<FxTrail,FxTrail> *__cdecl FX_PoolFromHandle_Generic<FxTrail,FxTrail,128>(
-                FxPool<FxTrail,FxTrail> *poolArray,
-                unsigned __int16 handle)
-{
-    const char *v2; // eax
-
-    if ( handle >= 0x100u || handle % 2u )
-    {
-        v2 = va("%p %i size=%d limit=%d handlescale=%d", poolArray, handle, 8, 128, 4);
-        if ( !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
-                        465,
-                        0,
-                        "%s\n\t%s",
-                        "handle < LIMIT * sizeof( CONTAINER_TYPE ) / ITEM_TYPE::HANDLE_SCALE && handle % (sizeof( CONTAINER_TYPE ) / "
-                        "ITEM_TYPE::HANDLE_SCALE) == 0",
-                        v2) )
-            __debugbreak();
-    }
-    return (FxPool<FxTrail,FxTrail> *)((char *)poolArray + 4 * handle);
-}
+//FxPool<FxTrailElem,FxTrailElem> *__cdecl FX_PoolFromHandle_Generic<FxTrailElem,FxTrailElem,2048>(
+//                FxPool<FxTrailElem,FxTrailElem> *poolArray,
+//                unsigned __int16 handle)
+//{
+//    const char *v2; // eax
+//
+//    if ( handle >= 0x4000u || handle % 8u )
+//    {
+//        v2 = va("%p %i size=%d limit=%d handlescale=%d", poolArray, handle, 32, 2048, 4);
+//        if ( !Assert_MyHandler(
+//                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
+//                        465,
+//                        0,
+//                        "%s\n\t%s",
+//                        "handle < LIMIT * sizeof( CONTAINER_TYPE ) / ITEM_TYPE::HANDLE_SCALE && handle % (sizeof( CONTAINER_TYPE ) / "
+//                        "ITEM_TYPE::HANDLE_SCALE) == 0",
+//                        v2) )
+//            __debugbreak();
+//    }
+//    return (FxPool<FxTrailElem,FxTrailElem> *)((char *)poolArray + 4 * handle);
+//}
+//
+//FxPool<FxTrail,FxTrail> *__cdecl FX_PoolFromHandle_Generic<FxTrail,FxTrail,128>(
+//                FxPool<FxTrail,FxTrail> *poolArray,
+//                unsigned __int16 handle)
+//{
+//    const char *v2; // eax
+//
+//    if ( handle >= 0x100u || handle % 2u )
+//    {
+//        v2 = va("%p %i size=%d limit=%d handlescale=%d", poolArray, handle, 8, 128, 4);
+//        if ( !Assert_MyHandler(
+//                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
+//                        465,
+//                        0,
+//                        "%s\n\t%s",
+//                        "handle < LIMIT * sizeof( CONTAINER_TYPE ) / ITEM_TYPE::HANDLE_SCALE && handle % (sizeof( CONTAINER_TYPE ) / "
+//                        "ITEM_TYPE::HANDLE_SCALE) == 0",
+//                        v2) )
+//            __debugbreak();
+//    }
+//    return (FxPool<FxTrail,FxTrail> *)((char *)poolArray + 4 * handle);
+//}
 
 void __cdecl FX_EvaluateDistanceFade(FxDrawState *draw)
 {

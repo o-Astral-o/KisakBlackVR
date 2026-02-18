@@ -1,4 +1,6 @@
 #include "fx_sort.h"
+#include "fx_archive.h"
+#include "fx_update_util.h"
 
 void __cdecl FX_SortEffects(FxSystem *system)
 {
@@ -52,7 +54,7 @@ void __cdecl FX_SortEffects(FxSystem *system)
 
 void __cdecl FX_WaitBeginIteratingOverEffects_Exclusive(FxSystem *system)
 {
-    volatile int *p_iteratorCount; // [esp+0h] [ebp-4h]
+    volatile unsigned int *p_iteratorCount; // [esp+0h] [ebp-4h]
 
     if ( system->isArchiving
         && !Assert_MyHandler(
@@ -75,20 +77,31 @@ void __cdecl FX_WaitBeginIteratingOverEffects_Exclusive(FxSystem *system)
 
 bool __cdecl FX_FirstEffectIsFurther(FxEffect *firstEffect, FxEffect *secondEffect)
 {
-    if ( (unsigned __int8)*(unsigned int *)&firstEffect->boltAndSortOrder.0 == 255
-        && (unsigned __int8)*(unsigned int *)&secondEffect->boltAndSortOrder.0 == 255 )
+    //if ( (unsigned __int8)*(unsigned int *)&firstEffect->boltAndSortOrder.0 == 255
+    //    && (unsigned __int8)*(unsigned int *)&secondEffect->boltAndSortOrder.0 == 255 )
+    //{
+    //    return 0;
+    //}
+    //if ( (unsigned __int8)*(unsigned int *)&firstEffect->boltAndSortOrder.0 == 255 )
+    //    firstEffect->boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((unsigned __int8)FX_CalcRunnerParentSortOrder(firstEffect)
+    //                                                                                                                                            | *(unsigned int *)&firstEffect->boltAndSortOrder.0
+    //                                                                                                                                            & 0xFFFFFF00);
+    //if ( (unsigned __int8)*(unsigned int *)&secondEffect->boltAndSortOrder.0 == 255 )
+    //    secondEffect->boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((unsigned __int8)FX_CalcRunnerParentSortOrder(secondEffect)
+    //                                                                                                                                             | *(unsigned int *)&secondEffect->boltAndSortOrder.0
+    //                                                                                                                                             & 0xFFFFFF00);
+    //return (unsigned __int8)*(unsigned int *)&firstEffect->boltAndSortOrder.0 < (unsigned int)(unsigned __int8)*(unsigned int *)&secondEffect->boltAndSortOrder.0;
+
+    if (firstEffect->boltAndSortOrder.sortOrder == 255
+        && secondEffect->boltAndSortOrder.sortOrder == 255)
     {
         return 0;
     }
-    if ( (unsigned __int8)*(unsigned int *)&firstEffect->boltAndSortOrder.0 == 255 )
-        firstEffect->boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((unsigned __int8)FX_CalcRunnerParentSortOrder(firstEffect)
-                                                                                                                                                | *(unsigned int *)&firstEffect->boltAndSortOrder.0
-                                                                                                                                                & 0xFFFFFF00);
-    if ( (unsigned __int8)*(unsigned int *)&secondEffect->boltAndSortOrder.0 == 255 )
-        secondEffect->boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((unsigned __int8)FX_CalcRunnerParentSortOrder(secondEffect)
-                                                                                                                                                 | *(unsigned int *)&secondEffect->boltAndSortOrder.0
-                                                                                                                                                 & 0xFFFFFF00);
-    return (unsigned __int8)*(unsigned int *)&firstEffect->boltAndSortOrder.0 < (unsigned int)(unsigned __int8)*(unsigned int *)&secondEffect->boltAndSortOrder.0;
+    if (firstEffect->boltAndSortOrder.sortOrder == 255)
+        firstEffect->boltAndSortOrder.sortOrder = FX_CalcRunnerParentSortOrder(firstEffect);
+    if (secondEffect->boltAndSortOrder.sortOrder == 255)
+        secondEffect->boltAndSortOrder.sortOrder = FX_CalcRunnerParentSortOrder(secondEffect);
+    return firstEffect->boltAndSortOrder.sortOrder < secondEffect->boltAndSortOrder.sortOrder;
 }
 
 int __cdecl FX_CalcRunnerParentSortOrder(FxEffect *effect)
@@ -326,24 +339,24 @@ bool __cdecl FX_ExistingElemSortsBeforeNewElem(
     return distToCamSq > sortElemNew->distToCamSq;
 }
 
-int __cdecl FX_PoolToHandle_Generic<FxElem,FxElemContainer,2048>(
-                FxPool<FxElem,FxElemContainer> *poolArray,
-                FxElem *item_slim)
-{
-    const char *v2; // eax
-
-    if ( !item_slim || item_slim < (FxElem *)poolArray || item_slim >= (FxElem *)&poolArray[2048] )
-    {
-        v2 = va("%p %p", poolArray, item_slim);
-        if ( !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
-                        457,
-                        0,
-                        "%s\n\t%s",
-                        "item && item >= &poolArray[0].item && item < &poolArray[LIMIT].item",
-                        v2) )
-            __debugbreak();
-    }
-    return ((char *)item_slim - (char *)poolArray) / 4;
-}
+//int __cdecl FX_PoolToHandle_Generic<FxElem,FxElemContainer,2048>(
+//                FxPool<FxElem,FxElemContainer> *poolArray,
+//                FxElem *item_slim)
+//{
+//    const char *v2; // eax
+//
+//    if ( !item_slim || item_slim < (FxElem *)poolArray || item_slim >= (FxElem *)&poolArray[2048] )
+//    {
+//        v2 = va("%p %p", poolArray, item_slim);
+//        if ( !Assert_MyHandler(
+//                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
+//                        457,
+//                        0,
+//                        "%s\n\t%s",
+//                        "item && item >= &poolArray[0].item && item < &poolArray[LIMIT].item",
+//                        v2) )
+//            __debugbreak();
+//    }
+//    return ((char *)item_slim - (char *)poolArray) / 4;
+//}
 

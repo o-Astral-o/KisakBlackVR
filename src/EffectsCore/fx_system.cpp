@@ -1,4 +1,25 @@
 #include "fx_system.h"
+#include "fx_random.h"
+#include "fx_marks.h"
+#include "fx_dvars.h"
+#include "fx_unique_handle.h"
+#include "fx_load_obj.h"
+#include "fx_archive.h"
+#include "fx_draw.h"
+#include "fx_update.h"
+#include "fx_update_util.h"
+#include <DynEntity/DynEntity_load_obj.h>
+#include "fx_sort.h"
+#include <gfx_d3d/r_warn.h>
+
+#include <algorithm>
+#include "fx_wind.h"
+#include <cgame/cg_sound.h>
+#include <sound/snd_public_async.h>
+
+FxSystemContainer *fx_systemPool;
+FxSystemBuffers *fx_systemBufferPool;
+int fx_serverVisClient;
 
 int __cdecl FX_AllocateClientMemory_SizeRequired(int maxLocalClients)
 {
@@ -352,7 +373,7 @@ void __cdecl FX_EffectNoLongerReferenced(FxSystem *system, FxEffectContainer *re
         {
             __debugbreak();
         }
-        FX_DelRefToEffect(system, &owner->effect, stackCount + 1);
+        FX_DelRefToEffect(system, (FxEffectContainer*)&owner->effect, stackCount + 1);
     }
     system->needsGarbageCollection = 1;
 }
@@ -408,7 +429,8 @@ void __cdecl FX_RunPrioritySorting(FxSystem *system)
     }
     if ( v11 )
     {
-        std::_Sort<unsigned int *,int>(v9, &v9[v11], (4 * v11) >> 2);
+        //std::_Sort<unsigned int *,int>(v9, &v9[v11], (4 * v11) >> 2);
+        std::sort(&v9[0], &v9[v11], (4 * v11) >> 2);
         if ( v11 > 2 )
             v1 = 2;
         else
@@ -522,6 +544,138 @@ void __cdecl FX_RunGarbageCollection_FreeSpotLight(FxSystem *system, unsigned __
     }
 }
 
+FxPool<FxTrail, FxTrail> *__cdecl FX_AllocPool_Generic_FxTrail_FxTrail_(
+    FxEffect *remoteEffect,
+    unsigned __int32 *firstFreeIndex,
+    FxPool<FxTrail, FxTrail> *pool,
+    volatile unsigned int *activeCount)
+{
+    unsigned __int32 itemIndex; // [esp+8Ch] [ebp-8h]
+    unsigned __int32 nextFree; // [esp+90h] [ebp-4h]
+
+    do
+    {
+        itemIndex = *firstFreeIndex;
+        if (*firstFreeIndex == -1)
+            return 0;
+        nextFree = pool[itemIndex].nextFree;
+    } while (_InterlockedCompareExchange((volatile unsigned __int32 *)firstFreeIndex, nextFree, itemIndex) != itemIndex);
+    if (itemIndex != -1
+        && itemIndex >= 0x80
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            247,
+            0,
+            "%s",
+            "itemIndex == -1 || (itemIndex >= 0 && itemIndex < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+    if (nextFree != -1
+        && nextFree >= 0x80
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            248,
+            0,
+            "%s",
+            "nextFree == -1 || (nextFree >= 0 && nextFree < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+    _InterlockedExchangeAdd(activeCount, 1u);
+    return &pool[itemIndex];
+}
+
+FxPool<FxTrailElem, FxTrailElem> *__cdecl FX_AllocPool_Generic_FxTrailElem_FxTrailElem_(
+    FxEffect *remoteEffect,
+    unsigned __int32 *firstFreeIndex,
+    FxPool<FxTrailElem, FxTrailElem> *pool,
+    volatile unsigned int *activeCount)
+{
+    unsigned __int32 itemIndex; // [esp+8Ch] [ebp-8h]
+    unsigned __int32 nextFree; // [esp+90h] [ebp-4h]
+
+    do
+    {
+        itemIndex = *firstFreeIndex;
+        if (*firstFreeIndex == -1)
+            return 0;
+        nextFree = pool[itemIndex].nextFree;
+    } while (_InterlockedCompareExchange((volatile unsigned __int32 *)firstFreeIndex, nextFree, itemIndex) != itemIndex);
+    if (itemIndex != -1
+        && itemIndex >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            247,
+            0,
+            "%s",
+            "itemIndex == -1 || (itemIndex >= 0 && itemIndex < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+    if (nextFree != -1
+        && nextFree >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            248,
+            0,
+            "%s",
+            "nextFree == -1 || (nextFree >= 0 && nextFree < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+    _InterlockedExchangeAdd(activeCount, 1u);
+    return &pool[itemIndex];
+}
+
+void __cdecl FX_FreePool_Generic_FxTrail_FxTrail_(
+    FxEffect *remoteEffect,
+    FxTrail *item_slim,
+    unsigned __int32 *firstFreeIndex,
+    FxPool<FxTrail, FxTrail> *pool)
+{
+    unsigned __int32 nextFree; // [esp+8Ch] [ebp-8h]
+    unsigned __int32 freedIndex; // [esp+90h] [ebp-4h]
+
+    freedIndex = ((char *)item_slim - (char *)pool) >> 3;
+    if (freedIndex >= 0x80
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            300,
+            0,
+            "%s",
+            "freedIndex >= 0 && freedIndex < ITEM_TYPE::POOL_SIZE"))
+    {
+        __debugbreak();
+    }
+    do
+    {
+        nextFree = *firstFreeIndex;
+        if (*firstFreeIndex == freedIndex
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                309,
+                0,
+                "%s",
+                "nextFree != freedIndex"))
+        {
+            __debugbreak();
+        }
+        *(_DWORD *)&item_slim->nextTrailHandle = nextFree;
+    } while (_InterlockedCompareExchange((volatile unsigned __int32 *)firstFreeIndex, freedIndex, nextFree) != nextFree);
+    if (nextFree != -1
+        && nextFree >= 0x80
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            316,
+            0,
+            "%s",
+            "nextFree == -1 || (nextFree >= 0 && nextFree < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+}
+
 void __cdecl FX_RunGarbageCollection_FreeTrails(FxSystem *system, FxEffect *effect)
 {
     unsigned __int16 nextTrailHandle; // [esp+98h] [ebp-Ch]
@@ -579,7 +733,7 @@ void __cdecl FX_RunGarbageCollection_FreeTrails(FxSystem *system, FxEffect *effe
 
 void __cdecl FX_RemoveStaleAttachedEffects(FxSystem *system)
 {
-    volatile signed __int32 *p_status; // [esp+4h] [ebp-2Ch]
+    volatile unsigned __int32 *p_status; // [esp+4h] [ebp-2Ch]
     signed __int32 v2; // [esp+8h] [ebp-28h]
     int status; // [esp+1Ch] [ebp-14h]
     FxEffectContainer *effect; // [esp+20h] [ebp-10h]
@@ -609,7 +763,7 @@ void __cdecl FX_RemoveStaleAttachedEffects(FxSystem *system)
 
 char __cdecl FX_EffectAffectsGameplay(const FxEffectDef *remoteEffectDef)
 {
-    FxElemDef *elemDefs; // [esp+4h] [ebp-24h]
+    const FxElemDef *elemDefs; // [esp+4h] [ebp-24h]
     bool result; // [esp+Fh] [ebp-19h]
     const FxElemDef *elemDef; // [esp+10h] [ebp-18h]
     unsigned int elemDefCount; // [esp+14h] [ebp-14h]
@@ -851,8 +1005,8 @@ unsigned int __cdecl FX_SpawnEffect(
                 const orientation_t *boneOffset)
 {
     unsigned int v12; // edx
-    volatile int *p_firstNewEffect; // [esp+14h] [ebp-7Ch]
-    volatile signed __int32 *p_status; // [esp+1Ch] [ebp-74h]
+    volatile unsigned int *p_firstNewEffect; // [esp+14h] [ebp-7Ch]
+    volatile unsigned __int32 *p_status; // [esp+1Ch] [ebp-74h]
     signed __int32 v15; // [esp+20h] [ebp-70h]
     unsigned int uniqueHandle; // [esp+54h] [ebp-3Ch]
     FxEffectContainer *ownerEffect; // [esp+68h] [ebp-28h]
@@ -870,302 +1024,333 @@ unsigned int __cdecl FX_SpawnEffect(
             //D3DPERF_EndEvent();
         return 0;
     }
-    else
+
+    iassert(system);
+    iassert(!system->isArchiving);
+    iassert(remoteDef);
+    iassert(origin);
+    iassert(axis);
+
+    if ( fx_cull_effect_spawn->current.enabled
+        && (!system->extraCameraPre.isValid || FX_CullEffectForSpawn(&system->extraCameraPre, remoteDef, origin))
+        && FX_CullEffectForSpawn(&system->cameraPrev, remoteDef, origin) )
     {
-        if ( !system
-            && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp", 1506, 0, "%s", "system") )
+        //if ( GetCurrentThreadId() == g_DXDeviceThread )
+            //D3DPERF_EndEvent();
+        return 0;
+    }
+
+    isSpotLightEffect = FX_IsSpotLightEffect(system, remoteDef);
+    if ( !isSpotLightEffect || FX_CanAllocSpotLightEffect(system) )
+    {
+        allocIndex = _InterlockedExchangeAdd(&system->shared->firstFreeEffect, 1u);
+        while ( allocIndex - system->shared->firstActiveEffect >= 1024 )
         {
-            __debugbreak();
-        }
-        if ( system->isArchiving
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                        1507,
-                        0,
-                        "%s",
-                        "!system->isArchiving") )
-        {
-            __debugbreak();
-        }
-        if ( !remoteDef
-            && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp", 1508, 0, "%s", "remoteDef") )
-        {
-            __debugbreak();
-        }
-        if ( !origin
-            && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp", 1509, 0, "%s", "origin") )
-        {
-            __debugbreak();
-        }
-        if ( !axis
-            && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp", 1510, 0, "%s", "axis") )
-        {
-            __debugbreak();
-        }
-        if ( fx_cull_effect_spawn->current.enabled
-            && (!system->extraCameraPre.isValid || FX_CullEffectForSpawn(&system->extraCameraPre, remoteDef, origin))
-            && FX_CullEffectForSpawn(&system->cameraPrev, remoteDef, origin) )
-        {
-            //if ( GetCurrentThreadId() == g_DXDeviceThread )
-                //D3DPERF_EndEvent();
-            return 0;
-        }
-        else
-        {
-            isSpotLightEffect = FX_IsSpotLightEffect(system, remoteDef);
-            if ( !isSpotLightEffect || FX_CanAllocSpotLightEffect(system) )
+            if ( _InterlockedCompareExchange(&system->shared->firstFreeEffect, allocIndex, allocIndex + 1) == allocIndex + 1 )
             {
-                allocIndex = _InterlockedExchangeAdd(&system->shared->firstFreeEffect, 1u);
-                while ( allocIndex - system->shared->firstActiveEffect >= 1024 )
-                {
-                    if ( _InterlockedCompareExchange(&system->shared->firstFreeEffect, allocIndex, allocIndex + 1) == allocIndex + 1 )
-                    {
-                        FX_SetWarningPriority(system, remoteDef->efPriority);
-                        //if ( GetCurrentThreadId() == g_DXDeviceThread )
-                            //D3DPERF_EndEvent();
-                        return 0;
-                    }
-                }
-                if ( allocIndex - system->shared->firstActiveEffect >= 1014 )
-                    FX_SetWarningPriority(system, remoteDef->efPriority);
-                effectHandle = system->shared->allEffectHandles[allocIndex & 0x3FF];
-                remoteEffect = FX_EffectFromHandle(system, effectHandle);
-                for ( remoteEffect->atomics.status = 0;
-                            _InterlockedExchangeAdd(&remoteEffect->atomics.status, 0x20000000u) >= 0x20000000;
-                            _InterlockedExchangeAdd(&remoteEffect->atomics.status, 0xE0000000) )
-                {
-                    ;
-                }
-                UniqueHandleRelease(system, &remoteEffect->effect);
-                UniqueHandleAssignHandle(system, remoteEffect, remoteEffect);
-                FX_AddRefToEffect(system, &remoteEffect->effect);
-                remoteEffect->effect.def = remoteDef;
-                if ( remoteDef->msecLoopingLife )
-                {
-                    p_status = &remoteEffect->atomics.status;
-                    do
-                        v15 = *p_status;
-                    while ( _InterlockedCompareExchange(p_status, v15 | 0x10000, v15) != v15 );
-                    FX_AddRefToEffect(system, &remoteEffect->effect);
-                }
-                for ( elemClass = 0; elemClass < 3; ++elemClass )
-                    remoteEffect->effect.firstElemHandle[elemClass] = -1;
-                remoteEffect->effect.firstSortedElemHandle = -1;
-                if ( (remoteDef->flags & 1) != 0 )
-                {
-                    FX_CalculatePackedLighting(&remoteEffect->effect, origin);
-                }
-                else
-                {
-                    remoteEffect->effect.lightR = 255;
-                    remoteEffect->effect.lightG = 255;
-                    remoteEffect->effect.lightB = 255;
-                }
-                memcpy(&remoteEffect->effect.boneOffset, boneOffset, sizeof(remoteEffect->effect.boneOffset));
-                remoteEffect->effect.msecBegin = msecBegin;
-                remoteEffect->effect.msecLastUpdate = remoteEffect->effect.msecBegin;
-                remoteEffect->effect.distanceTraveled = 0.0f;
-                FX_SetEffectRandomSeed(&remoteEffect->effect, remoteDef);
-                remoteEffect->effect.firstTrailHandle = -1;
-                FX_SpawnEffect_AllocTrails(system, &remoteEffect->effect, &remoteEffect->effect);
-                if ( isSpotLightEffect )
-                    FX_SpawnEffect_AllocSpotLightEffect(system, &remoteEffect->effect, remoteEffect);
-                if ( (remoteEffect->atomics.status & 0x7FE0000) != 0
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                1642,
-                                0,
-                                "%s\n\t(FX_GetAtomics(effect)->status) = %i",
-                                "((FX_GetAtomics(effect)->status & FX_STATUS_OWNED_EFFECTS_MASK) == 0)",
-                                remoteEffect->atomics.status) )
-                {
-                    __debugbreak();
-                }
-                if ( owner == 0xFFFF )
-                {
-                    remoteEffect->effect.owner = effectHandle;
-                }
-                else
-                {
-                    remoteEffect->effect.owner = owner;
-                    ownerEffect = FX_EffectFromHandle(system, owner);
-                    FX_AddRefToEffect(system, &ownerEffect->effect);
-                    if ( remoteEffect == ownerEffect
-                        && !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                    1658,
-                                    0,
-                                    "%s",
-                                    "remoteEffect != ownerEffect") )
-                    {
-                        __debugbreak();
-                    }
-                    oldStatusValue = _InterlockedExchangeAdd(&ownerEffect->atomics.status, 0x20000u);
-                    if ( (oldStatusValue & 0xF801FFFF) != ((oldStatusValue + 0x20000) & 0xF801FFFF)
-                        && !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                    1663,
-                                    0,
-                                    "%s\n\t(oldStatusValue) = %i",
-                                    "((oldStatusValue & ~FX_STATUS_OWNED_EFFECTS_MASK) == ((oldStatusValue + (1 << FX_STATUS_OWNED_EFFECTS_"
-                                    "SHIFT)) & ~FX_STATUS_OWNED_EFFECTS_MASK))",
-                                    oldStatusValue) )
-                    {
-                        __debugbreak();
-                    }
-                    if ( (ownerEffect->atomics.status & 0x7FE0000) == 0
-                        && !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                    1665,
-                                    0,
-                                    "%s\n\t(FX_GetAtomics(ownerEffect)->status) = %i",
-                                    "((FX_GetAtomics(ownerEffect)->status & FX_STATUS_OWNED_EFFECTS_MASK) > 0)",
-                                    ownerEffect->atomics.status) )
-                    {
-                        __debugbreak();
-                    }
-                }
-                remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((boneIndex & 0x1FF) << 20)
-                                                                                                                                                                        | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                        & 0xE00FFFFF);
-                *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 &= ~0x80000u;
-                if ( dobjHandle != 2047 || boneIndex == 511 )
-                {
-                    if ( markEntnum == 1023 )
-                    {
-                        if ( dobjHandle == 2047 )
-                            v12 = *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 & 0x9FFFFFFF;
-                        else
-                            v12 = *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 & 0x9FFFFFFF | 0x20000000;
-                        remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)v12;
-                        if ( boneIndex < 0
-                            && !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                        1699,
-                                        0,
-                                        "%s",
-                                        "boneIndex >= 0") )
-                        {
-                            __debugbreak();
-                        }
-                        remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((dobjHandle & 0x7FF) << 8)
-                                                                                                                                                                                | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                                & 0xFFF800FF);
-                        remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((FX_GetBoltTemporalBits(
-                                                                                                                                                                                         system->localClientNum,
-                                                                                                                                                                                         dobjHandle) << 19)
-                                                                                                                                                                                | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                                & 0xFFF7FFFF);
-                    }
-                    else
-                    {
-                        if ( boneIndex != 511
-                            && !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                        1683,
-                                        0,
-                                        "%s",
-                                        "boneIndex == FX_BONE_INDEX_NONE") )
-                        {
-                            __debugbreak();
-                        }
-                        if ( markEntnum >= 0x7FF
-                            && !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                        1684,
-                                        0,
-                                        "markEntnum doesn't index FX_DOBJ_HANDLE_NONE\n\t%i not in [0, %i)",
-                                        markEntnum,
-                                        2047) )
-                        {
-                            __debugbreak();
-                        }
-                        remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((markEntnum & 0x7FF) << 8)
-                                                                                                                                                                                | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                                & 0xFFF800FF);
-                        *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 |= 0x60000000u;
-                        if ( ((*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 >> 8) & 0x7FF) != markEntnum
-                            && !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                        1687,
-                                        0,
-                                        "%s\n\t(markEntnum) = %i",
-                                        "(effect->boltAndSortOrder.dobjHandle == markEntnum)",
-                                        markEntnum) )
-                        {
-                            __debugbreak();
-                        }
-                    }
-                }
-                else
-                {
-                    remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((boneIndex & 0x1FFFFF) << 8)
-                                                                                                                                                                            | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                            & 0xE00000FF);
-                    remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                            & 0x9FFFFFFF
-                                                                                                                                                                            | 0x40000000);
-                    if ( ((*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 >> 8) & 0x1FFFFF) != boneIndex
-                        && !Assert_MyHandler(
-                                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                    1678,
-                                    0,
-                                    "effect->boltAndSortOrder.absDynEntId == static_cast<uint>( boneIndex )\n\t%i, %i",
-                                    (*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 >> 8) & 0x1FFFFF,
-                                    boneIndex) )
-                    {
-                        __debugbreak();
-                    }
-                }
-                remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((unsigned __int8)runnerSortOrder
-                                                                                                                                                                        | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
-                                                                                                                                                                        & 0xFFFFFF00);
-                if ( (unsigned __int8)*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 != runnerSortOrder
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                                1707,
-                                0,
-                                "effect->boltAndSortOrder.sortOrder == static_cast<uint>( runnerSortOrder )\n\t%i, %i",
-                                (unsigned __int8)*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0,
-                                runnerSortOrder) )
-                {
-                    __debugbreak();
-                }
-                remoteEffect->effect.frameAtSpawn.origin[0] = *origin;
-                remoteEffect->effect.frameAtSpawn.origin[1] = origin[1];
-                remoteEffect->effect.frameAtSpawn.origin[2] = origin[2];
-                AxisToQuat(axis, remoteEffect->effect.frameAtSpawn.quat);
-                memcpy(
-                    &remoteEffect->effect.framePrev,
-                    &remoteEffect->effect.frameAtSpawn,
-                    sizeof(remoteEffect->effect.framePrev));
-                memcpy(
-                    &remoteEffect->effect.frameNow,
-                    &remoteEffect->effect.frameAtSpawn,
-                    sizeof(remoteEffect->effect.frameNow));
-                p_firstNewEffect = &system->shared->firstNewEffect;
-                do
-                {
-                    while ( *p_firstNewEffect != allocIndex )
-                        ;
-                }
-                while ( _InterlockedCompareExchange(p_firstNewEffect, allocIndex + 1, allocIndex) != allocIndex );
-                FX_StartNewEffect(system, &remoteEffect->effect, remoteEffect);
-                _InterlockedExchangeAdd(&remoteEffect->atomics.status, 0xE0000000);
-                uniqueHandle = remoteEffect->effect.uniqueHandle;
-                //if ( GetCurrentThreadId() == g_DXDeviceThread )
-                    //D3DPERF_EndEvent();
-                return uniqueHandle;
-            }
-            else
-            {
-                R_WarnOncePerFrame(R_WARN_SPOT_LIGHT_LIMIT);
+                FX_SetWarningPriority(system, remoteDef->efPriority);
                 //if ( GetCurrentThreadId() == g_DXDeviceThread )
                     //D3DPERF_EndEvent();
                 return 0;
             }
         }
+        if ( allocIndex - system->shared->firstActiveEffect >= 1014 )
+            FX_SetWarningPriority(system, remoteDef->efPriority);
+        effectHandle = system->shared->allEffectHandles[allocIndex & 0x3FF];
+        remoteEffect = FX_EffectFromHandle(system, effectHandle);
+        for ( remoteEffect->atomics.status = 0;
+                    _InterlockedExchangeAdd(&remoteEffect->atomics.status, 0x20000000u) >= 0x20000000;
+                    _InterlockedExchangeAdd(&remoteEffect->atomics.status, 0xE0000000) )
+        {
+            ;
+        }
+        UniqueHandleRelease(system, &remoteEffect->effect);
+        UniqueHandleAssignHandle(system, remoteEffect, remoteEffect);
+        FX_AddRefToEffect(system, &remoteEffect->effect);
+        remoteEffect->effect.def = remoteDef;
+        if ( remoteDef->msecLoopingLife )
+        {
+            p_status = &remoteEffect->atomics.status;
+            do
+                v15 = *p_status;
+            while ( _InterlockedCompareExchange(p_status, v15 | 0x10000, v15) != v15 );
+            FX_AddRefToEffect(system, &remoteEffect->effect);
+        }
+        for ( elemClass = 0; elemClass < 3; ++elemClass )
+            remoteEffect->effect.firstElemHandle[elemClass] = -1;
+        remoteEffect->effect.firstSortedElemHandle = -1;
+        if ( (remoteDef->flags & 1) != 0 )
+        {
+            FX_CalculatePackedLighting(&remoteEffect->effect, origin);
+        }
+        else
+        {
+            remoteEffect->effect.lightR = 255;
+            remoteEffect->effect.lightG = 255;
+            remoteEffect->effect.lightB = 255;
+        }
+        memcpy(&remoteEffect->effect.boneOffset, boneOffset, sizeof(remoteEffect->effect.boneOffset));
+        remoteEffect->effect.msecBegin = msecBegin;
+        remoteEffect->effect.msecLastUpdate = remoteEffect->effect.msecBegin;
+        remoteEffect->effect.distanceTraveled = 0.0f;
+        FX_SetEffectRandomSeed(&remoteEffect->effect, remoteDef);
+        remoteEffect->effect.firstTrailHandle = -1;
+        FX_SpawnEffect_AllocTrails(system, &remoteEffect->effect, &remoteEffect->effect);
+        if ( isSpotLightEffect )
+            FX_SpawnEffect_AllocSpotLightEffect(system, &remoteEffect->effect, remoteEffect);
+        if ( (remoteEffect->atomics.status & 0x7FE0000) != 0
+            && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                        1642,
+                        0,
+                        "%s\n\t(FX_GetAtomics(effect)->status) = %i",
+                        "((FX_GetAtomics(effect)->status & FX_STATUS_OWNED_EFFECTS_MASK) == 0)",
+                        remoteEffect->atomics.status) )
+        {
+            __debugbreak();
+        }
+        if ( owner == 0xFFFF )
+        {
+            remoteEffect->effect.owner = effectHandle;
+        }
+        else
+        {
+            remoteEffect->effect.owner = owner;
+            ownerEffect = FX_EffectFromHandle(system, owner);
+            FX_AddRefToEffect(system, &ownerEffect->effect);
+            if ( remoteEffect == ownerEffect
+                && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                            1658,
+                            0,
+                            "%s",
+                            "remoteEffect != ownerEffect") )
+            {
+                __debugbreak();
+            }
+            oldStatusValue = _InterlockedExchangeAdd(&ownerEffect->atomics.status, 0x20000u);
+            if ( (oldStatusValue & 0xF801FFFF) != ((oldStatusValue + 0x20000) & 0xF801FFFF)
+                && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                            1663,
+                            0,
+                            "%s\n\t(oldStatusValue) = %i",
+                            "((oldStatusValue & ~FX_STATUS_OWNED_EFFECTS_MASK) == ((oldStatusValue + (1 << FX_STATUS_OWNED_EFFECTS_"
+                            "SHIFT)) & ~FX_STATUS_OWNED_EFFECTS_MASK))",
+                            oldStatusValue) )
+            {
+                __debugbreak();
+            }
+            if ( (ownerEffect->atomics.status & 0x7FE0000) == 0
+                && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                            1665,
+                            0,
+                            "%s\n\t(FX_GetAtomics(ownerEffect)->status) = %i",
+                            "((FX_GetAtomics(ownerEffect)->status & FX_STATUS_OWNED_EFFECTS_MASK) > 0)",
+                            ownerEffect->atomics.status) )
+            {
+                __debugbreak();
+            }
+        }
+
+#if 0 // aislop used with union context
+        remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((boneIndex & 0x1FF) << 20)
+                                                                                                                                                                | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
+                                                                                                                                                                & 0xE00FFFFF);
+        *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 &= ~0x80000u;
+        if ( dobjHandle != 2047 || boneIndex == 511 )
+        {
+            if ( markEntnum == 1023 )
+            {
+                if ( dobjHandle == 2047 )
+                    v12 = *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 & 0x9FFFFFFF;
+                else
+                    v12 = *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 & 0x9FFFFFFF | 0x20000000;
+                remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)v12;
+                if ( boneIndex < 0
+                    && !Assert_MyHandler(
+                                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                                1699,
+                                0,
+                                "%s",
+                                "boneIndex >= 0") )
+                {
+                    __debugbreak();
+                }
+                remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((dobjHandle & 0x7FF) << 8)
+                                                                                                                                                                        | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
+                                                                                                                                                                        & 0xFFF800FF);
+                remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((FX_GetBoltTemporalBits(
+                                                                                                                                                                                    system->localClientNum,
+                                                                                                                                                                                    dobjHandle) << 19)
+                                                                                                                                                                        | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
+                                                                                                                                                                        & 0xFFF7FFFF);
+            }
+            else
+            {
+                if ( boneIndex != 511
+                    && !Assert_MyHandler(
+                                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                                1683,
+                                0,
+                                "%s",
+                                "boneIndex == FX_BONE_INDEX_NONE") )
+                {
+                    __debugbreak();
+                }
+                if ( markEntnum >= 0x7FF
+                    && !Assert_MyHandler(
+                                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                                1684,
+                                0,
+                                "markEntnum doesn't index FX_DOBJ_HANDLE_NONE\n\t%i not in [0, %i)",
+                                markEntnum,
+                                2047) )
+                {
+                    __debugbreak();
+                }
+                remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((markEntnum & 0x7FF) << 8)
+                                                                                                                                                                        | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
+                                                                                                                                                                        & 0xFFF800FF);
+                *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 |= 0x60000000u;
+                if ( ((*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 >> 8) & 0x7FF) != markEntnum
+                    && !Assert_MyHandler(
+                                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                                1687,
+                                0,
+                                "%s\n\t(markEntnum) = %i",
+                                "(effect->boltAndSortOrder.dobjHandle == markEntnum)",
+                                markEntnum) )
+                {
+                    __debugbreak();
+                }
+            }
+        }
+        else
+        {
+            remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(((boneIndex & 0x1FFFFF) << 8)
+                                                                                                                                                                    | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
+                                                                                                                                                                    & 0xE00000FF);
+            remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)(*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0
+                                                                                                                                                                    & 0x9FFFFFFF
+                                                                                                                                                                    | 0x40000000);
+            if ( ((*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 >> 8) & 0x1FFFFF) != boneIndex
+                && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                            1678,
+                            0,
+                            "effect->boltAndSortOrder.absDynEntId == static_cast<uint>( boneIndex )\n\t%i, %i",
+                            (*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 >> 8) & 0x1FFFFF,
+                            boneIndex) )
+            {
+                __debugbreak();
+            }
+        }
+        remoteEffect->effect.boltAndSortOrder.0 = ($88D60DA77564256B22C3F95D9DD45A24)((unsigned __int8)runnerSortOrder | *(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 & 0xFFFFFF00);
+
+        if ( (unsigned __int8)*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0 != runnerSortOrder
+            && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                        1707,
+                        0,
+                        "effect->boltAndSortOrder.sortOrder == static_cast<uint>( runnerSortOrder )\n\t%i, %i",
+                        (unsigned __int8)*(unsigned int *)&remoteEffect->effect.boltAndSortOrder.0,
+                        runnerSortOrder) )
+        {
+            __debugbreak();
+        }
+#else
+    FxBoltAndSortOrder &bolt = remoteEffect->effect.boltAndSortOrder;
+
+    /*
+        Base bone index setup
+    */
+    bolt.boneIndex = boneIndex & 0xFF;
+    bolt.rewindKill = 0;
+
+    /*
+        DObj / MarkEnt / AbsDynEnt handling
+    */
+    if (dobjHandle != 2047 || boneIndex == 511)
+    {
+        if (markEntnum == 1023)
+        {
+            // Normal DObj case
+
+            bolt.type = (dobjHandle == 2047) ? 0 : 1;
+
+            iassert(boneIndex >= 0);
+
+            bolt.dobjHandle = dobjHandle & 0x7FF;
+            bolt.temporalBits =
+                FX_GetBoltTemporalBits(system->localClientNum, dobjHandle);
+        }
+        else
+        {
+            // Mark entity case
+
+            iassert(boneIndex == 511);
+            iassert(markEntnum < 2047);
+
+            bolt.dobjHandle = markEntnum & 0x7FF;
+            bolt.type = 3;  // matches 0x60000000
+
+            iassert(bolt.dobjHandle == markEntnum);
+        }
     }
+    else
+    {
+        // Absolute dynamic entity case
+
+        bolt.absDynEntId = boneIndex & 0x1FFFFF;
+        bolt._type = 1; // matches 0x40000000
+
+        iassert(bolt.absDynEntId == static_cast<uint32_t>(boneIndex));
+    }
+
+    /*
+        Sort order (lowest 8 bits)
+    */
+    bolt.sortOrder = static_cast<uint8_t>(runnerSortOrder);
+
+    iassert(bolt.sortOrder == static_cast<uint32_t>(runnerSortOrder));
+
+#endif
+        remoteEffect->effect.frameAtSpawn.origin[0] = *origin;
+        remoteEffect->effect.frameAtSpawn.origin[1] = origin[1];
+        remoteEffect->effect.frameAtSpawn.origin[2] = origin[2];
+        AxisToQuat(axis, remoteEffect->effect.frameAtSpawn.quat);
+        memcpy(
+            &remoteEffect->effect.framePrev,
+            &remoteEffect->effect.frameAtSpawn,
+            sizeof(remoteEffect->effect.framePrev));
+        memcpy(
+            &remoteEffect->effect.frameNow,
+            &remoteEffect->effect.frameAtSpawn,
+            sizeof(remoteEffect->effect.frameNow));
+        p_firstNewEffect = &system->shared->firstNewEffect;
+        do
+        {
+            while ( *p_firstNewEffect != allocIndex )
+                ;
+        }
+        while ( _InterlockedCompareExchange(p_firstNewEffect, allocIndex + 1, allocIndex) != allocIndex );
+        FX_StartNewEffect(system, &remoteEffect->effect, remoteEffect);
+        _InterlockedExchangeAdd(&remoteEffect->atomics.status, 0xE0000000);
+        uniqueHandle = remoteEffect->effect.uniqueHandle;
+        //if ( GetCurrentThreadId() == g_DXDeviceThread )
+            //D3DPERF_EndEvent();
+        return uniqueHandle;
+    }
+    else
+    {
+        R_WarnOncePerFrame(R_WARN_SPOT_LIGHT_LIMIT);
+        //if ( GetCurrentThreadId() == g_DXDeviceThread )
+            //D3DPERF_EndEvent();
+        return 0;
+    }
+    
 }
 
 void __cdecl FX_AddRefToEffect(FxSystem *__formal, FxEffect *effect)
@@ -1175,7 +1360,7 @@ void __cdecl FX_AddRefToEffect(FxSystem *__formal, FxEffect *effect)
     {
         __debugbreak();
     }
-    _InterlockedExchangeAdd((volatile signed __int32 *)&effect[1], 1u);
+    _InterlockedExchangeAdd((volatile unsigned __int32 *)&effect[1], 1u);
 }
 
 char __cdecl FX_CullEffectForSpawn(const FxCamera *camera, const FxEffectDef *effectDef, const float *origin)
@@ -1327,7 +1512,7 @@ void __cdecl FX_AssertAllocatedEffect(int localClientNum, unsigned int hEffect, 
     }
     FX_EffectToHandle(&system->system, effect);
     if ( (effect->atomics.status & 0x3FFF) == 0 )
-        Com_Error(ERR_DROP, &byte_CAFF94, effect->effect.def->name, error_msg);
+        Com_Error(ERR_DROP, "FX_AssertAllocatedEffect: %s %s.", effect->effect.def->name, error_msg);
     if ( (effect->atomics.status & 0x3FFF) == 0
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
@@ -1348,7 +1533,7 @@ unsigned int __cdecl FX_PlayOrientedEffectWithMarkEntity(
                 const float (*axis)[3],
                 unsigned int markEntnum)
 {
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-18h]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-18h]
     signed __int32 v8; // [esp+4h] [ebp-14h]
     unsigned int effect; // [esp+Ch] [ebp-Ch]
     FxEffectContainer *effectPtr; // [esp+10h] [ebp-8h]
@@ -1388,7 +1573,7 @@ unsigned int __cdecl FX_PlayOrientedEffect(
                 const float *origin,
                 const float (*axis)[3])
 {
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-14h]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-14h]
     signed __int32 v7; // [esp+4h] [ebp-10h]
     unsigned int effect; // [esp+Ch] [ebp-8h]
     FxEffectContainer *effectPtr; // [esp+10h] [ebp-4h]
@@ -1520,7 +1705,7 @@ unsigned int __cdecl FX_PlayBoltedEffect_DynEnt(
                 int startMsec,
                 int absDynEntId)
 {
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-58h]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-58h]
     signed __int32 v6; // [esp+4h] [ebp-54h]
     const DynEntityPose *dynEntPose; // [esp+10h] [ebp-48h]
     int boneIndex; // [esp+14h] [ebp-44h]
@@ -1578,7 +1763,7 @@ unsigned int __cdecl FX_PlayBoltedEffect(
                 unsigned int dobjHandle,
                 int boneIndex)
 {
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-18h]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-18h]
     signed __int32 v7; // [esp+4h] [ebp-14h]
     unsigned int effect; // [esp+Ch] [ebp-Ch]
     FxEffectContainer *effectPtr; // [esp+10h] [ebp-8h]
@@ -1607,7 +1792,7 @@ unsigned int __cdecl FX_PlayBoltedEffect(
                 const float *origin,
                 const float (*axis)[3])
 {
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-18h]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-18h]
     signed __int32 v9; // [esp+4h] [ebp-14h]
     unsigned int effect; // [esp+Ch] [ebp-Ch]
     FxEffectContainer *effectPtr; // [esp+10h] [ebp-8h]
@@ -1629,7 +1814,7 @@ unsigned int __cdecl FX_PlayBoltedEffect(
 
 void __cdecl FX_RetriggerEffect(int localClientNum, FxEffectContainer *effect, int msecBegin)
 {
-    volatile signed __int32 *p_status; // [esp+18h] [ebp-54h]
+    volatile unsigned __int32 *p_status; // [esp+18h] [ebp-54h]
     signed __int32 v4; // [esp+1Ch] [ebp-50h]
     unsigned __int16 lastOldTrailElemHandle[8]; // [esp+30h] [ebp-3Ch] BYREF
     int trailCount; // [esp+40h] [ebp-2Ch] BYREF
@@ -1840,7 +2025,7 @@ void __cdecl FX_StopEffect(FxSystem *system, FxEffectContainer *effect)
                 {
                     otherEffect = FX_EffectFromHandle(system, effectHandle);
                     if ( *(unsigned int *)&otherEffect->effect.owner == stoppedEffectHandle )
-                        FX_StopEffect(system, &otherEffect->effect);
+                        FX_StopEffect(system, (FxEffectContainer*)&otherEffect->effect);
                 }
             }
             if ( !_InterlockedDecrement(&system->shared->iteratorCount) )
@@ -2177,9 +2362,7 @@ void __cdecl FX_SpawnTrailElem_NoCull(
     }
     msecBegin = elemDef->spawnDelayMsec.base + msecWhenPlayed;
     if ( elemDef->spawnDelayMsec.amplitude )
-        msecBegin += ((elemDef->spawnDelayMsec.amplitude + 1)
-                                * LOWORD(fx_randomTable[(296 * trail->sequence + msecBegin + (unsigned int)effect->randomSeed) % 0x1DF
-                                                                            + 18])) >> 16;
+        msecBegin += ((elemDef->spawnDelayMsec.amplitude + 1) * LOWORD(fx_randomTable[(296 * trail->sequence + msecBegin + (unsigned int)effect->randomSeed) % 0x1DF + 18])) >> 16;
     randomSeed = (296 * trail->sequence + msecBegin + (unsigned int)effect->randomSeed) % 0x1DF;
     if ( elemDef->effectOnImpact.handle )
     {
@@ -2481,8 +2664,7 @@ void __cdecl FX_SpawnElem(
         {
             msecBegin = elemDef->spawnDelayMsec.base + msecWhenPlayed;
             if ( elemDef->spawnDelayMsec.amplitude )
-                msecBegin += ((elemDef->spawnDelayMsec.amplitude + 1)
-                                        * LOWORD(fx_randomTable[(296 * sequence + msecBegin + (unsigned int)effect->randomSeed) % 0x1DF + 18])) >> 16;
+                msecBegin += ((elemDef->spawnDelayMsec.amplitude + 1) * LOWORD(fx_randomTable[(296 * sequence + msecBegin + (unsigned int)effect->randomSeed) % 0x1DF + 18])) >> 16;
             randomSeed = (msecBegin + effect->randomSeed + 296 * (unsigned int)(unsigned __int8)sequence) % 0x1DF;
             priority = effect->def->efPriority;
             v10 = elemDef->flags < 0 && (!cg_blood->current.enabled || !CG_IsMature());
@@ -2491,17 +2673,48 @@ void __cdecl FX_SpawnElem(
                 case 0xCu:
                     FX_SpawnRunner(system, effect, elemDef, effectFrameWhenPlayed, randomSeed, msecBegin);
                     break;
+                //case 0xBu:
+                //    if ( !v10 )
+                //    {
+                //        if ( ((*(unsigned int *)&effect->boltAndSortOrder.0 >> 29) & 3) == 3 )
+                //            markEntnum = (*(unsigned int *)&effect->boltAndSortOrder.0 >> 8) & 0x7FF;
+                //        else
+                //            markEntnum = 1023;
+                //        if ( FX_ImpactMarkWithinRange(system, effectFrameWhenPlayed->origin) )
+                //            FX_CreateImpactMark(system->localClientNum, elemDef, effectFrameWhenPlayed, randomSeed, markEntnum);
+                //    }
+                //    break;
                 case 0xBu:
-                    if ( !v10 )
+                {
+                    if (!v10)
                     {
-                        if ( ((*(unsigned int *)&effect->boltAndSortOrder.0 >> 29) & 3) == 3 )
-                            markEntnum = (*(unsigned int *)&effect->boltAndSortOrder.0 >> 8) & 0x7FF;
+                        const FxBoltAndSortOrder &bolt = effect->boltAndSortOrder;
+
+                        unsigned int markEntnum;
+
+                        // Old: ((bolt >> 29) & 3) == 3
+                        if (bolt.type == 3)
+                        {
+                            // Old: (bolt >> 8) & 0x7FF
+                            markEntnum = bolt.dobjHandle;
+                        }
                         else
+                        {
                             markEntnum = 1023;
-                        if ( FX_ImpactMarkWithinRange(system, effectFrameWhenPlayed->origin) )
-                            FX_CreateImpactMark(system->localClientNum, elemDef, effectFrameWhenPlayed, randomSeed, markEntnum);
+                        }
+
+                        if (FX_ImpactMarkWithinRange(system,
+                            effectFrameWhenPlayed->origin))
+                        {
+                            FX_CreateImpactMark(system->localClientNum,
+                                elemDef,
+                                effectFrameWhenPlayed,
+                                randomSeed,
+                                markEntnum);
+                        }
                     }
                     break;
+                }
                 case 0xAu:
                     FX_SpawnSound(system->localClientNum, effect, elemDef, effectFrameWhenPlayed, randomSeed);
                     break;
@@ -2617,6 +2830,48 @@ void __cdecl FX_SpawnElem(
     }
 }
 
+FxPool<FxElem, FxElemContainer> *__cdecl FX_AllocPool_Generic_FxElem_FxElemContainer_(
+    FxEffect *remoteEffect,
+    unsigned __int32 *firstFreeIndex,
+    FxPool<FxElem, FxElemContainer> *pool,
+    volatile unsigned int *activeCount)
+{
+    unsigned __int32 itemIndex; // [esp+8Ch] [ebp-8h]
+    unsigned __int32 nextFree; // [esp+90h] [ebp-4h]
+
+    do
+    {
+        itemIndex = *firstFreeIndex;
+        if (*firstFreeIndex == -1)
+            return 0;
+        nextFree = pool[itemIndex].nextFree;
+    } while (_InterlockedCompareExchange((volatile unsigned __int32 *)firstFreeIndex, nextFree, itemIndex) != itemIndex);
+    if (itemIndex != -1
+        && itemIndex >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            247,
+            0,
+            "%s",
+            "itemIndex == -1 || (itemIndex >= 0 && itemIndex < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+    if (nextFree != -1
+        && nextFree >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            248,
+            0,
+            "%s",
+            "nextFree == -1 || (nextFree >= 0 && nextFree < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+    _InterlockedExchangeAdd(activeCount, 1u);
+    return &pool[itemIndex];
+}
+
 FxPool<FxElem,FxElemContainer> *__cdecl FX_AllocElem(FxEffect *remoteEffect, FxSystem *system)
 {
     return FX_AllocPool_Generic_FxElem_FxElemContainer_(
@@ -2626,6 +2881,134 @@ FxPool<FxElem,FxElemContainer> *__cdecl FX_AllocElem(FxEffect *remoteEffect, FxS
                      &system->shared->activeElemCount);
 }
 
+void FX_SpawnRunner(
+    FxSystem *system,
+    FxEffect *effect,
+    const FxElemDef *remoteElemDef,
+    const FxSpatialFrame *effectFrameWhenPlayed,
+    int randomSeed,
+    int msecWhenPlayed)
+{
+    FxEffectContainer *spawnedContainer;
+    const FxEffectDef *effectDef;
+
+    float spawnOrigin[3];
+    float axis[3][3];
+    float rotatedAxis[3][3];
+    float *usedAxis;
+
+    /*
+        Spawn origin setup
+    */
+    FX_GetSpawnOrigin(effectFrameWhenPlayed, remoteElemDef, randomSeed, spawnOrigin);
+    FX_OffsetSpawnOrigin(effectFrameWhenPlayed, remoteElemDef, randomSeed, spawnOrigin);
+
+    effectDef = FX_GetElemVisuals(remoteElemDef, randomSeed).effectDef.handle;
+
+    UnitQuatToAxis(effectFrameWhenPlayed->quat, axis);
+
+    if (remoteElemDef->flags & 8)
+    {
+        FX_RandomlyRotateAxis(axis, randomSeed, rotatedAxis);
+        usedAxis = rotatedAxis[0];
+    }
+    else
+    {
+        usedAxis = axis[0];
+    }
+
+    /*
+        Sort order clamp
+    */
+    int sortOrder = (remoteElemDef->sortOrder == 255)
+        ? 255
+        : remoteElemDef->sortOrder;
+
+    int runnerSortOrder = (sortOrder > 0) ? sortOrder : 0;
+
+    FX_PlayElementSpawnSound(system->localClientNum,
+        remoteElemDef,
+        spawnOrigin);
+
+    const FxBoltAndSortOrder &bolt = effect->boltAndSortOrder;
+
+    unsigned int spawnedHandle;
+
+    /*
+        Case 1:
+        type == 2
+    */
+    if (bolt.type == 2)
+    {
+        spawnedHandle = FX_SpawnEffect(
+            system,
+            effectDef,
+            msecWhenPlayed,
+            spawnOrigin,
+            (const float (*)[3])usedAxis,
+            2047,
+            511,
+            runnerSortOrder,
+            effect->owner,
+            0x3FFu,
+            &orIdentity);
+    }
+
+    /*
+        Case 2:
+        boneIndex == 511 (0x1FF)
+    */
+    else if (bolt.boneIndex == 0x1FF)
+    {
+        unsigned int markEnt =
+            (bolt.dobjHandle == 0x7FF)
+            ? 0x3FFu
+            : bolt.dobjHandle;
+
+        spawnedHandle = FX_SpawnEffect(
+            system,
+            effectDef,
+            msecWhenPlayed,
+            spawnOrigin,
+            (const float (*)[3])usedAxis,
+            2047,
+            511,
+            runnerSortOrder,
+            effect->owner,
+            markEnt,
+            &orIdentity);
+    }
+
+    /*
+        Case 3:
+        Normal DObj/Bone case
+    */
+    else
+    {
+        spawnedHandle = FX_SpawnEffect(
+            system,
+            effectDef,
+            msecWhenPlayed,
+            spawnOrigin,
+            (const float (*)[3])usedAxis,
+            bolt.dobjHandle,
+            bolt.boneIndex,
+            runnerSortOrder,
+            effect->owner,
+            0x3FFu,
+            &orIdentity);
+    }
+
+    spawnedContainer = UniqueHandleToEffect(system, spawnedHandle);
+
+    if (spawnedContainer)
+    {
+        FX_DelRefToEffect(system, spawnedContainer, 0);
+    }
+}
+
+
+#if 0
 void __cdecl FX_SpawnRunner(
                 FxSystem *system,
                 FxEffect *effect,
@@ -2733,71 +3116,73 @@ void __cdecl FX_SpawnRunner(
     if ( v6 )
         FX_DelRefToEffect(system, v6, 0);
 }
+#endif
 
-void __cdecl FX_RandomlyRotateAxis(const float (*axisIn)[3], int randomSeed, float (*axisOut)[3])
+
+void FX_RandomlyRotateAxis(const float (*axisIn)[3], int randomSeed, float (*axisOut)[3])
 {
-    double v3; // st7
-    const char *v4; // eax
-    double v5; // st7
-    const char *v6; // eax
-    double v7; // st7
-    const char *v8; // eax
+    double v4; // st7
+    char *v5; // eax
+    double v6; // st7
+    char *v7; // eax
+    double v8; // st7
+    char *v9; // eax
     float rotation; // [esp+3Ch] [ebp-4h]
 
-    rotation = 360.0 * dword_CAEB40[randomSeed];
+    rotation = 360.0 * fx_randomTable[randomSeed + 24];
     (*axisOut)[0] = (*axisIn)[0];
     (*axisOut)[1] = (*axisIn)[1];
     (*axisOut)[2] = (*axisIn)[2];
     RotatePointAroundVector(&(*axisOut)[3], (const float *)axisOut, &(*axisIn)[3], rotation);
     Vec3Cross((const float *)axisOut, &(*axisOut)[3], &(*axisOut)[6]);
-    if ( !Vec3IsNormalized((const float *)axisOut) )
+    if (!Vec3IsNormalized((const float *)axisOut))
     {
-        v3 = Abs((const float *)axisOut);
-        v4 = va("(%g %g %g) len %g", (*axisOut)[0], (*axisOut)[1], (*axisOut)[2], v3);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                        2484,
-                        0,
-                        "%s\n\t%s",
-                        "Vec3IsNormalized( axisOut[0] )",
-                        v4) )
+        v4 = Abs((const float *)axisOut);
+        v5 = va("(%g %g %g) len %g", (*axisOut)[0], (*axisOut)[1], (*axisOut)[2], v4);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            2484,
+            0,
+            "%s\n\t%s",
+            "Vec3IsNormalized( axisOut[0] )",
+            v5))
             __debugbreak();
     }
-    if ( !Vec3IsNormalized(&(*axisOut)[3]) )
+    if (!Vec3IsNormalized(&(*axisOut)[3]))
     {
-        v5 = Abs(&(*axisOut)[3]);
-        v6 = va("(%g %g %g) len %g", (*axisOut)[3], (*axisOut)[4], (*axisOut)[5], v5);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                        2485,
-                        0,
-                        "%s\n\t%s",
-                        "Vec3IsNormalized( axisOut[1] )",
-                        v6) )
+        v6 = Abs(&(*axisOut)[3]);
+        v7 = va("(%g %g %g) len %g", (*axisOut)[3], (*axisOut)[4], (*axisOut)[5], v6);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            2485,
+            0,
+            "%s\n\t%s",
+            "Vec3IsNormalized( axisOut[1] )",
+            v7))
             __debugbreak();
     }
-    if ( !Vec3IsNormalized(&(*axisOut)[6]) )
+    if (!Vec3IsNormalized(&(*axisOut)[6]))
     {
-        v7 = Abs(&(*axisOut)[6]);
-        v8 = va("(%g %g %g) len %g", (*axisOut)[6], (*axisOut)[7], (*axisOut)[8], v7);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                        2486,
-                        0,
-                        "%s\n\t%s",
-                        "Vec3IsNormalized( axisOut[2] )",
-                        v8) )
+        v8 = Abs(&(*axisOut)[6]);
+        v9 = va("(%g %g %g) len %g", (*axisOut)[6], (*axisOut)[7], (*axisOut)[8], v8);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            2486,
+            0,
+            "%s\n\t%s",
+            "Vec3IsNormalized( axisOut[2] )",
+            v9))
             __debugbreak();
     }
 }
 
 bool __cdecl FX_SpawnModelPhysics(
-                FxSystem *system,
-                FxEffect *effect,
-                const FxElemDef *elemDef,
-                int randomSeed,
-                FxElem *elem,
-                int sequence)
+    FxSystem *system,
+    FxEffect *effect,
+    const FxElemDef *elemDef,
+    int randomSeed,
+    FxElem *elem,
+    int sequence)
 {
     float v7; // [esp+14h] [ebp-164h]
     unsigned int rotationAxis; // [esp+70h] [ebp-108h]
@@ -2822,17 +3207,17 @@ bool __cdecl FX_SpawnModelPhysics(
 
     FX_GetOrientation(elemDef, &effect->frameAtSpawn, &effect->frameNow, randomSeed, &orient);
     FX_OrientationPosToWorldPos(&orient, elem->origin, worldOrigin);
-    if ( (0x800000 & elemDef->flags) != 0 )
+    if ((0x800000 & elemDef->flags) != 0)
     {
         rotationAxis = elemDef->rotationAxis;
         v[0] = (float)(COERCE_FLOAT((rotationAxis & 0x1FF) + 1077936128 - 2 * (rotationAxis & 0x100)) - 3.0) * 16448.252;
         v[1] = (float)(COERCE_FLOAT(((rotationAxis >> 9) & 0x3FF) + 1077936128 - 2 * ((rotationAxis >> 9) & 0x200)) - 3.0)
-                 * 8208.0312;
+            * 8208.0312;
         v[2] = (float)(COERCE_FLOAT(((rotationAxis >> 19) & 0x3FF) + 1077936128 - 2 * ((rotationAxis >> 19) & 0x200)) - 3.0)
-                 * 8208.0312;
+            * 8208.0312;
         v[3] = 1.0f;
         v10 = Vec4Length(v);
-        if ( (rotationAxis & 0x80000000) == 0 )
+        if ((rotationAxis & 0x80000000) == 0)
             v7 = 1.0f;
         else
             v7 = -1.0f;
@@ -2856,35 +3241,35 @@ bool __cdecl FX_SpawnModelPhysics(
     FX_GetElemAxis(elemDef, randomSeed, &orient, 0.0, axis);
     AxisToQuat(axis, quat);
     msecLifeSpan = (float)((((elemDef->lifeSpanMsec.amplitude + 1) * LOWORD(fx_randomTable[randomSeed + 17])) >> 16)
-                                             + elemDef->lifeSpanMsec.base);
+        + elemDef->lifeSpanMsec.base);
     FX_GetVelocityAtTime(elemDef, randomSeed, msecLifeSpan, 0.0, &orient, elem->baseVel, velocity);
-    angularVelocity[0] = (float)((float)(*(float *)&dword_CAEAEC[randomSeed] * elemDef->angularVelocity[0].amplitude)
-                                                         + elemDef->angularVelocity[0].base)
-                                         * 1000.0;
-    angularVelocity[1] = (float)((float)(*(float *)&dword_CAEAF0[randomSeed] * elemDef->angularVelocity[1].amplitude)
-                                                         + elemDef->angularVelocity[1].base)
-                                         * 1000.0;
-    angularVelocity[2] = (float)((float)(*(float *)&dword_CAEAF4[randomSeed] * elemDef->angularVelocity[2].amplitude)
-                                                         + elemDef->angularVelocity[2].base)
-                                         * 1000.0;
+    angularVelocity[0] = (float)((float)(fx_randomTable[randomSeed + 3] * elemDef->angularVelocity[0].amplitude)
+        + elemDef->angularVelocity[0].base)
+        * 1000.0;
+    angularVelocity[1] = (float)((float)(fx_randomTable[randomSeed + 4] * elemDef->angularVelocity[1].amplitude)
+        + elemDef->angularVelocity[1].base)
+        * 1000.0;
+    angularVelocity[2] = (float)((float)(fx_randomTable[randomSeed + 5] * elemDef->angularVelocity[2].amplitude)
+        + elemDef->angularVelocity[2].base)
+        * 1000.0;
     Sys_EnterCriticalSection(CRITSECT_PHYSICS_UPDATE);
     Sys_EnterCriticalSection(CRITSECT_PHYSICS);
     v11.anonymous = FX_GetElemVisuals(elemDef, randomSeed).anonymous;
     visuals.anonymous = v11.anonymous;
-    if ( !*((unsigned int *)v11.anonymous + 59)
+    if (!*((_DWORD *)v11.anonymous + 59)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                    2591,
-                    0,
-                    "%s",
-                    "visuals.model->physPreset") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            2591,
+            0,
+            "%s",
+            "visuals.model->physPreset"))
     {
         __debugbreak();
     }
     id = FX_MakePhysId(elemDef, orient.origin, orient.axis[0], system->frameCount, sequence);
     gjk_geom_list.m_first_geom = 0;
     gjk_geom_list.m_geom_count = 0;
-    collision_visitor.__vftable = (create_gjk_geom_collision_visitor_vtbl *)&create_gjk_geom_collision_visitor::`vftable';
+    //collision_visitor.__vftable = (create_gjk_geom_collision_visitor_vtbl *)&create_gjk_geom_collision_visitor::`vftable';
     collision_visitor.gjk_geom_list = &gjk_geom_list;
     create_xmodel_gjk_geom(
         visuals.model,
@@ -2894,31 +3279,32 @@ bool __cdecl FX_SpawnModelPhysics(
         1,
         0,
         0);
-    if ( elem->physObjId
+    if (elem->physObjId
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
-                    2598,
-                    0,
-                    "%s",
-                    "!elem->physObjId") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            2598,
+            0,
+            "%s",
+            "!elem->physObjId"))
     {
         __debugbreak();
     }
     elem->physObjId = (int)Phys_ObjCreate(
-                                                     1,
-                                                     worldOrigin,
-                                                     quat,
-                                                     velocity,
-                                                     *((const PhysPreset **)visuals.anonymous + 59),
-                                                     &gjk_geom_list,
-                                                     1,
-                                                     id);
-    if ( elem->physObjId )
-        Phys_ObjSetAngularVelocity((int)&savedregs, elem->physObjId, angularVelocity);
+        1,
+        worldOrigin,
+        quat,
+        velocity,
+        *((const PhysPreset **)visuals.anonymous + 59),
+        &gjk_geom_list,
+        1,
+        id);
+    if (elem->physObjId)
+        Phys_ObjSetAngularVelocity(elem->physObjId, angularVelocity);
     Sys_LeaveCriticalSection(CRITSECT_PHYSICS);
     Sys_LeaveCriticalSection(CRITSECT_PHYSICS_UPDATE);
     return elem->physObjId != 0;
 }
+
 
 void __cdecl Vec4Scale(const float *v, float scale, float *result)
 {
@@ -3033,6 +3419,54 @@ unsigned __int8 __cdecl FX_ElemSpawnVisBits(const FxSystem *system, const FxElem
     return bits;
 }
 
+void __cdecl FX_FreePool_Generic_FxElem_FxElemContainer_(
+    FxEffect *remoteEffect,
+    FxElem *item_slim,
+    unsigned __int32 *firstFreeIndex,
+    FxPool<FxElem, FxElemContainer> *pool)
+{
+    unsigned __int32 nextFree; // [esp+8Ch] [ebp-8h]
+    unsigned __int32 freedIndex; // [esp+90h] [ebp-4h]
+
+    freedIndex = ((char *)item_slim - (char *)pool) / 48;
+    if (freedIndex >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            300,
+            0,
+            "%s",
+            "freedIndex >= 0 && freedIndex < ITEM_TYPE::POOL_SIZE"))
+    {
+        __debugbreak();
+    }
+    do
+    {
+        nextFree = *firstFreeIndex;
+        if (*firstFreeIndex == freedIndex
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                309,
+                0,
+                "%s",
+                "nextFree != freedIndex"))
+        {
+            __debugbreak();
+        }
+        *(_DWORD *)&item_slim->defIndex = nextFree;
+    } while (_InterlockedCompareExchange((volatile unsigned __int32 *)firstFreeIndex, freedIndex, nextFree) != nextFree);
+    if (nextFree != -1
+        && nextFree >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            316,
+            0,
+            "%s",
+            "nextFree == -1 || (nextFree >= 0 && nextFree < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
+}
+
 void __cdecl FX_FreeElem(
                 FxSystem *system,
                 unsigned __int16 elemHandle,
@@ -3040,7 +3474,7 @@ void __cdecl FX_FreeElem(
                 FxEffectContainer *remoteEffect,
                 unsigned int elemClass)
 {
-    volatile signed __int32 *p_status; // [esp+B0h] [ebp-2Ch]
+    volatile unsigned __int32 *p_status; // [esp+B0h] [ebp-2Ch]
     signed __int32 v6; // [esp+B4h] [ebp-28h]
     unsigned __int16 nextElemHandle; // [esp+BCh] [ebp-20h]
     const FxElemDef *elemDef; // [esp+C0h] [ebp-1Ch]
@@ -3118,6 +3552,54 @@ void __cdecl FX_FreeElem(
         system->elems);
     FX_DelRefToEffect(system, remoteEffect, 0);
     _InterlockedExchangeAdd(&system->shared->activeElemCount, 0xFFFFFFFF);
+}
+
+void __cdecl FX_FreePool_Generic_FxTrailElem_FxTrailElem_(
+    FxEffect *remoteEffect,
+    FxTrailElem *item_slim,
+    unsigned __int32 *firstFreeIndex,
+    FxPool<FxTrailElem, FxTrailElem> *pool)
+{
+    unsigned __int32 nextFree; // [esp+8Ch] [ebp-8h]
+    unsigned __int32 freedIndex; // [esp+90h] [ebp-4h]
+
+    freedIndex = ((char *)item_slim - (char *)pool) >> 5;
+    if (freedIndex >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            300,
+            0,
+            "%s",
+            "freedIndex >= 0 && freedIndex < ITEM_TYPE::POOL_SIZE"))
+    {
+        __debugbreak();
+    }
+    do
+    {
+        nextFree = *firstFreeIndex;
+        if (*firstFreeIndex == freedIndex
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+                309,
+                0,
+                "%s",
+                "nextFree != freedIndex"))
+        {
+            __debugbreak();
+        }
+        LODWORD(item_slim->origin[0]) = nextFree;
+    } while (_InterlockedCompareExchange((volatile unsigned __int32 *)firstFreeIndex, freedIndex, nextFree) != nextFree);
+    if (nextFree != -1
+        && nextFree >= 0x800
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_system.cpp",
+            316,
+            0,
+            "%s",
+            "nextFree == -1 || (nextFree >= 0 && nextFree < ITEM_TYPE::POOL_SIZE)"))
+    {
+        __debugbreak();
+    }
 }
 
 void __cdecl FX_FreeTrailElem(
@@ -3310,43 +3792,43 @@ char __cdecl FX_GetActiveSpotLightBoltDobj(int localClientNum, int *dobjHandleOu
     return 1;
 }
 
-int __cdecl FX_PoolToHandle_Generic<FxTrailElem,FxTrailElem,2048>(
-                FxPool<FxTrailElem,FxTrailElem> *poolArray,
-                FxTrailElem *item_slim)
-{
-    const char *v2; // eax
-
-    if ( !item_slim || item_slim < (FxTrailElem *)poolArray || item_slim >= (FxTrailElem *)&poolArray[2048] )
-    {
-        v2 = va("%p %p", poolArray, item_slim);
-        if ( !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
-                        457,
-                        0,
-                        "%s\n\t%s",
-                        "item && item >= &poolArray[0].item && item < &poolArray[LIMIT].item",
-                        v2) )
-            __debugbreak();
-    }
-    return ((char *)item_slim - (char *)poolArray) / 4;
-}
-
-int __cdecl FX_PoolToHandle_Generic<FxTrail,FxTrail,128>(FxPool<FxTrail,FxTrail> *poolArray, FxTrail *item_slim)
-{
-    const char *v2; // eax
-
-    if ( !item_slim || item_slim < (FxTrail *)poolArray || item_slim >= (FxTrail *)&poolArray[128] )
-    {
-        v2 = va("%p %p", poolArray, item_slim);
-        if ( !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
-                        457,
-                        0,
-                        "%s\n\t%s",
-                        "item && item >= &poolArray[0].item && item < &poolArray[LIMIT].item",
-                        v2) )
-            __debugbreak();
-    }
-    return ((char *)item_slim - (char *)poolArray) / 4;
-}
+//int __cdecl FX_PoolToHandle_Generic<FxTrailElem,FxTrailElem,2048>(
+//                FxPool<FxTrailElem,FxTrailElem> *poolArray,
+//                FxTrailElem *item_slim)
+//{
+//    const char *v2; // eax
+//
+//    if ( !item_slim || item_slim < (FxTrailElem *)poolArray || item_slim >= (FxTrailElem *)&poolArray[2048] )
+//    {
+//        v2 = va("%p %p", poolArray, item_slim);
+//        if ( !Assert_MyHandler(
+//                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
+//                        457,
+//                        0,
+//                        "%s\n\t%s",
+//                        "item && item >= &poolArray[0].item && item < &poolArray[LIMIT].item",
+//                        v2) )
+//            __debugbreak();
+//    }
+//    return ((char *)item_slim - (char *)poolArray) / 4;
+//}
+//
+//int __cdecl FX_PoolToHandle_Generic<FxTrail,FxTrail,128>(FxPool<FxTrail,FxTrail> *poolArray, FxTrail *item_slim)
+//{
+//    const char *v2; // eax
+//
+//    if ( !item_slim || item_slim < (FxTrail *)poolArray || item_slim >= (FxTrail *)&poolArray[128] )
+//    {
+//        v2 = va("%p %p", poolArray, item_slim);
+//        if ( !Assert_MyHandler(
+//                        "c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\fx_system.h",
+//                        457,
+//                        0,
+//                        "%s\n\t%s",
+//                        "item && item >= &poolArray[0].item && item < &poolArray[LIMIT].item",
+//                        v2) )
+//            __debugbreak();
+//    }
+//    return ((char *)item_slim - (char *)poolArray) / 4;
+//}
 

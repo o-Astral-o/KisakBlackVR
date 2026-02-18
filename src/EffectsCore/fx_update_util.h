@@ -1,4 +1,5 @@
 #pragma once
+#include "fx_update.h"
 
 void __cdecl FX_OffsetSpawnOrigin(
                 const FxSpatialFrame *effectFrame,

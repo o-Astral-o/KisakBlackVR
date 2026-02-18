@@ -108,6 +108,15 @@ struct FxActiveMarkSurf // sizeof=0x24
     unsigned int visLightsMask;
 };
 
+struct FxAddMarkCmd // sizeof=0x2C
+{
+    int localClientNum;
+    const FxElemDef *elemDef;
+    FxSpatialFrame spatialFrame;
+    int randomSeed;
+    unsigned int markEntnum;
+};
+
 bool __cdecl FX_MarkIsAlphaFadedOut(const FxMark *mark);
 unsigned __int8 __cdecl FX_MarkGetFadedAlpha(const FxMark *mark);
 void __cdecl FX_InitMarksSystem(FxMarksSystem *marksSystem);
@@ -390,3 +399,6 @@ void __cdecl FX_MarkUpdateClientTime(unsigned int localClientNum, int frameTime)
 int __cdecl FX_GetFrameTotalSeeThruDecalCount(unsigned int localClientNum);
 
 extern jqWorkerCmd fx_add_markWorkerCmd;
+
+extern FxMarksSystem *fx_marksSystemPool;
+extern int fx_maxLocalClients;

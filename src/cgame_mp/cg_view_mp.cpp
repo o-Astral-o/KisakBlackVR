@@ -52,12 +52,6 @@
 
 ClientViewParams clientViewParamsArray[1][1][1] = { { { { 0.0, 0.0, 1.0, 1.0, VIEWPORT_LARGE } } } };
 
-orientation_t orIdentity =
-{
-  { 0.0, 0.0, 0.0 },
-  { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } }
-};
-
 static const float cg_shallowWaterLevel = 30.0f;
 
 static const float CAM_MINS[3] = { -4.0, -4.0, -4.0 };

@@ -1,10 +1,6 @@
 #pragma once
 
-#include <universal/q_shared.h>
-#include <gfx_d3d/fxprimitives.h>
-#include <qcommon/cm_trace.h>
-#include <gfx_d3d/r_workercmds_common.h>
-#include <cgame_mp/cg_local_mp.h>
+struct FxCmd;
 
 enum FxUpdateResult : __int32
 {                                       // XREF: FX_UpdateEffectPartialForClass/r
@@ -53,7 +49,20 @@ struct FxCameraUpdate // sizeof=0x3C
     float zfar;                         // XREF: CG_DrawActiveFrame(int,int,DemoType,CubemapShot,int,int)+102D/w
 };
 
-void __cdecl FX_TrailElem_CompressBasis(const float (*inBasis)[3], char (*outBasis)[3]);
+struct FxElemDef;
+struct FxEffectDef;
+struct FxEffect;
+struct FxEffectContainer;
+struct FxSpatialFrame;
+struct FxSystem;
+struct FxTrail;
+struct FxElem;
+struct FxElemVelStateSample;
+struct FxElemVelStateInFrame;
+struct FxTrailElem;
+struct orientation_t;
+struct FxCamera;
+
 bool __cdecl FX_IsDemoPlaying();
 void __cdecl FX_SpawnAllFutureLooping(
                 FxSystem *system,
@@ -166,7 +175,7 @@ FxUpdateResult __cdecl FX_UpdateElement(
 bool __cdecl Vec3Compare(const float *a, const float *b);
 const FxElemDef *__cdecl FX_GetUpdateElemDef(const FxUpdateElem *update);
 double __cdecl FX_GetAtRestFraction(const FxUpdateElem *update, float msec);
-int __cdecl FX_UpdateElementPosition(FxSystem *system, FxUpdateElem *update);
+int __cdecl FX_UpdateElementPosition(FxSystem *system, FxUpdateElem *update); // KISAKTODO: retval 'FxUpdateResult'
 int __cdecl FX_UpdateElementPosition_Colliding(FxSystem *system, FxUpdateElem *update);
 int __cdecl FX_UpdateElementPosition_CollidingStep(
                 FxSystem *system,

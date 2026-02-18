@@ -3,8 +3,6 @@
 #include "r_debug.h"
 #include <qcommon/threads.h>
 
-float4 g_keepXYZ{ -1, -1, -1, 0 };
-
 char __cdecl TestOccluders(const float (*bounds)[3], int numOccluders, float (*plane)[4])
 {
     float v5; // [esp+4h] [ebp-858h]

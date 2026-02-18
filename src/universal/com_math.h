@@ -396,8 +396,46 @@ constexpr float g_identityMatrix44[4][4] =
   { 0.0, 0.0, 0.0, 1.0 }
 };
 
+constexpr float4 g_swizzleXYZA = {
+    {
+        0x00010203,
+        0x04050607,
+        0x08090A0B,
+        0x10111213
+    }
+};
+
+constexpr float4 g_swizzleYZXW = {
+    {
+        0x04050607,
+        0x08090A0B,
+        0x00010203,
+        0x0C0D0E0F
+    }
+};
+
+constexpr float4 g_keepXYW = {
+    {
+        0xFFFFFFFF,
+        0xFFFFFFFF,
+        0,
+        0xFFFFFFFF
+    }
+};
+
+constexpr float4 g_zero = { { 0.0, 0.0, 0.0, 0.0 } };
+
+
+constexpr float4 g_keepXYZ{ -1, -1, -1, 0 };
+
 constexpr float quatZRot[4] = { 0.0, 0.0, 1.0, 0.0 };
 
 constexpr float c_fadeRate = 1.0;
 
 const float SQRT2_0 = sqrtf(2.0);
+
+constexpr orientation_t orIdentity =
+{
+  { 0.0, 0.0, 0.0 },
+  { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } }
+};

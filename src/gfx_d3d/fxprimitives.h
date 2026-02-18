@@ -273,7 +273,7 @@ const struct FxEffectDef // sizeof=0x3C
 struct FxCamera // sizeof=0xA0
 {                                       // XREF: FxSystem/r FxSystem/r ...
     float origin[3];
-    volatile int isValid;
+    volatile unsigned int isValid;
     float frustum[6][4];
     float axis[3][3];
     unsigned int frustumPlaneCount;
@@ -283,8 +283,21 @@ struct FxCamera // sizeof=0xA0
 struct r_double_index_t // sizeof=0x4
 {                                       // XREF: FX_BuildQuadStampCodeMeshVerts/r
                                         // ?FX_PostLight_GenerateVerts@@YAXPAUFxPostLightInfo@@PAUFxSystem@@@Z/r ...
-    unsigned __int16 value[2];          // XREF: FX_Beam_GenerateVerts(FxGenerateVertsCmd *)+5AB/w
+    //unsigned __int16 value[2];          // XREF: FX_Beam_GenerateVerts(FxGenerateVertsCmd *)+5AB/w
     // FX_Beam_GenerateVerts(FxGenerateVertsCmd *)+5C2/w ...
+    union
+    {
+        unsigned __int16 value[2];          // ...
+        unsigned int kisak;
+    };
+    r_double_index_t()
+    {
+        kisak = 0;
+    }
+    r_double_index_t(int val)
+    {
+        kisak = val;
+    }
 };
 
 struct FxSpriteInfo // sizeof=0x10
@@ -344,7 +357,7 @@ struct __declspec(align(16)) FxEffect // sizeof=0xC0
     __int16 lightG;
     __int16 lightB;
     FxBoltAndSortOrder boltAndSortOrder;
-    volatile int frameCount;
+    volatile unsigned int frameCount;
     int msecBegin;
     int msecLastUpdate;
     FxSpatialFrame frameAtSpawn;
@@ -369,7 +382,7 @@ struct __declspec(align(16)) FxEffect // sizeof=0xC0
 
 struct FxEffectAtomics // sizeof=0x4
 {                                       // XREF: FxEffectContainer/r
-    volatile int status;
+    volatile unsigned int status;
 };
 
 struct __declspec(align(16)) FxEffectContainer // sizeof=0xD0
@@ -493,7 +506,7 @@ struct FxVisBlocker // sizeof=0x10
 struct FxVisState // sizeof=0x1010
 {                                       // XREF: FxSystemBuffers/r
     FxVisBlocker blocker[256];
-    volatile int blockerCount;
+    volatile unsigned int blockerCount;
     unsigned int pad[3];
 };
 
@@ -516,27 +529,27 @@ struct FxUniqueHandleDb // sizeof=0x4010
 
     FxUniqueHandleDb::Node nodes[1024];
     int firstFreeNode;
-    int numNodesInUse;
+    volatile unsigned int numNodesInUse;
     int pad[2];
 };
 
 struct __declspec(align(16)) FxSystemShared // sizeof=0x840
 {                                       // XREF: FxSystemContainer/r
-    volatile int firstFreeElem;
-    volatile int firstFreeTrailElem;
-    volatile int firstFreeTrail;
-    volatile int activeElemCount;
-    volatile int activeTrailElemCount;
-    volatile int activeTrailCount;
-    volatile int firstActiveEffect;
-    volatile int firstNewEffect;
-    volatile int firstFreeEffect;
+    volatile unsigned int firstFreeElem;
+    volatile unsigned int firstFreeTrailElem;
+    volatile unsigned int firstFreeTrail;
+    volatile unsigned int activeElemCount;
+    volatile unsigned int activeTrailElemCount;
+    volatile unsigned int activeTrailCount;
+    volatile unsigned int firstActiveEffect;
+    volatile unsigned int firstNewEffect;
+    volatile unsigned int firstFreeEffect;
     unsigned __int16 activeSpotLightEffectHandle;
     unsigned __int16 activeSpotLightElemHandle;
-    volatile int activeSpotLightEffectCount;
-    volatile int activeSpotLightElemCount;
+    volatile unsigned int activeSpotLightEffectCount;
+    volatile unsigned int activeSpotLightElemCount;
     unsigned __int16 allEffectHandles[1024];
-    volatile int iteratorCount;
+    volatile unsigned int iteratorCount;
     // padding byte
     // padding byte
     // padding byte
@@ -562,7 +575,7 @@ struct FxSystem // sizeof=0x360
     FxPool<FxElem, FxElemContainer> *elems;
     FxPool<FxTrail, FxTrail> *trails;
     FxPool<FxTrailElem, FxTrailElem> *trailElems;
-    volatile int gfxCloudCount;
+    volatile unsigned int gfxCloudCount;
     FxVisState *visState;
     const FxVisState *visStateBufferRead;
     FxVisState *visStateBufferWrite;
@@ -570,7 +583,7 @@ struct FxSystem // sizeof=0x360
     // padding byte
     // padding byte
     int msecNow;
-    volatile int msecDraw;
+    volatile unsigned int msecDraw;
     int frameCount;
     bool isInitialized;
     bool needsGarbageCollection;
@@ -610,24 +623,8 @@ struct FxBeamInfo // sizeof=0x1B04
     volatile int beamCount;             // XREF: FX_Beam_Begin(void)+3/w
 };
 
-struct FxPostLight // sizeof=0x24
-{                                       // XREF: FxPostLightInfo/r
-                                        // CG_Laser_Add_Core/r
-    float begin[3];                     // XREF: CG_Laser_Add_Core+636/w
-                                        // CG_Laser_Add_Core+640/w ...
-    float end[3];                       // XREF: CG_Laser_Add_Core+654/w
-                                        // CG_Laser_Add_Core+65E/w ...
-    float radius;                       // XREF: CG_Laser_Add_Core+67D/w
-    GfxColor color;                     // XREF: CG_Laser_Add_Core+6B1/w
-    Material *material;                 // XREF: CG_Laser_Add_Core+6BA/w
-};
-
-struct FxPostLightInfo // sizeof=0xD84
-{                                       // XREF: .data:g_postLightInfo/r
-    FxPostLight postLights[96];
-    int postLightCount;                 // XREF: FX_PostLight_Begin(void)+3/w
-                                        // FX_PostLight_Add(FxPostLight *)+5/r ...
-};
+struct FxPostLight;
+struct FxPostLightInfo;
 
 struct FxSprite // sizeof=0x20
 {                                       // XREF: CG_AddPlayerSpriteDrawSurf/r

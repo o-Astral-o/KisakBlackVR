@@ -1,10 +1,14 @@
 #include "fx_update_util.h"
 
+#include <gfx_d3d/fxprimitives.h>
+#include "fx_random.h"
+#include "fx_system.h"
+
 void __cdecl FX_OffsetSpawnOrigin(
-                const FxSpatialFrame *effectFrame,
-                const FxElemDef *elemDef,
-                int randomSeed,
-                float *spawnOrigin)
+    const FxSpatialFrame *effectFrame,
+    const FxElemDef *elemDef,
+    int randomSeed,
+    float *spawnOrigin)
 {
     float v4; // [esp+Ch] [ebp-70h]
     float v5; // [esp+14h] [ebp-68h]
@@ -16,44 +20,44 @@ void __cdecl FX_OffsetSpawnOrigin(
     float cosYaw; // [esp+54h] [ebp-28h]
     float axis[3][3]; // [esp+58h] [ebp-24h] BYREF
 
-    if ( (elemDef->flags & 0x30) != 0 )
+    if ((elemDef->flags & 0x30) != 0)
     {
-        if ( (elemDef->flags & 0x30) == 0x10 )
+        if ((elemDef->flags & 0x30) == 0x10)
         {
             FX_RandomDir(randomSeed, dir);
-            radius = (float)(*(float *)&dword_CAEB0C[randomSeed] * elemDef->spawnOffsetRadius.amplitude)
-                         + elemDef->spawnOffsetRadius.base;
+            radius = (float)(fx_randomTable[randomSeed + 11] * elemDef->spawnOffsetRadius.amplitude)
+                + elemDef->spawnOffsetRadius.base;
             *spawnOrigin = (float)(radius * dir[0]) + *spawnOrigin;
             spawnOrigin[1] = (float)(radius * dir[1]) + spawnOrigin[1];
             spawnOrigin[2] = (float)(radius * dir[2]) + spawnOrigin[2];
         }
         else
         {
-            if ( (elemDef->flags & 0x30) != 0x20
+            if ((elemDef->flags & 0x30) != 0x20
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
-                            117,
-                            0,
-                            "%s\n\t(elemDef->flags & FX_ELEM_SPAWN_OFFSET_MASK) = %i",
-                            "((elemDef->flags & FX_ELEM_SPAWN_OFFSET_MASK) == FX_ELEM_SPAWN_OFFSET_CYLINDER)",
-                            elemDef->flags & 0x30) )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
+                    117,
+                    0,
+                    "%s\n\t(elemDef->flags & FX_ELEM_SPAWN_OFFSET_MASK) = %i",
+                    "((elemDef->flags & FX_ELEM_SPAWN_OFFSET_MASK) == FX_ELEM_SPAWN_OFFSET_CYLINDER)",
+                    elemDef->flags & 0x30))
             {
                 __debugbreak();
             }
-            radius = (float)(*(float *)&dword_CAEB0C[randomSeed] * elemDef->spawnOffsetRadius.amplitude)
-                         + elemDef->spawnOffsetRadius.base;
-            yaw = *(float *)&dword_CAEB04[randomSeed] * 6.2831855;
+            radius = (float)(fx_randomTable[randomSeed + 11] * elemDef->spawnOffsetRadius.amplitude)
+                + elemDef->spawnOffsetRadius.base;
+            yaw = fx_randomTable[randomSeed + 9] * 6.2831855;
             UnitQuatToAxis(effectFrame->quat, axis);
             cosYaw = cos(yaw);
             sinYaw = sin(yaw);
             v4 = radius * cosYaw;
             v5 = radius * sinYaw;
             *spawnOrigin = (float)((float)((float)(radius * cosYaw) * axis[1][0]) + *spawnOrigin)
-                                     + (float)((float)(radius * sinYaw) * axis[2][0]);
+                + (float)((float)(radius * sinYaw) * axis[2][0]);
             spawnOrigin[1] = (float)((float)(v4 * axis[1][1]) + spawnOrigin[1]) + (float)(v5 * axis[2][1]);
             spawnOrigin[2] = (float)((float)(v4 * axis[1][2]) + spawnOrigin[2]) + (float)(v5 * axis[2][2]);
-            height = (float)(*(float *)&dword_CAEB08[randomSeed] * elemDef->spawnOffsetHeight.amplitude)
-                         + elemDef->spawnOffsetHeight.base;
+            height = (float)(fx_randomTable[randomSeed + 10] * elemDef->spawnOffsetHeight.amplitude)
+                + elemDef->spawnOffsetHeight.base;
             *spawnOrigin = (float)(height * axis[0][0]) + *spawnOrigin;
             spawnOrigin[1] = (float)(height * axis[0][1]) + spawnOrigin[1];
             spawnOrigin[2] = (float)(height * axis[0][2]) + spawnOrigin[2];
@@ -105,20 +109,17 @@ void __cdecl FX_GetOriginForTrailElem(
 }
 
 void __cdecl FX_GetSpawnOrigin(
-                const FxSpatialFrame *effectFrame,
-                const FxElemDef *elemDef,
-                int randomSeed,
-                float *spawnOrigin)
+    const FxSpatialFrame *effectFrame,
+    const FxElemDef *elemDef,
+    int randomSeed,
+    float *spawnOrigin)
 {
     float offset[3]; // [esp+1Ch] [ebp-Ch] BYREF
 
-    offset[0] = (float)(*(float *)&dword_CAEAF8[randomSeed] * elemDef->spawnOrigin[0].amplitude)
-                        + elemDef->spawnOrigin[0].base;
-    offset[1] = (float)(*(float *)&dword_CAEAFC[randomSeed] * elemDef->spawnOrigin[1].amplitude)
-                        + elemDef->spawnOrigin[1].base;
-    offset[2] = (float)(*(float *)&dword_CAEB00[randomSeed] * elemDef->spawnOrigin[2].amplitude)
-                        + elemDef->spawnOrigin[2].base;
-    if ( (elemDef->flags & 2) != 0 )
+    offset[0] = (float)(fx_randomTable[randomSeed + 6] * elemDef->spawnOrigin[0].amplitude) + elemDef->spawnOrigin[0].base;
+    offset[1] = (float)(fx_randomTable[randomSeed + 7] * elemDef->spawnOrigin[1].amplitude) + elemDef->spawnOrigin[1].base;
+    offset[2] = (float)(fx_randomTable[randomSeed + 8] * elemDef->spawnOrigin[2].amplitude) + elemDef->spawnOrigin[2].base;
+    if ((elemDef->flags & 2) != 0)
     {
         FX_TransformPosFromLocalToWorld(effectFrame, offset, spawnOrigin);
     }
@@ -129,6 +130,7 @@ void __cdecl FX_GetSpawnOrigin(
         spawnOrigin[2] = offset[2] + effectFrame->origin[2];
     }
 }
+
 
 void __cdecl FX_TransformPosFromLocalToWorld(const FxSpatialFrame *frame, float *posLocal, float *posWorld)
 {
@@ -365,21 +367,21 @@ void __cdecl FX_GetOrientation(
     }
 }
 
-void __cdecl FX_GetVelocityAtTime(
-                const FxElemDef *elemDef,
-                int randomSeed,
-                float msecLifeSpan,
-                float msecElapsed,
-                const orientation_t *orient,
-                const float *baseVel,
-                float *velocity)
+void FX_GetVelocityAtTime(
+    const FxElemDef *elemDef,
+    int randomSeed,
+    float msecLifeSpan,
+    float msecElapsed,
+    const orientation_t *orient,
+    const float *baseVel,
+    float *velocity)
 {
-    const char *v7; // eax
-    int v8; // eax
-    char *v9; // eax
-    double v10; // [esp+18h] [ebp-58h]
-    int v11; // [esp+20h] [ebp-50h]
-    float v12; // [esp+24h] [ebp-4Ch]
+    char *v8; // eax
+    int v9; // eax
+    char *v10; // eax
+    double v11; // [esp+18h] [ebp-58h]
+    float v12; // [esp+20h] [ebp-50h]
+    float v13; // [esp+24h] [ebp-4Ch]
     float velocityWorld[3]; // [esp+28h] [ebp-48h] BYREF
     float sampleTime; // [esp+34h] [ebp-3Ch]
     float samplePoint; // [esp+38h] [ebp-38h]
@@ -392,70 +394,70 @@ void __cdecl FX_GetVelocityAtTime(
     float rangeLerp[3]; // [esp+60h] [ebp-10h] BYREF
     float sampleLerp; // [esp+6Ch] [ebp-4h]
 
-    if ( !elemDef
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp", 310, 0, "%s", "elemDef") )
+    if (!elemDef
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp", 310, 0, "%s", "elemDef"))
     {
         __debugbreak();
     }
-    if ( !elemDef->velSamples
+    if (!elemDef->velSamples
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
-                    311,
-                    0,
-                    "%s",
-                    "elemDef->velSamples") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
+            311,
+            0,
+            "%s",
+            "elemDef->velSamples"))
     {
         __debugbreak();
     }
-    if ( !elemDef->velIntervalCount
+    if (!elemDef->velIntervalCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
-                    312,
-                    0,
-                    "%s\n\t(elemDef->velIntervalCount) = %i",
-                    "(elemDef->velIntervalCount >= 1)",
-                    elemDef->velIntervalCount) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
+            312,
+            0,
+            "%s\n\t(elemDef->velIntervalCount) = %i",
+            "(elemDef->velIntervalCount >= 1)",
+            elemDef->velIntervalCount))
     {
         __debugbreak();
     }
     sampleTime = msecElapsed / msecLifeSpan;
-    if ( (float)(msecElapsed / msecLifeSpan) < 0.0 || sampleTime >= 1.0 )
+    if ((float)(msecElapsed / msecLifeSpan) < 0.0 || sampleTime >= 1.0)
     {
-        v7 = va("%g: %g, %g", sampleTime, msecElapsed, msecLifeSpan);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
-                        315,
-                        0,
-                        "%s\n\t%s",
-                        "0.0f <= sampleTime && sampleTime < 1.0f",
-                        v7) )
+        v8 = va("%g: %g, %g", sampleTime, msecElapsed, msecLifeSpan);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
+            315,
+            0,
+            "%s\n\t%s",
+            "0.0f <= sampleTime && sampleTime < 1.0f",
+            v8))
             __debugbreak();
     }
-    v12 = fx_randomTable[randomSeed];
-    rangeLerp[0] = v12;
-    v11 = dword_CAEAE4[randomSeed];
-    LODWORD(rangeLerp[1]) = v11;
-    HIDWORD(v10) = dword_CAEAE8[randomSeed];
-    rangeLerp[2] = *((float *)&v10 + 1);
+    v13 = fx_randomTable[randomSeed];
+    rangeLerp[0] = v13;
+    v12 = fx_randomTable[randomSeed + 1];
+    rangeLerp[1] = v12;
+    *((float *)&v11 + 1) = fx_randomTable[randomSeed + 2];
+    rangeLerp[2] = *((float *)&v11 + 1);
     intervalCount = elemDef->velIntervalCount;
     samplePoint = (float)intervalCount * sampleTime;
-    *(float *)&v10 = floor(samplePoint);
-    v8 = (int)*(float *)&v10;
-    sampleIndex = v8;
-    sampleLerp = samplePoint - (float)v8;
-    if ( v8 < 0 || sampleIndex >= intervalCount )
+    *(float *)&v11 = floor(samplePoint);
+    v9 = (int)*(float *)&v11;
+    sampleIndex = v9;
+    sampleLerp = samplePoint - (float)v9;
+    if (v9 < 0 || sampleIndex >= intervalCount)
     {
-        v9 = va("%i for %g on %i intervals", sampleIndex, sampleTime, intervalCount);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
-                        325,
-                        1,
-                        "%s\n\t(va( \"%i for %g on %i intervals\", sampleIndex, sampleTime, intervalCount )) = %i",
-                        "(sampleIndex >= 0 && sampleIndex < intervalCount)",
-                        v9,
-                        v10,
-                        v11,
-                        v12) )
+        v10 = va("%i for %g on %i intervals", sampleIndex, sampleTime, intervalCount);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update_util.cpp",
+            325,
+            1,
+            "%s\n\t(va( \"%i for %g on %i intervals\", sampleIndex, sampleTime, intervalCount )) = %i",
+            "(sampleIndex >= 0 && sampleIndex < intervalCount)",
+            v10,
+            v11,
+            v12,
+            v13))
             __debugbreak();
     }
     weight[1] = (float)intervalCount * sampleLerp;
@@ -465,14 +467,14 @@ void __cdecl FX_GetVelocityAtTime(
     velocity[1] = baseVel[1];
     velocity[2] = baseVel[2];
     velocityScale = 1000.0f;
-    if ( ((unsigned int)&cls.wagerServers[5331].basictraining & elemDef->flags) != 0 )
+    if (((unsigned int)&cls.wagerServers[5331].basictraining & elemDef->flags) != 0)
     {
         FX_GetVelocityAtTimeInFrame(&samples->world, &samples[1].world, rangeLerp, weight, velocityWorld);
         *velocity = (float)(velocityScale * velocityWorld[0]) + *velocity;
         velocity[1] = (float)(velocityScale * velocityWorld[1]) + velocity[1];
         velocity[2] = (float)(velocityScale * velocityWorld[2]) + velocity[2];
     }
-    if ( ((unsigned int)&cls.rankedServers[711].game[35] & elemDef->flags) != 0 )
+    if (((unsigned int)&cls.rankedServers[711].game[35] & elemDef->flags) != 0)
     {
         FX_GetVelocityAtTimeInFrame(&samples->local, &samples[1].local, rangeLerp, weight, velocityLocal);
         FX_OrientationDirToWorldDir(orient, velocityLocal, velocityWorld);
@@ -481,6 +483,7 @@ void __cdecl FX_GetVelocityAtTime(
         velocity[2] = (float)(velocityScale * velocityWorld[2]) + velocity[2];
     }
 }
+
 
 void __cdecl FX_GetVelocityAtTimeInFrame(
                 const FxElemVelStateInFrame *statePrev,
@@ -552,6 +555,7 @@ void __cdecl FX_OrientationPosFromWorldPos(const orientation_t *orient, const fl
                  + (float)(dir_8 * orient->axis[2][2]);
 }
 
+int warnCount_1;
 void __cdecl FX_AddVisBlocker(FxSystem *system, const float *posWorld, float radius, float opacity)
 {
     FxVisState *visState; // [esp+4h] [ebp-Ch]
@@ -664,14 +668,14 @@ char __cdecl FX_CullSphere(const FxCamera *camera, unsigned int frustumPlaneCoun
                             v6) )
                 __debugbreak();
         }
-        if ( COERCE_FLOAT(LODWORD(radius) ^ _mask__NegFloat_) >= (float)((float)((float)((float)(camera->frustum[planeIndex][0]
-                                                                                                                                                                                     * *posWorld)
-                                                                                                                                                                     + (float)(camera->frustum[planeIndex][1]
-                                                                                                                                                                                     * posWorld[1]))
-                                                                                                                                                     + (float)(camera->frustum[planeIndex][2]
-                                                                                                                                                                     * posWorld[2]))
-                                                                                                                                     - camera->frustum[planeIndex][3]) )
+        if ((-(radius)) >= 
+            (float)((float)((float)((float)(camera->frustum[planeIndex][0] * *posWorld) 
+            + (float)(camera->frustum[planeIndex][1] * posWorld[1])) 
+            + (float)(camera->frustum[planeIndex][2] * posWorld[2]))
+            - camera->frustum[planeIndex][3]))
+        {
             return 1;
+        }
     }
     return 0;
 }
@@ -713,32 +717,32 @@ void __cdecl FX_AnglesToOrientedAxis(float *anglesInRad, const orientation_t *or
 }
 
 void __cdecl FX_GetElemAxis(
-                const FxElemDef *elemDef,
-                int randomSeed,
-                const orientation_t *orient,
-                float msecElapsed,
-                float (*axis)[3])
+    const FxElemDef *elemDef,
+    int randomSeed,
+    const orientation_t *orient,
+    float msecElapsed,
+    float (*axis)[3])
 {
     float angles[3]; // [esp+30h] [ebp-Ch] BYREF
 
-    angles[0] = (float)(*(float *)&dword_CAEB10[randomSeed] * elemDef->spawnAngles[0].amplitude)
-                        + elemDef->spawnAngles[0].base;
-    angles[1] = (float)(*(float *)&dword_CAEB14[randomSeed] * elemDef->spawnAngles[1].amplitude)
-                        + elemDef->spawnAngles[1].base;
-    angles[2] = (float)(*(float *)&dword_CAEB18[randomSeed] * elemDef->spawnAngles[2].amplitude)
-                        + elemDef->spawnAngles[2].base;
-    angles[0] = (float)((float)((float)(*(float *)&dword_CAEAEC[randomSeed] * elemDef->angularVelocity[0].amplitude)
-                                                        + elemDef->angularVelocity[0].base)
-                                        * msecElapsed)
-                        + angles[0];
-    angles[1] = (float)((float)((float)(*(float *)&dword_CAEAF0[randomSeed] * elemDef->angularVelocity[1].amplitude)
-                                                        + elemDef->angularVelocity[1].base)
-                                        * msecElapsed)
-                        + angles[1];
-    angles[2] = (float)((float)((float)(*(float *)&dword_CAEAF4[randomSeed] * elemDef->angularVelocity[2].amplitude)
-                                                        + elemDef->angularVelocity[2].base)
-                                        * msecElapsed)
-                        + angles[2];
+    angles[0] = (float)(fx_randomTable[randomSeed + 12] * elemDef->spawnAngles[0].amplitude)
+        + elemDef->spawnAngles[0].base;
+    angles[1] = (float)(fx_randomTable[randomSeed + 13] * elemDef->spawnAngles[1].amplitude)
+        + elemDef->spawnAngles[1].base;
+    angles[2] = (float)(fx_randomTable[randomSeed + 14] * elemDef->spawnAngles[2].amplitude)
+        + elemDef->spawnAngles[2].base;
+    angles[0] = (float)((float)((float)(fx_randomTable[randomSeed + 3] * elemDef->angularVelocity[0].amplitude)
+        + elemDef->angularVelocity[0].base)
+        * msecElapsed)
+        + angles[0];
+    angles[1] = (float)((float)((float)(fx_randomTable[randomSeed + 4] * elemDef->angularVelocity[1].amplitude)
+        + elemDef->angularVelocity[1].base)
+        * msecElapsed)
+        + angles[1];
+    angles[2] = (float)((float)((float)(fx_randomTable[randomSeed + 5] * elemDef->angularVelocity[2].amplitude)
+        + elemDef->angularVelocity[2].base)
+        * msecElapsed)
+        + angles[2];
     FX_AnglesToOrientedAxis(angles, orient, axis);
 }
 

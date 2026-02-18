@@ -1,4 +1,5 @@
 #include "FxCurve_load_obj.h"
+#include <universal/com_memory.h>
 
 const FxCurve *__cdecl FxCurve_AllocAndCreateWithKeys(float *keyArray, int dimensionCount, int keyCount)
 {

@@ -67,13 +67,7 @@ struct MarkClipPlaneSet // sizeof=0xB4
     int planeCount;
 };
 
-struct FxMarkPoint // sizeof=0x20
-{                                       // XREF: .data:g_fxMarkPoints/r
-                                        // FxPointGroup/r
-    float xyz[3];
-    float lmapCoord[2];
-    float normal[3];
-};
+struct FxMarkPoint;
 
 struct __declspec(align(4)) MarkInfoCollidedBModel // sizeof=0xC
 {                                       // XREF: MarkInfo/r

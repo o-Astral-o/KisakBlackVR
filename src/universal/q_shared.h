@@ -186,6 +186,7 @@ typedef ull                         uint64;
 
 #define LOBYTE(x)    BYTEn(x,LOW_IND(x,_BYTE))
 #define LOWORD(x)    WORDn(x,LOW_IND(x,_WORD))
+#define LOWORD_NAMEHACK(x)    WORDn(x,LOW_IND(x,_WORD)) // windows. 
 #define LODWORD(x) DWORDn(x,LOW_IND(x,_DWORD))
 #define HIBYTE(x)    BYTEn(x,HIGH_IND(x,_BYTE))
 #define HIWORD(x)    WORDn(x,HIGH_IND(x,_WORD))

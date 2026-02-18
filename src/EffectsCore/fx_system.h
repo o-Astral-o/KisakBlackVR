@@ -1,5 +1,24 @@
 #pragma once
 
+#include <gfx_d3d/fxprimitives.h>
+
+struct FxSystemContainer // sizeof=0xBA0
+{
+    FxSystem system;
+    FxSystemShared shared;
+};
+
+struct FxSystemBuffers // sizeof=0x62480
+{
+    FxEffectContainer effects[1024];
+    FxPool<FxElem,FxElemContainer> elems[2048];
+    FxPool<FxTrail,FxTrail> trails[128];
+    FxPool<FxTrailElem,FxTrailElem> trailElems[2048];
+    FxVisState visState[2];
+    FxUniqueHandleDb uniqueHandleDb;
+    unsigned __int8 padBuffer[80];
+};
+
 int __cdecl FX_AllocateClientMemory_SizeRequired(int maxLocalClients);
 void __cdecl FX_AllocateClientMemory(HunkUser *hunk, int maxLocalClients);
 void __cdecl FX_FreeClientMemory(HunkUser *hunk);
@@ -209,7 +228,11 @@ void __cdecl FX_FreeSpotLightElem(FxSystem *system, unsigned __int16 elemHandle,
 double __cdecl FX_GetClientVisibility(int localClientNum, const float *start, const float *end);
 bool __cdecl FX_ClientVisibilityTest(int localClientNum, const float *start, const float *end);
 char __cdecl FX_GetActiveSpotLightBoltDobj(int localClientNum, int *dobjHandleOut);
-int __cdecl FX_PoolToHandle_Generic<FxTrailElem,FxTrailElem,2048>(
-                FxPool<FxTrailElem,FxTrailElem> *poolArray,
-                FxTrailElem *item_slim);
-int __cdecl FX_PoolToHandle_Generic<FxTrail,FxTrail,128>(FxPool<FxTrail,FxTrail> *poolArray, FxTrail *item_slim);
+
+//int __cdecl FX_PoolToHandle_Generic<FxTrailElem,FxTrailElem,2048>(
+//                FxPool<FxTrailElem,FxTrailElem> *poolArray,
+//                FxTrailElem *item_slim);
+//int __cdecl FX_PoolToHandle_Generic<FxTrail,FxTrail,128>(FxPool<FxTrail,FxTrail> *poolArray, FxTrail *item_slim);
+//
+
+extern int fx_serverVisClient;

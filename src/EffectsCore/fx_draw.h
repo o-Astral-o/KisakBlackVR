@@ -194,11 +194,11 @@ void __cdecl FX_DrawSpriteEffect(FxSystem *system, FxEffect *effect, int drawTim
 void __cdecl FX_GenerateVerts(FxGenerateVertsCmd *cmd);
 void __cdecl FX_FillGenerateVertsCmd(int localClientNum, FxGenerateVertsCmd *cmd);
 
-FxPool<FxTrailElem,FxTrailElem> *__cdecl FX_PoolFromHandle_Generic<FxTrailElem,FxTrailElem,2048>(
-                FxPool<FxTrailElem,FxTrailElem> *poolArray,
-                unsigned __int16 handle);
-FxPool<FxTrail,FxTrail> *__cdecl FX_PoolFromHandle_Generic<FxTrail,FxTrail,128>(
-                FxPool<FxTrail,FxTrail> *poolArray,
-                unsigned __int16 handle);
+//FxPool<FxTrailElem,FxTrailElem> *__cdecl FX_PoolFromHandle_Generic<FxTrailElem,FxTrailElem,2048>(
+//                FxPool<FxTrailElem,FxTrailElem> *poolArray,
+//                unsigned __int16 handle);
+//FxPool<FxTrail,FxTrail> *__cdecl FX_PoolFromHandle_Generic<FxTrail,FxTrail,128>(
+//                FxPool<FxTrail,FxTrail> *poolArray,
+//                unsigned __int16 handle);
 
 void __cdecl FX_EvaluateDistanceFade(FxDrawState *draw);

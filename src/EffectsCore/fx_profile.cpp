@@ -1,4 +1,7 @@
 #include "fx_profile.h"
+#include "fx_system.h"
+#include "fx_draw.h"
+#include "fx_archive.h"
 
 void __cdecl FX_DrawProfile(int clientIndex, void (__cdecl *drawFunc)(char *), float *profilePos)
 {
@@ -264,7 +267,7 @@ void __cdecl FX_DrawPriorityDebug(int clientIndex, void (__cdecl *drawFunc)(char
             {
                 __debugbreak();
             }
-            base[2 * num] = v14->effect.def;
+            base[2 * num] = (unsigned int)v14->effect.def;
             base[2 * num++ + 1] = 1;
         }
     }
@@ -437,7 +440,7 @@ void __cdecl FX_DrawMarkProfile(unsigned int clientIndex, void (__cdecl *drawFun
     drawFunc(v9);
     v10 = va("%4i Ent Model", entModelMarks);
     drawFunc(v10);
-    FX_DrawMark//Profile_MarkPrint(
+    FX_DrawMarkProfile_MarkPrint(
         marksSystem,
         marksSystem->firstActiveWorldMarkHandle,
         "world",
@@ -445,7 +448,7 @@ void __cdecl FX_DrawMarkProfile(unsigned int clientIndex, void (__cdecl *drawFun
         (void (__cdecl *)(const char *, float *))drawFunc,
         profilePos);
     for ( entityIndex = 0; entityIndex != 1536; ++entityIndex )
-        FX_DrawMark//Profile_MarkPrint(
+        FX_DrawMarkProfile_MarkPrint(
             marksSystem,
             marksSystem->entFirstMarkHandles[entityIndex],
             "ent",
@@ -460,7 +463,7 @@ void __cdecl FX_DrawMarkProfile(unsigned int clientIndex, void (__cdecl *drawFun
         {
             modelIndex = markItera->context.modelIndex;
             v11 = FX_MarkToHandle(marksSystem, markItera);
-            FX_DrawMark//Profile_MarkPrint(
+            FX_DrawMarkProfile_MarkPrint(
                 marksSystem,
                 v11,
                 "sm",
@@ -471,7 +474,7 @@ void __cdecl FX_DrawMarkProfile(unsigned int clientIndex, void (__cdecl *drawFun
     }
 }
 
-void __cdecl FX_DrawMark//Profile_MarkPrint(
+void __cdecl FX_DrawMarkProfile_MarkPrint(
                 FxMarksSystem *marksSystem,
                 unsigned __int16 head,
                 const char *name,

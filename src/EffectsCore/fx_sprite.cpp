@@ -1,4 +1,8 @@
 #include "fx_sprite.h"
+#include <gfx_d3d/r_drawsurf.h>
+
+FxSpriteInfo g_spriteInfo;
+FxSprite g_sprites[1664]; // way bigger than cod4
 
 void __cdecl FX_SpriteGenerateVerts(FxGenerateVertsCmd *cmd)
 {
@@ -94,10 +98,10 @@ void __cdecl FX_BuildSpriteCodeMeshVerts(
         left,
         up,
         rgbaColor,
-        COERCE_INT(0.0),
-        COERCE_INT(0.0),
-        COERCE_INT(1.0),
-        COERCE_INT(1.0));
+        int(0.0),
+        int(0.0),
+        int(1.0),
+        int(1.0));
 }
 
 void __cdecl FX_BuildQuadStampCodeMeshVerts(
@@ -176,13 +180,16 @@ void __cdecl FX_BuildQuadStampCodeMeshVerts(
         leftDown[1] = left[1] - up[1];
         leftDown[2] = left[2] - up[2];
         Byte4CopyRgbaToVertexColor(rgbaColor, (unsigned __int8 *)&nativeColor);
-        v30.array[0] = (int)(float)((float)(COERCE_FLOAT(*(unsigned int *)viewAxis ^ _mask__NegFloat_) * 127.0) + 127.5);
-        v30.array[1] = (int)(float)((float)(COERCE_FLOAT(*((unsigned int *)viewAxis + 1) ^ _mask__NegFloat_) * 127.0) + 127.5);
-        v30.array[2] = (int)(float)((float)(COERCE_FLOAT(*((unsigned int *)viewAxis + 2) ^ _mask__NegFloat_) * 127.0) + 127.5);
+        //v30.array[0] = (int)(float)((float)(COERCE_FLOAT(*(unsigned int *)viewAxis ^ _mask__NegFloat_) * 127.0) + 127.5);
+        //v30.array[1] = (int)(float)((float)(COERCE_FLOAT(*((unsigned int *)viewAxis + 1) ^ _mask__NegFloat_) * 127.0) + 127.5);
+        //v30.array[2] = (int)(float)((float)(COERCE_FLOAT(*((unsigned int *)viewAxis + 2) ^ _mask__NegFloat_) * 127.0) + 127.5);
+        v30.array[0] = (int)(float)((float)(-(viewAxis[0]) * 127.0) + 127.5);
+        v30.array[1] = (int)(float)((float)(-(viewAxis[1]) * 127.0) + 127.5);
+        v30.array[2] = (int)(float)((float)(-(viewAxis[2]) * 127.0) + 127.5);
         v30.array[3] = 63;
-        v29.array[0] = (int)(float)((float)(COERCE_FLOAT(*(unsigned int *)left ^ _mask__NegFloat_) * 127.0) + 127.5);
-        v29.array[1] = (int)(float)((float)(COERCE_FLOAT(*((unsigned int *)left + 1) ^ _mask__NegFloat_) * 127.0) + 127.5);
-        v29.array[2] = (int)(float)((float)(COERCE_FLOAT(*((unsigned int *)left + 2) ^ _mask__NegFloat_) * 127.0) + 127.5);
+        v29.array[0] = (int)(float)((float)(-(left[0]) * 127.0) + 127.5);
+        v29.array[1] = (int)(float)((float)(-(left[1]) * 127.0) + 127.5);
+        v29.array[2] = (int)(float)((float)(-(left[2]) * 127.0) + 127.5);
         v29.array[3] = 63;
         baseVerts = R_GetCodeMeshVerts(baseVertex);
         verts = baseVerts;
@@ -430,8 +437,11 @@ void __cdecl FX_SpriteBegin()
 
 void __cdecl FX_SpriteAdd(FxSprite *sprite)
 {
-    if ( g_spriteInfo.indices != (r_double_index_t *)1664 )
-        memcpy((char *)&unk_3CAF610 + 32 * (int)g_spriteInfo.indices++, sprite, 0x20u);
+    //if ( g_spriteInfo.indices != (r_double_index_t *)1664 )
+    //    memcpy((char *)&unk_3CAF610 + 32 * (int)g_spriteInfo.indices++, sprite, 0x20u);
+
+    if ((int)g_spriteInfo.indexCount < arr_cnt(g_sprites))
+        memcpy(&g_sprites[g_spriteInfo.indexCount++], sprite, sizeof(FxSprite));
 }
 
 FxSpriteInfo *__cdecl FX_SpriteGetInfo()

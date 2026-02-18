@@ -20,7 +20,6 @@ float max_plop_size = 5.0;
 
 int water_rand_seed = 3;
 
-float4 g_zero = { { 0.0, 0.0, 0.0, 0.0 } };
 float4 g_255 = { { 255.0, 255.0, 255.0, 255.0 } };
 float4 g_swizzleXZYW = { 66051u, 134810123u, 67438087u, 202182159u };
 float4 g_swizzleXYAB = { 66051u, 67438087u, 269554195u, 336926231u };

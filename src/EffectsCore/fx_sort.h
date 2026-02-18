@@ -1,4 +1,17 @@
 #pragma once
+#include <gfx_d3d/fxprimitives.h>
+
+struct __declspec(align(4)) FxInsertSortElem // sizeof=0x14
+{                                       // XREF: FX_SortSpriteElemIntoEffect/r
+    int defSortOrder;                   // XREF: FX_SortSpriteElemIntoEffect+70/r
+    float distToCamSq;
+    int msecBegin;
+    int defIndex;
+    unsigned __int8 elemType;
+    // padding byte
+    // padding byte
+    // padding byte
+};
 
 void __cdecl FX_SortEffects(FxSystem *system);
 void __cdecl FX_WaitBeginIteratingOverEffects_Exclusive(FxSystem *system);
@@ -17,6 +30,6 @@ bool __cdecl FX_ExistingElemSortsBeforeNewElem(
                 const FxEffect *effect,
                 const FxElem *remoteElem,
                 const FxInsertSortElem *sortElemNew);
-int __cdecl FX_PoolToHandle_Generic<FxElem,FxElemContainer,2048>(
-                FxPool<FxElem,FxElemContainer> *poolArray,
-                FxElem *item_slim);
+//int __cdecl FX_PoolToHandle_Generic<FxElem,FxElemContainer,2048>(
+//                FxPool<FxElem,FxElemContainer> *poolArray,
+//                FxElem *item_slim);

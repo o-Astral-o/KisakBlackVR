@@ -1,32 +1,31 @@
 #include "fx_update.h"
+#include "fx_random.h"
+#include <demo/demo_common.h>
+#include "fx_wind.h"
+#include "fx_system.h"
+#include "fx_draw.h"
+#include "fx_sort.h"
+#include <cgame/cg_sound.h>
+#include <sound/snd_public_async.h>
+#include <qcommon/dobj_management.h>
+#include <cgame_mp/cg_ents_mp.h>
+#include <xanim/dobj_utils.h>
+#include "fx_archive.h"
+#include "fx_update_util.h"
+#include "fx_unique_handle.h"
+#include <universal/com_math_anglevectors.h>
+#include <DynEntity/DynEntity_load_obj.h>
+#include "fx_dvars.h"
+#include <gfx_d3d/r_workercmds_common.h>
+#include "fx_beam.h"
+#include "fx_postlight.h"
+#include "fx_sprite.h"
+#include <gfx_d3d/r_water_sim.h>
+#include "fx_marks.h"
 
-void __cdecl FX_TrailElem_CompressBasis(const float (*inBasis)[3], char (*outBasis)[3])
-{
-    int v2; // [esp+0h] [ebp-10h]
-    int v3; // [esp+4h] [ebp-Ch]
-    int basisVecIter; // [esp+8h] [ebp-8h]
-    int dimIter; // [esp+Ch] [ebp-4h]
+#include <universal/q_shared.h>
+#include <bgame/bg_wind.h>
 
-    for ( basisVecIter = 0; basisVecIter != 2; ++basisVecIter )
-    {
-        for ( dimIter = 0; dimIter != 3; ++dimIter )
-        {
-            v3 = (int)(float)(127.0 * (float)(*inBasis)[3 * basisVecIter + dimIter]);
-            if ( v3 >= -128 )
-            {
-                if ( v3 <= 127 )
-                    v2 = (int)(float)(127.0 * (float)(*inBasis)[3 * basisVecIter + dimIter]);
-                else
-                    LOBYTE(v2) = 127;
-            }
-            else
-            {
-                LOBYTE(v2) = 0x80;
-            }
-            (*outBasis)[3 * basisVecIter + dimIter] = v2;
-        }
-    }
-}
 
 bool __cdecl FX_IsDemoPlaying()
 {
@@ -303,7 +302,7 @@ int __cdecl FX_LimitStabilizeTimeForEffectDef_Recurse(const FxEffectDef *remoteE
     int v3; // [esp+0h] [ebp-28h]
     int v4; // [esp+4h] [ebp-24h]
     int elemIter; // [esp+10h] [ebp-18h]
-    FxElemDef *elemDefs; // [esp+18h] [ebp-10h]
+    const FxElemDef *elemDefs; // [esp+18h] [ebp-10h]
     int maxStabilizeTime; // [esp+20h] [ebp-8h]
     int elemCount; // [esp+24h] [ebp-4h]
 
@@ -1030,7 +1029,7 @@ void __cdecl FX_UpdateEffectPartialForClass(
                 unsigned __int16 elemHandleStop,
                 unsigned int elemClass)
 {
-    FxIntRange *p_lifeSpanMsec; // [esp+4h] [ebp-2Ch]
+    const FxIntRange *p_lifeSpanMsec; // [esp+4h] [ebp-2Ch]
     unsigned __int16 elemHandle; // [esp+14h] [ebp-1Ch]
     FxUpdateResult updateResult; // [esp+1Ch] [ebp-14h]
     unsigned __int16 elemHandleNext; // [esp+20h] [ebp-10h]
@@ -1144,7 +1143,7 @@ FxUpdateResult __cdecl FX_UpdateElement(
     FxUpdateElem update; // [esp+F0h] [ebp-98h] BYREF
     const FxElemDef *elemDef; // [esp+170h] [ebp-18h]
     FxUpdateResult updateResult; // [esp+174h] [ebp-14h] BYREF
-    $A58BA6DA60295001BBA5E9F807131CF1 elemOriginPrev; // [esp+178h] [ebp-10h] BYREF
+    float elemOriginPrev[3];
     bool goToRest; // [esp+187h] [ebp-1h]
 
     if ( !elem
@@ -1171,20 +1170,21 @@ FxUpdateResult __cdecl FX_UpdateElement(
         {
             if ( !FX_UpdateElement_TruncateToElemBegin(&update, &updateResult) )
                 return updateResult;
-            elemOriginPrev = elem->20;
+            //elemOriginPrev = elem->20;
+            memcpy(elemOriginPrev, elem->origin, sizeof(elemOriginPrev));
             physObjId = elem->physObjId;
             update.elemBaseVel = elem->baseVel;
             update.physObjId = physObjId;
             update.onGround = 0;
-            updateResult = FX_UpdateElementPosition(system, &update);
-            FX_UpdateElement_HandleEmitting(system, elem, &update, elemOriginPrev.origin, &updateResult);
+            updateResult = (FxUpdateResult)FX_UpdateElementPosition(system, &update);
+            FX_UpdateElement_HandleEmitting(system, elem, &update, elemOriginPrev, &updateResult);
             FX_UpdateElement_HandleAttachedEffect(system, elem, &update);
             if ( update.msecUpdateBegin == update.msecElemBegin )
                 FX_PlayElementSpawnSound(system->localClientNum, elemDef, update.posWorld);
         }
         if ( updateResult )
         {
-            v6 = update.atRestFraction == 255 && Vec3Compare(elem->origin, elemOriginPrev.origin);
+            v6 = update.atRestFraction == 255 && Vec3Compare(elem->origin, elemOriginPrev);
             goToRest = v6;
             if ( v6 && ((elemDef->flags & 0x100) == 0 || update.onGround) )
                 elem->atRestFraction = (int)FX_GetAtRestFraction(&update, (float)update.msecUpdateEnd);
@@ -1302,7 +1302,7 @@ int __cdecl FX_UpdateElementPosition_CollidingStep(
 
 void __cdecl FX_NextElementPosition(FxUpdateElem *update, int msecUpdateBegin, int msecUpdateEnd)
 {
-    const char *v3; // eax
+    char *v4; // eax
     float *elemBaseVel; // [esp+Ch] [ebp-28h]
     float *elemOrigin; // [esp+14h] [ebp-20h]
     float secDuration; // [esp+1Ch] [ebp-18h]
@@ -1310,16 +1310,16 @@ void __cdecl FX_NextElementPosition(FxUpdateElem *update, int msecUpdateBegin, i
     float posLocal[3]; // [esp+24h] [ebp-10h] BYREF
     float deltaVelFromGravity; // [esp+30h] [ebp-4h]
 
-    if ( msecUpdateEnd - msecUpdateBegin <= 0 )
+    if (msecUpdateEnd - msecUpdateBegin <= 0)
     {
-        v3 = va("[%d, %d]", msecUpdateBegin, msecUpdateEnd);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                        924,
-                        0,
-                        "%s\n\t%s",
-                        "msecUpdateEnd - msecUpdateBegin > 0",
-                        v3) )
+        v4 = va("[%d, %d]", msecUpdateBegin, msecUpdateEnd);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            924,
+            0,
+            "%s\n\t%s",
+            "msecUpdateEnd - msecUpdateBegin > 0",
+            v4))
             __debugbreak();
     }
     elemOrigin = update->elemOrigin;
@@ -1333,10 +1333,10 @@ void __cdecl FX_NextElementPosition(FxUpdateElem *update, int msecUpdateBegin, i
     update->posWorld[1] = (float)(secDuration * elemBaseVel[1]) + update->posWorld[1];
     update->posWorld[2] = (float)(secDuration * elemBaseVel[2]) + update->posWorld[2];
     elemDef = FX_GetUpdateElemDef(update);
-    deltaVelFromGravity = (float)((float)((float)(*(float *)&dword_CAEB1C[update->randomSeed] * elemDef->gravity.amplitude)
-                                                                            + elemDef->gravity.base)
-                                                            * 800.0)
-                                            * secDuration;
+    deltaVelFromGravity = (float)((float)((float)(fx_randomTable[update->randomSeed + 15] * elemDef->gravity.amplitude)
+        + elemDef->gravity.base)
+        * 800.0)
+        * secDuration;
     update->elemBaseVel[2] = update->elemBaseVel[2] - deltaVelFromGravity;
     update->posWorld[2] = update->posWorld[2] - (float)((float)(deltaVelFromGravity * secDuration) * 0.5);
 }
@@ -1377,13 +1377,13 @@ void __cdecl FX_NextElementPosition_NoExternalForces(
 
 void __cdecl FX_IntegrateVelocity(const FxUpdateElem *update, float t0, float t1, float *posLocal, float *posWorld)
 {
-    const char *v5; // eax
-    const char *v6; // eax
+    char *v6; // eax
     char *v7; // eax
     char *v8; // eax
-    double v9; // [esp+18h] [ebp-80h]
-    int v10; // [esp+20h] [ebp-78h]
-    int v11; // [esp+24h] [ebp-74h]
+    char *v9; // eax
+    double v10; // [esp+18h] [ebp-80h]
+    int v11; // [esp+20h] [ebp-78h]
+    int v12; // [esp+24h] [ebp-74h]
     float integralScale; // [esp+64h] [ebp-34h]
     float startPoint; // [esp+68h] [ebp-30h]
     float endPoint; // [esp+6Ch] [ebp-2Ch]
@@ -1396,57 +1396,57 @@ void __cdecl FX_IntegrateVelocity(const FxUpdateElem *update, float t0, float t1
     float rangeLerp[3]; // [esp+88h] [ebp-10h] BYREF
     float endLerp; // [esp+94h] [ebp-4h]
 
-    if ( !update
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp", 824, 0, "%s", "update") )
+    if (!update
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp", 824, 0, "%s", "update"))
     {
         __debugbreak();
     }
     elemDef = FX_GetUpdateElemDef(update);
-    if ( !elemDef
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp", 827, 0, "%s", "elemDef") )
+    if (!elemDef
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp", 827, 0, "%s", "elemDef"))
     {
         __debugbreak();
     }
-    if ( !elemDef->velSamples
+    if (!elemDef->velSamples
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                    828,
-                    0,
-                    "%s",
-                    "elemDef->velSamples") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            828,
+            0,
+            "%s",
+            "elemDef->velSamples"))
     {
         __debugbreak();
     }
-    if ( !elemDef->velIntervalCount
+    if (!elemDef->velIntervalCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                    829,
-                    0,
-                    "%s\n\t(elemDef->velIntervalCount) = %i",
-                    "(elemDef->velIntervalCount >= 1)",
-                    elemDef->velIntervalCount) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            829,
+            0,
+            "%s\n\t(elemDef->velIntervalCount) = %i",
+            "(elemDef->velIntervalCount >= 1)",
+            elemDef->velIntervalCount))
     {
         __debugbreak();
     }
-    if ( t0 < 0.0 || t1 <= t0 || t1 > 1.0 )
+    if (t0 < 0.0 || t1 <= t0 || t1 > 1.0)
     {
-        v5 = va("%g, %g", t0, t1);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                        830,
-                        0,
-                        "%s\n\t%s",
-                        "0.0f <= t0 && t0 < t1 && t1 <= 1.0f",
-                        v5) )
+        v6 = va("%g, %g", t0, t1);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            830,
+            0,
+            "%s\n\t%s",
+            "0.0f <= t0 && t0 < t1 && t1 <= 1.0f",
+            v6))
             __debugbreak();
     }
     rangeLerp[0] = fx_randomTable[update->randomSeed];
-    LODWORD(rangeLerp[1]) = dword_CAEAE4[update->randomSeed];
-    LODWORD(rangeLerp[2]) = dword_CAEAE8[update->randomSeed];
+    rangeLerp[1] = fx_randomTable[update->randomSeed + 1];
+    rangeLerp[2] = fx_randomTable[update->randomSeed + 2];
     integralScale = update->msecLifeSpan;
     samples = elemDef->velSamples;
     intervalCount = elemDef->velIntervalCount;
-    if ( intervalCount == 1 )
+    if (intervalCount == 1)
     {
         FX_IntegrateVelocityInSegment(
             elemDef->flags,
@@ -1462,56 +1462,56 @@ void __cdecl FX_IntegrateVelocity(const FxUpdateElem *update, float t0, float t1
     else
     {
         startPoint = (float)intervalCount * t0;
-        *((float *)&v9 + 1) = floor(startPoint);
-        startIndex = (int)*((float *)&v9 + 1);
+        *((float *)&v10 + 1) = floor(startPoint);
+        startIndex = (int)*((float *)&v10 + 1);
         startLerp = startPoint - (float)startIndex;
         endPoint = (float)intervalCount * t1;
-        *(float *)&v9 = ceil(endPoint);
-        endIndex = (int)*(float *)&v9 - 1;
+        *(float *)&v10 = ceil(endPoint);
+        endIndex = (int)*(float *)&v10 - 1;
         endLerp = endPoint - (float)endIndex;
-        if ( startIndex > endIndex )
+        if (startIndex > endIndex)
         {
-            v6 = va("%i > %i for %g to %g on %i intervals", startIndex, endIndex, t0, t1, intervalCount);
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            853,
-                            1,
-                            "%s\n\t%s",
-                            "startIndex <= endIndex",
-                            v6) )
+            v7 = va("%i > %i for %g to %g on %i intervals", startIndex, endIndex, t0, t1, intervalCount);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                853,
+                1,
+                "%s\n\t%s",
+                "startIndex <= endIndex",
+                v7))
                 __debugbreak();
         }
-        if ( startIndex < 0 || startIndex >= intervalCount )
+        if (startIndex < 0 || startIndex >= intervalCount)
         {
-            v7 = va("%i for %g on %i intervals", startIndex, t0, intervalCount);
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            854,
-                            1,
-                            "%s\n\t(va( \"%i for %g on %i intervals\", startIndex, t0, intervalCount )) = %i",
-                            "(startIndex >= 0 && startIndex < intervalCount)",
-                            v7,
-                            v9,
-                            v10,
-                            v11) )
+            v8 = va("%i for %g on %i intervals", startIndex, t0, intervalCount);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                854,
+                1,
+                "%s\n\t(va( \"%i for %g on %i intervals\", startIndex, t0, intervalCount )) = %i",
+                "(startIndex >= 0 && startIndex < intervalCount)",
+                v8,
+                v10,
+                v11,
+                v12))
                 __debugbreak();
         }
-        if ( endIndex < 0 || endIndex >= intervalCount )
+        if (endIndex < 0 || endIndex >= intervalCount)
         {
-            v8 = va("%i for %g on %i intervals", endIndex, t1, intervalCount);
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            855,
-                            1,
-                            "%s\n\t(va( \"%i for %g on %i intervals\", endIndex, t1, intervalCount )) = %i",
-                            "(endIndex >= 0 && endIndex < intervalCount)",
-                            v8,
-                            v9,
-                            v10,
-                            v11) )
+            v9 = va("%i for %g on %i intervals", endIndex, t1, intervalCount);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                855,
+                1,
+                "%s\n\t(va( \"%i for %g on %i intervals\", endIndex, t1, intervalCount )) = %i",
+                "(endIndex >= 0 && endIndex < intervalCount)",
+                v9,
+                v10,
+                v11,
+                v12))
                 __debugbreak();
         }
-        if ( startIndex == endIndex )
+        if (startIndex == endIndex)
             FX_IntegrateVelocityInSegment(
                 elemDef->flags,
                 &update->orient,
@@ -1579,7 +1579,7 @@ void __cdecl FX_IntegrateVelocityAcrossSegments(
     {
         __debugbreak();
     }
-    t0ScaledByIntegral = COERCE_FLOAT(LODWORD(integralScale) ^ _mask__NegFloat_) * t0;
+    t0ScaledByIntegral = (-(integralScale)) * t0;
     w0[1] = (float)(0.5 * t0) * t0ScaledByIntegral;
     w0[0] = t0ScaledByIntegral - w0[1];
     w1[1] = (float)(0.5 * t1) * (float)(t1 * integralScale);
@@ -1598,7 +1598,7 @@ void __cdecl FX_IntegrateVelocityAcrossSegments(
             &localVelState0[1].local,
             w0,
             amplitudeScale,
-            COERCE_FLOAT(LODWORD(integralScale) ^ _mask__NegFloat_),
+            (-(integralScale)),
             posLocal);
     }
     FX_OrientationPosToWorldPos(orient, posLocal, posWorld);
@@ -1616,7 +1616,7 @@ void __cdecl FX_IntegrateVelocityAcrossSegments(
             &localVelState0[1].world,
             w0,
             amplitudeScale,
-            COERCE_FLOAT(LODWORD(integralScale) ^ _mask__NegFloat_),
+            (-(integralScale)),
             posWorld);
     }
 }
@@ -1762,10 +1762,10 @@ int __cdecl FX_CollisionResponse(
                 int msecUpdateEnd,
                 float *xyzWorldOld)
 {
-    const char *v7; // eax
+    char *v8; // eax
     float *elemBaseVel; // edx
-    float v9; // [esp+18h] [ebp-9Ch]
-    float *v10; // [esp+2Ch] [ebp-88h]
+    float v10; // [esp+18h] [ebp-9Ch]
+    float *v11; // [esp+2Ch] [ebp-88h]
     const FxElemDef *elemDef; // [esp+78h] [ebp-3Ch]
     int msecOnImpact; // [esp+7Ch] [ebp-38h]
     float velDelta_4; // [esp+84h] [ebp-30h]
@@ -1779,42 +1779,42 @@ int __cdecl FX_CollisionResponse(
     float overshotDeltaVelFromGravity; // [esp+B0h] [ebp-4h]
 
     elemDef = FX_GetUpdateElemDef(update);
-    if ( msecUpdateBegin >= msecUpdateEnd
+    if (msecUpdateBegin >= msecUpdateEnd
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                    986,
-                    0,
-                    "%s",
-                    "msecUpdateBegin < msecUpdateEnd") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            986,
+            0,
+            "%s",
+            "msecUpdateBegin < msecUpdateEnd"))
     {
         __debugbreak();
     }
     Vec3Lerp(xyzWorldOld, update->posWorld, trace->fraction, update->posWorld);
-    v9 = floor((float)((float)(msecUpdateEnd - msecUpdateBegin) * trace->fraction));
-    msecOnImpact = msecUpdateBegin + (int)v9;
-    if ( msecOnImpact >= msecUpdateEnd
+    v10 = floor((float)((float)(msecUpdateEnd - msecUpdateBegin) * trace->fraction));
+    msecOnImpact = msecUpdateBegin + (int)v10;
+    if (msecOnImpact >= msecUpdateEnd
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                    990,
-                    0,
-                    "%s",
-                    "msecOnImpact < msecUpdateEnd") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            990,
+            0,
+            "%s",
+            "msecOnImpact < msecUpdateEnd"))
     {
         __debugbreak();
     }
-    if ( (elemDef->flags & 0x200) != 0 || msecOnImpact == update->msecElemEnd )
+    if ((elemDef->flags & 0x200) != 0 || msecOnImpact == update->msecElemEnd)
     {
-        if ( elemDef->effectOnImpact.handle )
+        if (elemDef->effectOnImpact.handle)
             FX_SpawnImpactEffect(system, update, elemDef->effectOnImpact.handle, msecOnImpact, trace->normal.vec.v);
-        return msecUpdateBegin + (int)v9;
+        return msecUpdateBegin + (int)v10;
     }
     else
     {
-        overshotDeltaVelFromGravity = (float)((float)((float)(*(float *)&dword_CAEB1C[update->randomSeed]
-                                                                                                                * elemDef->gravity.amplitude)
-                                                                                                + elemDef->gravity.base)
-                                                                                * 0.80000001)
-                                                                * (float)(msecUpdateEnd - msecOnImpact);
+        overshotDeltaVelFromGravity = (float)((float)((float)(fx_randomTable[update->randomSeed + 15]
+            * elemDef->gravity.amplitude)
+            + elemDef->gravity.base)
+            * 0.80000001)
+            * (float)(msecUpdateEnd - msecOnImpact);
         update->elemBaseVel[2] = update->elemBaseVel[2] + overshotDeltaVelFromGravity;
         FX_GetVelocityAtTime(
             elemDef,
@@ -1824,59 +1824,59 @@ int __cdecl FX_CollisionResponse(
             &update->orient,
             update->elemBaseVel,
             preImpactVelocity);
-        if ( ((LODWORD(preImpactVelocity[0]) & 0x7F800000) == 0x7F800000
-             || (LODWORD(preImpactVelocity[1]) & 0x7F800000) == 0x7F800000
-             || (LODWORD(preImpactVelocity[2]) & 0x7F800000) == 0x7F800000)
+        if (((LODWORD(preImpactVelocity[0]) & 0x7F800000) == 0x7F800000
+            || (LODWORD(preImpactVelocity[1]) & 0x7F800000) == 0x7F800000
+            || (LODWORD(preImpactVelocity[2]) & 0x7F800000) == 0x7F800000)
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                        1006,
-                        0,
-                        "%s",
-                        "!IS_NAN((preImpactVelocity)[0]) && !IS_NAN((preImpactVelocity)[1]) && !IS_NAN((preImpactVelocity)[2])") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                1006,
+                0,
+                "%s",
+                "!IS_NAN((preImpactVelocity)[0]) && !IS_NAN((preImpactVelocity)[1]) && !IS_NAN((preImpactVelocity)[2])"))
         {
             __debugbreak();
         }
-        if ( (float)((float)((float)(preImpactVelocity[0] * preImpactVelocity[0])
-                                             + (float)(preImpactVelocity[1] * preImpactVelocity[1]))
-                             + (float)(preImpactVelocity[2] * preImpactVelocity[2])) >= 1.0e12 )
+        if ((float)((float)((float)(preImpactVelocity[0] * preImpactVelocity[0])
+            + (float)(preImpactVelocity[1] * preImpactVelocity[1]))
+            + (float)(preImpactVelocity[2] * preImpactVelocity[2])) >= 1.0e12)
         {
-            v7 = va("%g %g %g", preImpactVelocity[0], preImpactVelocity[1], preImpactVelocity[2]);
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            1007,
-                            0,
-                            "%s\n\t%s",
-                            "Vec3LengthSq( preImpactVelocity ) < 1.0e12f",
-                            v7) )
+            v8 = va("%g %g %g", preImpactVelocity[0], preImpactVelocity[1], preImpactVelocity[2]);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                1007,
+                0,
+                "%s\n\t%s",
+                "Vec3LengthSq( preImpactVelocity ) < 1.0e12f",
+                v8))
                 __debugbreak();
         }
-        reflectionFactor = (float)(dword_CAEB20[update->randomSeed] * elemDef->reflectionFactor.amplitude)
-                                         + elemDef->reflectionFactor.base;
+        reflectionFactor = (float)(fx_randomTable[update->randomSeed + 16] * elemDef->reflectionFactor.amplitude)
+            + elemDef->reflectionFactor.base;
         scaledPreImpactVelocity = reflectionFactor * preImpactVelocity[0];
         scaledPreImpactVelocity_4 = reflectionFactor * preImpactVelocity[1];
         scaledPreImpactVelocity_8 = reflectionFactor * preImpactVelocity[2];
-        if ( elemDef->effectOnImpact.handle
+        if (elemDef->effectOnImpact.handle
             && (float)((float)((float)(preImpactVelocity[0] * preImpactVelocity[0])
-                                             + (float)(preImpactVelocity[1] * preImpactVelocity[1]))
-                             + (float)(preImpactVelocity[2] * preImpactVelocity[2])) > 1.0 )
+                + (float)(preImpactVelocity[1] * preImpactVelocity[1]))
+                + (float)(preImpactVelocity[2] * preImpactVelocity[2])) > 1.0)
         {
             FX_SpawnImpactEffect(system, update, elemDef->effectOnImpact.handle, msecOnImpact, trace->normal.vec.v);
             FX_GetUpdateElemDef(update);
         }
-        if ( msecOnImpact == msecUpdateBegin
+        if (msecOnImpact == msecUpdateBegin
             && (++msecOnImpact,
-                    (float)((float)((float)(scaledPreImpactVelocity * scaledPreImpactVelocity)
-                                                + (float)(scaledPreImpactVelocity_4 * scaledPreImpactVelocity_4))
-                                + (float)(scaledPreImpactVelocity_8 * scaledPreImpactVelocity_8)) <= 1.0)
-            && trace->normal.vec.v[2] > 0.69999999 )
+                (float)((float)((float)(scaledPreImpactVelocity * scaledPreImpactVelocity)
+                    + (float)(scaledPreImpactVelocity_4 * scaledPreImpactVelocity_4))
+                    + (float)(scaledPreImpactVelocity_8 * scaledPreImpactVelocity_8)) <= 1.0)
+            && trace->normal.vec.v[2] > 0.69999999)
         {
             update->atRestFraction = (int)FX_GetAtRestFraction(update, (float)msecOnImpact);
-            if ( FX_IsDemoPlaying()
+            if (FX_IsDemoPlaying()
                 && (float)((float)(*update->elemBaseVel * *update->elemBaseVel)
-                                 + (float)(update->elemBaseVel[1] * update->elemBaseVel[1])) < 1.0 )
+                    + (float)(update->elemBaseVel[1] * update->elemBaseVel[1])) < 1.0)
             {
                 elemBaseVel = update->elemBaseVel;
-                *elemBaseVel = 0.0f;
+                *elemBaseVel =   0.0f;
                 elemBaseVel[1] = 0.0f;
                 elemBaseVel[2] = 0.0f;
             }
@@ -1885,51 +1885,51 @@ int __cdecl FX_CollisionResponse(
         else
         {
             velocityAlongNormal = (float)((float)(scaledPreImpactVelocity * trace->normal.vec.v[0])
-                                                                    + (float)(scaledPreImpactVelocity_4 * trace->normal.vec.v[1]))
-                                                    + (float)(scaledPreImpactVelocity_8 * trace->normal.vec.v[2]);
-            if ( (LODWORD(velocityAlongNormal) & 0x7F800000) == 0x7F800000
+                + (float)(scaledPreImpactVelocity_4 * trace->normal.vec.v[1]))
+                + (float)(scaledPreImpactVelocity_8 * trace->normal.vec.v[2]);
+            if ((LODWORD(velocityAlongNormal) & 0x7F800000) == 0x7F800000
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            1037,
-                            0,
-                            "%s",
-                            "!IS_NAN(velocityAlongNormal)") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                    1037,
+                    0,
+                    "%s",
+                    "!IS_NAN(velocityAlongNormal)"))
             {
                 __debugbreak();
             }
-            if ( fabs(velocityAlongNormal) >= 1000000.0
+            if ((fabs(velocityAlongNormal)) >= 1000000.0
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            1038,
-                            0,
-                            "%s\n\t(velocityAlongNormal) = %g",
-                            "(I_fabs( velocityAlongNormal ) < 1.0e6f)",
-                            velocityAlongNormal) )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                    1038,
+                    0,
+                    "%s\n\t(velocityAlongNormal) = %g",
+                    "(I_fabs( velocityAlongNormal ) < 1.0e6f)",
+                    velocityAlongNormal))
             {
                 __debugbreak();
             }
             velDelta_4 = (float)((float)((float)(-2.0 * velocityAlongNormal) * trace->normal.vec.v[1])
-                                                 + scaledPreImpactVelocity_4)
-                                 - preImpactVelocity[1];
+                + scaledPreImpactVelocity_4)
+                - preImpactVelocity[1];
             velDelta_8 = (float)((float)((float)(-2.0 * velocityAlongNormal) * trace->normal.vec.v[2])
-                                                 + scaledPreImpactVelocity_8)
-                                 - preImpactVelocity[2];
-            v10 = update->elemBaseVel;
-            *v10 = *v10
-                     + (float)((float)((float)((float)(-2.0 * velocityAlongNormal) * trace->normal.vec.v[0])
-                                                     + scaledPreImpactVelocity)
-                                     - preImpactVelocity[0]);
-            v10[1] = v10[1] + velDelta_4;
-            v10[2] = v10[2] + velDelta_8;
-            if ( ((*(unsigned int *)update->elemBaseVel & 0x7F800000) == 0x7F800000
-                 || ((unsigned int)update->elemBaseVel[1] & 0x7F800000) == 0x7F800000
-                 || ((unsigned int)update->elemBaseVel[2] & 0x7F800000) == 0x7F800000)
+                + scaledPreImpactVelocity_8)
+                - preImpactVelocity[2];
+            v11 = update->elemBaseVel;
+            *v11 = *v11
+                + (float)((float)((float)((float)(-2.0 * velocityAlongNormal) * trace->normal.vec.v[0])
+                    + scaledPreImpactVelocity)
+                    - preImpactVelocity[0]);
+            v11[1] = v11[1] + velDelta_4;
+            v11[2] = v11[2] + velDelta_8;
+            if (((*(_DWORD *)update->elemBaseVel & 0x7F800000) == 0x7F800000
+                || ((_DWORD)update->elemBaseVel[1] & 0x7F800000) == 0x7F800000
+                || ((_DWORD)update->elemBaseVel[2] & 0x7F800000) == 0x7F800000)
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                            1043,
-                            0,
-                            "%s",
-                            "!IS_NAN((update->elemBaseVel)[0]) && !IS_NAN((update->elemBaseVel)[1]) && !IS_NAN((update->elemBaseVel)[2])") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                    1043,
+                    0,
+                    "%s",
+                    "!IS_NAN((update->elemBaseVel)[0]) && !IS_NAN((update->elemBaseVel)[1]) && !IS_NAN((update->elemBaseVel)[2])"))
             {
                 __debugbreak();
             }
@@ -2144,9 +2144,9 @@ unsigned __int8 __cdecl FX_ProcessEmitting(
                 const FxSpatialFrame *frameBegin,
                 const FxSpatialFrame *frameEnd)
 {
-    const char *v6; // eax
-    float v7; // [esp+10h] [ebp-B4h]
-    float v8; // [esp+14h] [ebp-B0h]
+    char *v7; // eax
+    float v8; // [esp+10h] [ebp-B4h]
+    float v9; // [esp+14h] [ebp-B0h]
     FxEffectContainer *effect; // [esp+20h] [ebp-A4h]
     unsigned int handle; // [esp+24h] [ebp-A0h]
     const FxElemDef *elemDef; // [esp+60h] [ebp-64h]
@@ -2161,68 +2161,67 @@ unsigned __int8 __cdecl FX_ProcessEmitting(
     float distLastEmit; // [esp+C0h] [ebp-4h]
 
     elemDef = FX_GetUpdateElemDef(update);
-    if ( elemDef->elemType == 7 && (elemDef->flags & 0x8000000) != 0 )
+    if (elemDef->elemType == 7 && (elemDef->flags & 0x8000000) != 0)
         return emitResidual;
     axisSpawn[0][0] = frameEnd->origin[0] - frameBegin->origin[0];
     axisSpawn[0][1] = frameEnd->origin[1] - frameBegin->origin[1];
     axisSpawn[0][2] = frameEnd->origin[2] - frameBegin->origin[2];
     distInUpdate = Vec3Normalize(axisSpawn[0]);
-    if ( distInUpdate == 0.0 )
+    if (distInUpdate == 0.0)
         return emitResidual;
-    baseDistPerEmit = (float)((float)(dword_CAEB30[update->randomSeed] * elemDef->emitDist.amplitude)
-                                                    + elemDef->emitDist.base)
-                                    + elemDef->emitDistVariance.base;
+    baseDistPerEmit = (float)((float)(fx_randomTable[update->randomSeed + 20] * elemDef->emitDist.amplitude)
+        + elemDef->emitDist.base)
+        + elemDef->emitDistVariance.base;
     maxDistPerEmit = baseDistPerEmit + elemDef->emitDistVariance.amplitude;
-    LODWORD(distNextEmit) = COERCE_UNSIGNED_INT((float)((float)emitResidual * maxDistPerEmit) * 0.00390625)
-                                                ^ _mask__NegFloat_;
-    while ( 1 )
+    distNextEmit = -((float)((float)emitResidual * maxDistPerEmit) * 0.00390625);
+    while (1)
     {
         distLastEmit = distNextEmit;
         distNextEmit = (float)((float)((float)((float)rand() * 0.000030517578) * elemDef->emitDistVariance.amplitude)
-                                                 + baseDistPerEmit)
-                                 + distNextEmit;
-        if ( distNextEmit > distInUpdate )
+            + baseDistPerEmit)
+            + distNextEmit;
+        if (distNextEmit > distInUpdate)
             break;
-        if ( (float)(distNextEmit - 0.0) < 0.0 )
-            v8 = 0.0f;
+        if ((float)(distNextEmit - 0.0) < 0.0)
+            v9 = 0.0f;
         else
-            v8 = distNextEmit;
-        distNextEmit = v8;
-        v7 = floor((float)((float)(update->msecUpdateEnd - update->msecUpdateBegin) * (float)(v8 / distInUpdate)));
-        msecAtSpawn = update->msecUpdateBegin + (int)v7;
-        Vec3Lerp(frameBegin->origin, frameEnd->origin, v8 / distInUpdate, frameElemNow.origin);
-        Vec4Lerp(frameBegin->quat, frameEnd->quat, v8 / distInUpdate, frameElemNow.quat);
+            v9 = distNextEmit;
+        distNextEmit = v9;
+        v8 = floor((float)((float)(update->msecUpdateEnd - update->msecUpdateBegin) * (float)(v9 / distInUpdate)));
+        msecAtSpawn = update->msecUpdateBegin + (int)v8;
+        Vec3Lerp(frameBegin->origin, frameEnd->origin, v9 / distInUpdate, frameElemNow.origin);
+        Vec4Lerp(frameBegin->quat, frameEnd->quat, v9 / distInUpdate, frameElemNow.quat);
         Vec4Normalize(frameElemNow.quat);
         PerpendicularVector(axisSpawn[0], axisSpawn[1]);
         Vec3Cross(axisSpawn[0], axisSpawn[1], axisSpawn[2]);
         handle = FX_SpawnEffect(
-                             system,
-                             elemDef->effectEmitted.handle,
-                             msecAtSpawn,
-                             frameElemNow.origin,
-                             axisSpawn,
-                             0x7FFu,
-                             511,
-                             255,
-                             update->effect->owner,
-                             0x3FFu,
-                             &orIdentity);
+            system,
+            elemDef->effectEmitted.handle,
+            msecAtSpawn,
+            frameElemNow.origin,
+            axisSpawn,
+            0x7FFu,
+            511,
+            255,
+            update->effect->owner,
+            0x3FFu,
+            &orIdentity);
         effect = UniqueHandleToEffect(system, handle);
-        if ( effect )
+        if (effect)
             FX_DelRefToEffect(system, effect, 0);
         elemDef = FX_GetUpdateElemDef(update);
     }
     residual = distInUpdate - distLastEmit;
-    if ( (float)(distInUpdate - distLastEmit) < -0.001 || (float)(maxDistPerEmit + 0.001) < residual )
+    if ((float)(distInUpdate - distLastEmit) < -0.001 || (float)(maxDistPerEmit + 0.001) < residual)
     {
-        v6 = va("%g, %g", residual, maxDistPerEmit);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
-                        678,
-                        0,
-                        "%s\n\t%s",
-                        "residual >= -0.001f && residual <= maxDistPerEmit + 0.001f",
-                        v6) )
+        v7 = va("%g, %g", residual, maxDistPerEmit);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+            678,
+            0,
+            "%s\n\t%s",
+            "residual >= -0.001f && residual <= maxDistPerEmit + 0.001f",
+            v7))
             __debugbreak();
     }
     return (int)((float)((float)(256.0 * residual) / maxDistPerEmit) + 9.313225746154785e-10);
@@ -2292,13 +2291,13 @@ void __cdecl FX_UpdateElement_HandleAttachedEffect(FxSystem *system, FxElem *ele
         attachedFx = (FxEffect *)UniqueHandleToEffect(system, elem->attachedEffectHandle);
         if ( attachedFx )
         {
-            while ( _InterlockedExchangeAdd((volatile signed __int32 *)&attachedFx[1], 0x20000000u) >= 0x20000000 )
-                _InterlockedExchangeAdd((volatile signed __int32 *)&attachedFx[1], 0xE0000000);
+            while ( _InterlockedExchangeAdd((volatile unsigned __int32 *)&attachedFx[1], 0x20000000u) >= 0x20000000 )
+                _InterlockedExchangeAdd((volatile unsigned __int32 *)&attachedFx[1], 0xE0000000);
             origin = attachedFx->frameNow.origin;
             attachedFx->frameNow.origin[0] = update->posWorld[0];
             origin[1] = update->posWorld[1];
             origin[2] = update->posWorld[2];
-            _InterlockedExchangeAdd((volatile signed __int32 *)&attachedFx[1], 0xE0000000);
+            _InterlockedExchangeAdd((volatile unsigned __int32 *)&attachedFx[1], 0xE0000000);
         }
     }
     else
@@ -2331,7 +2330,7 @@ char __cdecl FX_UpdateElement_TruncateToElemBegin(FxUpdateElem *update, FxUpdate
         update->msecUpdateBegin = update->msecElemBegin;
     if ( update->msecUpdateBegin == update->msecUpdateEnd )
     {
-        *outUpdateResult = update->msecUpdateBegin < update->msecElemEnd;
+        *outUpdateResult = (FxUpdateResult)(update->msecUpdateBegin < update->msecElemEnd);
         return 0;
     }
     else
@@ -2494,18 +2493,18 @@ FxUpdateResult __cdecl FX_UpdateTrailElement(
             update.elemBaseVel = baseVel;
             update.physObjId = 0;
             update.onGround = 0;
-            updateResult = FX_UpdateElementPosition(system, &update);
+            updateResult = (FxUpdateResult)FX_UpdateElementPosition(system, &update);
             v8 = (int)(float)(baseVel[2] / 0.001);
             if ( v8 >= -32768 )
             {
                 if ( v8 <= 0x7FFF )
                     v7 = (int)(float)(baseVel[2] / 0.001);
                 else
-                    LOWORD(v7) = 0x7FFF;
+                    LOWORD_NAMEHACK(v7) = 0x7FFF;
             }
             else
             {
-                LOWORD(v7) = 0x8000;
+                LOWORD_NAMEHACK(v7) = 0x8000;
             }
             trailElem->baseVelZ = v7;
         }
@@ -2552,9 +2551,9 @@ void __cdecl FX_UpdateBatch(
 
 char __cdecl FX_AcquireEffectLock_IsLiveEffect(FxEffect *effect)
 {
-    while ( _InterlockedExchangeAdd((volatile signed __int32 *)&effect[1], 0x20000000u) >= 0x20000000 )
+    while ( _InterlockedExchangeAdd((volatile unsigned __int32 *)&effect[1], 0x20000000u) >= 0x20000000 )
     {
-        _InterlockedExchangeAdd((volatile signed __int32 *)&effect[1], 0xE0000000);
+        _InterlockedExchangeAdd((volatile unsigned __int32 *)&effect[1], 0xE0000000);
         if ( ((int)effect[1].def & 0x3FFF) == 0 )
             return 0;
     }
@@ -2591,6 +2590,7 @@ void __cdecl FX_UpdateEffect(FxSystem *system, FxEffect *effect, FxEffectContain
     }
 }
 
+#if 0
 void __cdecl FX_UpdateEffectBolt(FxSystem *system, FxEffect *effect, FxEffectContainer *remoteEffect)
 {
     const DynEntityPose *ClientPose; // eax
@@ -2649,6 +2649,92 @@ void __cdecl FX_UpdateEffectBolt(FxSystem *system, FxEffect *effect, FxEffectCon
         }
     }
 }
+#endif
+
+// aislopped unionization
+void FX_UpdateEffectBolt(
+    FxSystem *system,
+    FxEffect *effect,
+    FxEffectContainer *remoteEffect)
+{
+    orientation_t orient;
+    orientation_t fullOrient;
+
+    FxBoltAndSortOrder &bolt = effect->boltAndSortOrder;
+
+    /*
+        Case 1: Absolute dynamic entity (type == 2)
+    */
+    if (bolt.type == 2)
+    {
+        if (DynEnt_Valid(bolt.dobjHandle))
+        {
+            const DynEntityPose *dynEntPose =
+                DynEnt_GetClientPose(bolt.dobjHandle);
+
+            effect->frameNow.origin[0] = dynEntPose->pose.origin[0];
+            effect->frameNow.origin[1] = dynEntPose->pose.origin[1];
+            effect->frameNow.origin[2] = dynEntPose->pose.origin[2];
+
+            effect->frameNow.quat[0] = dynEntPose->pose.quat[0];
+            effect->frameNow.quat[1] = dynEntPose->pose.quat[1];
+            effect->frameNow.quat[2] = dynEntPose->pose.quat[2];
+            effect->frameNow.quat[3] = dynEntPose->pose.quat[3];
+        }
+        else
+        {
+            FX_KillEffect(system, remoteEffect);
+        }
+
+        return;
+    }
+
+    /*
+        Case 2: DObj bone bolt (type == 1)
+    */
+    if (bolt.type == 1)
+    {
+        const int localClientNum = system->localClientNum;
+
+        bool temporalBitsValid =
+            FX_GetBoltTemporalBits(localClientNum,
+                bolt.dobjHandle) == bolt.temporalBits;
+
+        if (temporalBitsValid &&
+            FX_GetBoneOrientation(localClientNum,
+                bolt.dobjHandle,
+                bolt.boneIndex,
+                &orient))
+        {
+            OrientationConcatenate(&effect->boneOffset,
+                &orient,
+                &fullOrient);
+
+            effect->frameNow.origin[0] = fullOrient.origin[0];
+            effect->frameNow.origin[1] = fullOrient.origin[1];
+            effect->frameNow.origin[2] = fullOrient.origin[2];
+
+            AxisToQuat(fullOrient.axis,
+                effect->frameNow.quat);
+        }
+        else
+        {
+            if (FX_CanKillImmediate(effect->def))
+                FX_KillEffect(system, remoteEffect);
+            else
+                FX_StopEffect(system, remoteEffect);
+
+            /*
+                Old bit mutation replaced cleanly
+            */
+            bolt.boneIndex = 0x1FF;
+            bolt.dobjHandle = 0x7FF;
+            bolt.type = 0;
+            bolt.rewindKill = 1;
+        }
+    }
+}
+
 
 char __cdecl FX_CanKillImmediate(const FxEffectDef *def)
 {
@@ -2666,6 +2752,7 @@ char __cdecl FX_CanKillImmediate(const FxEffectDef *def)
     return 1;
 }
 
+#if 0
 bool __cdecl FX_ShouldProcessEffect(
                 FxSystem *system,
                 FxEffect *effect,
@@ -2678,6 +2765,32 @@ bool __cdecl FX_ShouldProcessEffect(
         return 0;
     return system->shared->activeSpotLightEffectCount <= 0
             || remoteEffect != FX_EffectFromHandle(system, system->shared->activeSpotLightEffectHandle);
+}
+#endif
+
+// aislop unionization
+bool FX_ShouldProcessEffect(
+    FxSystem *system,
+    FxEffect *effect,
+    FxEffectContainer *remoteEffect,
+    bool nonBoltedEffectsOnly)
+{
+    const FxBoltAndSortOrder &bolt = effect->boltAndSortOrder;
+
+    // Skip bolted effects if requested
+    if (nonBoltedEffectsOnly && bolt.type != 0)
+        return false;
+
+    // Prevent double-processing within same frame
+    if (_InterlockedExchange(&remoteEffect->effect.frameCount,
+        system->frameCount) == system->frameCount)
+        return false;
+
+    // Spotlight special-case
+    return system->shared->activeSpotLightEffectCount <= 0
+        || remoteEffect != FX_EffectFromHandle(
+            system,
+            system->shared->activeSpotLightEffectHandle);
 }
 
 void __cdecl FX_Update(FxSystem *system, FxSystem *remoteSystem, int localClientNum, bool nonBoltedEffectsOnly)
@@ -2736,6 +2849,7 @@ void __cdecl FX_UpdateSpotLight(FxCmd *cmd)
     }
 }
 
+#if 0
 void __cdecl FX_UpdateSpotLightEffect(FxSystem *system, FxEffectContainer *effect, FxEffectContainer *remoteEffect)
 {
     unsigned __int16 lastElemHandle[4]; // [esp+30h] [ebp-14h] BYREF
@@ -2778,6 +2892,81 @@ void __cdecl FX_UpdateSpotLightEffect(FxSystem *system, FxEffectContainer *effec
         effect->effect.distanceTraveled = newDistanceTraveled;
     }
 }
+#endif
+
+// aislop unionization
+void FX_UpdateSpotLightEffect(
+    FxSystem *system,
+    FxEffectContainer *effect,
+    FxEffectContainer *remoteEffect)
+{
+    uint16_t lastElemHandle[4];
+    float newDistanceTraveled;
+    unsigned int elemClass;
+
+    if ((remoteEffect->atomics.status & 0x3FFF) != 0 &&
+        effect->effect.msecLastUpdate <= system->msecNow)
+    {
+        FX_UpdateEffectBolt(system, &effect->effect, remoteEffect);
+
+        FxBoltAndSortOrder &bolt = effect->effect.boltAndSortOrder;
+
+        /*
+            Assert: spotlight effects must NOT be dynent bolts (type 2)
+        */
+        if (bolt.type == 2 &&
+            !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\EffectsCore\\fx_update.cpp",
+                2069,
+                0,
+                "%s",
+                "effect->boltAndSortOrder.type != FX_BOLT_TYPE_DYNENT"))
+        {
+            __debugbreak();
+        }
+
+        /*
+            Old: (>> 8) & 0x7FF
+        */
+        system->activeSpotLightBoltDobj = bolt.dobjHandle;
+
+        newDistanceTraveled =
+            Vec3Distance(effect->effect.framePrev.origin,
+                effect->effect.frameNow.origin)
+            + effect->effect.distanceTraveled;
+
+        for (elemClass = 0; elemClass < 3; ++elemClass)
+            lastElemHandle[elemClass] = static_cast<uint16_t>(-1);
+
+        FX_UpdateSpotLightEffectPartial(
+            system,
+            effect,
+            effect->effect.msecLastUpdate,
+            system->msecNow);
+
+        FX_UpdateEffectPartial(
+            system,
+            &effect->effect,
+            remoteEffect,
+            effect->effect.msecLastUpdate,
+            system->msecNow,
+            effect->effect.distanceTraveled,
+            newDistanceTraveled,
+            effect->effect.firstElemHandle,
+            lastElemHandle,
+            0,
+            0);
+
+        FX_SortNewElemsInEffect(system, &effect->effect);
+
+        memcpy(&effect->effect.framePrev,
+            &effect->effect.frameNow,
+            sizeof(effect->effect.framePrev));
+
+        effect->effect.distanceTraveled = newDistanceTraveled;
+    }
+}
+
 
 void __cdecl FX_UpdateSpotLightEffectPartial(
                 FxSystem *system,
@@ -2975,7 +3164,7 @@ unsigned int __cdecl FX_IndexFromEffectHandle(unsigned __int16 handle)
 void __cdecl FX_RewindTo_Finish(int localClientNum)
 {
     unsigned __int16 v1; // ax
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-18h]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-18h]
     signed __int32 v3; // [esp+4h] [ebp-14h]
     FxEffectContainer *effect; // [esp+Ch] [ebp-Ch]
     FxSystemContainer *system; // [esp+10h] [ebp-8h]
@@ -3046,9 +3235,11 @@ unsigned int __cdecl FX_EffectHandleFromIndex(unsigned int index)
     return 48 * index;
 }
 
+bool bRestart = true;
+
 void __cdecl FX_RewindTo(int localClientNum, int time)
 {
-    volatile signed __int32 *p_status; // [esp+0h] [ebp-103Ch]
+    volatile unsigned __int32 *p_status; // [esp+0h] [ebp-103Ch]
     signed __int32 v3; // [esp+4h] [ebp-1038h]
     bool IsDObjEntityValid; // [esp+1Fh] [ebp-101Dh]
     unsigned __int16 v5; // [esp+20h] [ebp-101Ch]
@@ -3078,10 +3269,11 @@ void __cdecl FX_RewindTo(int localClientNum, int time)
         {
             v5 = system->system.shared->allEffectHandles[i & 0x3FF];
             effect = FX_EffectFromHandle(&system->system, v5);
-            v12[v13++] = effect;
+            v12[v13++] = (unsigned int)effect;
             if ( (effect->atomics.status & 0x3FFF) != 0 && effect->effect.msecBegin < time && effect->effect.owner == v5 )
             {
                 IsDObjEntityValid = 1;
+#if 0 // aislop unionization (hey, its convenient)
                 if ( FX_IsDemoPlaying() )
                 {
                     if ( ((*(unsigned int *)&effect->effect.boltAndSortOrder.0 >> 8) & 0x7FF) != 0x7FF )
@@ -3090,6 +3282,24 @@ void __cdecl FX_RewindTo(int localClientNum, int time)
                                                                     (*(unsigned int *)&effect->effect.boltAndSortOrder.0 >> 8) & 0x7FF);
                     if ( IsDObjEntityValid && *(unsigned int *)&effect->effect.boltAndSortOrder.0 < 0 )
                         IsDObjEntityValid = 0;
+                }
+#endif
+                if (FX_IsDemoPlaying())
+                {
+                    FxBoltAndSortOrder &bolt = effect->effect.boltAndSortOrder;
+
+                    if (bolt.dobjHandle != 0x7FF)
+                    {
+                        IsDObjEntityValid =
+                            FX_GetBoneOrientation_IsDObjEntityValid(
+                                localClientNum,
+                                bolt.dobjHandle);
+                    }
+
+                    if (IsDObjEntityValid && bolt.rewindKill)
+                    {
+                        IsDObjEntityValid = false;
+                    }
                 }
                 if ( IsDObjEntityValid )
                 {
@@ -3221,12 +3431,9 @@ void __cdecl FX_SetupCamera(
                                                 + (float)(cosHalfFov * (float)(*viewaxis)[4]);
     camera->frustum[1][2] = (float)((float)(tanHalfFovX * cosHalfFov) * (float)(*viewaxis)[2])
                                                 + (float)(cosHalfFov * (float)(*viewaxis)[5]);
-    camera->frustum[2][0] = (float)((float)(tanHalfFovX * cosHalfFov) * (*viewaxis)[0])
-                                                + (float)(COERCE_FLOAT(LODWORD(cosHalfFov) ^ _mask__NegFloat_) * (float)(*viewaxis)[3]);
-    camera->frustum[2][1] = (float)((float)(tanHalfFovX * cosHalfFov) * (float)(*viewaxis)[1])
-                                                + (float)(COERCE_FLOAT(LODWORD(cosHalfFov) ^ _mask__NegFloat_) * (float)(*viewaxis)[4]);
-    camera->frustum[2][2] = (float)((float)(tanHalfFovX * cosHalfFov) * (float)(*viewaxis)[2])
-                                                + (float)(COERCE_FLOAT(LODWORD(cosHalfFov) ^ _mask__NegFloat_) * (float)(*viewaxis)[5]);
+    camera->frustum[2][0] = (float)((float)(tanHalfFovX * cosHalfFov) * (*viewaxis)[0])        + (float)((-(cosHalfFov)) * (float)(*viewaxis)[3]);
+    camera->frustum[2][1] = (float)((float)(tanHalfFovX * cosHalfFov) * (float)(*viewaxis)[1]) + (float)((-(cosHalfFov)) * (float)(*viewaxis)[4]);
+    camera->frustum[2][2] = (float)((float)(tanHalfFovX * cosHalfFov) * (float)(*viewaxis)[2]) + (float)((-(cosHalfFov)) * (float)(*viewaxis)[5]);
     cosHalfFova = 1.0 / sqrtf((float)(tanHalfFovY * tanHalfFovY) + 1.0);
     camera->frustum[3][0] = (float)((float)(tanHalfFovY * cosHalfFova) * (*viewaxis)[0])
                                                 + (float)(cosHalfFova * (float)(*viewaxis)[6]);
@@ -3234,12 +3441,9 @@ void __cdecl FX_SetupCamera(
                                                 + (float)(cosHalfFova * (float)(*viewaxis)[7]);
     camera->frustum[3][2] = (float)((float)(tanHalfFovY * cosHalfFova) * (float)(*viewaxis)[2])
                                                 + (float)(cosHalfFova * (float)(*viewaxis)[8]);
-    camera->frustum[4][0] = (float)((float)(tanHalfFovY * cosHalfFova) * (*viewaxis)[0])
-                                                + (float)(COERCE_FLOAT(LODWORD(cosHalfFova) ^ _mask__NegFloat_) * (float)(*viewaxis)[6]);
-    camera->frustum[4][1] = (float)((float)(tanHalfFovY * cosHalfFova) * (float)(*viewaxis)[1])
-                                                + (float)(COERCE_FLOAT(LODWORD(cosHalfFova) ^ _mask__NegFloat_) * (float)(*viewaxis)[7]);
-    camera->frustum[4][2] = (float)((float)(tanHalfFovY * cosHalfFova) * (float)(*viewaxis)[2])
-                                                + (float)(COERCE_FLOAT(LODWORD(cosHalfFova) ^ _mask__NegFloat_) * (float)(*viewaxis)[8]);
+    camera->frustum[4][0] = (float)((float)(tanHalfFovY * cosHalfFova) * (*viewaxis)[0]) +        (float)((-(cosHalfFova)) * (float)(*viewaxis)[6]);
+camera->frustum[4][1] = (float)((float)(tanHalfFovY * cosHalfFova) * (float)(*viewaxis)[1]) +     (float)((-(cosHalfFova)) * (float)(*viewaxis)[7]);
+    camera->frustum[4][2] = (float)((float)(tanHalfFovY * cosHalfFova) * (float)(*viewaxis)[2]) + (float)((-(cosHalfFova)) * (float)(*viewaxis)[8]);
     camera->frustumPlaneCount = 5;
     for ( planeIndex = 0; planeIndex < camera->frustumPlaneCount; ++planeIndex )
     {
@@ -3267,10 +3471,10 @@ void __cdecl FX_SetupCamera(
     }
     if ( zfar > 0.0 )
     {
-        LODWORD(camera->frustum[5][0]) = LODWORD((*viewaxis)[0]) ^ _mask__NegFloat_;
-        LODWORD(camera->frustum[5][1]) = LODWORD((*viewaxis)[1]) ^ _mask__NegFloat_;
-        LODWORD(camera->frustum[5][2]) = LODWORD((*viewaxis)[2]) ^ _mask__NegFloat_;
-        camera->frustum[5][3] = COERCE_FLOAT(LODWORD(camera->frustum[0][3]) ^ _mask__NegFloat_) - zfar;
+        (camera->frustum[5][0]) = -((*viewaxis)[0]);
+        (camera->frustum[5][1]) = -((*viewaxis)[1]);
+        (camera->frustum[5][2]) = -((*viewaxis)[2]);
+        camera->frustum[5][3] = (-(camera->frustum[0][3])) - zfar;
         camera->frustumPlaneCount = 6;
     }
 }

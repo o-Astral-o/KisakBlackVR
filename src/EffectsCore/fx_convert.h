@@ -1,5 +1,19 @@
 #pragma once
 #include <gfx_d3d/fxprimitives.h>
+#include "fx_load_obj.h"
+#include "FxCurve.h"
+
+enum FxSampleChannel : __int32
+{                                       // XREF: ?FX_Convert@@YAPBUFxEffectDef@@PBUFxEditorEffectDef@@P6APAXH@Z@Z/r
+                                        // FX_SampleVisualState/r ...
+    FX_CHAN_RGBA     = 0x0,
+    FX_CHAN_SIZE_0   = 0x1,
+    FX_CHAN_SIZE_1   = 0x2,
+    FX_CHAN_SCALE    = 0x3,
+    FX_CHAN_ROTATION = 0x4,
+    FX_CHAN_COUNT    = 0x5,
+    FX_CHAN_NONE     = 0x6,
+};
 
 const FxEffectDef *__cdecl FX_Convert(const FxEditorEffectDef *editorEffect, void *(__cdecl *Alloc)(int));
 int __cdecl FX_DecideVelocitySampleCount(const FxEditorElemDef *edElem, int intervalLimit);

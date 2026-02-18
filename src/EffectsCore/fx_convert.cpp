@@ -1,4 +1,10 @@
 #include "fx_convert.h"
+#include <gfx_d3d/r_material_load_obj.h>
+#include "FxCurve.h"
+
+float4 NATIVE_VERTEX_PERM = { { 3.972236e-34, 0.0, 0.0, 0.0 } };
+
+
 
 const FxEffectDef *__cdecl FX_Convert(const FxEditorEffectDef *editorEffect, void *(__cdecl *Alloc)(int))
 {
@@ -65,7 +71,7 @@ const FxEffectDef *__cdecl FX_Convert(const FxEditorEffectDef *editorEffect, voi
                     if ( !*((unsigned int *)elemVisual->anonymous + 59) )
                     {
                         v2 = FX_RegisterPhysPreset("default");
-                        *((unsigned int *)elemVisual->anonymous + 59) = v2;
+                        *((unsigned int *)elemVisual->anonymous + 59) = (unsigned int)v2;
                         Com_PrintError(
                             20,
                             "ERROR: no physics preset specified for the FX model [%s]\n",
@@ -116,10 +122,10 @@ const FxEffectDef *__cdecl FX_Convert(const FxEditorEffectDef *editorEffect, voi
     memPool = (unsigned __int8 *)&effect[1];
     effect->elemDefsEA = (const FxElemDef *)&effect[1];
     memPool += 292 * elemCountTotal;
-    v9 = FX_ConvertElemDefsOfType(effect->elemDefsEA, editorEffect, 1u, velStateCount, visStateCount, emitIndex, &memPool);
+    v9 = FX_ConvertElemDefsOfType((FxElemDef*)effect->elemDefsEA, editorEffect, 1u, velStateCount, visStateCount, emitIndex, &memPool);
     effect->elemDefCountLooping = v9;
     v10 = FX_ConvertElemDefsOfType(
-                    &effect->elemDefsEA[effect->elemDefCountLooping],
+        (FxElemDef *)&effect->elemDefsEA[effect->elemDefCountLooping],
                     editorEffect,
                     0,
                     velStateCount,
@@ -128,7 +134,7 @@ const FxEffectDef *__cdecl FX_Convert(const FxEditorEffectDef *editorEffect, voi
                     &memPool);
     effect->elemDefCountOneShot = v10;
     v11 = FX_CopyEmittedElemDefs(
-                    &effect->elemDefsEA[effect->elemDefCountOneShot + effect->elemDefCountLooping],
+        (FxElemDef *)&effect->elemDefsEA[effect->elemDefCountOneShot + effect->elemDefCountLooping],
                     editorEffect,
                     &memPool);
     effect->elemDefCountEmission = v11;
@@ -373,10 +379,8 @@ double __cdecl FX_MaxErrorForIntervalCount(
                 lerpedValueIter);
             for ( componentIndex = 1; componentIndex < componentCount; ++componentIndex )
             {
-                LODWORD(error) = COERCE_UNSIGNED_INT(
-                                                     samples[componentIndex + componentCount * sampleIndexIter]
-                                                 - lerpedValueIter[componentIndex - 1])
-                                             & _mask__AbsFloat_;
+                //LODWORD(error) = COERCE_UNSIGNED_INT(samples[componentIndex + componentCount * sampleIndexIter] - lerpedValueIter[componentIndex - 1]) & _mask__AbsFloat_;
+                error = -(samples[componentIndex + componentCount * sampleIndexIter] - lerpedValueIter[componentIndex - 1]);
                 if ( error > errorMax )
                 {
                     errorMax = error;
@@ -748,6 +752,32 @@ int __cdecl FX_ConvertElemDefsOfType(
     return elemCount;
 }
 
+void __cdecl FX_CopyCanonicalRange_FxIntRange_FxIntRange_(FxIntRange *to, const FxIntRange *from)
+{
+    if (from->amplitude >= 0)
+    {
+        *to = *from;
+    }
+    else
+    {
+        to->base = from->amplitude + from->base;
+        to->amplitude = -from->amplitude;
+    }
+}
+
+void __cdecl FX_CopyCanonicalRange_FxFloatRange_FxFloatRange_(FxFloatRange *to, const FxFloatRange *from)
+{
+    if (from->amplitude >= 0.0)
+    {
+        *to = *from;
+    }
+    else
+    {
+        to->base = from->base + from->amplitude;
+        to->amplitude = -(from->amplitude);
+    }
+}
+
 void __cdecl FX_ConvertElemDef(
                 FxElemDef *elemDef,
                 const FxEditorElemDef *edElemDef,
@@ -1058,7 +1088,7 @@ void __cdecl FX_SampleVelocity(FxElemDef *elemDef, const FxEditorElemDef *edElem
     velScale[1][1] = v2 * edElemDef->velScale[1][1];
     velScale[1][2] = v2 * edElemDef->velScale[1][2];
     velStateStride = 2;
-    velStateRange = elemDef->velSamples;
+    velStateRange = (FxElemVelStateSample*)elemDef->velSamples;
     FX_SampleVelocityInFrame(
         elemDef,
         velScale,
@@ -1253,7 +1283,7 @@ double __cdecl FxCurveIterator_SampleTime(FxCurveIterator *source, float time)
     {
         __debugbreak();
     }
-    return (float)FxCurve_Interpolate1d(&source->master->keys[2 * source->currentKeyIndex], time);
+    return (float)FxCurve_Interpolate1d((float*)&source->master->keys[2 * source->currentKeyIndex], time);
 }
 
 double __cdecl FxCurve_Interpolate1d(float *key, float intermediateTime)
@@ -1287,7 +1317,7 @@ void __cdecl FxCurveIterator_MoveToTime(FxCurveIterator *source, float time)
 {
     const char *v2; // eax
     int keySize; // [esp+8h] [ebp-8h]
-    float *key; // [esp+Ch] [ebp-4h]
+    const float *key; // [esp+Ch] [ebp-4h]
 
     if ( !source && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\effectscore\\FxCurve.h", 85, 0, "%s", "source") )
         __debugbreak();
@@ -1408,7 +1438,7 @@ void __cdecl FX_SampleVisualState(FxElemDef *elemDef, const FxEditorElemDef *edE
     for ( sampleIndex = 0; sampleIndex <= elemDef->visStateIntervalCount; ++sampleIndex )
     {
         sampleTime = (float)sampleIndex / (float)elemDef->visStateIntervalCount;
-        visStateRange = &elemDef->visSamples[sampleIndex];
+        visStateRange = (FxElemVisStateSample*)&elemDef->visSamples[sampleIndex];
         if ( routing[0] )
         {
             if ( routing[0] != FX_CHAN_NONE
@@ -1875,12 +1905,13 @@ void __cdecl FX_ReserveElemDefMemory(FxElemDef *elemDef, unsigned __int8 **memPo
 
 void __cdecl FX_CopyMarkVisuals(const FxEditorElemDef *edElemDef, FxElemMarkVisuals *markVisualsArray)
 {
-    memcpy((unsigned __int8 *)markVisualsArray, (unsigned __int8 *)&edElemDef->692, 8 * edElemDef->visualCount);
+    //memcpy((unsigned __int8 *)markVisualsArray, (unsigned __int8 *)&edElemDef->692, 8 * edElemDef->visualCount);
+    memcpy((unsigned __int8 *)markVisualsArray, (unsigned __int8 *)&edElemDef->markVisuals, 8 * edElemDef->visualCount);
 }
 
 void __cdecl FX_CopyVisuals(const FxEditorElemDef *edElemDef, FxElemVisuals *visualsArray)
 {
-    memcpy((unsigned __int8 *)visualsArray, (unsigned __int8 *)&edElemDef->692, 4 * edElemDef->visualCount);
+    memcpy((unsigned __int8 *)visualsArray, (unsigned __int8 *)&edElemDef->visuals, 4 * edElemDef->visualCount);
 }
 
 void __cdecl FX_ConvertEffectDefRef(FxEffectDefRef *ref, const FxEffectDef *effectDef)
@@ -1980,12 +2011,12 @@ void __cdecl FX_ConvertTrail_CompileVertices(
     float v6[2]; // [esp+14h] [ebp-B0h] BYREF
     float *normal; // [esp+1Ch] [ebp-A8h]
     FxTrailVertex *v8; // [esp+20h] [ebp-A4h]
-    float *v9; // [esp+24h] [ebp-A0h]
-    float *v10; // [esp+34h] [ebp-90h]
-    float *v11; // [esp+38h] [ebp-8Ch]
+    const float *v9; // [esp+24h] [ebp-A0h]
+    const float *v10; // [esp+34h] [ebp-90h]
+    const float *v11; // [esp+38h] [ebp-8Ch]
     float v12[2]; // [esp+40h] [ebp-84h] BYREF
-    float *pos; // [esp+48h] [ebp-7Ch]
-    float *v14; // [esp+4Ch] [ebp-78h]
+    const float *pos; // [esp+48h] [ebp-7Ch]
+    const float *v14; // [esp+4Ch] [ebp-78h]
     float v[2]; // [esp+54h] [ebp-70h] BYREF
     FxTrailVertex *emittedVertPtrIter; // [esp+5Ch] [ebp-68h]
     float secondaryEdgeNorm[2]; // [esp+60h] [ebp-64h] BYREF
@@ -2247,7 +2278,7 @@ int __cdecl FX_CopyEmittedElemDefs(
                     96 * (elemDef->velIntervalCount + 1));
                 if ( elemDef->visSamples )
                     memcpy(
-                        elemDef->visSamples->base.color,
+                        (void*)elemDef->visSamples->base.color,
                         (unsigned __int8 *)elemDefEmit[48].spawnSound,
                         48 * (elemDef->visStateIntervalCount + 1));
                 if ( elemDef->visualCount > 1u )
