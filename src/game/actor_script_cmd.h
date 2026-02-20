@@ -8,6 +8,23 @@ enum DEBUGMAYMOVE_LIFT_ENUM : __int32
     DEBUGMAYMOVE_LIFTED     = 0x1,
 };
 
+struct entityHandler_t // sizeof=0x30
+{                                       // XREF: .data:entityHandler_t * entityHandlers/r
+    void(__cdecl *think)(gentity_s *); // XREF: G_RunThink(gentity_s *)+41/r
+    void(__cdecl *reached)(gentity_s *);
+    void(__cdecl *blocked)(gentity_s *, gentity_s *);
+    void(__cdecl *touch)(gentity_s *, gentity_s *, int);
+    void(__cdecl *use)(gentity_s *, gentity_s *, gentity_s *);
+    void(__cdecl *pain)(gentity_s *, gentity_s *, int, const float *, const int, const float *, const hitLocation_t, const int);
+    void(__cdecl *react)(gentity_s *, gentity_s *, const float *);
+    void(__cdecl *die)(gentity_s *, gentity_s *, gentity_s *, int, int, const int, const float *, const hitLocation_t, int);
+    void(__cdecl *entinfo)(gentity_s *, float *);
+    void(__cdecl *controller)(const gentity_s *, int *);
+    // G_DObjCalcBone(gentity_s const *,int)+56/r
+    int methodOfDeath;                  // XREF: G_ExplodeMissile(gentity_s *)+C03/r
+    int splashMethodOfDeath;            // XREF: GetSplashMethodOfDeath+B5/r
+};
+
 void __cdecl ActorCmd_StartCoverArrival(scr_entref_t entref);
 actor_s *__fastcall Actor_Get(scr_entref_t entref);
 void __fastcall Actor_StartArrivalState(actor_s *self, ai_state_t newState);
@@ -96,4 +113,8 @@ void __cdecl ActorCmd_GetDeltaTurnYaw(scr_entref_t entref);
 void __cdecl ActorCmd_SetAnimState(scr_entref_t entref);
 void __cdecl ActorCmd_SetAimAnimWeights(scr_entref_t entref);
 void __cdecl ActorCmd_finishActorDamage(scr_entref_t entref);
-void (__cdecl *__cdecl Actor_GetMethod(const char **pName))(scr_entref_t);
+//void (__cdecl *__cdecl Actor_GetMethod(const char **pName))(scr_entref_t);
+void(__cdecl *__cdecl Actor_GetMethod(const char **pName))(scr_entref_t);
+
+
+extern entityHandler_t entityHandlers[31];

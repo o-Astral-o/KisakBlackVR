@@ -7,15 +7,15 @@ void __cdecl G_ParseHitLocDmgTable();
 void __cdecl LookAtKiller(gentity_s *self, gentity_s *inflictor, gentity_s *attacker);
 int __cdecl G_MeansOfDeathFromScriptParam(unsigned int scrParam);
 void __cdecl player_die(
-                gentity_s *self,
-                gentity_s *inflictor,
-                gentity_s *attacker,
-                int damage,
-                unsigned int meansOfDeath,
-                unsigned int iWeapon,
-                float *vDir,
-                hitLocation_t hitLoc,
-                int psTimeOffset);
+    gentity_s *self,
+    gentity_s *inflictor,
+    gentity_s *attacker,
+    int damage,
+    int meansOfDeath,
+    const int iWeapon,
+    const float *vDir,
+    const hitLocation_t hitLoc,
+    int psTimeOffset);
 void __cdecl DeathGrenadeDrop(gentity_s *self);
 double __cdecl G_GetWeaponHitLocationMultiplier(hitLocation_t hitLoc, unsigned int weapon);
 void __cdecl G_DamageClient(

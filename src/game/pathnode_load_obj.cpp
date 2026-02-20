@@ -1,4 +1,95 @@
 #include "pathnode_load_obj.h"
+#include <universal/com_memory.h>
+#include "g_load_utils.h"
+#include <clientscript/cscr_stringlist.h>
+#include <qcommon/com_bsp_load_obj.h>
+#include "actor_exposed.h"
+#include <game_mp/g_main_mp.h>
+#include <bgame/bg_misc.h>
+#include <server/sv_game.h>
+
+const float nodeAttackOffset[21] =
+{
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  -90.0,
+  90.0,
+  -90.0,
+  90.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+};
+
+const int nodeFlagsCleared[21] =
+{ 0, 0, 4, 8, 8, 16, 0, 0, 0, 0, 0, 4, 8, 16, 0, 4, 0, 1, 1, 8, 0 };
+
+struct node_field_t_HACK // sizeof=0xC
+{                                       // XREF: .data:fields_4/r
+    const char *name;
+    int ofs;
+    int type;
+};
+
+node_field_t_HACK fields_4[7] =
+{
+  { "targetname", 6, 5 },
+  { "target", 12, 5 },
+  { "animscript", 14, 5 },
+  { "script_noteworthy", 10, 5 },
+  { "script_linkname", 8, 5 },
+  { "origin", 20, 6 },
+  { "angles", 32, 15 }
+};
+
+struct nodespawn_t // sizeof=0x8
+{                                       // XREF: .rdata:nodespawns/r
+    const char *name;
+    nodeType type;
+};
+
+const nodespawn_t nodespawns[21] =
+{
+  { "node_pathnode", NODE_PATHNODE },
+  { "node_cover_stand", NODE_COVER_STAND },
+  { "node_cover_crouch", NODE_COVER_CROUCH },
+  { "node_cover_crouch_window", NODE_COVER_CROUCH_WINDOW },
+  { "node_cover_prone", NODE_COVER_PRONE },
+  { "node_cover_right", NODE_COVER_RIGHT },
+  { "node_cover_left", NODE_COVER_LEFT },
+  { "node_cover_wide_right", NODE_COVER_WIDE_RIGHT },
+  { "node_cover_wide_left", NODE_COVER_WIDE_LEFT },
+  { "node_cover_pillar", NODE_COVER_PILLAR },
+  { "node_concealment_stand", NODE_CONCEALMENT_STAND },
+  { "node_concealment_crouch", NODE_CONCEALMENT_CROUCH },
+  { "node_concealment_prone", NODE_CONCEALMENT_PRONE },
+  { "node_reacquire", NODE_REACQUIRE },
+  { "node_balcony", NODE_BALCONY },
+  { "node_scripted", NODE_SCRIPTED },
+  { "node_negotiation_begin", NODE_NEGOTIATION_BEGIN },
+  { "node_negotiation_end", NODE_NEGOTIATION_END },
+  { "node_turret", NODE_TURRET },
+  { "node_guard", NODE_GUARD },
+  { NULL, NODE_BADNODE }
+};
+
+
+struct NodeNums // sizeof=0x10000
+{
+    int array[2][8192];
+};
 
 int __cdecl NodeVisCacheEntry(int i, int j)
 {
@@ -109,45 +200,45 @@ void __cdecl G_ParsePathnodeFields(SpawnVar *spawnVar, pathnode_t *node, nodeTyp
 void __cdecl G_ParsePathnodeField(const char *key, char *value, pathnode_t *node)
 {
     float v3; // [esp+4h] [ebp-1Ch]
-    node_field_t *f; // [esp+10h] [ebp-10h]
+    node_field_t_HACK *f; // [esp+10h] [ebp-10h]
     float vec[3]; // [esp+14h] [ebp-Ch] BYREF
 
-    for ( f = fields_4; f->name; f = (node_field_t *)((char *)f + 12) )
+    for (f = fields_4; f->name; ++f)
     {
-        if ( !I_stricmp(f->name, key) )
+        if (!I_stricmp(f->name, key))
         {
-            switch ( f->size[0] )
+            switch (f->type)
             {
-                case 0:
-                    *(nodeType *)((char *)&node->constant.type + f->ofs) = atoi(value);
-                    break;
-                case 1:
-                    *(_WORD *)((char *)&node->constant.type + f->ofs) = atoi(value);
-                    break;
-                case 2:
-                    *((_BYTE *)&node->constant.type + f->ofs) = atoi(value);
-                    break;
-                case 3:
-                    v3 = atof(value);
-                    *(float *)((char *)&node->constant.type + f->ofs) = v3;
-                    break;
-                case 5:
-                    Scr_SetStringLiveUpdateSafe((unsigned __int16 *)((char *)node + f->ofs), value, SCRIPTINSTANCE_SERVER);
-                    break;
-                case 6:
-                    memset(vec, 0, sizeof(vec));
-                    sscanf(value, "%f %f %f", vec, &vec[1], &vec[2]);
-                    *(float *)((char *)&node->constant.type + f->ofs) = vec[0];
-                    *(float *)((char *)&node->constant.spawnflags + f->ofs) = vec[1];
-                    *(float *)((char *)&node->constant.script_linkName + f->ofs) = vec[2];
-                    break;
-                case 0xF:
-                    memset(vec, 0, sizeof(vec));
-                    sscanf(value, "%f %f %f", vec, &vec[1], &vec[2]);
-                    *(float *)((char *)&node->constant.type + f->ofs) = AngleNormalize360(vec[1]);
-                    break;
-                default:
-                    return;
+            case 0:
+                *(nodeType *)((char *)&node->constant.type + f->ofs) = (nodeType)atoi(value);
+                break;
+            case 1:
+                *(_WORD *)((char *)&node->constant.type + f->ofs) = atoi(value);
+                break;
+            case 2:
+                *((_BYTE *)&node->constant.type + f->ofs) = atoi(value);
+                break;
+            case 3:
+                v3 = atof(value);
+                *(float *)((char *)&node->constant.type + f->ofs) = v3;
+                break;
+            case 5:
+                Scr_SetStringLiveUpdateSafe((unsigned __int16 *)((char *)node + f->ofs), value, SCRIPTINSTANCE_SERVER);
+                break;
+            case 6:
+                memset(vec, 0, sizeof(vec));
+                sscanf(value, "%f %f %f", vec, &vec[1], &vec[2]);
+                *(float *)((char *)&node->constant.type + f->ofs) = vec[0];
+                *(float *)((char *)&node->constant.spawnflags + f->ofs) = vec[1];
+                *(float *)((char *)&node->constant.script_linkName + f->ofs) = vec[2];
+                break;
+            case 0xF:
+                memset(vec, 0, sizeof(vec));
+                sscanf(value, "%f %f %f", vec, &vec[1], &vec[2]);
+                *(float *)((char *)&node->constant.type + f->ofs) = AngleNormalize360(vec[1]);
+                break;
+            default:
+                return;
             }
             return;
         }
@@ -171,10 +262,11 @@ void __cdecl G_SpawnPathnodeStatic(SpawnVar *spawnVar, const char *classname)
 {
     nodeType NodeTypeFromClassname; // eax
 
-    NodeTypeFromClassname = G_GetNodeTypeFromClassname(classname);
+    NodeTypeFromClassname = (nodeType)G_GetNodeTypeFromClassname(classname);
     SP_spawn_node(spawnVar, NodeTypeFromClassname);
 }
 
+int overCount_0;
 void __cdecl SP_spawn_node(SpawnVar *spawnVar, nodeType type)
 {
     pathnode_t *loadNode; // [esp+0h] [ebp-4h]
@@ -228,11 +320,11 @@ void __cdecl SP_spawn_node(SpawnVar *spawnVar, nodeType type)
 
 void __cdecl Scr_FreePathnodeFields(pathnode_t *node)
 {
-    node_field_t *f; // [esp+8h] [ebp-4h]
+    node_field_t_HACK *f; // [esp+8h] [ebp-4h]
 
-    for ( f = fields_4; f->name; f = (node_field_t *)((char *)f + 12) )
+    for (f = fields_4; f->name; ++f)
     {
-        if ( f->size[0] == 5 )
+        if (f->type == 5)
             Scr_SetString((unsigned __int16 *)((char *)node + f->ofs), 0, SCRIPTINSTANCE_SERVER);
     }
 }
@@ -277,12 +369,12 @@ void __cdecl Path_BuildChains()
                     if ( node->constant.wChainParent >= 0 )
                     {
                         v0 = SL_ConvertToString(node->constant.targetname, SCRIPTINSTANCE_SERVER);
-                        Com_Error(ERR_DROP, &byte_D39448, v0);
+                        Com_Error(ERR_DROP, "multiple nodes target node with name %s", v0);
                     }
                     if ( i == j )
                     {
                         v1 = SL_ConvertToString(node->constant.targetname, SCRIPTINSTANCE_SERVER);
-                        Com_Error(ERR_DROP, &byte_D39420, v1);
+                        Com_Error(ERR_DROP, "node with name %s targets itself", v1);
                     }
                     node->constant.wChainParent = j;
                     pNodeParent->constant.wChainId = -1;
@@ -298,7 +390,7 @@ void __cdecl Path_BuildChains()
             if ( nodea->constant.wChainParent == ia )
             {
                 v2 = SL_ConvertToString(nodea->constant.targetname, SCRIPTINSTANCE_SERVER);
-                Com_Error(ERR_DROP, &byte_D393EC, v2);
+                Com_Error(ERR_DROP, "found chain loop including node with name %s", v2);
             }
             nodea = &gameWorldCurrent->path.nodes[nodea->constant.wChainParent];
         }
@@ -347,7 +439,7 @@ void __cdecl Path_BuildChains()
             ++badNodeCount;
             Com_Error(
                 ERR_DROP,
-                &byte_D3937C,
+                "Error: bad node [%d] in friendly chain at (%g %g %g)",
                 ie,
                 nodec->constant.vOrigin[0],
                 nodec->constant.vOrigin[1],
@@ -390,7 +482,7 @@ void __cdecl Path_BuildChain_r(pathnode_t *node, __int16 wChainId, __int16 wChai
                 if ( node == &gameWorldCurrent->path.nodes[i] )
                 {
                     v3 = SL_ConvertToString(node->constant.targetname, SCRIPTINSTANCE_SERVER);
-                    Com_Error(ERR_DROP, &byte_D39488, v3);
+                    Com_Error(ERR_DROP, "node %s targets itself", v3);
                 }
                 if ( (gameWorldCurrent->path.nodes[i].constant.spawnflags & 2) == 0 )
                 {
@@ -489,7 +581,7 @@ bool __cdecl Path_FindOverlappingNodes()
             vDelta_8 = node->constant.vOrigin[2] - otherNode->constant.vOrigin[2];
             distSq = (float)(vDelta * vDelta) + (float)(vDelta_4 * vDelta_4);
             if ( distSq <= (float)((float)((float)(15.0 - -15.0) + 1.0) * (float)((float)(15.0 - -15.0) + 1.0))
-                && COERCE_FLOAT(LODWORD(actorSize_8) ^ _mask__NegFloat_) <= vDelta_8
+                && (-(actorSize_8)) <= vDelta_8
                 && vDelta_8 <= actorSize_8 )
             {
                 if ( distSq < 1.0
@@ -561,6 +653,8 @@ bool __cdecl Path_FindOverlappingNodes()
     return iErrorCount > 0;
 }
 
+char str_0[8][64];
+int index_0;
 char *__cdecl vtosf(const float *v)
 {
     char *s; // [esp+18h] [ebp-4h]
@@ -612,8 +706,8 @@ int __cdecl Path_LoadPathsInternal()
     {
         pos = buf + 6;
         if ( gameWorldCurrent->path.nodeCount != *((unsigned __int16 *)buf + 2) )
-            Com_Error(ERR_DROP, &byte_D396F0);
-        linksBuffer = (pathlink_s *)Z_Malloc((int)&off_600000, "Path_LoadPaths", 6);
+            Com_Error(ERR_DROP, "Path node count mismatch in bsp file. Recompile the map to fix.");
+        linksBuffer = (pathlink_s *)Z_Malloc(0x600000, "Path_LoadPaths", 6);
         totalLinkCount = 0;
         for ( i = 0; i < gameWorldCurrent->path.nodeCount; ++i )
         {
@@ -920,6 +1014,26 @@ pathnode_tree_t *__cdecl Path_AllocPathnodeTree()
 {
     ++gameWorldCurrent->path.nodeTreeCount;
     return (pathnode_tree_t *)Hunk_AllocAlign(0x10u, 4, "Path_AllocPathnodeTree", 6);
+}
+
+int __cdecl ExpandedNodeVisCacheEntry_0(int i, int j)
+{
+    if (i <= j
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode_load_obj.cpp", 1428, 0, "%s", "i > j"))
+    {
+        __debugbreak();
+    }
+    return j + gameWorldCurrent->path.nodeCount * (i - 1);
+}
+
+int __cdecl NodeVisCacheEntry_0(int i, int j)
+{
+    if (i >= j
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode_load_obj.cpp", 1416, 0, "%s", "i < j"))
+    {
+        __debugbreak();
+    }
+    return j + gameWorldCurrent->path.nodeCount * i;
 }
 
 void __cdecl Path_BuildNodeVis(unsigned __int8 *visbuf, unsigned int iVisCacheSize)
@@ -1235,7 +1349,7 @@ char __cdecl Path_AttemptLink1(pathnode_t *pNodeFrom, pathnode_t *pNodeTo, pathl
     if ( !Path_CanLinkNodes(pNodeFrom, pNodeTo, &fDist, &bNegotiationLink) )
         return 0;
     if ( pNodeFrom->constant.totalLinkCount >= iMaxLinks )
-        Com_Error(ERR_DROP, &byte_D399BC, 0x80000);
+        Com_Error(ERR_DROP, "PATH_MAX_TOTAL_LINKS (%i) exceeded", 0x80000);
     pLink = &pLinks[pNodeFrom->constant.totalLinkCount++];
     if ( pNodeTo - gameWorldCurrent->path.nodes != (unsigned __int16)(pNodeTo - gameWorldCurrent->path.nodes)
         && !Assert_MyHandler(
@@ -1265,7 +1379,7 @@ bool __cdecl Path_CanLinkNodes(pathnode_t *pNodeFrom, pathnode_t *pNodeTo, float
     int i; // [esp+870h] [ebp-10h]
     float vDelta[3]; // [esp+874h] [ebp-Ch]
 
-    colgeom_visitor_inlined_t<200>::colgeom_visitor_inlined_t<200>(&phys.proximity_data);
+    //colgeom_visitor_inlined_t<200>::colgeom_visitor_inlined_t<200>(&phys.proximity_data);
     if ( !pNodeFrom
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode_load_obj.cpp", 1164, 0, "%s", "pNodeFrom") )
     {
@@ -1285,7 +1399,7 @@ bool __cdecl Path_CanLinkNodes(pathnode_t *pNodeFrom, pathnode_t *pNodeTo, float
     {
         *pbNegotiationLink = 1;
         *pfDist = 15.0f;
-        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
         return 1;
     }
     else
@@ -1334,27 +1448,27 @@ bool __cdecl Path_CanLinkNodes(pathnode_t *pNodeFrom, pathnode_t *pNodeTo, float
                         break;
                     if ( !Actor_Physics_z(&phys) )
                     {
-                        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                         return 0;
                     }
                     if ( phys.bHasGroundPlane )
                         fLastGroundPlaneAltitude = phys.vOrigin[2];
                     if ( (float)(fLastGroundPlaneAltitude - phys.vOrigin[2]) > 32.0 )
                     {
-                        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                       // phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                         return 0;
                     }
                     if ( phys.iHitEntnum != 1023
                         && (phys_ai_collision_mode->current.integer != 1
                          || !isDeflectionOK(pNodeFrom->constant.vOrigin, phys.vOrigin, vMoveDir)) )
                     {
-                        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                         return 0;
                     }
                 }
                 if ( (float)(fLastGroundPlaneAltitude - pNodeTo->constant.vOrigin[2]) > 32.0 )
                 {
-                    phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                    //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                     return 0;
                 }
                 fDist = sqrtf(fDistSqrd);
@@ -1362,40 +1476,41 @@ bool __cdecl Path_CanLinkNodes(pathnode_t *pNodeFrom, pathnode_t *pNodeTo, float
                 phys.vWishDelta[1] = fDist * vMoveDir[1];
                 if ( !Actor_Physics_z(&phys) )
                 {
-                    phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                    //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                     return 0;
                 }
                 if ( phys.iHitEntnum != 1023 )
                 {
                     if ( phys_ai_collision_mode->current.integer != 1 )
                     {
-                        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                       // phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                         return 0;
                     }
                     if ( !isDeflectionOK(pNodeFrom->constant.vOrigin, phys.vOrigin, vMoveDir) )
                     {
-                        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                         return 0;
                     }
                 }
                 v5 = fabs(phys.vOrigin[2] - pNodeTo->constant.vOrigin[2]) <= 18.0;
-                phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                 return v5;
             }
             else
             {
-                phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+                //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
                 return 0;
             }
         }
         else
         {
-            phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+            //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
             return 0;
         }
     }
 }
 
+static float MAX_ALLOWED_DEFLECTION_SQ = 0.30000001;
 bool __cdecl isDeflectionOK(const float *start, const float *origin, const float *movedir)
 {
     float v4; // [esp+0h] [ebp-14h]
@@ -1404,8 +1519,8 @@ bool __cdecl isDeflectionOK(const float *start, const float *origin, const float
 
     deflection = *origin - *start;
     deflection_4 = origin[1] - start[1];
-    LODWORD(v4) = COERCE_UNSIGNED_INT((float)(deflection * *movedir) + (float)(deflection_4 * movedir[1]))
-                            ^ _mask__NegFloat_;
+    //LODWORD(v4) = COERCE_UNSIGNED_INT((float)(deflection * *movedir) + (float)(deflection_4 * movedir[1])) ^ _mask__NegFloat_;
+    (v4) = -((float)(deflection * *movedir) + (float)(deflection_4 * movedir[1]));
     return MAX_ALLOWED_DEFLECTION_SQ >= (float)((float)((float)((float)(v4 * *movedir) + deflection)
                                                                                                         * (float)((float)(v4 * *movedir) + deflection))
                                                                                         + (float)((float)((float)(v4 * movedir[1]) + deflection_4)
@@ -1430,9 +1545,9 @@ void __cdecl Path_ConnectPaths()
 
     Com_Printf(18, "Connecting paths...\n");
     if ( pathstatic.pathLinks )
-        Com_Error(ERR_DROP, &byte_D39B20);
+        Com_Error(ERR_DROP, "Cannot calculate paths on a map_restart if paths already exist");
     if ( gameWorldCurrent->path.nodeCount >= 0x2000 )
-        Com_Error(ERR_DROP, &byte_D39AE4, 0x2000);
+        Com_Error(ERR_DROP, "PATH_MAX_NODES (%i) exceeded.  Check log for nodecount", 0x2000);
     if ( g_oldContents
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode_load_obj.cpp",
@@ -1493,7 +1608,7 @@ void __cdecl Path_ConnectPaths()
     }
     count = 0;
     prevPercent = 0;
-    linksBuffer = (pathlink_s *)Z_Malloc((int)&off_600000, "Path_ConnectPaths", 6);
+    linksBuffer = (pathlink_s *)Z_Malloc(0x600000, "Path_ConnectPaths", 6);
     totalLinkCount = 0;
     for ( ia = 0; ia < gameWorldCurrent->path.nodeCount; ++ia )
     {

@@ -41,4 +41,4 @@ unsigned int __cdecl GetTargetIdx(const gentity_s *ent);
 bool __cdecl G_TargetAttackProfileTop(const gentity_s *ent);
 void __cdecl Scr_Target_SetAttackMode();
 void __cdecl Scr_Target_SetJavelinOnly();
-$A5C519FFED38118F396585C413DE405F *__cdecl Target_GetTargetArray();
+target_t *__cdecl Target_GetTargetArray();

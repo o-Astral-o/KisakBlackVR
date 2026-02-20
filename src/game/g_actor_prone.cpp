@@ -1,4 +1,6 @@
 #include "g_actor_prone.h"
+#include "actor.h"
+#include <universal/assertive.h>
 
 void __cdecl G_InitActorProneInfo(actor_s *actor)
 {

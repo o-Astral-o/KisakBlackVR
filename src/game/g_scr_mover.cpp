@@ -1,4 +1,17 @@
 #include "g_scr_mover.h"
+#include <game_mp/g_main_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <bgame/bg_misc.h>
+#include <server/sv_world.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include <server/sv_game.h>
+#include <game_mp/g_utils_mp.h>
+#include <qcommon/dobj_management.h>
+#include <universal/com_math_anglevectors.h>
+#include <qcommon/cm_load.h>
+#include <clientscript/cscr_stringlist.h>
+#include <cgame/cg_scr_main.h>
 
 gentity_s *__cdecl GetEntity(const unsigned __int16 *targetname)
 {
@@ -55,7 +68,7 @@ void __cdecl Reached_ScriptMover(gentity_s *pEnt)
                                                 &pEnt->trigger.exposureFeather[1],
                                                 pEnt->mover.pos3);
             BG_EvaluateTrajectory(&pEnt->s.lerp.pos, level.time, pEnt->r.currentOrigin);
-            SV_LinkEntity((int)&savedregs, pEnt);
+            SV_LinkEntity(pEnt);
             if ( bMoveFinished )
                 Scr_Notify(pEnt, scr_const.movedone, 0);
         }
@@ -72,7 +85,7 @@ void __cdecl Reached_ScriptMover(gentity_s *pEnt)
                                              pEnt->mover.apos2,
                                              pEnt->mover.apos3);
         BG_EvaluateTrajectory(&pEnt->s.lerp.apos, level.time, pEnt->r.currentAngles);
-        SV_LinkEntity((int)&savedregs, pEnt);
+        SV_LinkEntity(pEnt);
         if ( bMoveFinisheda )
         {
             pEnt->r.currentAngles[0] = AngleNormalize180(pEnt->r.currentAngles[0]);
@@ -235,7 +248,7 @@ void __cdecl SP_script_brushmodel(gentity_s *self)
     if ( SV_SetBrushModel(self) )
     {
         InitScriptMover(self);
-        SV_LinkEntity((int)&savedregs, self);
+        SV_LinkEntity(self);
         if ( (self->spawnflags & 1) != 0 )
             self->flags |= 0x40000800u;
     }
@@ -266,7 +279,7 @@ void __cdecl SP_script_model(gentity_s *pSelf)
         pSelf->r.contents |= DObjGetContents(obj);
         DObjCalcBounds(obj, pSelf->r.mins, pSelf->r.maxs);
     }
-    SV_LinkEntity((int)&savedregs, pSelf);
+    SV_LinkEntity(pSelf);
     if ( pSelf->handler != 8
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_scr_mover.cpp",
@@ -288,7 +301,7 @@ void __cdecl SP_script_origin(gentity_s *pSelf)
 
     InitScriptMover(pSelf);
     pSelf->r.contents = 0;
-    SV_LinkEntity((int)&savedregs, pSelf);
+    SV_LinkEntity(pSelf);
     pSelf->r.svFlags |= 1u;
 }
 
@@ -392,11 +405,15 @@ void __cdecl ScriptMover_Move(gentity_s *pEnt, const float *vPos, float fTotalTi
         origin,
         &pEnt->mover.speed,
         &pEnt->mover.midTime,
-        (float *)&pEnt->540,
-        &pEnt->trigger.exposureLerpToLighter,
-        &pEnt->trigger.exposureFeather[1],
+        &pEnt->mover.aDecelTime,
+        pEnt->mover.pos1,
+        pEnt->mover.pos2,
         pEnt->mover.pos3);
-    SV_LinkEntity((int)&savedregs, pEnt);
+        //(float *)&pEnt->540,
+        //&pEnt->trigger.exposureLerpToLighter,
+        //&pEnt->trigger.exposureFeather[1],
+        //pEnt->mover.pos3);
+    SV_LinkEntity(pEnt);
 }
 
 void __cdecl ScriptMover_SetupMove(
@@ -678,7 +695,7 @@ void __cdecl ScriptMover_GravityMove(gentity_s *mover, const float *velocity, fl
     }
     trajectory->trType = 6;
     BG_EvaluateTrajectory(trajectory, level.time, mover->r.currentOrigin);
-    SV_LinkEntity((int)&savedregs, mover);
+    SV_LinkEntity(mover);
 }
 
 void __cdecl ScriptEnt_MoveAxis(scr_entref_t entref, int iAxis)
@@ -817,7 +834,7 @@ void __cdecl ScriptMover_Rotate(
         pEnt->mover.apos1,
         pEnt->mover.apos2,
         pEnt->mover.apos3);
-    SV_LinkEntity((int)&savedregs, pEnt);
+    SV_LinkEntity(pEnt);
 }
 
 void __cdecl ScriptEntCmd_DevAddPitch(scr_entref_t entref)
@@ -895,7 +912,7 @@ void __cdecl ScriptEnt_DevAddRotate(scr_entref_t entref, unsigned int iAxis)
         pSelf->s.lerp.apos.trBase[0] = pSelf->r.currentAngles[0];
         pSelf->s.lerp.apos.trBase[1] = pSelf->r.currentAngles[1];
         pSelf->s.lerp.apos.trBase[2] = pSelf->r.currentAngles[2];
-        SV_LinkEntity((int)&savedregs, pSelf);
+        SV_LinkEntity(pSelf);
     }
     else
     {
@@ -1029,11 +1046,9 @@ void __cdecl ScriptEntCmd_Vibrate(scr_entref_t entref)
         vibrationAngles[0] = (float)((float)(axis[0][0] * scaledImpulseVector[0])
                                                              + (float)(axis[0][1] * scaledImpulseVector[1]))
                                              + (float)(axis[0][2] * scaledImpulseVector[2]);
-        LODWORD(vibrationAngles[2]) = COERCE_UNSIGNED_INT(
-                                                                        (float)((float)(axis[1][0] * scaledImpulseVector[0])
-                                                                                    + (float)(axis[1][1] * scaledImpulseVector[1]))
-                                                                    + (float)(axis[1][2] * scaledImpulseVector[2]))
-                                                                ^ _mask__NegFloat_;
+        (vibrationAngles[2]) = -((float)((float)(axis[1][0] * scaledImpulseVector[0])
+            + (float)(axis[1][1] * scaledImpulseVector[1]))
+            + (float)(axis[1][2] * scaledImpulseVector[2]));// ^_mask__NegFloat_;
         vibrationAngles[1] = 0.0f;
         pSelf->mover.apos3[0] = pSelf->r.currentAngles[0];
         pSelf->mover.apos3[1] = pSelf->r.currentAngles[1];
@@ -1117,7 +1132,7 @@ void __cdecl ScriptMover_RotateSpeed(
         pEnt->mover.apos1,
         pEnt->mover.apos2,
         pEnt->mover.apos3);
-    SV_LinkEntity((int)&savedregs, pEnt);
+    SV_LinkEntity(pEnt);
 }
 
 void __cdecl ScriptMover_SetupMoveSpeed(
@@ -1386,6 +1401,29 @@ void __cdecl ScriptEntCmd_PhysicsLaunch(scr_entref_t entref)
     }
 }
 
+gentity_s *__cdecl GetEntity_0(scr_entref_t entref)
+{
+    if (entref.classnum)
+    {
+        Scr_ObjectError("not an entity", SCRIPTINSTANCE_SERVER);
+        return 0;
+    }
+    else
+    {
+        if (entref.entnum >= 0x400u
+            && !Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_scr_mover.cpp",
+                532,
+                0,
+                "%s",
+                "entref.entnum < MAX_GENTITIES"))
+        {
+            __debugbreak();
+        }
+        return &g_entities[entref.entnum];
+    }
+}
+
 void __cdecl ScriptEntCmd_Solid(scr_entref_t entref)
 {
     gentity_s *pSelf; // [esp+8h] [ebp-4h]
@@ -1403,7 +1441,7 @@ void __cdecl ScriptEntCmd_Solid(scr_entref_t entref)
         else
             pSelf->r.contents = 1;
         pSelf->s.lerp.eFlags &= ~1u;
-        SV_LinkEntity((int)&savedregs, pSelf);
+        SV_LinkEntity(pSelf);
     }
 }
 
@@ -1421,9 +1459,31 @@ void __cdecl ScriptEntCmd_NotSolid(scr_entref_t entref)
     {
         pSelf->r.contents = 0;
         pSelf->s.lerp.eFlags |= 1u;
-        SV_LinkEntity((int)&savedregs, pSelf);
+        SV_LinkEntity(pSelf);
     }
 }
+
+const BuiltinMethodDef methods_1[18] =
+{
+  { "moveto", &ScriptEntCmd_MoveTo, 0 },
+  { "movex", &ScriptEntCmd_MoveX, 0 },
+  { "movey", &ScriptEntCmd_MoveY, 0 },
+  { "movez", &ScriptEntCmd_MoveZ, 0 },
+  { "movegravity", &ScriptEntCmd_GravityMove, 0 },
+  { "rotateto", &ScriptEntCmd_RotateTo, 0 },
+  { "rotatepitch", &ScriptEntCmd_RotatePitch, 0 },
+  { "rotateyaw", &ScriptEntCmd_RotateYaw, 0 },
+  { "rotateroll", &ScriptEntCmd_RotateRoll, 0 },
+  { "devaddpitch", &ScriptEntCmd_DevAddPitch, 1 },
+  { "devaddyaw", &ScriptEntCmd_DevAddYaw, 1 },
+  { "devaddroll", &ScriptEntCmd_DevAddRoll, 1 },
+  { "vibrate", &ScriptEntCmd_Vibrate, 0 },
+  { "rotatevelocity", &ScriptEntCmd_RotateVelocity, 0 },
+  { "solid", &ScriptEntCmd_Solid, 0 },
+  { "notsolid", &ScriptEntCmd_NotSolid, 0 },
+  { "setcandamage", &ScriptEntCmd_SetCanDamage, 0 },
+  { "physicslaunch", &ScriptEntCmd_PhysicsLaunch, 0 }
+};
 
 void (__cdecl *__cdecl ScriptEnt_GetMethod(const char **pName))(scr_entref_t)
 {

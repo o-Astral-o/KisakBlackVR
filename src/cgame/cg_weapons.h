@@ -518,3 +518,7 @@ char __cdecl Bullet_Trace(
                 gentity_s *attacker,
                 BulletTraceResults *br,
                 unsigned int lastSurfaceType);
+
+
+extern unsigned __int8 bulletPriorityMap[4];
+extern unsigned __int8 riflePriorityMap[19];

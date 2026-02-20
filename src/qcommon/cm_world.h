@@ -7,6 +7,13 @@
 
 struct moveclip_t;
 
+enum PredictionTraceResult : __int32
+{                                       // XREF: ?Path_AttemptDodge@@YI_NPAUpath_t@@QBM11HPBHHHHH@Z/r
+    PTR_SUCCESS    = 0x0,
+    PTR_HIT_WORLD  = 0x1,
+    PTR_HIT_ENTITY = 0x2,
+};
+
 struct locTraceWork_t // sizeof=0x34
 {                                       // XREF: ?CM_PointTraceStaticModels@@YAXPAUtrace_t@@QBM1H@Z/r
     int contents;                       // XREF: CM_PointTraceStaticModels(trace_t *,float const * const,float const * const,int)+2A/w
@@ -165,3 +172,8 @@ int __cdecl CM_PointSightTraceToEntities_r(
                 unsigned __int16 nodeIndex,
                 const float *p1,
                 const float *p2);
+
+
+static const float PREDICTION_TRACE_MIN[3] = { -15.0, -15.0, 0.0 };
+static const float PREDICTION_TRACE_MAX[3] = { 15.0, 15.0, 48.0 };
+

@@ -1,4 +1,507 @@
 #include "actor_script_cmd.h"
+#include <game_mp/g_main_mp.h>
+#include <clientscript/cscr_vm.h>
+#include "actor_state.h"
+#include "actor_orientation.h"
+#include <game_mp/actor_mp.h>
+#include "actor_aim.h"
+#include <game_mp/g_spawn_mp.h>
+#include "actor_exposed.h"
+#include "actor_lookat.h"
+#include "actor_senses.h"
+#include <cgame/cg_drawtools.h>
+#include "actor_navigation.h"
+#include <game_mp/g_utils_mp.h>
+#include <clientscript/scr_const.h>
+#include "actor_spawner.h"
+#include <clientscript/cscr_stringlist.h>
+#include <qcommon/dobj_management.h>
+#include <bgame/bg_misc.h>
+#include <server/sv_game.h>
+#include "actor_events.h"
+#include "actor_dog_exposed.h"
+#include <bgame/bg_dog.h>
+#include <game_mp/g_combat_mp.h>
+#include "g_weapon.h"
+#include <game_mp/g_client_script_cmd_mp.h>
+#include <game_mp/g_misc_mp.h>
+#include <game_mp/g_trigger_mp.h>
+#include <game_mp/g_active_mp.h>
+#include "g_scr_mover.h"
+#include "g_missile.h"
+#include "turret.h"
+#include "g_scr_helicopter.h"
+#include <cgame/cg_scr_main.h>
+
+static void __cdecl METHOD_NULLSUB(scr_entref_t entref)
+{
+
+}
+
+
+const BuiltinMethodDef methods_2[77] =
+{
+  { "startcoverarrival", &ActorCmd_StartCoverArrival, 0 },
+  { "starttraversearrival", &ActorCmd_StartTraverseArrival, 0 },
+  { "melee", &ActorCmd_Melee, 0 },
+  { "reacquirestep", &ActorCmd_ReacquireStep, 0 },
+  { "findreacquirenode", &ActorCmd_FindReacquireNode, 0 },
+  { "getreacquirenode", &ActorCmd_GetReacquireNode, 0 },
+  { "usereacquirenode", &ActorCmd_UseReacquireNode, 0 },
+  { "findreacquiredirectpath", &ActorCmd_FindReacquireDirectPath, 0 },
+  { "trimpathtoattack", &ActorCmd_TrimPathToAttack, 0 },
+  { "reacquiremove", &ActorCmd_ReacquireMove, 0 },
+  { "findreacquireproximatepath", &ActorCmd_FindReacquireProximatePath, 0 },
+  { "flagenemyunattackable", &ActorCmd_FlagEnemyUnattackable, 0 },
+  { "clearpitchorient", &ActorCmd_ClearPitchOrient, 0 },
+  { "setlookatanimnodes", &ActorCmd_SetLookAtAnimNodes, 0 },
+  { "setlookat", &ActorCmd_SetLookAt, 0 },
+  { "setlookatyawlimits", &ActorCmd_SetLookAtYawLimits, 0 },
+  { "stoplookat", &ActorCmd_StopLookAt, 0 },
+  { "cansee", &ActorCmd_CanSee, 0 },
+  { "maymovetopoint", &ActorCmd_MayMoveToPoint, 0 },
+  { "maymovefrompointtopoint", &ActorCmd_MayMoveFromPointToPoint, 0 },
+  { "teleport", &ActorCmd_Teleport, 0 },
+  { "forceteleport", &ActorCmd_ForceTeleport, 0 },
+  { "withinapproxpathdist", &ActorCmd_WithinApproxPathDist, 0 },
+  { "ispathdirect", &ActorCmd_IsPathDirect, 0 },
+  { "allowedstances", &ActorCmd_AllowedStances, 0 },
+  { "isstanceallowed", &ActorCmd_IsStanceAllowed, 0 },
+  { "traversemode", &ActorCmd_TraverseMode, 0 },
+  { "animmode", &ActorCmd_AnimMode, 0 },
+  { "orientmode", &ActorCmd_OrientMode, 0 },
+  { "getmotionangle", &ActorCmd_GetMotionAngle, 0 },
+  { "getanglestolikelyenemypath", &ActorCmd_GetAnglesToLikelyEnemyPath, 0 },
+  { "lerpposition", &ActorCmd_LerpPosition, 0 },
+  { "predictoriginandangles", &ActorCmd_PredictOriginAndAngles, 0 },
+  { "predictanim", &ActorCmd_PredictAnim, 0 },
+  { "gethitenttype", &ActorCmd_GetHitEntType, 0 },
+  { "gethityaw", &ActorCmd_GetHitYaw, 0 },
+  { "getgroundenttype", &ActorCmd_GetGroundEntType, 0 },
+  { "isdeflected", &ActorCmd_IsDeflected, 0 },
+  { "animcustom", &ScrCmd_animcustom, 0 },
+  { "canattackenemynode", &ScrCmd_CanAttackEnemyNode, 0 },
+  { "getnegotiationstartnode", &ScrCmd_GetNegotiationStartNode, 0 },
+  { "getnegotiationendnode", &ScrCmd_GetNegotiationEndNode, 0 },
+  { "checkprone", &ActorCmd_CheckProne, 0 },
+  { "pushplayer", &ActorCmd_PushPlayer, 0 },
+  { "setgoalnode", &ActorCmd_SetGoalNode, 0 },
+  { "setgoalpos", &ActorCmd_SetGoalPos, 0 },
+  { "setgoalentity", &ActorCmd_SetGoalEntity, 0 },
+  { "setgoalvolume", &ActorCmd_SetGoalVolume, 0 },
+  { "getgoalvolume", &ActorCmd_GetGoalVolume, 0 },
+  { "cleargoalvolume", &ActorCmd_ClearGoalVolume, 0 },
+  { "setfixednodesafevolume", &ActorCmd_SetFixedNodeSafeVolume, 0 },
+  { "getfixednodesafevolume", &ActorCmd_GetFixedNodeSafeVolume, 0 },
+  { "clearfixednodesafevolume", &ActorCmd_ClearFixedNodeSafeVolume, 0 },
+  { "isingoal", &ActorCmd_IsInGoal, 0 },
+  { "setruntopos", &ActorCmd_SetOverrideRunToPos, 0 },
+  { "clearruntopos", &ActorCmd_ClearOverrideRunToPos, 0 },
+  { "nearnode", &ActorCmd_NearNode, 0 },
+  { "clearenemy", &ActorCmd_ClearEnemy, 0 },
+  { "setentitytarget", &ActorCmd_SetEntityTarget, 0 },
+  { "clearentitytarget", &ActorCmd_ClearEntityTarget, 0 },
+  { "setpotentialthreat", &ActorCmd_SetPotentialThreat, 0 },
+  { "clearpotentialthreat", &ActorCmd_ClearPotentialThreat, 0 },
+  { "getperfectinfo", &ActorCmd_GetPerfectInfo, 0 },
+  { "setflashbangimmunity", &ActorCmd_SetFlashbangImmunity, 0 },
+  { "setflashbanged", &ActorCmd_SetFlashBanged, 0 },
+  { "getflashbangedstrength", &ActorCmd_GetFlashBangedStrength, 0 },
+  { "isknownenemyinradius", &ActorCmd_IsKnownEnemyInRadius, 0 },
+  { "isknownenemyinvolume", &ActorCmd_IsKnownEnemyInVolume, 0 },
+  { "settalktospecies", &ActorCmd_SetTalkToSpecies, 0 },
+  { "allowpitchangle", &METHOD_NULLSUB, 0 },
+  { "knockback", &ActorCmd_Knockback, 0 },
+  { "getdeltaturnyaw", &ActorCmd_GetDeltaTurnYaw, 0 },
+  { "setentityowner", &ActorCmd_SetEntityOwner, 0 },
+  { "clearentityowner", &ActorCmd_ClearEntityOwner, 0 },
+  { "setanimstate", &ActorCmd_SetAnimState, 0 },
+  { "setaimanimweights", &ActorCmd_SetAimAnimWeights, 0 },
+  { "finishactordamage", &ActorCmd_finishActorDamage, 0 }
+};
+
+
+
+static void USE_NULLSUB(gentity_s *, gentity_s *, gentity_s *)
+{
+
+}
+
+
+entityHandler_t entityHandlers[31] =
+{
+  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+  {
+    NULL,
+    NULL,
+    NULL,
+    Actor_Touch,
+    NULL,
+    Actor_Pain,
+    NULL,
+    Actor_Die,
+    Actor_EntInfo,
+    actor_controller,
+    0,
+    0
+  },
+  {
+    Actor_Think,
+    NULL,
+    NULL,
+    Actor_Touch,
+    NULL,
+    Actor_Pain,
+    NULL,
+    Actor_Die,
+    Actor_EntInfo,
+    actor_controller,
+    0,
+    0
+  },
+  {
+    BodyEnd,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    Touch_Multi,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    NULL,
+    0,
+    0
+  },
+  { NULL, NULL, NULL, NULL, hurt_use, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+  {
+    NULL,
+    NULL,
+    NULL,
+    hurt_touch,
+    hurt_use,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    Use_trigger_damage,
+    Pain_trigger_damage,
+    NULL,
+    Die_trigger_damage,
+    NULL,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    Reached_ScriptMover,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    Reached_ScriptMover,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    NULL,
+    0,
+    0
+  },
+  {
+    G_ExplodeMissile,
+    NULL,
+    NULL,
+    Touch_Item_Auto,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    NULL,
+    3,
+    4
+  },
+  {
+    G_TimedObjectThink,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    NULL,
+    0,
+    0
+  },
+  {
+    G_ExplodeMissile,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    NULL,
+    5,
+    6
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    player_die,
+    misc_EntInfo,
+    G_PlayerController,
+    0,
+    0
+  },
+  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, player_die, NULL, NULL, 0, 0 },
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    G_PlayerController,
+    0,
+    0
+  },
+  { BodyEnd, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+  {
+    turret_think_init,
+    NULL,
+    NULL,
+    NULL,
+    turret_use,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    turret_controller,
+    0,
+    0
+  },
+  {
+    turret_think,
+    NULL,
+    NULL,
+    NULL,
+    turret_use,
+    NULL,
+    NULL,
+    NULL,
+    misc_EntInfo,
+    turret_controller,
+    0,
+    0
+  },
+  {
+    DroppedItemClearOwner,
+    NULL,
+    NULL,
+    Touch_Item_Auto,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    EntInfo_Item,
+    NULL,
+    0,
+    0
+  },
+  {
+    FinishSpawningItem,
+    NULL,
+    NULL,
+    Touch_Item_Auto,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    EntInfo_Item,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    Touch_Item_Auto,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    EntInfo_Item,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    USE_NULLSUB,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    Reached_ScriptMover,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0
+  },
+  { G_FreeEntity, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+  {
+    Scr_Vehicle_Init,
+    NULL,
+    NULL,
+    Scr_Vehicle_Touch,
+    Scr_Vehicle_Use,
+    Scr_Vehicle_Pain,
+    NULL,
+    Scr_Vehicle_Die,
+    misc_EntInfo,
+    Scr_Vehicle_Controller,
+    0,
+    0
+  },
+  {
+    Scr_Vehicle_Think,
+    NULL,
+    NULL,
+    Scr_Vehicle_Touch,
+    Scr_Vehicle_Use,
+    Scr_Vehicle_Pain,
+    NULL,
+    Scr_Vehicle_Die,
+    EntInfo_Vehicle,
+    Scr_Vehicle_Controller,
+    0,
+    0
+  },
+  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 },
+  {
+    Helicopter_Think,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    Helicopter_Pain,
+    NULL,
+    Helicopter_Die,
+    EntInfo_Vehicle,
+    Helicopter_Controller,
+    0,
+    0
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    trigger_ik_playerclip_terrain_touch,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0
+  },
+  {
+    NULL,
+    NULL,
+    NULL,
+    trigger_ik_disable_terrain_mapping_touch,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0
+  }
+};
+
+void(__cdecl *__cdecl Actor_GetMethod(const char **pName))(scr_entref_t)
+{
+    unsigned int i; // [esp+18h] [ebp-4h]
+
+    for (i = 0; i < 0x4D; ++i)
+    {
+        if (!strcmp(*pName, methods_2[i].actionString))
+        {
+            *pName = methods_2[i].actionString;
+            return methods_2[i].actionFunc;
+        }
+    }
+    return 0;
+}
 
 void __cdecl ActorCmd_StartCoverArrival(scr_entref_t entref)
 {
@@ -319,8 +822,8 @@ void __cdecl ActorCmd_MayMoveToPoint(scr_entref_t entref)
     {
         DEBUGMAYMOVE(self->ent->r.currentOrigin, vPoint, colorMagenta, DEBUGMAYMOVE_LIFTED);
         Scr_AddInt(0, SCRIPTINSTANCE_SERVER);
-        if ( g_DXDeviceThread != GetCurrentThreadId() )
-            return;
+        //if ( g_DXDeviceThread != GetCurrentThreadId() )
+        //    return;
     }
     else
     {
@@ -330,14 +833,14 @@ void __cdecl ActorCmd_MayMoveToPoint(scr_entref_t entref)
             self->mayMoveTime = level.time;
             DEBUGMAYMOVE(self->ent->r.currentOrigin, vPoint, colorGreen, DEBUGMAYMOVE_LIFTED);
             Scr_AddInt(1, SCRIPTINSTANCE_SERVER);
-            if ( g_DXDeviceThread != GetCurrentThreadId() )
-                return;
+            //if ( g_DXDeviceThread != GetCurrentThreadId() )
+            //    return;
         }
         else
         {
             Scr_AddInt(0, SCRIPTINSTANCE_SERVER);
-            if ( g_DXDeviceThread != GetCurrentThreadId() )
-                return;
+            //if ( g_DXDeviceThread != GetCurrentThreadId() )
+            //    return;
         }
     }
     //D3DPERF_EndEvent();
@@ -468,8 +971,8 @@ void __cdecl ActorCmd_MayMoveFromPointToPoint(scr_entref_t entref)
     {
         DEBUGMAYMOVE(vStart, vEnd, colorMagenta, DEBUGMAYMOVE_LIFTED);
         Scr_AddInt(0, SCRIPTINSTANCE_SERVER);
-        if ( g_DXDeviceThread != GetCurrentThreadId() )
-            return;
+        //if ( g_DXDeviceThread != GetCurrentThreadId() )
+        //    return;
         goto LABEL_11;
     }
     if ( MayMove_TraceCheck(self, vStart, vEnd, 0, checkDrop) )
@@ -676,15 +1179,15 @@ void __cdecl ActorCmd_AllowedStances(scr_entref_t entref)
         str = Scr_GetConstString(i, SCRIPTINSTANCE_SERVER).stringValue;
         if ( str == scr_const.stand )
         {
-            self->eAllowedStances |= 1u;
+            self->eAllowedStances |= 1;
         }
         else if ( str == scr_const.crouch )
         {
-            self->eAllowedStances |= 2u;
+            self->eAllowedStances |= 2;
         }
         else if ( str == scr_const.prone )
         {
-            self->eAllowedStances |= 4u;
+            self->eAllowedStances |= 4;
         }
         else
         {
@@ -742,7 +1245,7 @@ void __cdecl ActorCmd_IsStanceAllowed(scr_entref_t entref)
         eAllowedStances = Path_AllowedStancesForNode(self->sentient->pClaimedNode);
     }
     if ( (self->eAllowedStances & eAllowedStances) != 0 )
-        eAllowedStancesa = self->eAllowedStances & eAllowedStances;
+        eAllowedStancesa = (ai_stance_e)(self->eAllowedStances & eAllowedStances);
     else
         eAllowedStancesa = self->eAllowedStances;
     if ( (eStance & eAllowedStancesa) != 0 )
@@ -1233,7 +1736,6 @@ void __cdecl ActorCmd_CheckProne(scr_entref_t entref)
     yaw = Scr_GetFloat(1u, SCRIPTINSTANCE_SERVER);
     isProne = Scr_GetInt(2u, SCRIPTINSTANCE_SERVER).intValue != 0;
     canGoProne = BG_CheckProne(
-                                 (cStaticModel_s *)&savedregs,
                                  0,
                                  entref.entnum,
                                  position,
@@ -1286,7 +1788,8 @@ void __cdecl ActorCmd_SetGoalNode(scr_entref_t entref)
 
 void __fastcall Actor_SetScriptGoalPos(actor_s *self, const float *vGoalPos, pathnode_t *node, float *ang)
 {
-    EntHandle::setEnt(&self->scriptGoalEnt, 0);
+    //EntHandle::setEnt(&self->scriptGoalEnt, 0);
+    self->scriptGoalEnt.setEnt(NULL);
     Actor_ClearKeepClaimedNode(self);
     self->scriptGoal.pos[0] = *vGoalPos;
     self->scriptGoal.pos[1] = vGoalPos[1];
@@ -1345,7 +1848,8 @@ void __fastcall Actor_SetScriptGoalEntity(actor_s *self, gentity_s *pGoalEnt)
         __debugbreak();
     }
     Actor_ClearKeepClaimedNode(self);
-    EntHandle::setEnt(&self->scriptGoalEnt, pGoalEnt);
+    //EntHandle::setEnt(&self->scriptGoalEnt, pGoalEnt);
+    self->scriptGoalEnt.setEnt(pGoalEnt);
     self->scriptGoal.node = 0;
     self->scriptGoal.volume = 0;
 }
@@ -1357,7 +1861,8 @@ void __cdecl ActorCmd_SetGoalVolume(scr_entref_t entref)
     actor_s *self; // [esp+20h] [ebp-4h]
 
     self = Actor_Get(entref);
-    if ( EntHandle::isDefined(&self->scriptGoalEnt) )
+    //if ( EntHandle::isDefined(&self->scriptGoalEnt) )
+    if ( self->scriptGoalEnt.isDefined() )
         Scr_Error("cannot set goal volume when a goal entity is set", 0);
     volume = Scr_GetEntity(0);
     if ( !SV_EntityContact(self->scriptGoal.pos, self->scriptGoal.pos, volume) )
@@ -1390,7 +1895,8 @@ void __fastcall Actor_SetScriptGoalVolume(actor_s *self, gentity_s *volume)
     {
         __debugbreak();
     }
-    if ( EntHandle::isDefined(&self->scriptGoalEnt)
+    //if ( EntHandle::isDefined(&self->scriptGoalEnt)
+    if ( self->scriptGoalEnt.isDefined()
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_script_cmd.cpp",
                     3186,
@@ -1434,7 +1940,8 @@ void __cdecl ActorCmd_SetFixedNodeSafeVolume(scr_entref_t entref)
 
     self = Actor_Get(entref);
     volume = Scr_GetEntity(0);
-    EntHandle::setEnt(&self->fixedNodeSafeVolume, volume);
+    //EntHandle::setEnt(&self->fixedNodeSafeVolume, volume);
+    self->fixedNodeSafeVolume.setEnt(volume);
     self->fixedNodeSafeVolumeRadiusSq = RadiusFromBounds2DSq(volume->r.mins, volume->r.maxs);
 }
 
@@ -1444,9 +1951,11 @@ void __cdecl ActorCmd_GetFixedNodeSafeVolume(scr_entref_t entref)
     actor_s *self; // [esp+8h] [ebp-4h]
 
     self = Actor_Get(entref);
-    if ( EntHandle::isDefined(&self->fixedNodeSafeVolume) )
+    //if ( EntHandle::isDefined(&self->fixedNodeSafeVolume) )
+    if ( self->fixedNodeSafeVolume.isDefined() )
     {
-        v1 = EntHandle::ent(&self->fixedNodeSafeVolume);
+        //v1 = EntHandle::ent(&self->fixedNodeSafeVolume);
+        v1 = self->fixedNodeSafeVolume.ent();
         Scr_AddEntity(v1, SCRIPTINSTANCE_SERVER);
     }
 }
@@ -1456,7 +1965,8 @@ void __cdecl ActorCmd_ClearFixedNodeSafeVolume(scr_entref_t entref)
     actor_s *self; // [esp+8h] [ebp-4h]
 
     self = Actor_Get(entref);
-    EntHandle::setEnt(&self->fixedNodeSafeVolume, 0);
+    //EntHandle::setEnt(&self->fixedNodeSafeVolume, 0);
+    self->fixedNodeSafeVolume.setEnt(NULL);
     self->fixedNodeSafeVolumeRadiusSq = 0.0f;
 }
 
@@ -1510,8 +2020,9 @@ void __cdecl ActorCmd_ClearOverrideRunToPos(scr_entref_t entref)
     v1->arrivalInfo.animscriptOverrideRunTo = 0;
     v1->arrivalInfo.animscriptOverrideRunToPos[0] = 0.0f;
     v1 = (actor_s *)((char *)v1 + 3836);
-    v1->sentient = *(sentient_s **)&FLOAT_0_0;
-    v1->species = 0;
+    //v1->sentient = *(sentient_s **)&FLOAT_0_0;
+    v1->sentient = NULL;
+    v1->species = AI_SPECIES_DOG;
 }
 
 void __cdecl ActorCmd_NearNode(scr_entref_t entref)
@@ -1547,15 +2058,21 @@ void __cdecl ActorCmd_ClearEnemy(scr_entref_t entref)
         self->sentientInfo[Actor_GetTargetSentient(self) - level.sentients].lastKnownPosTime = 0;
         self->faceLikelyEnemyPathNode = 0;
     }
-    if ( EntHandle::isDefined(&self->sentient->scriptTargetEnt) )
+    //if ( EntHandle::isDefined(&self->sentient->scriptTargetEnt) )
+    if ( self->sentient->scriptTargetEnt.isDefined() )
     {
         TargetEntity = Actor_GetTargetEntity(self);
-        if ( TargetEntity == EntHandle::ent(&self->sentient->scriptTargetEnt) )
-            EntHandle::setEnt(&self->sentient->scriptTargetEnt, 0);
+        //if ( TargetEntity == EntHandle::ent(&self->sentient->scriptTargetEnt) )
+        if ( TargetEntity == self->sentient->scriptTargetEnt.ent() )
+        {
+            //EntHandle::setEnt(&self->sentient->scriptTargetEnt, 0);
+            self->sentient->scriptTargetEnt.setEnt(0);
+        }
     }
     Sentient_SetEnemy(self->sentient, 0, 1);
 }
 
+static const float AI_ENTITY_TARGET_MAX_THREAT = 1.0;
 void __cdecl ActorCmd_SetEntityTarget(scr_entref_t entref)
 {
     float v1; // [esp+0h] [ebp-20h]
@@ -1609,7 +2126,8 @@ LABEL_14:
     {
         __debugbreak();
     }
-    EntHandle::setEnt(&self->sentient->scriptTargetEnt, targetEnt);
+    //EntHandle::setEnt(&self->sentient->scriptTargetEnt, targetEnt);
+    self->sentient->scriptTargetEnt.setEnt(targetEnt);
     self->sentient->entityTargetThreat = targetThreat;
     if ( self->sentient->entityTargetThreat == 1.0 )
         Sentient_SetEnemy(self->sentient, targetEnt, 1);
@@ -1621,13 +2139,17 @@ void __cdecl ActorCmd_ClearEntityTarget(scr_entref_t entref)
     actor_s *self; // [esp+4h] [ebp-4h]
 
     self = Actor_Get(entref);
-    if ( EntHandle::isDefined(&self->sentient->scriptTargetEnt) )
+    
+    //if ( EntHandle::isDefined(&self->sentient->scriptTargetEnt) )
+    if ( self->sentient->scriptTargetEnt.isDefined() )
     {
         TargetEntity = Actor_GetTargetEntity(self);
-        if ( TargetEntity == EntHandle::ent(&self->sentient->scriptTargetEnt) )
+        //if ( TargetEntity == EntHandle::ent(&self->sentient->scriptTargetEnt) )
+        if ( TargetEntity == self->sentient->scriptTargetEnt.ent() )
             Sentient_SetEnemy(self->sentient, 0, 1);
     }
-    EntHandle::setEnt(&self->sentient->scriptTargetEnt, 0);
+    //EntHandle::setEnt(&self->sentient->scriptTargetEnt, 0);
+    self->sentient->scriptTargetEnt.setEnt(0);
     self->sentient->scriptTargetTag = 0;
 }
 
@@ -1636,7 +2158,8 @@ void __cdecl ActorCmd_ClearEntityOwner(scr_entref_t entref)
     actor_s *self; // [esp+4h] [ebp-4h]
 
     self = Actor_Get(entref);
-    EntHandle::setEnt(&self->sentient->scriptOwner, 0);
+    //EntHandle::setEnt(&self->sentient->scriptOwner, 0);
+    self->sentient->scriptOwner.setEnt(0);
     self->ent->s.faction.iHeadIconTeam = self->ent->s.faction.iHeadIconTeam & 3 | 0xFC;
 }
 
@@ -1662,7 +2185,8 @@ void __cdecl ActorCmd_SetEntityOwner(scr_entref_t entref)
     {
         __debugbreak();
     }
-    EntHandle::setEnt(&self->sentient->scriptOwner, ownerEnt);
+    //EntHandle::setEnt(&self->sentient->scriptOwner, ownerEnt);
+    self->sentient->scriptOwner.setEnt(ownerEnt);
     self->ent->s.faction.iHeadIconTeam = self->ent->s.faction.iHeadIconTeam & 3 | (4 * LOBYTE(ownerEnt->s.number));
 }
 
@@ -1707,6 +2231,7 @@ void __cdecl ActorCmd_GetPerfectInfo(scr_entref_t entref)
     Actor_GetPerfectInfo(self, targetEnt->sentient);
 }
 
+const char *USAGEMSG = "Invalid call to setFlashBanged().";
 void __cdecl ActorCmd_SetFlashBanged(scr_entref_t entref)
 {
     int NumParam; // [esp+4h] [ebp-10h]
@@ -1730,6 +2255,7 @@ void __cdecl ActorCmd_SetFlashBanged(scr_entref_t entref)
     Actor_SetFlashed(self, flashed.intValue, strength);
 }
 
+const char *USAGEMSG_0 = "Invalid call to setFlashbangImmunity().";
 void __cdecl ActorCmd_SetFlashbangImmunity(scr_entref_t entref)
 {
     actor_s *self; // [esp+4h] [ebp-8h]
@@ -1844,8 +2370,8 @@ void __cdecl ActorCmd_SetAimAnimWeights(scr_entref_t entref)
     actor_s *self; // [esp+8h] [ebp-4h]
 
     self = Actor_Get(entref);
-    self->ent->s.un2.animState.fAimUpDown = Scr_GetFloat(0, SCRIPTINSTANCE_SERVER);
-    self->ent->s.un2.animState.fAimLeftRight = Scr_GetFloat(1u, SCRIPTINSTANCE_SERVER);
+    self->ent->s.animState.fAimUpDown = Scr_GetFloat(0, SCRIPTINSTANCE_SERVER);
+    self->ent->s.animState.fAimLeftRight = Scr_GetFloat(1u, SCRIPTINSTANCE_SERVER);
 }
 
 void __cdecl ActorCmd_finishActorDamage(scr_entref_t entref)
@@ -1885,7 +2411,7 @@ void __cdecl ActorCmd_finishActorDamage(scr_entref_t entref)
         if ( Scr_GetType(1u, SCRIPTINSTANCE_SERVER) && Scr_GetPointerType(1u, SCRIPTINSTANCE_SERVER) == 19 )
             attacker = Scr_GetEntity(1u);
         dflags = Scr_GetInt(3u, SCRIPTINSTANCE_SERVER).intValue;
-        mod = G_MeansOfDeathFromScriptParam(4u);
+        mod = (meansOfDeath_t)G_MeansOfDeathFromScriptParam(4u);
         String = Scr_GetString(5u, SCRIPTINSTANCE_SERVER);
         iWeapon = G_GetWeaponIndexForName(String);
         if ( Scr_GetType(6u, SCRIPTINSTANCE_SERVER) )
@@ -1899,7 +2425,7 @@ void __cdecl ActorCmd_finishActorDamage(scr_entref_t entref)
             dir = vDir;
         }
         floatValue = (unsigned __int16)Scr_GetConstString(8u, SCRIPTINSTANCE_SERVER).floatValue;
-        hitLoc = G_GetHitLocationIndexFromString(floatValue);
+        hitLoc = (hitLocation_t)G_GetHitLocationIndexFromString(floatValue);
         psTimeOffset = Scr_GetInt(9u, SCRIPTINSTANCE_SERVER).intValue;
         if ( self->Physics.bIsAlive )
         {
@@ -1928,24 +2454,23 @@ void __cdecl ActorCmd_finishActorDamage(scr_entref_t entref)
                 Scr_AddInt(damage, SCRIPTINSTANCE_SERVER);
                 Scr_Notify(self->ent, scr_const.damage, 2u);
                 ScrNotify_FaceEvent(self->ent, scr_const.damage);
-                if ( self->ent->health > 0 )
+                if (self->ent->health > 0)
                 {
-                    pain = (void (__cdecl *)(gentity_s *, gentity_s *, int, const float *, const int, const float *, const hitLocation_t, const int))dword_E07CE4[12 * self->ent->handler];
-                    if ( pain )
+                    pain = entityHandlers[self->ent->handler].pain;
+                    if (pain)
                         pain(self->ent, attacker, damage, point, mod, localdir, hitLoc, iWeapon);
                 }
                 else
                 {
-                    if ( self->ent->health < -999 )
+                    if (self->ent->health < -999)
                         self->ent->health = -999;
                     ScrNotify_FaceEvent(self->ent, scr_const.death);
                     Scr_AddEntity(attacker, SCRIPTINSTANCE_SERVER);
                     Scr_Notify(self->ent, scr_const.death, 1u);
-                    die = (void (__cdecl *)(gentity_s *, gentity_s *, gentity_s *, int, int, const int, const float *, const hitLocation_t, int))dword_E07CEC[12 * self->ent->handler];
-                    if ( die )
+                    die = entityHandlers[self->ent->handler].die;
+                    if (die)
                         die(self->ent, inflictor, attacker, damage, mod, iWeapon, localdir, hitLoc, psTimeOffset);
                 }
-            }
         }
         else
         {
@@ -1953,19 +2478,3 @@ void __cdecl ActorCmd_finishActorDamage(scr_entref_t entref)
         }
     }
 }
-
-void (__cdecl *__cdecl Actor_GetMethod(const char **pName))(scr_entref_t)
-{
-    unsigned int i; // [esp+18h] [ebp-4h]
-
-    for ( i = 0; i < 0x4D; ++i )
-    {
-        if ( !strcmp(*pName, methods_2[i].actionString) )
-        {
-            *pName = methods_2[i].actionString;
-            return methods_2[i].actionFunc;
-        }
-    }
-    return 0;
-}
-

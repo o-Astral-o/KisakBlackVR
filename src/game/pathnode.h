@@ -6,6 +6,10 @@
 #include "teams.h"
 #include "actor_badplace.h"
 #include <qcommon/radiant_remote.h>
+#include "sentient_fields.h"
+
+#include <type_traits>
+#include "g_bsp.h"
 
 enum nearestNodeHeightCheck : __int32
 {                                       // XREF: ?Path_NearestNode@@YAPAUpathnode_t@@QBMPAUpathsort_t@@HMPAHHW4nearestNodeHeightCheck@@@Z/r
@@ -23,6 +27,24 @@ enum ai_stance_e : __int32
     STANCE_PRONE  = 0x4,
     STANCE_ANY    = 0x7,
 };
+inline ai_stance_e operator|(ai_stance_e lhs, ai_stance_e rhs)
+{
+    return static_cast<ai_stance_e>(
+        static_cast<std::underlying_type<ai_stance_e>::type>(lhs) |
+        static_cast<std::underlying_type<ai_stance_e>::type>(rhs)
+        );
+}
+// Enable |= operator
+inline ai_stance_e &operator|=(ai_stance_e &lhs, ai_stance_e rhs)
+{
+    lhs = lhs | rhs;
+    return lhs;
+}
+inline ai_stance_e &operator|=(ai_stance_e &lhs, int rhs)
+{
+    lhs = static_cast<ai_stance_e>(static_cast<int32_t>(lhs) | rhs);
+    return lhs;
+}
 
 enum nodeType : __int32
 {                                       // XREF: pathnode_constant_t/r
@@ -218,7 +240,140 @@ struct path_t // sizeof=0x3E8
     __int16 numReductions;
 };
 
-void __cdecl Path_GetType(pathnode_t *node);
+struct node_field_t // sizeof=0x14
+{                                       // XREF: .data:fields_3/r
+    const char *name;                   // XREF: Path_ReadOnly+B/r
+    int ofs;
+    int size[1];
+    fieldtype_t type;
+    void (__cdecl *getter)(pathnode_t *, int);
+};
+
+struct PathLinkInfo // sizeof=0x8
+{                                       // XREF: pathlocal_t/r
+    unsigned __int16 from;              // XREF: Path_ConnectPathsForEntity(gentity_s *)+FC/r
+    unsigned __int16 to;                // XREF: Path_ConnectPathsForEntity(gentity_s *)+EF/r
+    unsigned __int16 prev;              // XREF: Path_InitLinkInfoArray+4A/w
+                                        // Path_CheckLinkLeaks(void)+7C/r ...
+    unsigned __int16 next;              // XREF: Path_InitLinkInfoArray+74/w
+};
+
+struct __declspec(align(128)) pathlocal_t // sizeof=0x4080
+{                                       // XREF: .data:g_path/r
+    PathLinkInfo pathLinkInfoArray[2048];
+                                        // XREF: Path_InitLinkInfoArray+4A/w
+                                        // Path_InitLinkInfoArray+74/w ...
+    int pathLinkInfoArrayInited;        // XREF: Path_InitLinkInfoArray+6/w
+                                        // Path_CheckLinkLeaks(void)+6/r
+    unsigned int actualNodeCount;       // XREF: Scr_GetPathnodeField(int,int)+36/r
+                                        // Scr_GetPathnodeField(int,int)+3E/r ...
+    unsigned int extraNodes;            // XREF: G_UpdateTrackExtraNodes(void):loc_9222A1/r
+                                        // G_UpdateTrackExtraNodes(void)+2A/r ...
+    unsigned int originErrors;          // XREF: G_UpdateTrackExtraNodes(void)+3/r
+                                        // G_UpdateTrackExtraNodes(void)+C/r ...
+    //pathlocal_t::<unnamed_type_circle> circle;
+    struct
+    {
+        float origin[3];                    // XREF: Path_NodesInCylinder_process(pathnode_t *)+E/r
+        // Path_NodesInCylinder_process(pathnode_t *)+23/r ...
+        float maxDist;                      // XREF: Path_MovingNodesInCylinder(void):loc_923F9F/r
+        // Path_MovingNodesInCylinder(void)+1F6/r ...
+        float maxDistSq;                    // XREF: Path_NodesInCylinder_process(pathnode_t *)+4D/r
+        // Path_NodesInCylinder(float const * const,float,float,pathsort_t *,int,int)+5B/w
+        float maxHeight;                    // XREF: Path_MovingNodesInCylinder(void)+254/r
+        // Path_NodesInCylinder(float const * const,float,float,pathsort_t *,int,int)+68/w
+        float maxHeightSq;                  // XREF: Path_NodesInCylinder_process(pathnode_t *)+B2/r
+        // Path_NodesInCylinder(float const * const,float,float,pathsort_t *,int,int)+7A/w
+        int typeFlags;                      // XREF: Path_NodesInCylinder_process(pathnode_t *)+6B/r
+        // Path_NodesInCylinder_process(pathnode_t *)+84/r ...
+        pathsort_t *nodes;                  // XREF: Path_NodesInCylinder_process(pathnode_t *)+FA/r
+        // Path_NodesInCylinder_process(pathnode_t *)+10E/r ...
+        int maxNodes;                       // XREF: Path_NodesInCylinder_process(pathnode_t *)+C3/r
+        // Path_NodesInCylinder(float const * const,float,float,pathsort_t *,int,int)+97/w ...
+        int nodeCount;                      // XREF: Path_NodesInCylinder_process(pathnode_t *):loc_923D3D/r
+        // Path_NodesInCylinder_process(pathnode_t *):loc_923D71/r ...
+    } circle;
+
+                                        // XREF: Path_NodesInCylinder_process(pathnode_t *)+E/r
+                                        // Path_NodesInCylinder_process(pathnode_t *)+23/r ...
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
+struct pathstatic_t // sizeof=0xC
+{                                       // XREF: .data:pathstatic/r
+    pathlink_s *pathLinks;              // XREF: Path_CreateNodes(void)+5/w
+    unsigned __int16 *indirectNodes;    // XREF: Path_CreateNodes(void)+A/w
+    unsigned __int8 *pathbuf;           // XREF: Path_CreateNodes(void)+F/w
+};
+
+void __cdecl Path_GetType(pathnode_t *node, int);
 void __cdecl Scr_SetPathnodeField(unsigned int entnum, unsigned int offset);
 void __cdecl Path_ReadOnly(int offset);
 void __cdecl Scr_GetPathnodeField(unsigned int entnum, unsigned int offset);
@@ -314,9 +469,9 @@ pathnode_t *__cdecl Path_NearestNodeNotCrossPlanes(
                 int maxNodes,
                 nearestNodeHeightCheck heightCheck);
 bool __cdecl Path_CanClaimNode(const pathnode_t *node, sentient_s *claimer);
-sentient_s *__cdecl Path_GetNodeOwner(const pathnode_t *node);
-bool __cdecl Path_CanStealPriorityNode(const pathnode_t *node, sentient_s *claimer);
-bool __cdecl Path_CanStealNode(const pathnode_t *node, sentient_s *claimer);
+sentient_s *__cdecl Path_GetNodeOwner(pathnode_t *node);
+bool __cdecl Path_CanStealPriorityNode(pathnode_t *node, sentient_s *claimer);
+bool __cdecl Path_CanStealNode(pathnode_t *node, sentient_s *claimer);
 void __cdecl Path_ClaimNode(pathnode_t *node, sentient_s *claimer);
 void __cdecl Path_ClaimNodeInternal(pathnode_t *node, sentient_s *claimer);
 void __cdecl Path_MarkNodeOverlap(pathnode_t *node);
@@ -368,3 +523,13 @@ bool __cdecl IsNodeEnabled(const pathnode_t *pNode);
 pathnode_t *__cdecl G_FindPathNode(SpawnVar *spawnVar, nodeType type, int gameId);
 void __cdecl G_ProcessPathnodeCommand(const RadiantCommand *command, SpawnVar *spawnVar);
 void __cdecl G_ClearSelectedPathNode();
+
+
+extern pathlocal_t g_path;
+extern pathstatic_t pathstatic;
+extern GameWorldMp *gameWorldCurrent;
+extern const char *g_pathsError;
+extern pathlink_s g_tempPathNodeLinks[2048];
+extern int g_tempPathNodeLinksCount;
+extern void *g_oldContents;
+extern const char *nodeStringTable[21];

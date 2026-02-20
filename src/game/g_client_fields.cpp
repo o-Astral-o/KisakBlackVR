@@ -1,4 +1,186 @@
 #include "g_client_fields.h"
+#include <clientscript/cscr_vm.h>
+#include <clientscript/scr_const.h>
+#include <clientscript/cscr_stringlist.h>
+#include <client_mp/g_client_mp.h>
+#include <universal/surfaceflags.h>
+#include <server_mp/sv_init_mp.h>
+#include <cgame_mp/cg_scr_main_mp.h>
+#include <game_mp/g_spawn_mp.h>
+
+const char *g_scoreboardColumnNames[18] =
+{
+  "_invalid",
+  "none",
+  "kills",
+  "deaths",
+  "assists",
+  "defends",
+  "plants",
+  "defuses",
+  "returns",
+  "captures",
+  "destructions",
+  "kdratio",
+  "survived",
+  "stabs",
+  "tomahawks",
+  "humiliated",
+  "x2score",
+  "headshots"
+};
+
+const client_fields_s fields[42] =
+{
+  {
+    "sessionteam",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_SetSessionTeam,
+    ClientScr_GetSessionTeam
+  },
+  {
+    "ffateam",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_SetFFATeam,
+    ClientScr_GetFFATeam
+  },
+  { "name", 0, { 0 }, F_LSTRING, 0u, ClientScr_ReadOnly, ClientScr_GetName },
+  { "maxhealth", 10068, { 4 }, F_INT, 0u, ClientScr_SetMaxHealth, NULL },
+  {
+    "headiconteam",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_SetHeadIconTeam,
+    ClientScr_GetHeadIconTeam
+  },
+  { "hasspyplane", 10692, { 4 }, F_INT, 0u, NULL, NULL },
+  { "hassatellite", 10696, { 4 }, F_INT, 0u, NULL, NULL },
+  { "disallowvehicleusage", 10708, { 4 }, F_INT, 0u, NULL, NULL },
+  { "kills", 10280, { 4 }, F_INT, 0u, ClientScr_SetKills, NULL },
+  { "deaths", 10288, { 4 }, F_INT, 0u, ClientScr_SetDeaths, NULL },
+  { "assists", 10284, { 4 }, F_INT, 0u, ClientScr_SetAssists, NULL },
+  { "defends", 10336, { 4 }, F_INT, 0u, ClientScr_SetDefends, NULL },
+  { "plants", 10340, { 4 }, F_INT, 0u, ClientScr_SetPlants, NULL },
+  { "defuses", 10344, { 4 }, F_INT, 0u, ClientScr_SetDefuses, NULL },
+  { "returns", 10348, { 4 }, F_INT, 0u, ClientScr_SetReturns, NULL },
+  { "captures", 10352, { 4 }, F_INT, 0u, ClientScr_SetCaptures, NULL },
+  { "destructions", 10356, { 4 }, F_INT, 0u, ClientScr_SetDestructions, NULL },
+  { "survived", 10364, { 4 }, F_INT, 0u, ClientScr_SetSurvived, NULL },
+  { "stabs", 10368, { 4 }, F_INT, 0u, ClientScr_SetStabs, NULL },
+  { "tomahawks", 10372, { 4 }, F_INT, 0u, ClientScr_SetTomahawks, NULL },
+  { "humiliated", 10376, { 4 }, F_INT, 0u, ClientScr_SetHumiliated, NULL },
+  { "x2score", 10380, { 4 }, F_INT, 0u, ClientScr_SetX2Score, NULL },
+  { "headshots", 10384, { 4 }, F_INT, 0u, ClientScr_SetHeadshots, NULL },
+  { "killcamentity", 9904, { 4 }, F_INT, 0u, ClientScr_SetKillCamEntity, NULL },
+  {
+    "killcamtargetentity",
+    9908,
+    { 4 },
+    F_INT,
+    0u,
+    ClientScr_SetKillCamTargetEntity,
+    NULL
+  },
+  { "score", 10276, { 4 }, F_INT, 0u, ClientScr_SetScore, NULL },
+  {
+    "sessionstate",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_SetSessionState,
+    ClientScr_GetSessionState
+  },
+  {
+    "statusicon",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_SetStatusIcon,
+    ClientScr_GetStatusIcon
+  },
+  {
+    "spectatorclient",
+    9900,
+    { 4 },
+    F_INT,
+    0u,
+    ClientScr_SetSpectatorClient,
+    NULL
+  },
+  {
+    "archivetime",
+    9912,
+    { 4 },
+    F_FLOAT,
+    0u,
+    ClientScr_SetArchiveTime,
+    ClientScr_GetArchiveTime
+  },
+  {
+    "psoffsettime",
+    10312,
+    { 4 },
+    F_INT,
+    0u,
+    ClientScr_SetPSOffsetTime,
+    ClientScr_GetPSOffsetTime
+  },
+  { "pers", 9916, { 4 }, F_OBJECT, 0u, ClientScr_ReadOnly, NULL },
+  { "usingturret", 224, { 4 }, F_BITFLAG, 768u, ClientScr_ReadOnly, NULL },
+  { "usingvehicle", 224, { 4 }, F_BITFLAG, 16384u, ClientScr_ReadOnly, NULL },
+  { "vehicleposition", 1092, { 4 }, F_INT, 0u, ClientScr_ReadOnly, NULL },
+  {
+    "headicon",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_SetHeadIcon,
+    ClientScr_GetHeadIcon
+  },
+  { "divetoprone", 12, { 4 }, F_BITFLAG, 4194304u, NULL, NULL },
+  { "sprinting", 12, { 4 }, F_BITFLAG, 32768u, NULL, NULL },
+  {
+    "groundentity",
+    144,
+    { 4 },
+    F_ENTITY,
+    0u,
+    ClientScr_ReadOnly,
+    ClientScr_GetEntityFromIndex
+  },
+  {
+    "viewlockedentity",
+    1088,
+    { 2 },
+    F_ENTITY,
+    0u,
+    ClientScr_ReadOnly,
+    ClientScr_GetEntityFromIndex
+  },
+  {
+    "groundsurfacetype",
+    0,
+    { 0 },
+    F_STRING,
+    0u,
+    ClientScr_ReadOnly,
+    ClientScr_GetGroundType
+  },
+  { NULL, 0, { 0 }, F_INT, 0u, NULL, NULL }
+};
+
+
 
 void __cdecl ClientScr_ReadOnly(gclient_s *pSelf, const client_fields_s *pField)
 {
@@ -15,7 +197,7 @@ void __cdecl ClientScr_ReadOnly(gclient_s *pSelf, const client_fields_s *pField)
     Scr_Error(v2, 0);
 }
 
-void __cdecl ClientScr_SetSessionTeam(gclient_s *pSelf)
+void __cdecl ClientScr_SetSessionTeam(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *v1; // eax
     const char *v2; // eax
@@ -53,7 +235,7 @@ void __cdecl ClientScr_SetSessionTeam(gclient_s *pSelf)
     CalculateRanks();
 }
 
-void __cdecl ClientScr_SetFFATeam(gclient_s *pSelf)
+void __cdecl ClientScr_SetFFATeam(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *v1; // eax
     const char *v2; // eax
@@ -82,7 +264,7 @@ void __cdecl ClientScr_SetFFATeam(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_GetFFATeam(gclient_s *pSelf)
+void __cdecl ClientScr_GetFFATeam(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ffa_team_t ffaTeam; // [esp+0h] [ebp-4h]
 
@@ -103,7 +285,7 @@ void __cdecl ClientScr_GetFFATeam(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_GetName(gclient_s *pSelf)
+void __cdecl ClientScr_GetName(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *v1; // eax
 
@@ -116,7 +298,7 @@ void __cdecl ClientScr_GetName(gclient_s *pSelf)
     Scr_AddString(v1, SCRIPTINSTANCE_SERVER);
 }
 
-void __cdecl ClientScr_GetGroundType(gclient_s *pSelf)
+void __cdecl ClientScr_GetGroundType(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *groundType; // [esp+0h] [ebp-4h]
 
@@ -132,7 +314,7 @@ void __cdecl ClientScr_GetGroundType(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_GetSessionTeam(gclient_s *pSelf)
+void __cdecl ClientScr_GetSessionTeam(gclient_s *pSelf, const client_fields_s *__formal)
 {
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_client_fields.cpp", 126, 0, "%s", "pSelf") )
@@ -227,7 +409,7 @@ void __cdecl ClientScr_SetSessionState(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_GetSessionState(gclient_s *pSelf)
+void __cdecl ClientScr_GetSessionState(gclient_s *pSelf, const client_fields_s *__formal)
 {
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_client_fields.cpp", 244, 0, "%s", "pSelf") )
@@ -263,7 +445,7 @@ void __cdecl ClientScr_GetSessionState(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_SetMaxHealth(gclient_s *pSelf)
+void __cdecl ClientScr_SetMaxHealth(gclient_s *pSelf, const client_fields_s *__formal)
 {
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_client_fields.cpp", 278, 0, "%s", "pSelf") )
@@ -290,7 +472,7 @@ void __cdecl ClientScr_SetMaxHealth(gclient_s *pSelf)
     pSelf->ps.stats[2] = pSelf->sess.maxHealth;
 }
 
-void __cdecl ClientScr_SetScore(gclient_s *pSelf)
+void __cdecl ClientScr_SetScore(gclient_s *pSelf, const client_fields_s *__formal)
 {
     VariableUnion v1; // [esp+0h] [ebp-10h]
     int intValue; // [esp+4h] [ebp-Ch]
@@ -334,7 +516,7 @@ void __cdecl ClientScr_SetScore(gclient_s *pSelf)
     CalculateRanks();
 }
 
-void __cdecl ClientScr_SetKills(gclient_s *pSelf)
+void __cdecl ClientScr_SetKills(gclient_s *pSelf, const client_fields_s *__formal)
 {
     pSelf->sess.cs.score.kills = ClientScr_SetColumnValue(pSelf, SB_TYPE_KILLS).intValue;
 }
@@ -378,77 +560,74 @@ int __cdecl ClientScr_GetScoreboardColumnIndexByType(scoreboardColumnType_t colu
     return -1;
 }
 
-void __cdecl ClientScr_SetDeaths(gclient_s *pSelf)
+void __cdecl ClientScr_SetAssists(gclient_s *pSelf, const client_fields_s *__formal)
 {
-    pSelf->sess.cs.score.deaths = ClientScr_SetColumnValue(pSelf, SB_TYPE_DEATHS).intValue;
+    pSelf->sess.cs.score.assists =
+        ClientScr_SetColumnValue(pSelf, SB_TYPE_ASSISTS).intValue;
 }
 
-void __cdecl ClientScr_SetAssists(gclient_s *pSelf)
-{
-    pSelf->sess.cs.score.assists = ClientScr_SetColumnValue(pSelf, SB_TYPE_ASSISTS).intValue;
-}
-
-void __cdecl ClientScr_SetDefends(gclient_s *pSelf)
+void __cdecl ClientScr_SetDefends(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_DEFENDS);
 }
 
-void __cdecl ClientScr_SetPlants(gclient_s *pSelf)
+void __cdecl ClientScr_SetPlants(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_PLANTS);
 }
 
-void __cdecl ClientScr_SetDefuses(gclient_s *pSelf)
+void __cdecl ClientScr_SetDefuses(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_DEFUSES);
 }
 
-void __cdecl ClientScr_SetReturns(gclient_s *pSelf)
+void __cdecl ClientScr_SetReturns(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_RETURNS);
 }
 
-void __cdecl ClientScr_SetCaptures(gclient_s *pSelf)
+void __cdecl ClientScr_SetCaptures(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_CAPTURES);
 }
 
-void __cdecl ClientScr_SetDestructions(gclient_s *pSelf)
+void __cdecl ClientScr_SetDestructions(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_DESTRUCTIONS);
 }
 
-void __cdecl ClientScr_SetSurvived(gclient_s *pSelf)
+void __cdecl ClientScr_SetSurvived(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_SURVIVED);
 }
 
-void __cdecl ClientScr_SetStabs(gclient_s *pSelf)
+void __cdecl ClientScr_SetStabs(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_STABS);
 }
 
-void __cdecl ClientScr_SetTomahawks(gclient_s *pSelf)
+void __cdecl ClientScr_SetTomahawks(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_TOMAHAWKS);
 }
 
-void __cdecl ClientScr_SetHumiliated(gclient_s *pSelf)
+void __cdecl ClientScr_SetHumiliated(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_HUMILIATED);
 }
 
-void __cdecl ClientScr_SetX2Score(gclient_s *pSelf)
+void __cdecl ClientScr_SetX2Score(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_X2SCORE);
 }
 
-void __cdecl ClientScr_SetHeadshots(gclient_s *pSelf)
+void __cdecl ClientScr_SetHeadshots(gclient_s *pSelf, const client_fields_s *__formal)
 {
     ClientScr_SetColumnValue(pSelf, SB_TYPE_HEADSHOTS);
 }
 
-void __cdecl ClientScr_SetSpectatorClient(gclient_s *pSelf)
+
+void __cdecl ClientScr_SetSpectatorClient(gclient_s *pSelf, const client_fields_s *__formal)
 {
     int iNewSpectatorClient; // [esp+0h] [ebp-4h]
 
@@ -463,7 +642,7 @@ void __cdecl ClientScr_SetSpectatorClient(gclient_s *pSelf)
     pSelf->sess.forceSpectatorClient = iNewSpectatorClient;
 }
 
-void __cdecl ClientScr_SetKillCamEntity(gclient_s *pSelf)
+void __cdecl ClientScr_SetKillCamEntity(gclient_s *pSelf, const client_fields_s *__formal)
 {
     int iNewKillCamEntity; // [esp+0h] [ebp-4h]
 
@@ -598,7 +777,7 @@ void __cdecl ClientScr_GetHeadIcon(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_SetHeadIconTeam(gclient_s *pSelf)
+void __cdecl ClientScr_SetHeadIconTeam(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *v1; // eax
     const char *v2; // eax
@@ -647,10 +826,8 @@ void __cdecl ClientScr_SetHeadIconTeam(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_GetHeadIconTeam(gclient_s *pSelf)
+void __cdecl ClientScr_GetHeadIconTeam(gclient_s *pSelf, const client_fields_s *__formal)
 {
-    entityState_s::<unnamed_type_faction> v1; // [esp+0h] [ebp-8h]
-
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_client_fields.cpp", 699, 0, "%s", "pSelf") )
     {
@@ -667,8 +844,9 @@ void __cdecl ClientScr_GetHeadIconTeam(gclient_s *pSelf)
     {
         __debugbreak();
     }
-    v1.iHeadIconTeam = (unsigned __int8)g_entities[pSelf - level.clients].s.faction;
-    switch ( v1.iHeadIconTeam )
+    //v1.iHeadIconTeam = (unsigned __int8)g_entities[pSelf - level.clients].s.faction.iHeadIconTeam;
+    int teamAndOwnerIndex = g_entities[pSelf - level.clients].s.faction.teamAndOwnerIndex;
+    switch (teamAndOwnerIndex)
     {
         case 1u:
             Scr_AddConstString(scr_const.axis, SCRIPTINSTANCE_SERVER);
@@ -685,7 +863,7 @@ void __cdecl ClientScr_GetHeadIconTeam(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_SetArchiveTime(gclient_s *pSelf)
+void __cdecl ClientScr_SetArchiveTime(gclient_s *pSelf, const client_fields_s *__formal)
 {
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_client_fields.cpp", 726, 0, "%s", "pSelf") )
@@ -695,12 +873,12 @@ void __cdecl ClientScr_SetArchiveTime(gclient_s *pSelf)
     pSelf->sess.archiveTime = (int)(Scr_GetFloat(0, SCRIPTINSTANCE_SERVER) * 1000.0);
 }
 
-void __cdecl ClientScr_GetArchiveTime(gclient_s *pSelf)
+void __cdecl ClientScr_GetArchiveTime(gclient_s *pSelf, const client_fields_s *__formal)
 {
     Scr_AddFloat((float)pSelf->sess.archiveTime * 0.001, SCRIPTINSTANCE_SERVER);
 }
 
-void __cdecl ClientScr_SetPSOffsetTime(gclient_s *pSelf)
+void __cdecl ClientScr_SetPSOffsetTime(gclient_s *pSelf, const client_fields_s *__formal)
 {
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_client_fields.cpp", 749, 0, "%s", "pSelf") )
@@ -738,7 +916,7 @@ void __cdecl ClientScr_GetEntityFromIndex(gclient_s *pSelf, const client_fields_
     }
 }
 
-void __cdecl ClientScr_GetPSOffsetTime(gclient_s *pSelf)
+void __cdecl ClientScr_GetPSOffsetTime(gclient_s *pSelf, const client_fields_s *__formal)
 {
     Scr_AddInt(pSelf->sess.archiveTime, SCRIPTINSTANCE_SERVER);
 }

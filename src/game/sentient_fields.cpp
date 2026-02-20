@@ -1,4 +1,35 @@
 #include "sentient_fields.h"
+#include <universal/assertive.h>
+#include <universal/q_shared.h>
+#include <clientscript/cscr_vm.h>
+#include "sentient.h"
+#include <game_mp/g_spawn_mp.h>
+
+const sentient_fields_s fields_2[20] =
+{
+  { "aiteam", 4, { 4 }, F_INT, SentientScr_SetTeam, SentientScr_GetTeam },
+  { "script_owner", 8, { 4 }, F_ENTHANDLE, &SentientScr_ReadOnly, NULL },
+  { "threatbias", 12, { 4 }, F_INT, NULL, NULL },
+  { "threatbiasgroup", 16, { 4 }, F_INT, &SentientScr_ReadOnly, NULL },
+  { "attacker", 48, { 4 }, F_ENTHANDLE, &SentientScr_ReadOnly, NULL },
+  { "node", 96, { 4 }, F_PATHNODE, &SentientScr_ReadOnly, NULL },
+  { "prevnode", 100, { 4 }, F_PATHNODE, &SentientScr_ReadOnly, NULL },
+  { "enemy", 56, { 4 }, F_ENTHANDLE, &SentientScr_ReadOnly, NULL },
+  { "scriptenemy", 60, { 4 }, F_ENTHANDLE, &SentientScr_ReadOnly, NULL },
+  { "scriptenemytag", 64, { 2 }, F_STRING, &SentientScr_ReadOnly, NULL },
+  { "syncedmeleetarget", 52, { 4 }, F_ENTHANDLE, NULL, NULL },
+  { "ignoreme", 20, { 1 }, F_BYTE, NULL, NULL },
+  { "ignoreall", 21, { 1 }, F_BYTE, NULL, NULL },
+  { "ignoreforfriendlyfire", 22, { 1 }, F_BYTE, NULL, NULL },
+  { "maxvisibledist", 36, { 4 }, F_FLOAT, NULL, NULL },
+  { "attackeraccuracy", 88, { 4 }, F_FLOAT, NULL, NULL },
+  { "ignorerandombulletdamage", 92, { 1 }, F_BYTE, NULL, NULL },
+  { "turretinvulnerability", 93, { 1 }, F_BYTE, NULL, NULL },
+  { "inmeleecharge", 140, { 1 }, F_BYTE, NULL, NULL },
+  { NULL, 0, { 0 }, F_INT, NULL, NULL }
+};
+
+
 
 void __cdecl SentientScr_ReadOnly(sentient_s *pSelf, const sentient_fields_s *pField)
 {
@@ -10,7 +41,7 @@ void __cdecl SentientScr_ReadOnly(sentient_s *pSelf, const sentient_fields_s *pF
     Scr_Error(v2, 0);
 }
 
-void __cdecl SentientScr_SetTeam(sentient_s *pSelf)
+void __cdecl SentientScr_SetTeam(sentient_s *pSelf, const sentient_fields_s *pField)
 {
     const char *v1; // eax
     char *pszTeam; // [esp+0h] [ebp-4h]
@@ -50,7 +81,7 @@ void __cdecl SentientScr_SetTeam(sentient_s *pSelf)
     }
 }
 
-void __cdecl SentientScr_GetTeam(sentient_s *pSelf)
+void __cdecl SentientScr_GetTeam(sentient_s *pSelf, const sentient_fields_s *pField)
 {
     if ( !pSelf
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\sentient_fields.cpp", 108, 0, "%s", "pSelf") )

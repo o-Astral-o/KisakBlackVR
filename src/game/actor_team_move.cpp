@@ -1,4 +1,13 @@
 #include "actor_team_move.h"
+#include <game_mp/g_main_mp.h>
+#include "actor_navigation.h"
+#include <game_mp/actor_mp.h>
+#include "bullet.h"
+
+const int ACTOR_TEAMMOVE_WAIT_TIME = 500;
+
+const float g_actorAssumedSpeed[1] = { 300.0 };
+
 
 bool __cdecl Actor_AtDifferentElevation(float *vOrgSelf, float *vOrgOther)
 {
@@ -110,8 +119,8 @@ LABEL_18:
         case AI_TEAMMOVE_WAIT:
             Actor_AnimStop(self, &g_animScriptTable[self->species]->stop);
             self->arrivalInfo.animscriptOverrideRunTo = 0;
-            if ( g_DXDeviceThread != GetCurrentThreadId() )
-                return;
+            //if ( g_DXDeviceThread != GetCurrentThreadId() )
+            //    return;
             goto LABEL_33;
         case AI_TEAMMOVE_SLOW_DOWN:
             bRun = 0;
@@ -198,7 +207,7 @@ ai_teammove_t __fastcall Actor_GetTeamMoveStatus(actor_s *self, bool bUseInterva
         }
     }
     if ( context.pSlowDownOther && !Actor_TeamMoveConsiderSlowDown(&context, &eResult) )
-        return 1;
+        return AI_TEAMMOVE_WAIT;
     Actor_ClearPileUp(self);
     if ( !context.pDodgeOther || self->noDodgeMove || ai_noDodge->current.enabled )
         return Actor_TeamMoveNoDodge(&context, eResult);
@@ -218,7 +227,7 @@ ai_teammove_t __fastcall Actor_GetTeamMoveStatus(actor_s *self, bool bUseInterva
         while ( 1 )
         {
             if ( Actor_TeamMoveCheckPileup(self, pOtherActor) )
-                return 1;
+                return AI_TEAMMOVE_WAIT;
 LABEL_44:
             if ( level.time < self->iTeamMoveDodgeTime )
                 return eResult;
@@ -327,7 +336,7 @@ LABEL_136:
                     if ( self->moveMode )
                         return eResult;
                     else
-                        return 1;
+                        return AI_TEAMMOVE_WAIT;
                 }
                 if ( ai_showDodge->current.enabled )
                 {
@@ -387,7 +396,7 @@ dodge:
             if ( self->moveMode )
                 return eResult;
             if ( bCheckWait )
-                return 1;
+                return AI_TEAMMOVE_WAIT;
             eResult = AI_TEAMMOVE_WAIT;
         }
         if ( pPath->fLookaheadDist >= 60.0 || Path_CompleteLookahead(pPath) )
@@ -426,7 +435,7 @@ LABEL_123:
                 }
 LABEL_40:
                 Actor_TeamMoveBlocked(self);
-                return 1;
+                return AI_TEAMMOVE_WAIT;
             }
             if ( ai_showDodge->current.enabled )
             {
@@ -458,7 +467,8 @@ char __cdecl Actor_TeamMoveCheckWaitTimer(actor_s *self, ai_teammove_t *result)
     }
     if ( level.time >= self->iTeamMoveWaitTime )
     {
-        if ( EntHandle::isDefined(&self->pCloseEnt) )
+        //if ( EntHandle::isDefined(&self->pCloseEnt) )
+        if ( self->pCloseEnt.isDefined() )
         {
             self->iTeamMoveWaitTime = level.time + 50;
             *result = AI_TEAMMOVE_WAIT;
@@ -573,7 +583,8 @@ char __cdecl Actor_TeamMoveShouldTryDodgeSentient(
                         + (float)(self->Physics.vVelocity[1] * self->Physics.vVelocity[1]);
     if ( pOtherActor )
     {
-        if ( pOtherActor->pPileUpActor || EntHandle::isDefined(&pOtherActor->pCloseEnt) )
+        //if ( pOtherActor->pPileUpActor || EntHandle::isDefined(&pOtherActor->pCloseEnt) )
+        if ( pOtherActor->pPileUpActor || pOtherActor->pCloseEnt.isDefined() )
         {
             context_other->vVelOther[0] = 0.0f;
             context_other->vVelOther[1] = 0.0f;
@@ -584,10 +595,12 @@ char __cdecl Actor_TeamMoveShouldTryDodgeSentient(
             context_other->vVelOther[1] = 20.0 * pOtherActor->Physics.vWishDelta[1];
         }
         if ( bOtherClose
-            && !EntHandle::isDefined(&self->pCloseEnt)
+            //&& !EntHandle::isDefined(&self->pCloseEnt)
+            && !self->pCloseEnt.isDefined()
             && level.gentities[pOtherActor->Physics.iHitEntnum].sentient )
         {
-            EntHandle::setEnt(&self->pCloseEnt, pOtherActor->ent);
+            //EntHandle::setEnt(&self->pCloseEnt, pOtherActor->ent);
+            self->pCloseEnt.setEnt(pOtherActor->ent);
         }
     }
     else
@@ -845,7 +858,7 @@ ai_teammove_t __cdecl Actor_TeamMoveNoDodge(team_move_context_t *context, ai_tea
             }
             else
             {
-                return 1;
+                return AI_TEAMMOVE_WAIT;
             }
         }
         else
@@ -858,7 +871,7 @@ ai_teammove_t __cdecl Actor_TeamMoveNoDodge(team_move_context_t *context, ai_tea
         if ( !context->self->Path.wDodgeCount )
             context->self->Path.wDodgeCount = -1;
         pPath->wDodgeEntity = context->pSlowDownOther->ent->s.number;
-        return 0;
+        return AI_TEAMMOVE_TRAVEL;
     }
 }
 
@@ -899,7 +912,7 @@ void __cdecl Actor_CalcInterval(actor_s *self, bool bUseInterval, float *fInterv
         fWalkInterval = fInterval * 0.5;
         if ( (float)(fInterval * 0.5) < 37.5 )
         {
-            fWalkInterval = FLOAT_37_5;
+            fWalkInterval = 37.5f;
             if ( fInterval < 30.0 )
                 fInterval = 30.0f;
         }
@@ -908,8 +921,8 @@ void __cdecl Actor_CalcInterval(actor_s *self, bool bUseInterval, float *fInterv
     }
     else
     {
-        *fIntervalSqrdOut = FLOAT_900_0;
-        *fWalkIntervalSqrdOut = FLOAT_1406_25;
+        *fIntervalSqrdOut = 900.0f;
+        *fWalkIntervalSqrdOut = 1406.25f;
     }
 }
 

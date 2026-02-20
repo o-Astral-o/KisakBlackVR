@@ -10,8 +10,7 @@
 #include <server/sv_world.h>
 #include <bgame/bg_misc.h>
 #include <server_mp/sv_main_mp.h>
-
-heli_height_lock_patches_t heli_height_lock_patches[32];
+#include <game/g_scr_helicopter.h>
 
 void __cdecl RotatePoint(const float *v, const float *q, float *out)
 {

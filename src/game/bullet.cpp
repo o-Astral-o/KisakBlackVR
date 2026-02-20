@@ -1,4 +1,24 @@
 #include "bullet.h"
+#include <cgame/cg_world.h>
+#include <bgame/bg_misc.h>
+#include "game_public.h"
+#include "g_weapon.h"
+#include <server_mp/sv_init_mp.h>
+#include <game_mp/g_main_mp.h>
+#include <cgame/cg_drawtools.h>
+#include <game_mp/g_team_mp.h>
+#include <server/sv_world.h>
+#include <game_mp/g_trigger_mp.h>
+#include <DynEntity/DynEntity_server.h>
+#include <game_mp/g_combat_mp.h>
+#include <client/cl_debugdata.h>
+#include <game_mp/g_utils_mp.h>
+#include <server/sv_game.h>
+#include <glass/glass_server.h>
+#include "actor_events.h"
+#include <bgame/bg_perks.h>
+
+unsigned __int8 scr_playerdamage_boneindex = 254u;
 
 char __cdecl BulletTrace(
                 int localClientNum,
@@ -64,11 +84,11 @@ char __cdecl BulletTrace(
                     case 2:
                     case 0x11:
                     case 0x13:
-                        br->trace.sflags = (int)&off_700000;
+                        br->trace.sflags = 0x700000;
                         break;
                     case 6:
                         if ( Entity->nextState.surfType == 7 )
-                            br->trace.sflags = (int)&off_700000;
+                            br->trace.sflags = 0x700000;
                         break;
                     default:
                         break;
@@ -116,7 +136,7 @@ double __cdecl G_GoodRandomFloat(int *idum)
     if ( *idum < 0 )
         *idum += 0x7FFFFFFF;
     if ( 0.99999988 - (double)iv[iv[0] / 0x4000000] * 4.656612875245797e-10 < 0.0 )
-        return (float)DOUBLE_0_99999988;
+        return (float)0.99999988;
     else
         return (float)((double)iv[iv[0] / 0x4000000] * 4.656612875245797e-10);
 }
@@ -139,8 +159,9 @@ void __cdecl Bullet_Endpos(int randSeed, float spread, float *end, float *dir, c
         __debugbreak();
     if ( !wp && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\bullet.cpp", 114, 0, "%s", "wp") )
         __debugbreak();
-    __libm_sse2_tan(v6);
-    aimOffset = (float)(spread * 0.017453292) * maxRange;
+    //__libm_sse2_tan(v6);
+    //aimOffset = (float)(spread * 0.017453292) * maxRange;
+    aimOffset = (float)(tan(spread * 0.017453292)) * maxRange;
     if ( (LODWORD(aimOffset) & 0x7F800000) == 0x7F800000
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\bullet.cpp", 118, 0, "%s", "!IS_NAN(aimOffset)") )
     {
@@ -511,7 +532,7 @@ char __cdecl Bullet_Trace(
         if ( (br->hitEnt->s.eType == 1 || br->hitEnt->s.eType == 2 || br->hitEnt->s.eType == 17 || br->hitEnt->s.eType == 19)
             && !br->trace.sflags )
         {
-            br->trace.sflags = (int)&off_700000;
+            br->trace.sflags = 0x700000;
         }
         br->ignoreHitEnt = Bullet_IgnoreHitEntity(bp, br, attacker);
     }
@@ -629,8 +650,9 @@ void __cdecl Bullet_Process(
     if ( weapDef->bBulletImpactExplode && weapDef->iExplosionInnerDamage )
     {
         v8 = (float)(weapDef->damageConeAngle * 0.017453292);
-        __libm_sse2_cos(v15);
-        v9 = v8;
+        //__libm_sse2_cos(v15);
+        //v9 = v8;
+        v9 = cos(v8);
         if ( (float)(weapDef->damageConeAngle - 180.0) < 0.0 )
             v17 = v9;
         else
@@ -663,7 +685,7 @@ void __cdecl Bullet_Process(
             __debugbreak();
         }
         targetWasAlive = br->hitEnt->health > 0;
-        hitLoc = br->trace.partGroup;
+        hitLoc = (hitLocation_t)br->trace.partGroup;
         if ( hitLoc == HITLOC_HEAD || hitLoc == HITLOC_HELMET )
             *outImpactFlags |= 1u;
         if ( g_debugLocDamage->current.integer > 0 )
@@ -816,7 +838,7 @@ void __cdecl Bullet_NofifyActor(
     enemyTeam = Sentient_EnemyTeam(attacker->sentient->eTeam);
     if ( bp->damageMultiplier == 1.0 )
     {
-        eType = weapVariantDef->bSilenced + 11;
+        eType = (ai_event_t)(weapVariantDef->bSilenced + 11);
         Actor_BroadcastPointEvent(attacker, eType, 1 << enemyTeam, start, 0.0);
     }
     lineStart[0] = *start - *end;
@@ -868,7 +890,7 @@ void __cdecl Bullet_ImpactEffect(
                 const float *normal,
                 const WeaponVariantDef *weapVariantDef,
                 gentity_s *attacker,
-                entityState_s::<unnamed_type_un1> impactEffectFlags,
+                int impactEffectFlags,
                 gentity_s **outTempEnt)
 {
     int WeaponIndex; // eax
@@ -924,7 +946,8 @@ void __cdecl Bullet_ImpactEffect(
                 WeaponIndex = BG_GetWeaponIndex(weapVariantDef);
                 AssignToSmallerType<unsigned short>(&tempEnt->s.weapon, WeaponIndex);
                 tempEnt->s.eventParm = DirToByte(normal);
-                tempEnt->s.un1 = impactEffectFlags;
+                //tempEnt->s.un1 = impactEffectFlags;
+                tempEnt->s.un1.scale = impactEffectFlags;
                 tempEnt->s.surfType = (int)((unsigned int)&bg_vehicleInfos[11].rotorTailStartFx[20] & br->trace.sflags) >> 20;
                 tempEnt->s.index.brushmodel = LOBYTE(br->trace.boneIndex);
                 tempEnt->s.lerp.u.turret.gunAngles[0] = bp->start[0];
@@ -1046,9 +1069,12 @@ void __cdecl Bullet_FirePenetrate(
                 revBp.end[1] = (float)(0.0099999998 * revBp.dir[1]) + lastHitPos[1];
                 revBp.end[2] = (float)(0.0099999998 * revBp.dir[2]) + lastHitPos[2];
                 Com_Memcpy(&revBr, &br, 80);
-                revBr.trace.normal.vec.u[0] ^= _mask__NegFloat_;
-                revBr.trace.normal.vec.u[1] ^= _mask__NegFloat_;
-                revBr.trace.normal.vec.u[2] ^= _mask__NegFloat_;
+                //revBr.trace.normal.vec.u[0] ^= _mask__NegFloat_;
+                //revBr.trace.normal.vec.u[1] ^= _mask__NegFloat_;
+                //revBr.trace.normal.vec.u[2] ^= _mask__NegFloat_;
+                revBr.trace.normal.vec.u[0] = -revBr.trace.normal.vec.u[0];
+                revBr.trace.normal.vec.u[1] = -revBr.trace.normal.vec.u[1];
+                revBr.trace.normal.vec.u[2] = -revBr.trace.normal.vec.u[2];
                 if ( traceHit )
                     BG_AdvanceTrace(&revBp, &revBr, 0.0099999998);
                 revTraceHit = Bullet_Trace(&revBp, weapVariantDef, attacker, &revBr, revBr.depthSurfaceType);
@@ -1105,7 +1131,7 @@ void __cdecl Bullet_FirePenetrate(
                                 bp->dir,
                                 weapVariantDef,
                                 attacker,
-                                (entityState_s::<unnamed_type_un1>)(impactFlags | 4),
+                                impactFlags | 4,
                                 &bulletEffectTempEnt);
                         if ( traceHit )
                             Bullet_Process(bp, &br, weapVariantDef, attacker, 8, gameTime, &impactFlags, processFx);

@@ -50,7 +50,7 @@ void __fastcall Actor_CheckNotify(actor_s *self);
 bool __fastcall Actor_CheckGoalNotify(actor_s *self);
 int __cdecl Actor_UpdateActorInfo(gentity_s *ent);
 bool __cdecl Actor_InScriptedState(const actor_s *self);
-void __cdecl Actor_Touch(gentity_s *self, gentity_s *other);
+void __cdecl Actor_Touch(gentity_s *self, gentity_s *other, int);
 void __cdecl Actor_Pain(
                 gentity_s *self,
                 gentity_s *pAttacker,
@@ -61,15 +61,15 @@ void __cdecl Actor_Pain(
                 hitLocation_t hitLoc,
                 int weaponIdx);
 void __cdecl Actor_Die(
-                gentity_s *self,
-                gentity_s *pInflictor,
-                gentity_s *pAttacker,
-                int iDamage,
-                unsigned int iMod,
-                unsigned int iWeapon,
-                float *vDir,
-                hitLocation_t hitLoc,
-                int timeOffset);
+    gentity_s *self,
+    gentity_s *pInflictor,
+    gentity_s *pAttacker,
+    int iDamage,
+    int iMod,
+    const int iWeapon,
+    const float *vDir,
+    const hitLocation_t hitLoc,
+    int timeOffset);
 bool __cdecl usingCodeGoal(actor_s *actor);
 bool __cdecl isNodeInRegion(pathnode_t *node, gentity_s *volume);
 void __fastcall Actor_DebugDrawNodesInVolume(actor_s *self);

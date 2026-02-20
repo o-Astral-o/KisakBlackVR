@@ -2,6 +2,8 @@
 
 void __cdecl G_track_init()
 {
+    // just mem tracking crap
+#if 0
     g_mem_track_filename = "g_memtrack";
     TRACK_g_memtrack();
     g_mem_track_filename = "g_main";
@@ -46,5 +48,6 @@ void __cdecl G_track_init()
     //BLOPS_NULLSUB();
     g_mem_track_filename = "aim_target";
     TRACK_aim_target();
+#endif
 }
 

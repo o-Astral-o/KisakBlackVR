@@ -125,7 +125,7 @@ bool __cdecl G_IsTurretUsable(gentity_s *self, gentity_s *owner);
 bool __cdecl turret_behind(gentity_s *self, gentity_s *other);
 void __cdecl G_DeactivateTurret(gentity_s *self);
 void __cdecl turret_find_max_angles(gentity_s *pOwner, gentity_s *pTurret);
-void __cdecl turret_use(gentity_s *self, gentity_s *owner);
+void __cdecl turret_use(gentity_s *self, gentity_s *owner, gentity_s *__formal = NULL);
 void __cdecl G_SpawnTurret(gentity_s *self, const char *weaponinfoname, SpawnVar *spawnVar);
 void __cdecl SP_turret(gentity_s *self, SpawnVar *spawnVar);
 void __cdecl Turret_SetTurretCarried(gentity_s *self, int carried);

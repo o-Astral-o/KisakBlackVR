@@ -3,6 +3,16 @@
 struct gentity_s;
 struct cLeafBrushNode_s;
 
+struct DebugDrawBrushInfo // sizeof=0x38
+{                                       // XREF: .data:g_debugDrawBrushInfo/r
+    int depthTest;                      // XREF: G_DebugDrawBrushModel(gentity_s *,float const * const,int,int)+4D/w
+                                        // DrawBrushPoly+5C/r ...
+    int duration;                       // XREF: G_DebugDrawBrushModel(gentity_s *,float const * const,int,int)+56/w
+                                        // DrawBrushPoly+56/r ...
+    float transform[4][3];              // XREF: G_DebugDrawBrushModel(gentity_s *,float const * const,int,int)+5C/o
+                                        // DrawBrushPoly+A/o ...
+};
+
 void __cdecl G_DebugStar(const float *point, const float *color, int duration);
 void __cdecl G_DebugCircleEx(
                 const float *center,

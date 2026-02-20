@@ -153,6 +153,18 @@ struct flame_timed_damage_t // sizeof=0x1C
     int lastupdate_timestamp;
 };
 
+struct tagInfo_s // sizeof=0x70
+{                                       // XREF: tagInfo_t/r
+    struct gentity_s *parent;
+    struct gentity_s *next;
+    unsigned __int16 name;
+    // padding byte
+    // padding byte
+    int index;
+    float axis[4][3];
+    float parentInvAxis[4][3];
+};
+
 struct gentity_s // sizeof=0x2F8
 {                                       // XREF: Svcmd_EntityList_f(void)+6/o
                                         // .data:gentity_s * g_entities/r ...
@@ -211,7 +223,7 @@ struct gentity_s // sizeof=0x2F8
         spawner_ent_t spawner;
     };
     EntHandle missileTargetEnt;
-    struct tagInfo_s *tagInfo;
+    tagInfo_s *tagInfo;
     gentity_s *tagChildren;
     unsigned __int16 attachModelNames[19];
     unsigned __int16 attachTagNames[19];

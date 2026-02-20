@@ -1,6 +1,51 @@
 #include "g_vehicle_path.h"
+#include <clientscript/cscr_stringlist.h>
+#include <cfloat>
+#include <cstring>
+#include "g_debug.h"
+#include <cgame/cg_drawtools.h>
+#include <universal/com_math_anglevectors.h>
+#include "g_scr_helicopter.h"
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include "g_load_utils.h"
+#include "sentient_fields.h"
+
+static const float s_invalidAngles[3] = { 3.1415927, 3.1415927, 3.1415927 };
+
+vn_field_t vn_fields[12] =
+{
+  { "targetname", 0, { 2 }, F_STRING, false },
+  { "target", 2, { 2 }, F_STRING, false },
+  { "target2", 4, { 2 }, F_STRING, false },
+  { "script_linkname", 6, { 2 }, F_STRING, false },
+  { "script_noteworthy", 8, { 2 }, F_STRING, false },
+  { "origin", 24, { 12 }, F_VECTOR, true },
+  { "angles", 36, { 12 }, F_VECTOR, false },
+  { "speed", 16, { 4 }, F_FLOAT, false },
+  { "radius", 52, { 4 }, F_FLOAT, false },
+  { "lookahead", 20, { 4 }, F_FLOAT, false },
+  { "spawnflags", 12, { 4 }, F_INT, false },
+  { NULL, 0, { 0 }, F_INT, false }
+};
 
 int num_heli_height_lock_patches;
+__int16 s_numVehicleNodeLinks;
+
+vehicle_node_t s_nodes[2000];
+__int16 s_numNodes;
+vehicle_path_node_link_t s_node_links[2000];
+
+bool pathsInitialized;
+vehicle_custom_path_t gCustomPaths[10];
+
+int s_newDebugLine = 1;
+vehicle_node_t *g_radiant_selected_node;
+
+float s_dir[3];
+float s_end[3];
+float s_start[3];
+
 
 void __cdecl VP_ResetLinks()
 {
@@ -411,22 +456,21 @@ void __cdecl VP_AddDebugLine(const float *start, const float *end, int forceDraw
     dir[1] = end[1] - start[1];
     dir[2] = end[2] - start[2];
     Vec3Normalize(dir);
-    if ( s_newDebugLine )
+    if (s_newDebugLine)
     {
         s_start[0] = *start;
-        dword_9A95FC4 = *((unsigned int *)start + 1);
-        dword_9A95FC8 = *((unsigned int *)start + 2);
+        s_start[1] = start[1];
+        s_start[2] = start[2];
         s_end[0] = *end;
-        dword_9A95FB8 = *((unsigned int *)end + 1);
-        dword_9A95FBC = *((unsigned int *)end + 2);
+        s_end[1] = end[1];
+        s_end[2] = end[2];
         s_dir[0] = dir[0];
-        dword_9A95FAC = LODWORD(dir[1]);
-        dword_9A95FB0 = LODWORD(dir[2]);
+        s_dir[1] = dir[1];
+        s_dir[2] = dir[2];
         s_newDebugLine = 0;
     }
-    else if ( (float)((float)((float)(dir[0] * s_dir[0]) + (float)(dir[1] * *(float *)&dword_9A95FAC))
-                                    + (float)(dir[2] * *(float *)&dword_9A95FB0)) < 0.99989998
-                 || forceDraw )
+    else if ((float)((float)((float)(dir[0] * s_dir[0]) + (float)(dir[1] * s_dir[1])) + (float)(dir[2] * s_dir[2])) < 0.99989998
+        || forceDraw)
     {
         k_lineColor[0] = 1.0f;
         k_lineColor[1] = 0.0f;
@@ -434,20 +478,20 @@ void __cdecl VP_AddDebugLine(const float *start, const float *end, int forceDraw
         k_lineColor[3] = 1.0f;
         G_DebugLine(s_start, s_end, k_lineColor, 1);
         s_start[0] = *start;
-        dword_9A95FC4 = *((unsigned int *)start + 1);
-        dword_9A95FC8 = *((unsigned int *)start + 2);
+        s_start[1] = start[1];
+        s_start[2] = start[2];
         s_end[0] = *end;
-        dword_9A95FB8 = *((unsigned int *)end + 1);
-        dword_9A95FBC = *((unsigned int *)end + 2);
+        s_end[1] = end[1];
+        s_end[2] = end[2];
         s_dir[0] = dir[0];
-        dword_9A95FAC = LODWORD(dir[1]);
-        dword_9A95FB0 = LODWORD(dir[2]);
+        s_dir[1] = dir[1];
+        s_dir[2] = dir[2];
     }
     else
     {
         s_end[0] = *end;
-        dword_9A95FB8 = *((unsigned int *)end + 1);
-        dword_9A95FBC = *((unsigned int *)end + 2);
+        s_end[1] = end[1];
+        s_end[2] = end[2];
     }
 }
 
@@ -462,16 +506,39 @@ void __cdecl VP_DebugArrow(const float *pos, const float *angles)
     float origPts[5][3]; // [esp+A0h] [ebp-3Ch] BYREF
 
     scale = 80.0f;
-    *(_QWORD *)&origPts[0][0] = __PAIR64__(0, LODWORD(0.5f));
+    //*(_QWORD *)&origPts[0][0] = __PAIR64__(0, LODWORD(0.5f));
+    //origPts[0][0] = 0.5f;
+    //origPts[0][1] = 0.0f;
+    //origPts[0][2] = 0.0f;
+    //*(_QWORD *)&origPts[1][0] = __PAIR64__(LODWORD(FLOAT_N0_40000001), LODWORD(-0.5f));
+    //origPts[1][2] = 0.0f;
+    //*(_QWORD *)&origPts[2][0] = __PAIR64__(LODWORD(0.4f), LODWORD(-0.5f));
+    //origPts[2][2] = 0.0f;
+    //*(_QWORD *)&origPts[3][0] = __PAIR64__(0, LODWORD(-0.5f));
+    //origPts[3][2] = 0.4f;
+    //*(_QWORD *)&origPts[4][0] = __PAIR64__(0, LODWORD(-0.5f));
+    //origPts[4][2] = 0.0f;
+
+    // (ai assisted)
+    origPts[0][0] = 0.5f;
+    origPts[0][1] = 0.0f;
     origPts[0][2] = 0.0f;
-    *(_QWORD *)&origPts[1][0] = __PAIR64__(LODWORD(FLOAT_N0_40000001), LODWORD(-0.5f));
+
+    origPts[1][0] = -0.5f;
+    origPts[1][1] = -0.4f;
     origPts[1][2] = 0.0f;
-    *(_QWORD *)&origPts[2][0] = __PAIR64__(LODWORD(0.4f), LODWORD(-0.5f));
+
+    origPts[2][0] = -0.5f;
+    origPts[2][1] = 0.4f;
     origPts[2][2] = 0.0f;
-    *(_QWORD *)&origPts[3][0] = __PAIR64__(0, LODWORD(-0.5f));
+
+    origPts[3][0] = -0.5f;
+    origPts[3][1] = 0.0f;
     origPts[3][2] = 0.4f;
-    *(_QWORD *)&origPts[4][0] = __PAIR64__(0, LODWORD(-0.5f));
-    origPts[4][2] = 0.0f;
+
+    origPts[4][0] = -0.5f;
+    origPts[4][1] = 0.0f;
+
     AnglesToAxis(angles, axis);
     axis[3][0] = *pos;
     axis[3][1] = pos[1];
@@ -517,7 +584,7 @@ void __cdecl G_FreeVehiclePaths()
     s_numNodes = 0;
     s_numVehicleNodeLinks = 0;
     for ( ia = 0; ia < num_heli_height_lock_patches; ++ia )
-        Scr_SetString((unsigned __int16 *)&word_3F3CE98[12 * ia], 0, SCRIPTINSTANCE_SERVER);
+            Scr_SetString(&heli_height_lock_patches[ia].targetname, 0, SCRIPTINSTANCE_SERVER);
     num_heli_height_lock_patches = 0;
 }
 
@@ -584,7 +651,7 @@ void __cdecl G_SetupSplinePaths()
             nodeb->speed = VP_CalcNodeSpeed(ib);
             nodeb->lookAhead = VP_CalcNodeLookAhead(ib);
             if ( nodeb->speed < 0.0 )
-                Com_Error(ERR_DROP, &byte_D0AC40, nodeb->origin[0], nodeb->origin[1], nodeb->origin[2]);
+                Com_Error(ERR_DROP, "Vehicle path node at( %f, %f, %f ) has negative speed", nodeb->origin[0], nodeb->origin[1], nodeb->origin[2]);
             if ( (nodeb->flags & 0x10000) != 0 )
                 VP_CalcNodeAngles(ib, nodeb->angles);
             nodeb->angles[0] = AngleNormalize180(nodeb->angles[0]);
@@ -1395,6 +1462,7 @@ double __cdecl VP_GetSlide(const vehicle_pathpos_t *vpp)
     }
 }
 
+static const float tightTurnThreshold = 0.866;
 int __cdecl VP_UpdatePathPos(vehicle_pathpos_t *vpp, const float *dir, __int16 nodeTest)
 {
     double v3; // st7
@@ -1442,7 +1510,7 @@ int __cdecl VP_UpdatePathPos(vehicle_pathpos_t *vpp, const float *dir, __int16 n
         angleDiff = (float)((float)(pnode->splineNode.dir[0] * cnode->splineNode.dir[0])
                                             + (float)(pnode->splineNode.dir[1] * cnode->splineNode.dir[1]))
                             + (float)(pnode->splineNode.dir[2] * cnode->splineNode.dir[2]);
-        if ( COERCE_FLOAT(LODWORD(tightTurnThreshold) ^ _mask__NegFloat_) <= angleDiff )
+        if ( (-(tightTurnThreshold)) <= angleDiff )
         {
             cnodePlane[0] = pnode->splineNode.dir[0] + cnode->splineNode.dir[0];
             cnodePlane[1] = pnode->splineNode.dir[1] + cnode->splineNode.dir[1];
@@ -1728,7 +1796,7 @@ void __cdecl SP_info_vehicle_node(const SpawnVar *spawnVar, int rotated, int rad
     vehicle_node_t *node; // [esp+18h] [ebp-4h]
 
     if ( s_numNodes >= 2000 )
-        Com_Error(ERR_DROP, &byte_D0ACE4, 2000);
+        Com_Error(ERR_DROP, "Hit max vehicle path node count [%d]", 2000);
     node = &s_nodes[s_numNodes];
     VP_InitNode(node, s_numNodes);
     ++s_numNodes;
@@ -1736,7 +1804,7 @@ void __cdecl SP_info_vehicle_node(const SpawnVar *spawnVar, int rotated, int rad
     if ( rotated )
         node->flags |= 0x10000u;
     if ( !node->name && !radiantLiveUpdate && (node->flags & 2) == 0 )
-        Com_Error(ERR_DROP, &byte_D0ACA8, node->origin[0], node->origin[1], node->origin[2]);
+        Com_Error(ERR_DROP, "Vehicle spline path node( %f, %f, %f ) found with no name", node->origin[0], node->origin[1], node->origin[2]);
     if ( node->speed >= 0.0 )
     {
         node->flags |= 0x20000u;
@@ -1835,7 +1903,7 @@ unsigned __int16 __cdecl GScr_GetVehicleNodeIndex(unsigned int index)
     scr_entref_t v3; // [esp+Ah] [ebp-Eh]
     scr_entref_t entref; // [esp+10h] [ebp-8h]
 
-    v3 = *Scr_GetEntityRef(&v2, index, SCRIPTINSTANCE_SERVER);
+    v3 = Scr_GetEntityRef(index, SCRIPTINSTANCE_SERVER);
     entref = v3;
     if ( v3.classnum == 3 )
     {
@@ -1874,7 +1942,7 @@ void __cdecl GScr_AddFieldsForVehicleNode()
         {
             __debugbreak();
         }
-        Scr_AddClassField(3u, f->name, (unsigned __int16)(f - vn_fields), SCRIPTINSTANCE_SERVER);
+        Scr_AddClassField(3u, (char*)f->name, (unsigned __int16)(f - vn_fields), SCRIPTINSTANCE_SERVER);
     }
 }
 
@@ -1959,41 +2027,41 @@ void __cdecl G_SpawnHeliHeightLock(SpawnVar *spawnVar)
     const char *targetnameString; // [esp+1Ch] [ebp-8h] BYREF
     int modelIndex; // [esp+20h] [ebp-4h]
 
-    if ( num_heli_height_lock_patches <= 0 )
+    if (num_heli_height_lock_patches <= 0)
     {
-        if ( num_heli_height_lock_patches >= 32
+        if (num_heli_height_lock_patches >= 32
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\universal\\g_vehicle_path.cpp",
-                        2832,
-                        0,
-                        "%s",
-                        "num_heli_height_lock_patches < MAX_HELI_HEIGHT_LOCK_PATCHES") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\universal\\g_vehicle_path.cpp",
+                2832,
+                0,
+                "%s",
+                "num_heli_height_lock_patches < MAX_HELI_HEIGHT_LOCK_PATCHES"))
         {
             __debugbreak();
         }
-        if ( num_heli_height_lock_patches < 32 )
+        if (num_heli_height_lock_patches < 32)
         {
             G_SpawnString(spawnVar, "origin", 0, &originString);
             G_SpawnString(spawnVar, "model", 0, &modelString);
             G_SpawnString(spawnVar, "targetname", 0, &targetnameString);
-            if ( *modelString != 42
+            if (*modelString != 42
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\g_vehicle_path.cpp",
-                            2842,
-                            0,
-                            "%s",
-                            "modelString[0] == '*'") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\g_vehicle_path.cpp",
+                    2842,
+                    0,
+                    "%s",
+                    "modelString[0] == '*'"))
             {
                 __debugbreak();
             }
             modelIndex = atoi(modelString + 1);
-            if ( modelIndex != (unsigned __int16)modelIndex
+            if (modelIndex != (unsigned __int16)modelIndex
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\g_vehicle_path.cpp",
-                            2846,
-                            0,
-                            "%s",
-                            "modelIndex == (modelNameIndex_t)modelIndex") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\g_vehicle_path.cpp",
+                    2846,
+                    0,
+                    "%s",
+                    "modelIndex == (modelNameIndex_t)modelIndex"))
             {
                 __debugbreak();
             }
@@ -2001,12 +2069,12 @@ void __cdecl G_SpawnHeliHeightLock(SpawnVar *spawnVar)
             memset(origin, 0, sizeof(origin));
             sscanf(originString, "%f %f %f", origin, &origin[1], &origin[2]);
             heli_height_lock_patches[num_heli_height_lock_patches].brushmodel = brushmodel;
-            if ( targetnameString )
-                word_3F3CE98[12 * num_heli_height_lock_patches] = G_NewString(targetnameString);
+            if (targetnameString)
+                heli_height_lock_patches[num_heli_height_lock_patches].targetname = G_NewString(targetnameString);
             else
-                word_3F3CE98[12 * num_heli_height_lock_patches] = 0;
-            dword_3F3CE9C[6 * num_heli_height_lock_patches] = 1;
-            v1 = (float *)((char *)&unk_3F3CE8C + 24 * num_heli_height_lock_patches);
+                heli_height_lock_patches[num_heli_height_lock_patches].targetname = 0;
+            heli_height_lock_patches[num_heli_height_lock_patches].enabled = 1;
+            v1 = heli_height_lock_patches[num_heli_height_lock_patches].origin;
             *v1 = origin[0];
             v1[1] = origin[1];
             v1[2] = origin[2];

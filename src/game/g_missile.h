@@ -3,6 +3,19 @@
 #include <bgame/bg_weapons.h>
 #include <qcommon/common.h>
 
+struct AttractorRepulsor_t // sizeof=0x1C
+{                                       // XREF: $60CB2C8C864AAD4BAC72BAB25E42491F/r
+    bool inUse;                         // XREF: Missile_FreeAttractorRefs(gentity_s *)+22/r
+                                        // Scr_MissileCreateAttractorEnt(void)+AF/w ...
+    bool isAttractor;
+    // padding byte
+    // padding byte
+    int entnum;
+    float origin[3];
+    float strength;
+    float maxDist;
+};
+
 void __cdecl G_RegisterMissileDvars();
 void __cdecl G_RegisterMissileDebugDvars();
 bool __cdecl collide_missle_entity_filter(int entnum);

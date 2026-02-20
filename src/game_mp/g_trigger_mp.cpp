@@ -79,7 +79,7 @@ void __cdecl multi_trigger(gentity_s *ent)
         G_FreeEntityDelay(ent);
 }
 
-void __cdecl Touch_Multi(gentity_s *self, gentity_s *other)
+void __cdecl Touch_Multi(gentity_s *self, gentity_s *other, int __formal)
 {
     G_Trigger(self, other);
     multi_trigger(self);
@@ -218,7 +218,7 @@ void __cdecl SP_trigger_disk(gentity_s *ent, SpawnVar *spawnVar)
     }
 }
 
-void __cdecl hurt_touch(gentity_s *self, gentity_s *other)
+void __cdecl hurt_touch(gentity_s *self, gentity_s *other, int __formal)
 {
     if ( other->takedamage && self->item[0].index <= level.time )
     {
@@ -242,7 +242,7 @@ void __cdecl hurt_touch(gentity_s *self, gentity_s *other)
     }
 }
 
-void __cdecl hurt_use(gentity_s *self)
+void __cdecl hurt_use(gentity_s *self, gentity_s *__formal, gentity_s *__formal2)
 {
     if ( self->handler == 6 )
     {
@@ -337,12 +337,12 @@ void __cdecl Activate_trigger_damage(gentity_s *pEnt, gentity_s *pOther, int iDa
     }
 }
 
-void __cdecl Use_trigger_damage(gentity_s *pEnt, gentity_s *pOther)
+void __cdecl Use_trigger_damage(gentity_s *pEnt, gentity_s *pOther, gentity_s *__formal)
 {
     Activate_trigger_damage(pEnt, pOther, pEnt->item[0].clipAmmoCount + 1, -1);
 }
 
-void __cdecl Pain_trigger_damage(gentity_s *pSelf, gentity_s *pAttacker, int iDamage, const float *vPoint, int iMod)
+void __cdecl Pain_trigger_damage(gentity_s *pSelf, gentity_s *pAttacker, int iDamage, const float *vPoint, const int iMod, const float *__formal, const hitLocation_t __formal2, const int __formal3)
 {
     Activate_trigger_damage(pSelf, pAttacker, iDamage, iMod);
 }
@@ -367,7 +367,7 @@ void __cdecl Flame_trigger_damage(
     }
 }
 
-void __cdecl Die_trigger_damage(gentity_s *pSelf, gentity_s *pInflictor, gentity_s *pAttacker, int iDamage, int iMod)
+void __cdecl Die_trigger_damage(gentity_s *pSelf, gentity_s *pInflictor, gentity_s *pAttacker, int iDamage, int iMod, const int __formal, const float *__formal2, const hitLocation_t __formal3, int __formal4)
 {
     Activate_trigger_damage(pSelf, pAttacker, iDamage, iMod);
 }
@@ -540,7 +540,7 @@ void __cdecl SP_trigger_lookat(gentity_s *self)
     }
 }
 
-void __cdecl trigger_ik_playerclip_terrain_touch(gentity_s *ent, gentity_s *other)
+void __cdecl trigger_ik_playerclip_terrain_touch(gentity_s *ent, gentity_s *other, int __formal)
 {
     if ( other->client || other->actor )
     {
@@ -558,7 +558,7 @@ void __cdecl SP_trigger_ik_playerclip_terrain(gentity_s *self)
         SV_LinkEntity((int)&savedregs, self);
 }
 
-void __cdecl trigger_ik_disable_terrain_mapping_touch(gentity_s *ent, gentity_s *other)
+void __cdecl trigger_ik_disable_terrain_mapping_touch(gentity_s *ent, gentity_s *other, int __formal)
 {
     if ( other->client || other->actor )
     {

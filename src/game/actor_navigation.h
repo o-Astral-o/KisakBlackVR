@@ -68,6 +68,20 @@ struct CustomSearchInfo_FindPathClosestPossible // sizeof=0x10
     double EvaluateHeuristic(pathnode_t *pSuccessor, const float *vGoalPos);
 };
 
+struct CustomSearchInfo_FindPathInCylinderWithLOS : CustomSearchInfo_FindPathWithLOS // sizeof=0x1C
+{                                       // XREF: ?Path_FindPathInCylinderWithLOS@@YI?BHPAUpath_t@@W4team_t@@QBM2PBUactor_goal_s@@MH@Z/r
+    const actor_goal_s *goal;           // XREF: Path_FindPathInCylinderWithLOS(path_t *,team_t,float const * const,float const * const,actor_goal_s const *,float,int)+A8/w
+
+
+};
+
+struct CustomSearchInfo_CouldAttack // sizeof=0x8
+{                                       // XREF: ?Path_FindFacingNode@@YIPBUpathnode_t@@PAUsentient_s@@0PAUsentient_info_t@@@Z/r
+    pathnode_t *m_pNodeTo;              // XREF: Path_FindFacingNode(sentient_s *,sentient_s *,sentient_info_t *)+20/w
+                                        // Path_FindFacingNode(sentient_s *,sentient_s *,sentient_info_t *)+23/r ...
+    pathnode_t *attackNode;             // XREF: Path_FindFacingNode(sentient_s *,sentient_s *,sentient_info_t *):loc_905685/r
+};
+
 
 double __fastcall Path_GetPathDir(float *delta, const float *vFrom, const float *vTo);
 pathnode_t *__fastcall Path_GetNegotiationNode(const path_t *pPath);
@@ -195,7 +209,7 @@ void __fastcall Path_GetObstacleNegotiationScript(const path_t *pPath, scr_anims
 bool __fastcall Path_NeedsReevaluation(const path_t *pPath);
 int __fastcall Path_DistanceGreaterThan(path_t *pPath, float fDist);
 bool __fastcall Path_FailedLookahead(path_t *pPath);
-int __fastcall Path_PredictionTraceCheckForEntities(
+int __fastcall Path_PredictionTraceCheckForEntities( // KISAKTODO: retval PredictionTraceResult
                 float *vStartPos,
                 float *vEndPos,
                 const int *entities,

@@ -233,6 +233,8 @@ const dvar_t *g_turretBipodOffset;
 level_locals_t level;
 
 gentity_s g_entities[MAX_GENTITIES];
+sentient_s g_sentients[48];
+gclient_s g_clients[32];
 
 playerState_s g_defaultPlayerState;
 

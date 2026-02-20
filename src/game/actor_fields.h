@@ -24,14 +24,14 @@ struct actor_field_t // sizeof=0xC
     actorFieldtype_t type;
 };
 
-void __cdecl ActorScr_SetSpecies(actor_s *pSelf);
-void __cdecl ActorScr_GetSpecies(actor_s *pSelf);
-void __cdecl ActorScr_GetIsDog(actor_s *pSelf);
+void __cdecl ActorScr_SetSpecies(actor_s *pSelf, const actor_fields_s *pField);
+void __cdecl ActorScr_GetSpecies(actor_s *pSelf, const actor_fields_s *pField);
+void __cdecl ActorScr_GetIsDog(actor_s *pSelf, const actor_fields_s *pField);
 void __cdecl ActorScr_Clamp_0_1(actor_s *pSelf, const actor_fields_s *pField);
 void __cdecl ActorScr_Clamp_0_Positive(actor_s *pSelf, const actor_fields_s *pField);
 void __cdecl ActorScr_ReadOnly(actor_s *pSelf, const actor_fields_s *pField);
-void __cdecl ActorScr_SetGoalRadius(actor_s *pSelf);
-void __cdecl ActorScr_SetGoalHeight(actor_s *pSelf);
+void __cdecl ActorScr_SetGoalRadius(actor_s *pSelf, const actor_fields_s *pField);
+void __cdecl ActorScr_SetGoalHeight(actor_s *pSelf, const actor_fields_s *pField);
 void __cdecl ActorScr_SetTime(actor_s *pSelf, const actor_fields_s *pField);
 void __cdecl ActorScr_GetTime(actor_s *pSelf, const actor_fields_s *pField);
 void __cdecl ActorScr_SetWeapon(actor_s *pSelf, const actor_fields_s *pField);

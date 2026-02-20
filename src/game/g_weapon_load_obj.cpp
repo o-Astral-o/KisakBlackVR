@@ -1,5 +1,13 @@
 #include "g_weapon_load_obj.h"
 
+#include <cstring>
+#include <universal/com_memory.h>
+#include <universal/com_files.h>
+#include <universal/q_parse.h>
+
+const char *accuracyDirName[3] = { "aivsai", "aivsplayer", NULL };
+
+
 char __cdecl G_ParseWeaponAccurayGraphs(WeaponDef *weaponDef)
 {
     unsigned int size; // [esp+4h] [ebp-8Ch]
@@ -45,7 +53,7 @@ char __cdecl G_ParseWeaponAccurayGraphInternal(
     signed int v6; // [esp+10h] [ebp-405Ch]
     char string[64]; // [esp+14h] [ebp-4058h] BYREF
     char buffer[16388]; // [esp+54h] [ebp-4018h] BYREF
-    char *last; // [esp+405Ch] [ebp-10h]
+    const char *last; // [esp+405Ch] [ebp-10h]
     int knotCounta; // [esp+4060h] [ebp-Ch] BYREF
     int f; // [esp+4064h] [ebp-8h] BYREF
     int len; // [esp+4068h] [ebp-4h]

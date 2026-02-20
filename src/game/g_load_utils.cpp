@@ -1,4 +1,13 @@
 #include "g_load_utils.h"
+#include <universal/q_parse.h>
+#include <qcommon/cm_load_obj.h>
+#include <cstring>
+#include <clientscript/cscr_stringlist.h>
+
+const char *g_entityBeginParsePoint;
+const char *g_entityEndParsePoint;
+
+
 
 void __cdecl G_SetEntityParsePoint(const char *beginParsePoint)
 {
@@ -40,19 +49,19 @@ int __cdecl G_ParseSpawnVars(SpawnVar *spawnVar)
     if ( !G_GetEntityToken(com_token, 1024) )
         return 0;
     if ( com_token[0] != 123 )
-        Com_Error(ERR_DROP, &byte_CB9BF0, com_token);
+        Com_Error(ERR_DROP, "G_ParseSpawnVars: found %s when expecting {", com_token);
     while ( 1 )
     {
         if ( !G_GetEntityToken(keyname, 1024) )
-            Com_Error(ERR_DROP, &byte_CB9BC0);
+            Com_Error(ERR_DROP, "G_ParseSpawnVars: EOF without closing brace");
         if ( keyname[0] == 125 )
             break;
         if ( !G_GetEntityToken(com_token, 1024) )
-            Com_Error(ERR_DROP, &byte_CB9BC0);
+            Com_Error(ERR_DROP, "G_ParseSpawnVars: EOF without closing brace");
         if ( com_token[0] == 125 )
-            Com_Error(ERR_DROP, &byte_CB9B90);
+            Com_Error(ERR_DROP, "G_ParseSpawnVars: closing brace without data");
         if ( spawnVar->numSpawnVars == 64 )
-            Com_Error(ERR_DROP, &byte_CB9B6C);
+            Com_Error(ERR_DROP, "G_ParseSpawnVars: MAX_SPAWN_VARS");
         spawnVar->spawnVars[spawnVar->numSpawnVars][0] = G_AddSpawnVarToken(keyname, spawnVar);
         spawnVar->spawnVars[spawnVar->numSpawnVars++][1] = G_AddSpawnVarToken(com_token, spawnVar);
     }
@@ -67,7 +76,7 @@ char *__cdecl G_AddSpawnVarToken(char *string, SpawnVar *spawnVar)
 
     v3 = strlen(string);
     if ( (int)(spawnVar->numSpawnVarChars + v3 + 1) > 2048 )
-        Com_Error(ERR_DROP, &byte_CB9C20);
+        Com_Error(ERR_DROP, "G_AddSpawnVarToken: MAX_SPAWN_VARS");
     dest = &spawnVar->spawnVarChars[spawnVar->numSpawnVarChars];
     memcpy((unsigned __int8 *)dest, (unsigned __int8 *)string, v3 + 1);
     spawnVar->numSpawnVarChars += v3 + 1;
@@ -109,7 +118,7 @@ unsigned int __cdecl G_NewString(const char *string)
 
     v3 = strlen(string) + 1;
     if ( v3 > 0x4000 )
-        Com_Error(ERR_DROP, &byte_CB9C94, v3, 0x4000);
+        Com_Error(ERR_DROP, "G_NewString: len = %i > %i", v3, 0x4000);
     v4 = str;
     for ( i = 0; i < v3; ++i )
     {
@@ -129,6 +138,8 @@ unsigned int __cdecl G_NewString(const char *string)
     return SL_GetString(str, 0, SCRIPTINSTANCE_SERVER);
 }
 
+char str[8][32];
+int index;
 char *__cdecl vtos(const float *v)
 {
     char *s; // [esp+0h] [ebp-4h]

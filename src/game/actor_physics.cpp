@@ -1,11 +1,23 @@
 #include "actor_physics.h"
 
+#include <cgame_mp/cg_predict_mp.h>
+#include <bgame/bg_slidemove.h>
+#include <bgame/bg_misc.h>
+#include <game_mp/g_main_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include "g_mover.h"
+#include "bullet.h"
+#include "actor_events.h"
+
+actor_physics_local_t g_apl;
+actor_physics_t *g_pPhys;
+
 void __cdecl setup_gjkcc_input(pmove_t *pm, gjkcc_input_t *gjkcc_in)
 {
     gjkcc_in->gjkcc_id = (unsigned int)pm;
     gjkcc_in->is_server_thread = pm->handler == 1;
     gjkcc_in->proximity_data = &pm->proximity_data;
-    gjkcc_in->proximity_mask = (int)&ents_params[74].targetname[43];
+    gjkcc_in->proximity_mask = 0x3818813;
     if ( pm->handler == 1 )
         gjkcc_in->m_ent_num = pm->ps->clientNum;
     else
@@ -35,7 +47,7 @@ void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in)
     gjkcc_in->gjkcc_id = (unsigned int)pPhys;
     gjkcc_in->is_server_thread = 1;
     gjkcc_in->proximity_data = &pPhys->proximity_data;
-    gjkcc_in->proximity_mask = (int)&cls.recentServers[7995].countrycode[1];
+    gjkcc_in->proximity_mask = 0x2838013;
     gjkcc_in->m_ent_num = pPhys->iEntNum;
     gjkcc_in->m_gjk_query_flags = 3;
     gjkcc_in->m_gjk_cg = 0;
@@ -60,7 +72,7 @@ void __cdecl ai_physics_trace(
     {
         if ( pPhys )
         {
-            gjk_player_trace((int)&savedregs, pPhys->m_gjkcc_input, trace, start, mins, maxs, end, passEntityNum, contentmask);
+            gjk_player_trace(pPhys->m_gjkcc_input, trace, start, mins, maxs, end, passEntityNum, contentmask);
         }
         else
         {
@@ -72,21 +84,21 @@ void __cdecl ai_physics_trace(
             v9.m_gjk_query_flags = 3;
             v9.m_gjk_cg = 0;
             v9.m_mat = 0;
-            gjkcc_prolog((int)&savedregs, &v9, start);
-            gjk_player_trace((int)&savedregs, &v9, trace, start, mins, maxs, end, passEntityNum, contentmask);
+            gjkcc_prolog(&v9, start);
+            gjk_player_trace(&v9, trace, start, mins, maxs, end, passEntityNum, contentmask);
             gjkcc_epilog(&v9, start);
         }
     }
     else
     {
         //col_context_t::col_context_t(&context);
-        colgeom_visitor_inlined_t<200>::update(
-            &pPhys->proximity_data,
+        //colgeom_visitor_inlined_t<200>::update(
+            pPhys->proximity_data.update(
             start,
             end,
             mins,
             maxs,
-            (int)&cls.recentServers[7995].countrycode[1]);
+            0x2838013);
         context.prims = pPhys->proximity_data.prims;
         context.nprims = pPhys->proximity_data.nprims;
         G_TraceCapsule(trace, start, mins, maxs, end, passEntityNum, contentmask, &context);
@@ -153,13 +165,13 @@ void __cdecl AIPhys_FoliageSounds(actor_physics_t *pPhys)
             vMaxs[1] = 0.75 * pPhys->vMaxs[1];
             vMaxs[2] = 0.75 * pPhys->vMaxs[2];
             vMaxs[2] = pPhys->vMaxs[2] * 0.89999998;
-            colgeom_visitor_inlined_t<200>::update(
-                &pPhys->proximity_data,
+            //colgeom_visitor_inlined_t<200>::update(
+                pPhys->proximity_data.update(
                 pPhys->vOrigin,
                 pPhys->vOrigin,
                 vMins,
                 vMaxs,
-                (int)&cls.recentServers[7995].countrycode[1]);
+                0x2838013);
             //col_context_t::col_context_t(&context);
             context.prims = pPhys->proximity_data.prims;
             context.nprims = pPhys->proximity_data.nprims;
@@ -277,7 +289,7 @@ void __cdecl AIPhys_ClipVelocity(const float *in, const float *normal, bool isWa
 
     if ( isWalkable && (float)((float)(*in * *in) + (float)(in[1] * in[1])) >= (float)(in[2] * in[2]) )
     {
-        out[2] = (float)(COERCE_FLOAT(*(unsigned int *)in ^ _mask__NegFloat_) * *normal) - (float)(in[1] * normal[1]);
+        out[2] = (float)((-*in) * *normal) - (float)(in[1] * normal[1]);
         *out = *in * normal[2];
         out[1] = in[1] * normal[2];
     }
@@ -309,7 +321,7 @@ bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly
     float down[3]; // [esp+960h] [ebp-Ch] BYREF
 
     memset(&trace, 0, 16);
-    colgeom_visitor_inlined_t<200>::colgeom_visitor_inlined_t<200>(&phys.proximity_data);
+    //colgeom_visitor_inlined_t<200>::colgeom_visitor_inlined_t<200>(&phys.proximity_data);
     memset(&localPhys.groundTrace, 0, 16);
     start_o[0] = pPhys->vOrigin[0];
     start_o[1] = pPhys->vOrigin[1];
@@ -317,15 +329,15 @@ bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly
     start_v[0] = pPhys->vVelocity[0];
     start_v[1] = pPhys->vVelocity[1];
     start_v[2] = pPhys->vVelocity[2];
-    moveResult = AIPhys_SlideMove(pPhys, gravity, zonly);
+    moveResult = (SlideMoveResult)AIPhys_SlideMove(pPhys, gravity, zonly);
     if ( moveResult == SLIDEMOVE_COMPLETE )
     {
-        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
         return 1;
     }
     if ( moveResult == SLIDEMOVE_FAIL )
     {
-        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
         return 0;
     }
     if ( moveResult != SLIDEMOVE_CLIPPED
@@ -347,7 +359,7 @@ bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly
         ai_physics_trace(&trace, start_o, pPhys->vMins, pPhys->vMaxs, down, pPhys->iEntNum, g_apl.iTraceMask, pPhys);
         if ( trace.fraction == 1.0 || !trace.walkable )
         {
-            phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+            //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
             return 1;
         }
     }
@@ -357,10 +369,11 @@ bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly
     ai_physics_trace(&trace, start_o, pPhys->vMins, pPhys->vMaxs, up, pPhys->iEntNum, g_apl.iTraceMask, pPhys);
     if ( trace.allsolid )
     {
-        phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+        //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
         return trace.fraction != 0.0;
     }
-    actor_physics_t::operator=(&phys, pPhys);
+    //actor_physics_t::operator=(&phys, pPhys);
+    phys = *pPhys;
     memcpy(&localPhys, &g_apl, sizeof(localPhys));
     pPhys->iHitEntnum = 1023;
     g_apl.bGroundPlane = 0;
@@ -371,7 +384,7 @@ bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly
     pPhys->vVelocity[0] = start_v[0];
     pPhys->vVelocity[1] = start_v[1];
     pPhys->vVelocity[2] = start_v[2];
-    moveResult = AIPhys_SlideMove(pPhys, gravity, zonly);
+    moveResult = (SlideMoveResult)AIPhys_SlideMove(pPhys, gravity, zonly);
     if ( moveResult == SLIDEMOVE_FAIL )
         goto LABEL_22;
     diff2_4 = (float)((float)(g_apl.fFrameTime * start_v[1]) + start_o[1]) - pPhys->vOrigin[1];
@@ -402,9 +415,10 @@ bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly
         if ( trace.normal.vec.v[2] < 0.30000001 )
         {
 LABEL_22:
-            actor_physics_t::operator=(pPhys, &phys);
+            //actor_physics_t::operator=(pPhys, &phys);
+            *pPhys = phys;
             memcpy(&g_apl, &localPhys, sizeof(g_apl));
-            phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
+            //phys.proximity_data.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&visitor_base_t::`vftable';
             return 1;
         }
         AIPhys_ClipVelocity(pPhys->vVelocity, trace.normal.vec.v, trace.walkable, pPhys->vVelocity, 1.001);
@@ -447,7 +461,7 @@ int __cdecl AIPhys_SlideMove(actor_physics_t *pPhys, int gravity, int zonly)
 
     if ( phys_ai_collision_mode->current.integer == 1 )
     {
-        input.__vftable = (ai_gjk_slide_move_input_t_vtbl *)&ai_gjk_slide_move_input_t::`vftable';
+        //input.__vftable = (ai_gjk_slide_move_input_t_vtbl *)&ai_gjk_slide_move_input_t::`vftable';
         setup_ai_gjk_slide_move_input(pPhys, &input, gravity);
         gjkcc_in = pPhys->m_gjkcc_input;
         retv = gjk_slide_move(gjkcc_in, &input, &output);
@@ -573,7 +587,7 @@ LABEL_23:
                             + (float)(pPhys->vVelocity[2] * planes[i][2]);
                 if ( fInto < 0.1 )
                 {
-                    if ( COERCE_FLOAT(LODWORD(fInto) ^ _mask__NegFloat_) > g_apl.fImpactSpeed )
+                    if ( (-(fInto)) > g_apl.fImpactSpeed )
                         g_apl.fImpactSpeed = -fInto;
                     AIPhys_ClipVelocity(pPhys->vVelocity, planes[i], isWalkable[i], vClipVelocity, 1.001);
                     AIPhys_ClipVelocity(vEndVelocity, planes[i], isWalkable[i], vEndClipVelocity, 1.001);
@@ -656,7 +670,7 @@ LABEL_23:
     return 1;
 }
 
-void __thiscall ai_gjk_slide_move_input_t::custom_process(ai_gjk_slide_move_input_t *this, gjk_trace_output_t *gto)
+void __thiscall ai_gjk_slide_move_input_t::custom_process(gjk_trace_output_t *gto)
 {
     unsigned __int16 EntityHitId; // ax
     unsigned __int16 EntID; // [esp+Ch] [ebp-40h]
@@ -676,87 +690,87 @@ void __thiscall ai_gjk_slide_move_input_t::custom_process(ai_gjk_slide_move_inpu
     }
 }
 
-actor_physics_t *__thiscall actor_physics_t::operator=(actor_physics_t *this, const actor_physics_t *__that)
-{
-    unsigned int _S9; // [esp+Ch] [ebp-20h]
-    unsigned int _S8; // [esp+10h] [ebp-1Ch]
-    unsigned int _S7; // [esp+14h] [ebp-18h]
-    unsigned int _S6; // [esp+18h] [ebp-14h]
-    unsigned int _S5; // [esp+1Ch] [ebp-10h]
-    unsigned int _S4; // [esp+20h] [ebp-Ch]
-    unsigned int _S3; // [esp+24h] [ebp-8h]
-    unsigned int _S2; // [esp+28h] [ebp-4h]
+// default should be ok I guess
+//actor_physics_t *__thiscall actor_physics_t::operator=(actor_physics_t *this, const actor_physics_t *__that)
+//{
+//    unsigned int _S9; // [esp+Ch] [ebp-20h]
+//    unsigned int _S8; // [esp+10h] [ebp-1Ch]
+//    unsigned int _S7; // [esp+14h] [ebp-18h]
+//    unsigned int _S6; // [esp+18h] [ebp-14h]
+//    unsigned int _S5; // [esp+1Ch] [ebp-10h]
+//    unsigned int _S4; // [esp+20h] [ebp-Ch]
+//    unsigned int _S3; // [esp+24h] [ebp-8h]
+//    unsigned int _S2; // [esp+28h] [ebp-4h]
+//
+//    for ( _S2 = 0; _S2 < 3; ++_S2 )
+//        this->vOrigin[_S2] = __that->vOrigin[_S2];
+//    for ( _S3 = 0; _S3 < 3; ++_S3 )
+//        this->vVelocity[_S3] = __that->vVelocity[_S3];
+//    this->groundEntNum = __that->groundEntNum;
+//    this->iFootstepTimer = __that->iFootstepTimer;
+//    this->bHasGroundPlane = __that->bHasGroundPlane;
+//    this->groundplaneSlope = __that->groundplaneSlope;
+//    this->iSurfaceType = __that->iSurfaceType;
+//    for ( _S4 = 0; _S4 < 3; ++_S4 )
+//        this->vWishDelta[_S4] = __that->vWishDelta[_S4];
+//    this->bIsAlive = __that->bIsAlive;
+//    this->iEntNum = __that->iEntNum;
+//    this->ePhysicsType = __that->ePhysicsType;
+//    this->fGravity = __that->fGravity;
+//    this->iMsec = __that->iMsec;
+//    for ( _S5 = 0; _S5 < 3; ++_S5 )
+//        this->vMins[_S5] = __that->vMins[_S5];
+//    for ( _S6 = 0; _S6 < 3; ++_S6 )
+//        this->vMaxs[_S6] = __that->vMaxs[_S6];
+//    this->prone = __that->prone;
+//    this->iTraceMask = __that->iTraceMask;
+//    this->foliageSoundTime = __that->foliageSoundTime;
+//    this->iNumTouch = __that->iNumTouch;
+//    for ( _S7 = 0; _S7 < 0x20; ++_S7 )
+//        this->iTouchEnts[_S7] = __that->iTouchEnts[_S7];
+//    this->iHitEntnum = __that->iHitEntnum;
+//    for ( _S8 = 0; _S8 < 3; ++_S8 )
+//        this->vHitOrigin[_S8] = __that->vHitOrigin[_S8];
+//    for ( _S9 = 0; _S9 < 3; ++_S9 )
+//        this->vHitNormal[_S9] = __that->vHitNormal[_S9];
+//    this->bStuck = __that->bStuck;
+//    this->bDeflected = __that->bDeflected;
+//    this->m_gjkcc_input = __that->m_gjkcc_input;
+//    colgeom_visitor_inlined_t<200>::operator=(&this->proximity_data, &__that->proximity_data);
+//    return this;
+//}
 
-    for ( _S2 = 0; _S2 < 3; ++_S2 )
-        this->vOrigin[_S2] = __that->vOrigin[_S2];
-    for ( _S3 = 0; _S3 < 3; ++_S3 )
-        this->vVelocity[_S3] = __that->vVelocity[_S3];
-    this->groundEntNum = __that->groundEntNum;
-    this->iFootstepTimer = __that->iFootstepTimer;
-    this->bHasGroundPlane = __that->bHasGroundPlane;
-    this->groundplaneSlope = __that->groundplaneSlope;
-    this->iSurfaceType = __that->iSurfaceType;
-    for ( _S4 = 0; _S4 < 3; ++_S4 )
-        this->vWishDelta[_S4] = __that->vWishDelta[_S4];
-    this->bIsAlive = __that->bIsAlive;
-    this->iEntNum = __that->iEntNum;
-    this->ePhysicsType = __that->ePhysicsType;
-    this->fGravity = __that->fGravity;
-    this->iMsec = __that->iMsec;
-    for ( _S5 = 0; _S5 < 3; ++_S5 )
-        this->vMins[_S5] = __that->vMins[_S5];
-    for ( _S6 = 0; _S6 < 3; ++_S6 )
-        this->vMaxs[_S6] = __that->vMaxs[_S6];
-    this->prone = __that->prone;
-    this->iTraceMask = __that->iTraceMask;
-    this->foliageSoundTime = __that->foliageSoundTime;
-    this->iNumTouch = __that->iNumTouch;
-    for ( _S7 = 0; _S7 < 0x20; ++_S7 )
-        this->iTouchEnts[_S7] = __that->iTouchEnts[_S7];
-    this->iHitEntnum = __that->iHitEntnum;
-    for ( _S8 = 0; _S8 < 3; ++_S8 )
-        this->vHitOrigin[_S8] = __that->vHitOrigin[_S8];
-    for ( _S9 = 0; _S9 < 3; ++_S9 )
-        this->vHitNormal[_S9] = __that->vHitNormal[_S9];
-    this->bStuck = __that->bStuck;
-    this->bDeflected = __that->bDeflected;
-    this->m_gjkcc_input = __that->m_gjkcc_input;
-    colgeom_visitor_inlined_t<200>::operator=(&this->proximity_data, &__that->proximity_data);
-    return this;
-}
-
-colgeom_visitor_inlined_t<200> *__thiscall colgeom_visitor_inlined_t<200>::operator=(
-                colgeom_visitor_inlined_t<200> *this,
-                const colgeom_visitor_inlined_t<200> *__that)
-{
-    const CollisionAabbTree *tree; // edx
-    unsigned int _S10; // [esp+8h] [ebp-4h]
-
-    colgeom_visitor_t::operator=(this, __that);
-    this->nprims = __that->nprims;
-    this->overflow = __that->overflow;
-    for ( _S10 = 0; _S10 < 0xC8; ++_S10 )
-    {
-        tree = __that->prims[_S10].tree;
-        this->prims[_S10].type = __that->prims[_S10].type;
-        this->prims[_S10].tree = tree;
-    }
-    return this;
-}
-
-colgeom_visitor_t *__thiscall colgeom_visitor_t::operator=(colgeom_visitor_t *this, const colgeom_visitor_t *__that)
-{
-    this->m_mn = __that->m_mn;
-    this->m_mx = __that->m_mx;
-    this->m_p0 = __that->m_p0;
-    this->m_p1 = __that->m_p1;
-    this->m_delta = __that->m_delta;
-    this->m_rvec = __that->m_rvec;
-    this->m_radius = __that->m_radius;
-    this->m_mask = __that->m_mask;
-    this->m_threadInfo = __that->m_threadInfo;
-    return this;
-}
+//colgeom_visitor_inlined_t<200> *__thiscall colgeom_visitor_inlined_t<200>::operator=(const colgeom_visitor_inlined_t<200> *__that)
+//{
+//    const CollisionAabbTree *tree; // edx
+//    unsigned int _S10; // [esp+8h] [ebp-4h]
+//
+//    colgeom_visitor_t::operator=(this, __that);
+//    this->nprims = __that->nprims;
+//    this->overflow = __that->overflow;
+//    for ( _S10 = 0; _S10 < 0xC8; ++_S10 )
+//    {
+//        tree = __that->prims[_S10].tree;
+//        this->prims[_S10].type = __that->prims[_S10].type;
+//        this->prims[_S10].tree = tree;
+//    }
+//    return this;
+//}
+//
+//colgeom_visitor_t *__thiscall colgeom_visitor_t::operator=(colgeom_visitor_t *this, const colgeom_visitor_t *__that)
+//{
+//    this->m_mn = __that->m_mn;
+//    this->m_mx = __that->m_mx;
+//    this->m_p0 = __that->m_p0;
+//    this->m_p1 = __that->m_p1;
+//    this->m_delta = __that->m_delta;
+//    this->m_rvec = __that->m_rvec;
+//    this->m_radius = __that->m_radius;
+//    this->m_mask = __that->m_mask;
+//    this->m_threadInfo = __that->m_threadInfo;
+//    return this;
+//}
+//
 
 bool __cdecl AIPhys_WalkMove(actor_physics_t *pPhys)
 {
@@ -969,7 +983,6 @@ int __cdecl Actor_Physics(actor_physics_t *pPhys)
     retv = Actor_Physics_1(pPhys);
     if ( render_actor_collision->current.integer == 1 )
         render_gjkcc_collision(
-            COERCE_FLOAT(&savedregs),
             (float (*)[3])pPhys->vMins,
             (float (*)[3])pPhys->vMaxs,
             (float (*)[3])pPhys);
@@ -984,7 +997,7 @@ int __cdecl Actor_Physics_z(actor_physics_t *pPhys)
 
     setup_gjkcc_input(pPhys, &gjkcc_in);
     pPhys->m_gjkcc_input = &gjkcc_in;
-    gjkcc_prolog((int)&savedregs, &gjkcc_in, pPhys->vOrigin);
+    gjkcc_prolog(&gjkcc_in, pPhys->vOrigin);
     retv = Actor_Physics(pPhys);
     gjkcc_epilog(&gjkcc_in, pPhys->vOrigin);
     pPhys->m_gjkcc_input = 0;
@@ -1043,12 +1056,13 @@ void __cdecl AIPhys_Footsteps(actor_physics_t *pPhys)
     }
 }
 
-colgeom_visitor_inlined_t<200> *__thiscall colgeom_visitor_inlined_t<200>::colgeom_visitor_inlined_t<200>(
-                colgeom_visitor_inlined_t<200> *this)
-{
-    colgeom_visitor_t::colgeom_visitor_t(this);
-    this->__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&colgeom_visitor_inlined_t<200>::`vftable';
-    colgeom_visitor_inlined_t<500>::reset(this);
-    return this;
-}
-
+//colgeom_visitor_inlined_t<200> *__thiscall colgeom_visitor_inlined_t<200>::colgeom_visitor_inlined_t<200>(
+//                colgeom_visitor_inlined_t<200> *this)
+//{
+//    colgeom_visitor_t::colgeom_visitor_t(this);
+//    this->__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&colgeom_visitor_inlined_t<200>::`vftable';
+//    colgeom_visitor_inlined_t<500>::reset(this);
+//    return this;
+//}
+//
+//

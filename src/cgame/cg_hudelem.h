@@ -162,3 +162,5 @@ extern const dvar_t *waypointPlayerOffsetProne;
 extern const dvar_t *waypointPlayerOffsetCrouch;
 extern const dvar_t *waypointPlayerOffsetStand;
 extern const dvar_t *waypointPlayerOffsetRevive;
+
+extern game_hudelem_s g_hudelems[1024];

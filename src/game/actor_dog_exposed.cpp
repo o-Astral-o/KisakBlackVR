@@ -1,6 +1,17 @@
 #include "actor_dog_exposed.h"
+#include <game_mp/g_main_mp.h>
+#include "actor_state.h"
+#include <game_mp/actor_mp.h>
+#include "actor_corpse.h"
+#include "actor_orientation.h"
+#include "actor_team_move.h"
+#include "actor_exposed.h"
+#include "actor_navigation.h"
+#include <qcommon/cm_world.h>
+#include <bgame/bg_dog.h>
+#include "g_debug.h"
 
-char __fastcall Actor_Dog_Exposed_Start(actor_s *self, ai_state_t ePrevState)
+bool __fastcall Actor_Dog_Exposed_Start(actor_s *self, ai_state_t ePrevState)
 {
     if ( !self && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_dog_exposed.cpp", 34, 0, "%s", "self") )
         __debugbreak();
@@ -24,6 +35,7 @@ void __fastcall Actor_Dog_Exposed_Suspend(actor_s *self, ai_state_t eNextState)
     Actor_Dog_Exposed_Finish(self, eNextState);
 }
 
+float dog_max_attack_height = 80.0f;
 bool __fastcall Actor_Dog_PointNearAttackPoint(const float *vPoint, const float *vGoalPos, float buffer)
 {
     float v4; // [esp+10h] [ebp-8h]
@@ -103,7 +115,7 @@ actor_think_result_t __fastcall Actor_Dog_Exposed_Think(actor_s *self)
     }
     if ( !goalPosSet )
         Actor_UpdateGoalPos(self);
-    MAX_MOVE_DIST_SQ = FLOAT_225_0;
+    MAX_MOVE_DIST_SQ = 225.0f;
     if ( Actor_HasPath(self) )
     {
         v7 = self->Path.vFinalGoal[0] - self->codeGoal.pos[0];
@@ -181,14 +193,15 @@ actor_think_result_t __fastcall Actor_Dog_Exposed_Think(actor_s *self)
     Actor_PostThink(self);
     //if ( GetCurrentThreadId() == g_DXDeviceThread )
         //D3DPERF_EndEvent();
-    return 0;
+    return ACTOR_THINK_DONE;
 }
 
 bool __cdecl Actor_Dog_IsInSyncedMelee(actor_s *self, sentient_s *enemy)
 {
     if ( !self && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_dog_exposed.cpp", 79, 0, "%s", "self") )
         __debugbreak();
-    return enemy && EntHandle::isDefined(&enemy->syncedMeleeEnt) && EntHandle::ent(&enemy->syncedMeleeEnt) == self->ent;
+    //return enemy && EntHandle::isDefined(&enemy->syncedMeleeEnt) && EntHandle::ent(&enemy->syncedMeleeEnt) == self->ent;
+    return enemy && enemy->syncedMeleeEnt.isDefined() && enemy->syncedMeleeEnt.ent() == self->ent;
 }
 
 void __cdecl Actor_Dog_Attack(actor_s *self)
@@ -205,7 +218,8 @@ void __cdecl Actor_Dog_Attack(actor_s *self)
     {
         __debugbreak();
     }
-    if ( EntHandle::isDefined(&self->sentient->targetEnt) )
+    //if ( EntHandle::isDefined(&self->sentient->targetEnt) )
+    if ( self->sentient->targetEnt.isDefined() )
     {
         if ( (AnimScriptList *)self->pAnimScriptFunc == &g_scr_data.dogAnim && !Actor_IsAnimScriptAlive(self) )
             Actor_KillAnimScript(self);
@@ -353,7 +367,7 @@ int __cdecl Actor_Dog_IsEnemyInAttackRange(actor_s *self, sentient_s *enemy, int
     {
         if ( enemyInAttackRange )
         {
-            cos45 = FLOAT_0_70700002;
+            cos45 = 0.70700002f;
             enemyToAttackSpot[0] = attackPos[0] - enemyPos[0];
             enemyToAttackSpot[1] = attackPos[1] - enemyPos[1];
             Vec2Normalize(enemyToAttackSpot);
@@ -391,6 +405,7 @@ int __cdecl Actor_Dog_IsEnemyInAttackRange(actor_s *self, sentient_s *enemy, int
     return enemyInAttackRange;
 }
 
+float DROP_AMOUNT = 90.0f;
 char __fastcall Actor_SetMeleeAttackSpot(actor_s *self, const float *enemyPosition, float *attackPosition)
 {
     char *v4; // eax
@@ -616,7 +631,8 @@ double __cdecl Actor_Dog_GetEnemyPos(actor_s *self, sentient_s *enemy, float *en
             enemyPos[2] = (float)(0.25 * client->ps.velocity[2]) + enemyPos[2];
             bufferedAttackDist = bufferedAttackDist + 15.0;
         }
-        if ( EntHandle::isDefined(&enemy->ent->sentient->syncedMeleeEnt) )
+        //if ( EntHandle::isDefined(&enemy->ent->sentient->syncedMeleeEnt) )
+        if ( enemy->ent->sentient->syncedMeleeEnt.isDefined() )
             enemyPos[2] = enemyPos[2] + 64.0;
     }
     return bufferedAttackDist;

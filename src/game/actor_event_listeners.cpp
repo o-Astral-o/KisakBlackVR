@@ -1,4 +1,47 @@
 #include "actor_event_listeners.h"
+#include <game_mp/g_main_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include <game_mp/g_misc_mp.h>
+#include <clientscript/scr_const.h>
+
+unsigned __int16 *g_AIEV_scrConst_table[28] =
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  &scr_const.explode,
+  &scr_const.grenadedanger,
+  &scr_const.grenadedanger,
+  &scr_const.gunshot,
+  &scr_const.silenced_shot,
+  NULL,
+  NULL,
+  &scr_const.bulletwhizby,
+  &scr_const.bulletwhizby,
+  NULL,
+  &scr_const.projectile_impact,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+
+
+int g_listenerCount;
+AIEventListener g_AIEVlisteners[32];
+unsigned int array[63];
 
 void __cdecl RemoveSwapWithLast(unsigned int listenerIndex)
 {

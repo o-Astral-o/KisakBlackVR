@@ -4,6 +4,15 @@
 #include "sentient.h"
 #include <client_mp/g_client_mp.h>
 #include <game_mp/g_main_mp.h>
+#include <gfx_d3d/r_dobj_skin.h>
+#include <server/sv_world.h>
+#include "g_player_corpse.h"
+#include <game_mp/actor_mp.h>
+#include "actor_event_listeners.h"
+#include <qcommon/dobj_management.h>
+#include <game_mp/g_misc_mp.h>
+#include <game_mp/g_spawn_mp.h>
+#include <cgame/cg_event.h>
 
 int __cdecl G_GetActorCorpseIndex(gentity_s *ent)
 {
@@ -200,7 +209,7 @@ void __cdecl G_UpdateActorCorpses()
         else
             G_RemoveOneActorCorpse();
     }
-    if ( (*(_BYTE *)&g_skinErrorFlags.0 & 1) == 0 )
+    if (!g_skinErrorFlags.outOfSkinnedCachedVerts)
     {
         actorCorpseCount = ai_corpseCount->current.integer;
         zombietronCorpseCount = Dvar_GetInt("ai_zombietronCorpseCount");
@@ -336,7 +345,7 @@ double __cdecl Actor_SetBodyPlantAngle(
     memset(&trace, 0, 16);
     fStartUp = 30.0f;
     fEndDown = 30.0f;
-    fSize = 4.0f999999;
+    fSize = 4.0999999f;
 
     vMins[0] = -4.0f;
     vMins[1] = -4.0f;
@@ -384,9 +393,9 @@ double __cdecl Actor_SetBodyPlantAngle(
         vStart[1] = vOrigin[1];
         vStart[2] = vOrigin[2];
         vStart[2] = vStart[2] + fStartUp;
-        vEnd[0] = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(15.0 - fSize) ^ _mask__NegFloat_) * *vDir) + vStart[0];
-        vEnd[1] = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(15.0 - fSize) ^ _mask__NegFloat_) * vDir[1]) + vStart[1];
-        vEnd[2] = (float)(COERCE_FLOAT(COERCE_UNSIGNED_INT(15.0 - fSize) ^ _mask__NegFloat_) * vDir[2]) + vStart[2];
+        vEnd[0] = (float)((-(15.0 - fSize)) * *vDir) + vStart[0];
+        vEnd[1] = (float)((-(15.0 - fSize)) * vDir[1]) + vStart[1];
+        vEnd[2] = (float)((-(15.0 - fSize)) * vDir[2]) + vStart[2];
         G_TraceCapsule(&trace, vStart, vMins, vMaxs, vEnd, iEntNum, iClipMask, &context);
         if ( trace.fraction == 0.0 )
         {
@@ -693,7 +702,8 @@ int __cdecl Actor_BecomeCorpse(gentity_s *self)
     body->r.absmax[0] = self->r.absmax[0];
     body->r.absmax[1] = self->r.absmax[1];
     body->r.absmax[2] = self->r.absmax[2];
-    body->s.un2 = self->s.un2;
+    //body->s.un2 = self->s.un2;
+    body->s.animState = self->s.animState;
     body->clipmask = 65537;
     body->r.contents = (int)&objBuf[1890][6];
     body->nextthink = level.time + 300;
@@ -705,7 +715,7 @@ int __cdecl Actor_BecomeCorpse(gentity_s *self)
     self->physicsObject = 1;
     if ( Com_IsRagdollTrajectory(&body->s.lerp.pos) )
     {
-        origType = body->s.lerp.pos.trType;
+        origType = (trType_t)body->s.lerp.pos.trType;
         if ( (unsigned int)origType >= NUM_TRTYPES
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_corpse.cpp",
@@ -759,7 +769,7 @@ int __cdecl Actor_BecomeCorpse(gentity_s *self)
     Scr_Notify(self, scr_const.death, 0);
     Scr_FreeEntityNum(self->s.number, 0, SCRIPTINSTANCE_SERVER);
     G_DObjUpdate(body);
-    SV_LinkEntity((int)&savedregs, body);
+    SV_LinkEntity(body);
     return 0;
 }
 

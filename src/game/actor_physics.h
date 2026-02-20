@@ -12,6 +12,13 @@ enum aiphys_t : __int32
     AIPHYS_ZONLY_PHYSICS_RELATIVE = 0x5,
 };
 
+enum SlideMoveResult : __int32
+{                                       // XREF: AIPhys_StepSlideMove/r
+    SLIDEMOVE_COMPLETE = 0x0,
+    SLIDEMOVE_CLIPPED  = 0x1,
+    SLIDEMOVE_FAIL     = 0x2,
+};
+
 struct actor_physics_t // sizeof=0x7D0
 {                                       // XREF: actor_s/r
     //actor_physics_t *__thiscall actor_physics_t::operator=(actor_physics_t *this, const actor_physics_t *__that);
@@ -61,6 +68,36 @@ struct actor_physics_t // sizeof=0x7D0
                                         // AIPhys_StepSlideMove+133/w ...
 };
 
+struct ai_gjk_slide_move_input_t : gjk_slide_move_input_t // sizeof=0x30
+{                                       // XREF: AIPhys_SlideMove/r
+    actor_physics_t *m_pPhys;
+
+    void custom_process(gjk_trace_output_t *gto);
+};
+
+struct actor_physics_local_t // sizeof=0x68
+{                                       // XREF: .data:g_apl/r
+                                        // AIPhys_StepSlideMove/r
+    float fFrameTime;                   // XREF: setup_ai_gjk_slide_move_input(actor_physics_t *,ai_gjk_slide_move_input_t *,int)+19/r
+                                        // Actor_Physics_1(actor_physics_t *)+D2/w ...
+    int bIsWalking;                     // XREF: Actor_Physics_1(actor_physics_t *):loc_913056/r
+                                        // AIPhys_StepSlideMove+1BB/r ...
+    int bGroundPlane;                   // XREF: Actor_Physics_1(actor_physics_t *):loc_91307F/r
+                                        // AIPhys_AirMove+3/r ...
+    trace_t groundTrace;                // XREF: Actor_Physics_1(actor_physics_t *)+250/r
+                                        // Actor_Physics_1(actor_physics_t *)+27F/r ...
+    float fImpactSpeed;                 // XREF: AIPhys_SlideMove+8FD/r
+                                        // AIPhys_SlideMove+915/w
+    float vPrevOrigin[3];               // XREF: Actor_Physics_1(actor_physics_t *)+62/w
+                                        // Actor_Physics_1(actor_physics_t *)+72/w ...
+    float vPrevVelocity[3];             // XREF: Actor_Physics_1(actor_physics_t *)+9A/w
+                                        // Actor_Physics_1(actor_physics_t *)+AA/w ...
+    int iTraceMask;                     // XREF: setup_ai_gjk_slide_move_input(actor_physics_t *,ai_gjk_slide_move_input_t *,int)+61/r
+                                        // Actor_Physics_1(actor_physics_t *)+55/w ...
+    float stepheight;                   // XREF: Actor_Physics_1(actor_physics_t *)+11C/w
+                                        // Actor_Physics_1(actor_physics_t *)+12E/w ...
+};
+
 void __cdecl setup_gjkcc_input(pmove_t *pm, gjkcc_input_t *gjkcc_in);
 void __cdecl AIPhys_AddTouchEnt(actor_physics_t *pPhys, int entityNum);
 void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in);
@@ -79,8 +116,7 @@ bool __cdecl Actor_Physics_1(actor_physics_t *pPhys);
 bool __cdecl AIPhys_AirMove(actor_physics_t *pPhys);
 void __cdecl AIPhys_ClipVelocity(const float *in, const float *normal, bool isWalkable, float *out, float overbounce);
 bool __cdecl AIPhys_StepSlideMove(actor_physics_t *pPhys, int gravity, int zonly);
-int __cdecl AIPhys_SlideMove(actor_physics_t *pPhys, int gravity, int zonly);
-void __thiscall ai_gjk_slide_move_input_t::custom_process(ai_gjk_slide_move_input_t *this, gjk_trace_output_t *gto);
+int __cdecl AIPhys_SlideMove(actor_physics_t *pPhys, int gravity, int zonly); // KISAKTODO: SlideMoveResult retval
 
 bool __cdecl AIPhys_WalkMove(actor_physics_t *pPhys);
 bool __cdecl AIPhys_ZOnlyPhysicsMove(actor_physics_t *pPhys);

@@ -1,6 +1,14 @@
 #include "actor_negotiation.h"
+#include "actor_navigation.h"
+#include "actor_orientation.h"
+#include <clientscript/cscr_stringlist.h>
+#include "actor_animapi.h"
+#include <game_mp/actor_mp.h>
+#include <game_mp/g_main_mp.h>
+#include <bgame/bg_dog.h>
+#include "actor_state.h"
 
-char __fastcall Actor_Negotiation_Start(actor_s *pSelf, ai_state_t ePrevState)
+bool __fastcall Actor_Negotiation_Start(actor_s *pSelf, ai_state_t ePrevState)
 {
     if ( !Path_HasNegotiationNode(&pSelf->Path) )
         return 0;
@@ -11,7 +19,7 @@ char __fastcall Actor_Negotiation_Start(actor_s *pSelf, ai_state_t ePrevState)
     return 1;
 }
 
-int __fastcall Actor_Negotiation_Think(actor_s *pSelf)
+actor_think_result_t __fastcall Actor_Negotiation_Think(actor_s *pSelf)
 {
     const char *v1; // eax
     char *v2; // eax
@@ -57,7 +65,7 @@ int __fastcall Actor_Negotiation_Think(actor_s *pSelf)
         BG_Dog_UpdateAnimationState(-1, &pSelf->ent->s, &level_bgs.actorinfo[pSelf - level.actors]);
         //if ( GetCurrentThreadId() == g_DXDeviceThread )
             //D3DPERF_EndEvent();
-        return 0;
+        return ACTOR_THINK_DONE;
     }
     else
     {
@@ -99,7 +107,7 @@ int __fastcall Actor_Negotiation_Think(actor_s *pSelf)
         Actor_PopState(pSelf);
         //if ( GetCurrentThreadId() == g_DXDeviceThread )
             //D3DPERF_EndEvent();
-        return 1;
+        return ACTOR_THINK_REPEAT;
     }
 }
 

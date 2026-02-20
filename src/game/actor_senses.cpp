@@ -1,4 +1,15 @@
 #include "actor_senses.h"
+#include <game_mp/g_main_mp.h>
+#include <server/sv_world.h>
+#include <game_mp/actor_mp.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include <game_mp/g_utils_mp.h>
+#include "bullet.h"
+#include <qcommon/dobj_management.h>
+
+colgeom_visitor_inlined_t<200> *g_visitor;
+float g_viewPos[3];
 
 char __fastcall Actor_CanSeePointFrom(
                 actor_s *self,
@@ -132,8 +143,8 @@ char __fastcall Actor_CanSeePointEx(
     if ( g_visitor )
     {
         vViewPos[0] = g_viewPos[0];
-        LODWORD(vViewPos[1]) = dword_A06ED10;
-        LODWORD(vViewPos[2]) = dword_A06ED14;
+        vViewPos[1] = g_viewPos[1];
+        vViewPos[2] = g_viewPos[2];
     }
     else
     {
@@ -292,8 +303,10 @@ char __fastcall Actor_CanSeeEntityEx(actor_s *self, const gentity_s *ent, float 
         fovDotUse = fovDot;
         TargetSentient = Actor_GetTargetSentient(self);
         if ( TargetSentient == sentient
-            || SentientHandle::isDefined(&self->pFavoriteEnemy)
-            && (v5 = SentientHandle::sentient(&self->pFavoriteEnemy), v5 == sentient) )
+            //|| SentientHandle::isDefined(&self->pFavoriteEnemy)
+            || self->pFavoriteEnemy.isDefined()
+            //&& (v5 = SentientHandle::sentient(&self->pFavoriteEnemy), v5 == sentient) )
+            && (v5 = self->pFavoriteEnemy.sentient(), v5 == sentient))
         {
             fovDotUse = 0.0f;
         }
@@ -371,7 +384,8 @@ char __fastcall Actor_CanSeeEnemy(actor_s *self)
     {
         __debugbreak();
     }
-    if ( !EntHandle::isDefined(&self->sentient->targetEnt)
+    //if ( !EntHandle::isDefined(&self->sentient->targetEnt)
+    if ( !self->sentient->targetEnt.isDefined()
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_senses.cpp",
                     458,
@@ -384,9 +398,17 @@ char __fastcall Actor_CanSeeEnemy(actor_s *self)
     enemy = Actor_GetTargetSentient(self);
     if ( enemy )
         return Actor_CanSeeSentient(self, enemy, 250);
-    v2 = EntHandle::ent(&self->sentient->targetEnt);
+    //v2 = EntHandle::ent(&self->sentient->targetEnt);
+    v2 = self->sentient->targetEnt.ent();
     return Actor_CanSeeEntity(self, v2);
 }
+
+struct sentient_sort_t // sizeof=0x8
+{                                       // XREF: ?Actor_UpdateSight@@YIXPAUactor_s@@@Z/r
+    sentient_s *sentient;               // XREF: Actor_UpdateSight(actor_s *)+324/w
+                                        // Actor_UpdateSight(actor_s *)+3DF/r
+    float fMetric;                      // XREF: Actor_UpdateSight(actor_s *)+314/w
+};
 
 void __fastcall Actor_UpdateSight(actor_s *self)
 {
@@ -422,8 +444,10 @@ void __fastcall Actor_UpdateSight(actor_s *self)
             __debugbreak();
         }
         if ( sentient->ent->s.number != self->ent->s.number
-            && (!EntHandle::isDefined(&self->sentient->scriptOwner)
-             || sentient->ent != EntHandle::ent(&self->sentient->scriptOwner)) )
+            //&& (!EntHandle::isDefined(&self->sentient->scriptOwner)
+            && (!self->sentient->scriptOwner.isDefined()
+             //|| sentient->ent != EntHandle::ent(&self->sentient->scriptOwner)) )
+             || sentient->ent != self->sentient->scriptOwner.ent()) )
         {
             Sentient_GetOrigin(sentient, v);
             currentOrigin = self->ent->r.currentOrigin;
@@ -522,23 +546,23 @@ void __fastcall Actor_UpdateLastEnemySightPos(actor_s *self)
             {
                 self->lastEnemySightPosValid = 1;
                 Sentient_GetEyePosition(enemy, self->lastEnemySightPos);
-                if ( GetCurrentThreadId() != g_DXDeviceThread )
-                    return;
+                //if ( GetCurrentThreadId() != g_DXDeviceThread )
+                //    return;
             }
-            else if ( g_DXDeviceThread != GetCurrentThreadId() )
-            {
-                return;
-            }
+            //else if ( g_DXDeviceThread != GetCurrentThreadId() )
+            //{
+            //    return;
+            //}
         }
-        else if ( g_DXDeviceThread != GetCurrentThreadId() )
-        {
-            return;
-        }
+        //else if ( g_DXDeviceThread != GetCurrentThreadId() )
+        //{
+        //    return;
+        //}
     }
-    else if ( g_DXDeviceThread != GetCurrentThreadId() )
-    {
-        return;
-    }
+    //else if ( g_DXDeviceThread != GetCurrentThreadId() )
+    //{
+    //    return;
+    //}
     //D3DPERF_EndEvent();
 }
 

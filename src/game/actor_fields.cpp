@@ -1,6 +1,182 @@
 #include "actor_fields.h"
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_utils_mp.h>
+#include <clientscript/cscr_stringlist.h>
+#include <clientscript/scr_const.h>
+#include <game_mp/actor_mp.h>
+#include "g_weapon.h"
+#include <universal/surfaceflags.h>
+#include <game_mp/g_cmds_mp.h>
+#include <game_mp/g_main_mp.h>
+#include <game_mp/g_spawn_mp.h>
 
-void __cdecl ActorScr_SetSpecies(actor_s *pSelf)
+void __cdecl AIFIELD_NULLSUB(actor_s *pSelf, const actor_fields_s *pField)
+{
+
+}
+
+const actor_fields_s sentientfields[12] =
+{
+  { "threatbias", 12, { 4 }, F_INT, NULL, NULL },
+  { "node", 96, { 4 }, F_PATHNODE, &ActorScr_ReadOnly, NULL },
+  { "prevnode", 100, { 4 }, F_PATHNODE, &ActorScr_ReadOnly, NULL },
+  { "enemy", 56, { 4 }, F_ENTHANDLE, &ActorScr_ReadOnly, NULL },
+  { "scriptenemy", 60, { 4 }, F_ENTHANDLE, &ActorScr_ReadOnly, NULL },
+  { "scriptenemytag", 64, { 2 }, F_STRING, &ActorScr_ReadOnly, NULL },
+  { "syncedmeleetarget", 52, { 4 }, F_ENTHANDLE, NULL, NULL },
+  { "ignoreme", 20, { 1 }, F_BYTE, NULL, NULL },
+  { "ignoreall", 21, { 1 }, F_BYTE, NULL, NULL },
+  { "maxvisibledist", 36, { 4 }, F_FLOAT, NULL, NULL },
+  { "ignoreforfriendlyfire", 22, { 1 }, F_BYTE, NULL, NULL },
+  { NULL, 0, { 0 }, F_INT, NULL, NULL }
+};
+
+const actor_fields_s entfields[7] =
+{
+  { "health", 404, { 4 }, F_INT, NULL, NULL },
+  { "maxhealth", 408, { 4 }, F_INT, NULL, NULL },
+  { "targetname", 360, { 2 }, F_STRING, NULL, NULL },
+  { "classname", 356, { 2 }, F_STRING, &ActorScr_ReadOnly, NULL },
+  { "spawnflags", 368, { 4 }, F_INT, NULL, NULL },
+  { "model", 348, { 2 }, F_MODEL, &ActorScr_ReadOnly, NULL },
+  { NULL, 0, { 0 }, F_INT, NULL, NULL }
+};
+
+actor_fields_s aifield_delete =
+{ NULL, 0, { 0 }, F_INT, NULL, NULL };
+
+const actor_fields_s aifields[80] =
+{
+  { "type", 8, { 4 }, F_INT, ActorScr_SetSpecies, ActorScr_GetSpecies },
+  { "isdog", 8, { 4 }, F_INT, ActorScr_ReadOnly, ActorScr_GetIsDog },
+  { "accuracy", 468, { 4 }, F_FLOAT, ActorScr_Clamp_0_Positive, NULL },
+  { "lookforward", 248, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "lookright", 260, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "lookup", 272, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "fovcosine", 3860, { 4 }, F_FLOAT, ActorScr_Clamp_0_1, NULL },
+  { "maxsightdistsqrd", 3864, { 4 }, F_FLOAT, NULL, NULL },
+  { "ignoreclosefoliage", 3868, { 4 }, F_INT, NULL, NULL },
+  { "interval", 3576, { 4 }, F_FLOAT, NULL, NULL },
+  { "damagetaken", 496, { 4 }, F_INT, ActorScr_ReadOnly, NULL },
+  { "damagedir", 504, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "damageyaw", 500, { 4 }, F_INT, ActorScr_ReadOnly, NULL },
+  { "damagelocation", 516, { 2 }, F_STRING, ActorScr_ReadOnly, NULL },
+  { "damageweapon", 518, { 2 }, F_STRING, ActorScr_ReadOnly, NULL },
+  { "damagemod", 520, { 2 }, F_STRING, ActorScr_ReadOnly, NULL },
+  { "proneok", 332, { 4 }, F_INT, ActorScr_ReadOnly, NULL },
+  { "walkdist", 3564, { 4 }, F_FLOAT, NULL, NULL },
+  { "desiredangle", 316, { 4 }, F_FLOAT, ActorScr_ReadOnly, NULL },
+  { "pacifist", 3768, { 4 }, F_INT, NULL, NULL },
+  { "pacifistwait", 3772, { 4 }, F_INT, ActorScr_SetTime, ActorScr_GetTime },
+  { "ignoresuppression", 5840, { 4 }, F_INT, NULL, NULL },
+  { "suppressionwait", 5844, { 4 }, F_INT, NULL, NULL },
+  { "suppressionduration", 5848, { 4 }, F_INT, NULL, NULL },
+  { "suppressionstarttime", 5852, { 4 }, F_INT, ActorScr_ReadOnly, NULL },
+  { "suppressionmeter", 5856, { 4 }, F_FLOAT, ActorScr_ReadOnly, NULL },
+  { "aiweapon", 236, { 2 }, F_STRING, NULL, NULL },
+  { "dontavoidplayer", 3600, { 4 }, F_INT, NULL, NULL },
+  { "grenadeawareness", 5880, { 4 }, F_FLOAT, ActorScr_Clamp_0_1, NULL },
+  { "grenade", 5888, { 4 }, F_ENTHANDLE, ActorScr_ReadOnly, NULL },
+  {
+    "grenadeweapon",
+    5892,
+    { 4 },
+    F_INT,
+    ActorScr_SetWeapon,
+    ActorScr_GetWeapon
+  },
+  { "grenadeammo", 5908, { 4 }, F_INT, NULL, NULL },
+  { "grenadethrowback", 5884, { 4 }, F_INT, NULL, NULL },
+  { "favoriteenemy", 5792, { 4 }, F_SENTIENTHANDLE, NULL, NULL },
+  { "allowpain", 228, { 1 }, F_BYTE, NULL, NULL },
+  { "allowdeath", 229, { 1 }, F_BYTE, NULL, NULL },
+  { "delayeddeath", 230, { 1 }, F_BYTE, NULL, NULL },
+  { "providecoveringfire", 231, { 1 }, F_BYTE, NULL, NULL },
+  { "ignoretriggers", 5960, { 1 }, F_BYTE, NULL, NULL },
+  { "pushable", 5961, { 1 }, F_BYTE, NULL, NULL },
+  { "dropweapon", 5948, { 4 }, F_INT, NULL, NULL },
+  { "drawoncompass", 5952, { 4 }, F_INT, NULL, NULL },
+  { "activatecrosshair", 5956, { 4 }, F_INT, NULL, NULL },
+  {
+    "groundtype",
+    604,
+    { 4 },
+    F_STRING,
+    ActorScr_ReadOnly,
+    ActorScr_GetGroundType
+  },
+  { "scriptstate", 5992, { 2 }, F_STRING, ActorScr_ReadOnly, NULL },
+  { "lastscriptstate", 5994, { 2 }, F_STRING, ActorScr_ReadOnly, NULL },
+  { "statechangereason", 5996, { 2 }, F_STRING, ActorScr_ReadOnly, NULL },
+  { "goalradius", 3716, { 4 }, F_FLOAT, ActorScr_SetGoalRadius, NULL },
+  { "goalheight", 3720, { 4 }, F_FLOAT, ActorScr_SetGoalHeight, NULL },
+  { "goalpos", 3648, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "ignoreforfixednodesafecheck", 3752, { 1 }, F_BYTE, NULL, NULL },
+  { "fixednode", 3753, { 1 }, F_BYTE, ActorScr_SetFixedNode, NULL },
+  {
+    "fixednodesaferadius",
+    3756,
+    { 4 },
+    F_FLOAT,
+    ActorScr_Clamp_0_Positive,
+    NULL
+  },
+  {
+    "pathgoalpos",
+    3472,
+    { 12 },
+    F_VECTOR,
+    ActorScr_ReadOnly,
+    ActorScr_GetPathGoalPos
+  },
+  { "stopanimdistsq", 3552, { 4 }, F_FLOAT, NULL, NULL },
+  {
+    "lastenemysightpos",
+    5800,
+    { 12 },
+    F_VECTOR,
+    ActorScr_SetLastEnemySightPos,
+    ActorScr_GetLastEnemySightPos
+  },
+  { "pathenemylookahead", 3736, { 4 }, F_FLOAT, NULL, NULL },
+  { "pathenemyfightdist", 3740, { 4 }, F_FLOAT, NULL, NULL },
+  { "meleeattackdist", 3744, { 4 }, F_FLOAT, NULL, NULL },
+  {
+    "movemode",
+    548,
+    { 1 },
+    F_STRING,
+    ActorScr_ReadOnly,
+    ActorScr_GetMoveMode
+  },
+  { "safetochangescript", 549, { 1 }, F_BYTE, NULL, NULL },
+  { "keepclaimednode", 3608, { 1 }, F_BYTE, NULL, NULL },
+  { "keepclaimednodeingoal", 3609, { 1 }, F_BYTE, NULL, NULL },
+  { "nododgemove", 3610, { 1 }, F_BYTE, NULL, NULL },
+  { "leanamount", 3624, { 4 }, F_FLOAT, NULL, NULL },
+  { "isfacingmotion", 3628, { 1 }, F_BYTE, ActorScr_ReadOnly, NULL },
+  { "badplaceawareness", 5972, { 4 }, F_FLOAT, ActorScr_Clamp_0_1, NULL },
+  { "goodshootpos", 5976, { 12 }, F_VECTOR, NULL, NULL },
+  { "goodshootposvalid", 5988, { 4 }, F_INT, NULL, NULL },
+  { "flashbangimmunity", 6100, { 4 }, F_INT, NULL, NULL },
+  { "lookaheaddir", 3484, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "lookaheaddist", 3504, { 4 }, F_FLOAT, ActorScr_ReadOnly, NULL },
+  { "exposedduration", 3644, { 4 }, F_INT, NULL, NULL },
+  { "requestarrivalnotify", 3828, { 4 }, F_INT, NULL, NULL },
+  { "finalaccuracy", 484, { 4 }, F_FLOAT, ActorScr_ReadOnly, NULL },
+  { "weaponaccuracy", 488, { 4 }, F_FLOAT, ActorScr_ReadOnly, NULL },
+  { "goalangle", 3704, { 12 }, F_VECTOR, ActorScr_ReadOnly, NULL },
+  { "ikpriority", 10108, { 4 }, F_INT, AIFIELD_NULLSUB, NULL },
+  { "animtranslationscale", 560, { 4 }, F_FLOAT, NULL, NULL },
+  { NULL, 0, { 0 }, F_INT, NULL, NULL }
+};
+
+actor_fields_s aifield_list =
+{ NULL, 0, { 0 }, F_INT, NULL, NULL };
+
+const unsigned __int16 *g_AISpeciesNames[1] = { (const unsigned __int16 *)&scr_const.dog };
+
+void __cdecl ActorScr_SetSpecies(actor_s *pSelf, const actor_fields_s *pField)
 {
     char *v1; // eax
     const char *v2; // eax
@@ -25,7 +201,7 @@ void __cdecl ActorScr_SetSpecies(actor_s *pSelf)
     Scr_Error(v2, 0);
 }
 
-void __cdecl ActorScr_GetSpecies(actor_s *pSelf)
+void __cdecl ActorScr_GetSpecies(actor_s *pSelf, const actor_fields_s *pField)
 {
     if ( !pSelf && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_fields.cpp", 330, 0, "%s", "pSelf") )
         __debugbreak();
@@ -43,7 +219,7 @@ void __cdecl ActorScr_GetSpecies(actor_s *pSelf)
     Scr_AddConstString(*g_AISpeciesNames[pSelf->species], SCRIPTINSTANCE_SERVER);
 }
 
-void __cdecl ActorScr_GetIsDog(actor_s *pSelf)
+void __cdecl ActorScr_GetIsDog(actor_s *pSelf, const actor_fields_s *pField)
 {
     unsigned __int8 LocalClientSourceRange; // al
 
@@ -124,7 +300,7 @@ void __cdecl ActorScr_ReadOnly(actor_s *pSelf, const actor_fields_s *pField)
     Scr_Error(v2, 0);
 }
 
-void __cdecl ActorScr_SetGoalRadius(actor_s *pSelf)
+void __cdecl ActorScr_SetGoalRadius(actor_s *pSelf, const actor_fields_s *pField)
 {
     float radius; // [esp+4h] [ebp-4h]
 
@@ -136,7 +312,7 @@ void __cdecl ActorScr_SetGoalRadius(actor_s *pSelf)
     Actor_SetGoalRadius(&pSelf->scriptGoal, radius);
 }
 
-void __cdecl ActorScr_SetGoalHeight(actor_s *pSelf)
+void __cdecl ActorScr_SetGoalHeight(actor_s *pSelf, const actor_fields_s *pField)
 {
     float height; // [esp+0h] [ebp-4h]
 
@@ -724,7 +900,7 @@ gentity_s *__cdecl BaseForFields(actor_s *actor, const actor_fields_s *fields)
                     0,
                     "BaseForFields: invalid fields[]") )
         __debugbreak();
-    Com_Error(ERR_DROP, &byte_D3260C);
+    Com_Error(ERR_DROP, "BaseForFields: invalid fields[]");
     return 0;
 }
 
@@ -871,9 +1047,11 @@ void __cdecl Cmd_AI_DisplayValue(actor_s *pSelf, unsigned __int8 *pBase, const a
                 Com_Printf(0, "ent %i: %s = %i (targetname %s)\n", entnum, pField->name, i, v11);
                 break;
             case F_ENTHANDLE:
-                if ( !EntHandle::isDefined((EntHandle *)&pBase[pField->ofs]) )
+                //if ( !EntHandle::isDefined((EntHandle *)&pBase[pField->ofs]) )
+                if ( !((EntHandle *)&pBase[pField->ofs])->isDefined() )
                     goto LABEL_43;
-                i = EntHandle::entnum((EntHandle *)&pBase[pField->ofs]);
+                //i = EntHandle::entnum((EntHandle *)&pBase[pField->ofs]);
+                i = ((EntHandle *)&pBase[pField->ofs])->entnum();
                 if ( i >= 0x400
                     && !Assert_MyHandler(
                                 "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_fields.cpp",
@@ -908,9 +1086,11 @@ void __cdecl Cmd_AI_DisplayValue(actor_s *pSelf, unsigned __int8 *pBase, const a
                 Com_Printf(0, "ent %i: %s = %i (targetname %s)\n", entnum, pField->name, i, v8);
                 break;
             case F_SENTIENTHANDLE:
-                if ( !SentientHandle::isDefined((SentientHandle *)&pBase[pField->ofs]) )
+                //if ( !SentientHandle::isDefined((SentientHandle *)&pBase[pField->ofs]) )
+                if ( !((SentientHandle *)&pBase[pField->ofs])->isDefined() )
                     goto LABEL_43;
-                i = SentientHandle::sentient((SentientHandle *)&pBase[pField->ofs])->ent->s.number;
+                //i = SentientHandle::sentient((SentientHandle *)&pBase[pField->ofs])->ent->s.number;
+                i = ((SentientHandle *)&pBase[pField->ofs])->sentient()->ent->s.number;
                 if ( level.gentities[i].targetname )
                 {
                     v7 = SL_ConvertToString(level.gentities[i].targetname, SCRIPTINSTANCE_SERVER);
@@ -1001,7 +1181,7 @@ LABEL_28:
         Cmd_AI_PrintUsage();
         return;
     }
-    if ( (void (__cdecl *)(actor_s *))pField->getter == ActorScr_SetGoalRadius )
+    if ( pField->getter == ActorScr_SetGoalRadius )
     {
         if ( argc == 4 )
         {

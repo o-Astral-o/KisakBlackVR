@@ -1,6 +1,12 @@
 #pragma once
 #include "actor_events.h"
 
+struct AIEventListener // sizeof=0x8
+{
+    int entIndex;
+    unsigned int events;
+};
+
 void __cdecl RemoveSwapWithLast(unsigned int listenerIndex);
 void __cdecl Actor_EventListener_RemoveEntity(int entIndex);
 int __cdecl Actor_EventListener_First(ai_event_t event, int teamFlags);

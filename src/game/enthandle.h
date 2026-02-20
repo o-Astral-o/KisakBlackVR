@@ -10,8 +10,9 @@ struct EntHandle // sizeof=0x4
     static void Shutdown();
 
     void setEnt(gentity_s *ent);
-    bool isDefined();
+    bool isDefined() const;
     gentity_s *ent();
+    const gentity_s *ent() const;
 
     int entnum();
 
@@ -24,8 +25,9 @@ struct SentientHandle // sizeof=0x4
     static void Init();
 
     void setSentient(sentient_s *sentient);
-    bool isDefined();
+    bool isDefined() const;
     sentient_s *sentient();
+    const sentient_s *sentient() const;
 
     unsigned __int16 number;
     unsigned __int16 infoIndex;

@@ -1,4 +1,24 @@
 #include "g_items.h"
+#include <bgame/bg_weapons_ammo.h>
+#include <bgame/bg_misc.h>
+#include "g_weapon.h"
+#include <game_mp/g_main_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <server/sv_game.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include <server/sv_world.h>
+#include <server_mp/sv_main_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <universal/com_math_anglevectors.h>
+#include <xanim/xmodel_utils.h>
+#include <qcommon/dobj_management.h>
+#include <xanim/dobj_utils.h>
+#include "g_load_utils.h"
+#include <clientscript/cscr_stringlist.h>
+#include <server_mp/sv_init_mp.h>
+
+int itemRegistered[2048];
 
 void __cdecl Fill_Clip(playerState_s *ps, unsigned int weapon)
 {
@@ -27,8 +47,8 @@ int __cdecl Add_Ammo(gentity_s *ent, unsigned int weaponIndex, unsigned __int8 w
 {
     int AmmoInClip; // esi
     int ClipSize; // eax
-    const WeaponVariantDef *WeaponVariantDef; // eax
-    int v9; // esi
+    const WeaponVariantDef *weapVarDef2; // eax
+    int v10; // esi
     const WeaponVariantDef *weapVarDef; // [esp+5Ch] [ebp-1Ch]
     int oldClip; // [esp+60h] [ebp-18h]
     bool clipOnly; // [esp+67h] [ebp-11h]
@@ -38,54 +58,54 @@ int __cdecl Add_Ammo(gentity_s *ent, unsigned int weaponIndex, unsigned __int8 w
     const WeaponDef *weapDef; // [esp+74h] [ebp-4h]
     int counta; // [esp+8Ch] [ebp+14h]
 
-    if ( !ent && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 77, 0, "%s", "ent") )
+    if (!ent && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 77, 0, "%s", "ent"))
         __debugbreak();
-    if ( !ent->client
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 78, 0, "%s", "ent->client") )
+    if (!ent->client
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 78, 0, "%s", "ent->client"))
     {
         __debugbreak();
     }
     ps = ent->client;
     weapDef = BG_GetWeaponDef(weaponIndex);
     weapVarDef = BG_GetWeaponVariantDef(weaponIndex);
-    if ( !BG_PlayerHasWeapon(&ps->ps, weaponIndex) && weapDef->offhandClass != OFFHAND_CLASS_FRAG_GRENADE )
+    if (!BG_PlayerHasWeapon(&ps->ps, weaponIndex) && weapDef->offhandClass != OFFHAND_CLASS_FRAG_GRENADE)
         return 0;
     clipOnly = 0;
     oldAmmo = BG_GetAmmoNotInClip(&ps->ps, weaponIndex);
     oldClip = BG_GetAmmoInClip(&ps->ps, weaponIndex);
     maxWeaponAmmo = BG_GetAmmoPlayerMax(&ps->ps, weaponIndex, 0);
     BG_AddAmmoToPool(&ps->ps, weaponIndex, count);
-    if ( BG_WeaponIsClipOnly(weaponIndex) )
+    if (BG_WeaponIsClipOnly(weaponIndex))
     {
         G_GivePlayerWeapon(&ps->ps, weaponIndex, weaponModel, 0);
         clipOnly = 1;
     }
-    if ( fillClip || clipOnly )
+    if (fillClip || clipOnly)
         Fill_Clip(&ps->ps, weaponIndex);
-    if ( clipOnly )
+    if (clipOnly)
     {
         BG_SetAmmoInPool(&ps->ps, weaponIndex, 0);
     }
-    else if ( BG_GetAmmoNotInClip(&ps->ps, weaponIndex) > maxWeaponAmmo )
+    else if (BG_GetAmmoNotInClip(&ps->ps, weaponIndex) > maxWeaponAmmo)
     {
         BG_SetAmmoInPool(&ps->ps, weaponIndex, maxWeaponAmmo);
     }
     AmmoInClip = BG_GetAmmoInClip(&ps->ps, weaponIndex);
-    if ( AmmoInClip > BG_GetClipSize(weaponIndex) )
+    if (AmmoInClip > BG_GetClipSize(weaponIndex))
     {
         ClipSize = BG_GetClipSize(weaponIndex);
         BG_SetAmmoInClip(&ps->ps, weapVarDef->iClipIndex, ClipSize);
     }
-    if ( BG_GetWeaponDef(weaponIndex)->iSharedAmmoCapIndex >= 0 )
+    if (BG_GetWeaponDef(weaponIndex)->iSharedAmmoCapIndex >= 0)
     {
         counta = BG_GetMaxPickupableAmmo(&ps->ps, weaponIndex);
-        if ( counta < 0 )
+        if (counta < 0)
         {
-            if ( BG_WeaponIsClipOnly(weaponIndex) )
+            if (BG_WeaponIsClipOnly(weaponIndex))
             {
-                WeaponVariantDef = BG_GetWeaponVariantDef(weaponIndex);
-                BG_AddAmmoToClip(&ps->ps, WeaponVariantDef->iClipIndex, counta);
-                if ( BG_GetAmmoInClip(&ps->ps, weaponIndex) <= 0 )
+                weapVarDef2 = BG_GetWeaponVariantDef(weaponIndex);
+                BG_AddAmmoToClip(&ps->ps, weapVarDef2->iClipIndex, counta);
+                if (BG_GetAmmoInClip(&ps->ps, weaponIndex) <= 0)
                 {
                     BG_TakePlayerWeapon(&ps->ps, weaponIndex);
                     return 0;
@@ -97,8 +117,8 @@ int __cdecl Add_Ammo(gentity_s *ent, unsigned int weaponIndex, unsigned __int8 w
             }
         }
     }
-    v9 = BG_GetAmmoNotInClip(&ps->ps, weaponIndex) - oldAmmo;
-    return v9 + BG_GetAmmoInClip(&ps->ps, weaponIndex) - oldClip;
+    v10 = BG_GetAmmoNotInClip(&ps->ps, weaponIndex) - oldAmmo;
+    return v10 + BG_GetAmmoInClip(&ps->ps, weaponIndex) - oldClip;
 }
 
 void __cdecl Touch_Item_Auto(gentity_s *ent, gentity_s *other, int bTouched)
@@ -341,9 +361,11 @@ LABEL_8:
                 up[2] = ent->r.currentOrigin[2];
                 up[2] = up[2] + 2.0;
                 mask = G_ItemClipMask(ent);
-                if ( EntHandle::isDefined(&droppedEnt->r.ownerNum) )
+                //if ( EntHandle::isDefined(&droppedEnt->r.ownerNum) )
+                if ( droppedEnt->r.ownerNum.isDefined() )
                 {
-                    passEntityNum = EntHandle::entnum(&droppedEnt->r.ownerNum);
+                    //passEntityNum = EntHandle::entnum(&droppedEnt->r.ownerNum);
+                    passEntityNum = droppedEnt->r.ownerNum.entnum();
                     G_TraceCapsule(
                         &trace,
                         ent->r.currentOrigin,
@@ -365,9 +387,11 @@ LABEL_8:
                 else
                 {
                     Vec3Lerp(ent->r.currentOrigin, up, trace.fraction, up);
-                    if ( EntHandle::isDefined(&droppedEnt->r.ownerNum) )
+                    //if ( EntHandle::isDefined(&droppedEnt->r.ownerNum) )
+                    if ( droppedEnt->r.ownerNum.isDefined() )
                     {
-                        v8 = EntHandle::entnum(&droppedEnt->r.ownerNum);
+                        //v8 = EntHandle::entnum(&droppedEnt->r.ownerNum);
+                        v8 = droppedEnt->r.ownerNum.entnum();
                         G_TraceCapsule(&trace, up, droppedEnt->r.mins, droppedEnt->r.maxs, ent->r.currentOrigin, v8, mask, &context);
                     }
                     else
@@ -387,7 +411,7 @@ LABEL_8:
                 }
                 G_SetAngle(droppedEnt, ent->r.currentAngles);
             }
-            SV_LinkEntity((int)&savedregs, droppedEnt);
+            SV_LinkEntity(droppedEnt);
         }
         *pDroppedWeapon = droppedEnt;
         G_GivePlayerWeapon(ps, weapon, weaponModel, ent->s.renderOptions);
@@ -522,9 +546,9 @@ void __cdecl PrintPlayerPickupMessage(gentity_s *player, unsigned int weapIdx)
         __debugbreak();
     }
     if ( BG_WeaponIsClipOnly(weapIdx) )
-        v2 = va(aCGamePickupCli, 102, weapVariantDef->szDisplayName);
+        v2 = va("%c GAME_PICKUP_CLIPONLY_AMMO %s", 102, weapVariantDef->szDisplayName);
     else
-        v2 = va(aCGamePickupAmm, 102, weapVariantDef->szDisplayName);
+        v2 = va("%c GAME_PICKUP_AMMO %s", 102, weapVariantDef->szDisplayName);
     SV_GameSendServerCommand(player - g_entities, SV_CMD_CAN_IGNORE, v2);
 }
 
@@ -658,7 +682,7 @@ void __cdecl PrintMessage_CannotGrabItem(
         if ( BG_PlayerHasWeapon(&player->client->ps, weapIndex) )
         {
             WeaponVariantDef = BG_GetWeaponVariantDef(weapIndex);
-            v6 = va(aCGamePickupCan, 102, WeaponVariantDef->szDisplayName);
+            v6 = va("%c GAME_PICKUP_CANTCARRYMOREAMMO %s", 102, WeaponVariantDef->szDisplayName);
         }
         else
         {
@@ -763,7 +787,9 @@ gentity_s *__cdecl LaunchItem(const gitem_s *item, float *origin, float *angles,
     itemIndex = ((char *)item - (char *)bg_itemlist) >> 2;
     dropped = G_Spawn();
     dropIdx = GetFreeDropCueIdx();
-    EntHandle::setEnt((EntHandle *)(4 * dropIdx + 65348584), dropped);
+    //EntHandle::setEnt((EntHandle *)(4 * dropIdx + 65348584), dropped);
+    //EntHandle::setEnt(&level.droppedWeaponCue[dropIdx], dropped);
+    level.droppedWeaponCue[dropIdx].setEnt(dropped);
     dropped->s.eType = 3;
     dropped->s.un3.item = (unsigned __int16)itemIndex;
     if ( dropped->s.un3.item >= 0x800u
@@ -803,7 +829,7 @@ gentity_s *__cdecl LaunchItem(const gitem_s *item, float *origin, float *angles,
         AssignToSmallerType<unsigned char>(&dropped->s.clientNum, ownerNum);
     weapIndex = itemIndex % 2048;
     if ( itemIndex % 2048 >= (int)BG_GetNumWeapons() )
-        Com_Error(ERR_DROP, &byte_CB95BC, weapIndex);
+        Com_Error(ERR_DROP, "LaunchItem() - Bad item WEAPIDX %i on entity", weapIndex);
     weapModel = itemIndex / 2048;
     weapDef = BG_GetWeaponDef(weapIndex);
     if ( !weapDef && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 776, 0, "%s", "weapDef") )
@@ -862,7 +888,7 @@ gentity_s *__cdecl LaunchItem(const gitem_s *item, float *origin, float *angles,
     }
     dropped->flags = 16;
     dropped->nextthink = level.time + 1000;
-    SV_LinkEntity((int)&savedregs, dropped);
+    SV_LinkEntity(dropped);
     return dropped;
 }
 
@@ -894,10 +920,12 @@ int __cdecl GetFreeDropCueIdx()
     fBestDistSqrd = -1.0f;
     for ( i = 0; i < maxDroppedWeapon; ++i )
     {
-        if ( !EntHandle::isDefined((EntHandle *)(4 * i + 65348584)) )
+        //if ( !EntHandle::isDefined((EntHandle *)(4 * i + 65348584)) )
+        if (!level.droppedWeaponCue[i].isDefined())
             return i;
-        ent = EntHandle::ent((EntHandle *)(4 * i + 65348584));
-        if ( ((unsigned int)&cls.wagerServers[5331].basictraining & ent->flags) == 0 )
+        //ent = EntHandle::ent(&level.droppedWeaponCue[i]);
+        ent = level.droppedWeaponCue[i].ent();
+        if ((ent->flags & 0x2000000) == 0)
         {
             if ( bg_itemlist[ent->s.un3.item] != 1
                 && !Assert_MyHandler(
@@ -938,11 +966,13 @@ int __cdecl GetFreeDropCueIdx()
             maxDroppedWeapon);
         iBest = 0;
     }
-    enta = EntHandle::ent((EntHandle *)(4 * iBest + 65348584));
-    if ( !enta && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 693, 0, "%s", "ent") )
+    //enta = EntHandle::ent(&level.droppedWeaponCue[iBest]);
+    enta = level.droppedWeaponCue[iBest].ent();
+    if (!enta && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 693, 0, "%s", "ent"))
         __debugbreak();
     G_FreeEntity(enta);
-    EntHandle::setEnt((EntHandle *)(4 * iBest + 65348584), 0);
+    //EntHandle::setEnt(&level.droppedWeaponCue[iBest], 0);
+    level.droppedWeaponCue[iBest].setEnt(0);
     return iBest;
 }
 
@@ -1059,7 +1089,8 @@ gentity_s *__cdecl ThrowDownWeapon(
             dropEnt = Drop_Item(ent, weapItem, 0.0, 0);
         else
             dropEnt = ThrowClientWeapon(ent, weapItem, throwHeight, throwDistance);
-        renderOptions_s::CopyWeaponOptions(&dropEnt->s.renderOptions, &ent->s.renderOptions);
+        //renderOptions_s::CopyWeaponOptions(&dropEnt->s.renderOptions, &ent->s.renderOptions);
+        dropEnt->s.renderOptions.CopyWeaponOptions(&ent->s.renderOptions);
         if ( ent->client )
         {
             TransferPlayerAmmoToWeaponEntity(ent, dropEnt, weapIdx);
@@ -1263,7 +1294,6 @@ gentity_s *__cdecl Drop_Weapon(gentity_s *ent, int weapIdx, unsigned __int8 weap
 
 void __cdecl FinishSpawningItem(gentity_s *ent)
 {
-    entityState_s::<unnamed_type_un3> v1; // eax
     char *v2; // eax
     const char *v3; // [esp+4h] [ebp-100h]
     float v4; // [esp+10h] [ebp-F4h]
@@ -1286,21 +1316,20 @@ void __cdecl FinishSpawningItem(gentity_s *ent)
     memset(&tr, 0, 16);
     //col_context_t::col_context_t(&context);
     ent->handler = 21;
-    if ( (ent->spawnflags & 1) != 0 )
+    if ((ent->spawnflags & 1) != 0)
     {
         G_SetOrigin(ent, ent->r.currentOrigin);
     }
     else
     {
-        v1.item = (int)ent->s.un3;
-        item = (gitem_s *)(4 * v1.item + 15073304);
-        if ( bg_itemlist[v1.item] != 1
+        item = (gitem_s *)&bg_itemlist[ent->s.un3.item];
+        if (item->giType != IT_WEAPON
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp",
-                        1317,
-                        0,
-                        "%s",
-                        "item->giType == IT_WEAPON") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp",
+                1317,
+                0,
+                "%s",
+                "item->giType == IT_WEAPON"))
         {
             __debugbreak();
         }
@@ -1320,7 +1349,7 @@ void __cdecl FinishSpawningItem(gentity_s *ent)
         dest[1] = v6;
         dest[2] = v7;
         G_TraceCapsule(&tr, start, mins, maxs, dest, ent->s.number, clipMask, &context);
-        if ( tr.startsolid )
+        if (tr.startsolid)
         {
             start[0] = ent->r.currentOrigin[0];
             start[1] = ent->r.currentOrigin[1];
@@ -1333,7 +1362,7 @@ void __cdecl FinishSpawningItem(gentity_s *ent)
             dest[2] = v5;
             G_TraceCapsule(&tr, start, mins, maxs, dest, ent->s.number, clipMask, &context);
         }
-        if ( tr.startsolid )
+        if (tr.startsolid)
         {
             v3 = vtos(ent->r.currentOrigin);
             v2 = SL_ConvertToString(ent->classname, SCRIPTINSTANCE_SERVER);
@@ -1345,7 +1374,7 @@ void __cdecl FinishSpawningItem(gentity_s *ent)
         g_entities[ent->s.groundEntityNum].flags |= 0x100000u;
         Vec3Lerp(start, dest, tr.fraction, endpos);
         G_SetOrigin(ent, endpos);
-        if ( tr.fraction < 1.0 )
+        if (tr.fraction < 1.0)
         {
             *(_QWORD *)&vAxis[2][0] = *(_QWORD *)tr.normal.vec.v;
             LODWORD(vAxis[2][2]) = tr.normal.vec.u[2];
@@ -1353,13 +1382,13 @@ void __cdecl FinishSpawningItem(gentity_s *ent)
             Vec3Cross(vAxis[2], vAxis[0], vAxis[1]);
             Vec3Cross(vAxis[1], vAxis[2], vAxis[0]);
             AxisToAngles(vAxis, vAngles);
-            if ( bg_itemlist[ent->s.un3.item] != 1
+            if (bg_itemlist[ent->s.un3.item] != 1
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp",
-                            1362,
-                            0,
-                            "%s",
-                            "bg_itemlist[ent->s.un3.item].giType == IT_WEAPON") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp",
+                    1362,
+                    0,
+                    "%s",
+                    "bg_itemlist[ent->s.un3.item].giType == IT_WEAPON"))
             {
                 __debugbreak();
             }
@@ -1367,7 +1396,7 @@ void __cdecl FinishSpawningItem(gentity_s *ent)
             G_SetAngle(ent, vAngles);
         }
     }
-    SV_LinkEntity((int)&savedregs, ent);
+    SV_LinkEntity(ent);
 }
 
 void __cdecl ClearRegisteredItems()
@@ -1485,16 +1514,16 @@ void __cdecl G_RegisterWeapon(unsigned int weapIndex)
     if ( *weapDef->szUseHintString
         && !G_GetHintStringIndex(&weapDef->iUseHintStringIndex, (char *)weapDef->szUseHintString) )
     {
-        Com_Error(ERR_DROP, &byte_CB9928, 96);
+        Com_Error(ERR_DROP, "Too many different hintstring values on weapons. Max allowed is %i different strings.", 96);
     }
     if ( *weapDef->dropHintString && !G_GetHintStringIndex(&weapDef->dropHintStringIndex, (char *)weapDef->dropHintString) )
-        Com_Error(ERR_DROP, &byte_CB9928, 96);
+        Com_Error(ERR_DROP, "Too many different hintstring values on weapons. Max allowed is %i different strings.", 96);
     if ( *weapDef->worldModel )
     {
         Name = (char *)XModelGetName(*(const XModel **)weapDef->worldModel);
         modelindex = G_ModelIndex(Name);
         if ( XModelBad(*(const XModel **)weapDef->worldModel) )
-            G_OverrideModel(modelindex, "defaultweapon");
+            G_OverrideModel(modelindex, (char*)"defaultweapon");
     }
     if ( weapDef->projectileModel )
     {
@@ -1543,7 +1572,7 @@ void __cdecl G_SpawnItem(gentity_s *ent, const gitem_s *item)
     ent->item[0].index = ((char *)item - (char *)bg_itemlist) >> 2;
     weapIndex = ent->item[0].index % 2048;
     if ( weapIndex >= (int)BG_GetNumWeapons() )
-        Com_Error(ERR_DROP, &byte_CB9A08, weapIndex);
+        Com_Error(ERR_DROP, "G_SpawnItem() - Bad item WEAPIDX %i on entity", weapIndex);
     weapModel = ent->item[0].index / 2048;
     weapDef = BG_GetWeaponDef(weapIndex);
     if ( !weapDef && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_items.cpp", 1618, 0, "%s", "weapDef") )
@@ -1634,7 +1663,7 @@ void __cdecl G_SpawnItem(gentity_s *ent, const gitem_s *item)
         }
         G_SetAngle(ent, ent->r.currentAngles);
         G_SetOrigin(ent, ent->r.currentOrigin);
-        SV_LinkEntity((int)&savedregs, ent);
+        SV_LinkEntity(ent);
     }
 }
 
@@ -1793,9 +1822,11 @@ void __cdecl G_RunItem(gentity_s *ent)
         if ( Vec3DistanceSq(ent->r.currentOrigin, origin) < 0.1 )
             origin[2] = origin[2] - 1.0;
         //col_context_t::col_context_t(&context);
-        if ( EntHandle::isDefined(&ent->r.ownerNum) )
+        //if ( EntHandle::isDefined(&ent->r.ownerNum) )
+        if ( ent->r.ownerNum.isDefined() )
         {
-            passEntityNum = EntHandle::entnum(&ent->r.ownerNum);
+            //passEntityNum = EntHandle::entnum(&ent->r.ownerNum);
+            passEntityNum = ent->r.ownerNum.entnum();
             G_TraceCapsule(&tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passEntityNum, mask, &context);
         }
         else
@@ -1822,9 +1853,11 @@ void __cdecl G_RunItem(gentity_s *ent)
                 origin[0] = (float)(dot * tr.normal.vec.v[0]) + origin[0];
                 origin[1] = (float)(dot * tr.normal.vec.v[1]) + origin[1];
                 origin[2] = (float)(dot * tr.normal.vec.v[2]) + origin[2];
-                if ( EntHandle::isDefined(&ent->r.ownerNum) )
+                //if ( EntHandle::isDefined(&ent->r.ownerNum) )
+                if ( ent->r.ownerNum.isDefined() )
                 {
-                    v1 = EntHandle::entnum(&ent->r.ownerNum);
+                    //v1 = EntHandle::entnum(&ent->r.ownerNum);
+                    v1 = ent->r.ownerNum.entnum();
                     G_TraceCapsule(&tr, endpos, ent->r.mins, ent->r.maxs, origin, v1, mask, &context);
                 }
                 else
@@ -1849,7 +1882,7 @@ void __cdecl G_RunItem(gentity_s *ent)
             ent->r.currentOrigin[1] = endpos[1];
             ent->r.currentOrigin[2] = endpos[2];
         }
-        SV_LinkEntity((int)&savedregs, ent);
+        SV_LinkEntity(ent);
         G_RunThink(ent);
         if ( ent->r.inuse && tr.fraction < 0.0099999998 )
         {
@@ -1863,7 +1896,7 @@ void __cdecl G_RunItem(gentity_s *ent)
                 G_SetOrigin(ent, endpos);
                 ent->s.groundEntityNum = Trace_GetEntityHitId(&tr);
                 g_entities[ent->s.groundEntityNum].flags |= 0x100000u;
-                SV_LinkEntity((int)&savedregs, ent);
+                SV_LinkEntity(ent);
             }
         }
     }

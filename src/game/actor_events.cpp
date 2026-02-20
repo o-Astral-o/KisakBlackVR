@@ -1,4 +1,55 @@
 #include "actor_events.h"
+#include <game_mp/g_main_mp.h>
+#include "actor_senses.h"
+#include "bullet.h"
+#include <game_mp/actor_mp.h>
+#include "actor_event_listeners.h"
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_misc_mp.h>
+#include <clientscript/scr_const.h>
+
+const struct $97E41B13BD0B431546CEBD7708497565 // sizeof=0xC
+{                                       // XREF: .rdata:g_ai_event_info/r
+    const char *name;                   // XREF: Actor_DumpEvents+6E/r
+    const dvar_s **defaultDistDvar;     // XREF: Actor_EventDefaultRadiusSqrd(ai_event_t)+F/r
+                                        // Actor_EventDefaultRadiusSqrd(ai_event_t)+41/r
+    float defaultHeight;
+};
+
+const $97E41B13BD0B431546CEBD7708497565 g_ai_event_info[28] =
+{
+  { NULL, NULL, 0.0 },
+  { NULL, NULL, 0.0 },
+  { "footstep", &ai_eventDistFootstep, 0.0 },
+  { "footsteplite", &ai_eventDistFootstepLite, 0.0 },
+  { "new_enemy", &ai_eventDistNewEnemy, 0.0 },
+  { "pain", &ai_eventDistPain, 0.0 },
+  { "react", &ai_eventDistReact, 0.0 },
+  { "death", &ai_eventDistDeath, 0.0 },
+  { "explosion", &ai_eventDistExplosion, 0.0 },
+  { "grenade_ping", &ai_eventDistGrenadePing, 0.0 },
+  { "projectile_ping", &ai_eventDistProjPing, 0.0 },
+  { "gunshot", &ai_eventDistGunShot, 0.0 },
+  { "silenced_shot", &ai_eventDistSilencedShot, 0.0 },
+  { NULL, NULL, 0.0 },
+  { NULL, NULL, 0.0 },
+  { "bullet", &ai_eventDistBullet, 45.0 },
+  { "bullet", &ai_eventDistBullet, 45.0 },
+  { "bullet_react", &ai_eventDistBulletRunning, 45.0 },
+  { "projectile_impact", &ai_eventDistProjImpact, 45.0 },
+  { NULL, NULL, 0.0 },
+  { NULL, NULL, 0.0 },
+  { "badplacearc", &ai_eventDistBadPlace, 0.0 },
+  { "badplacelimitedarc", &ai_eventDistBadPlace, 0.0 },
+  { "reallybadplacearc", &ai_eventDistBadPlace, 0.0 },
+  { NULL, NULL, 0.0 },
+  { NULL, NULL, 0.0 },
+  { "badplacevolume", &ai_eventDistBadPlace, 0.0 },
+  { NULL, NULL, 0.0 }
+};
+
+
 
 double __fastcall Actor_EventDefaultRadiusSqrd(ai_event_t eType)
 {
@@ -152,14 +203,18 @@ char __cdecl Actor_IsOnSameTeam(gentity_s *originator, actor_s *pActor, int team
 
     if ( pActor == originator->actor )
         return 1;
-    if ( !EntHandle::isDefined(&pActor->sentient->scriptOwner) )
+    //if ( !EntHandle::isDefined(&pActor->sentient->scriptOwner) )
+    if ( !pActor->sentient->scriptOwner.isDefined() )
         return 0;
-    if ( EntHandle::ent(&pActor->sentient->scriptOwner) == originator )
+    //if ( EntHandle::ent(&pActor->sentient->scriptOwner) == originator )
+    if ( pActor->sentient->scriptOwner.ent() == originator)
         return 1;
     if ( !teamFlags
         && originator->sentient
-        && EntHandle::isDefined(&originator->sentient->scriptOwner)
-        && (v4 = EntHandle::ent(&pActor->sentient->scriptOwner), v4 == EntHandle::ent(&originator->sentient->scriptOwner)) )
+        //&& EntHandle::isDefined(&originator->sentient->scriptOwner)
+        && originator->sentient->scriptOwner.isDefined()
+        //&& (v4 = EntHandle::ent(&pActor->sentient->scriptOwner), v4 == EntHandle::ent(&originator->sentient->scriptOwner)) )
+        && (v4 = pActor->sentient->scriptOwner.ent(), v4 == originator->sentient->scriptOwner.ent()))
     {
         return 1;
     }
@@ -422,7 +477,8 @@ void __fastcall Actor_ReceivePointEvent(
             {
                 __debugbreak();
             }
-            if ( !EntHandle::isDefined(&originator->sentient->lastAttacker)
+            //if ( !EntHandle::isDefined(&originator->sentient->lastAttacker)
+            if ( !originator->sentient->lastAttacker.isDefined()
                 && !Assert_MyHandler(
                             "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_events.cpp",
                             818,
@@ -432,12 +488,15 @@ void __fastcall Actor_ReceivePointEvent(
             {
                 __debugbreak();
             }
-            if ( !EntHandle::ent(&originator->sentient->lastAttacker)->sentient )
+            //if ( !EntHandle::ent(&originator->sentient->lastAttacker)->sentient )
+            if ( !originator->sentient->lastAttacker.ent()->sentient)
                 return;
-            v6 = EntHandle::ent(&originator->sentient->lastAttacker);
+            //v6 = EntHandle::ent(&originator->sentient->lastAttacker);
+            v6 = originator->sentient->lastAttacker.ent();
             if ( !Actor_CaresAboutInfo(self, v6->sentient) )
                 return;
-            v7 = EntHandle::ent(&originator->sentient->lastAttacker);
+            //v7 = EntHandle::ent(&originator->sentient->lastAttacker);
+            v7 = originator->sentient->lastAttacker.ent();
             Actor_EventPain(self, originator->sentient, v7->sentient);
             break;
         case AI_EV_REACT:
@@ -458,14 +517,18 @@ void __fastcall Actor_ReceivePointEvent(
             {
                 __debugbreak();
             }
-            if ( !EntHandle::isDefined(&originator->sentient->lastAttacker) )
+            //if ( !EntHandle::isDefined(&originator->sentient->lastAttacker) )
+            if ( !originator->sentient->lastAttacker.isDefined() )
                 return;
-            if ( !EntHandle::ent(&originator->sentient->lastAttacker)->sentient )
+            //if ( !EntHandle::ent(&originator->sentient->lastAttacker)->sentient )
+            if ( !originator->sentient->lastAttacker.ent()->sentient)
                 return;
-            v8 = EntHandle::ent(&originator->sentient->lastAttacker);
+            //v8 = EntHandle::ent(&originator->sentient->lastAttacker);
+            v8 = originator->sentient->lastAttacker.ent();
             if ( !Actor_CaresAboutInfo(self, v8->sentient) )
                 return;
-            v9 = EntHandle::ent(&originator->sentient->lastAttacker);
+            //v9 = EntHandle::ent(&originator->sentient->lastAttacker);
+            v9 = originator->sentient->lastAttacker.ent();
             Actor_EventDeath(self, originator->sentient, v9->sentient);
             break;
         case AI_EV_EXPLOSION:
@@ -479,7 +542,8 @@ void __fastcall Actor_ReceivePointEvent(
             {
                 __debugbreak();
             }
-            if ( EntHandle::isDefined(&originator->parent) && EntHandle::ent(&originator->parent) == self->ent )
+            //if ( EntHandle::isDefined(&originator->parent) && EntHandle::ent(&originator->parent) == self->ent )
+            if ( originator->parent.isDefined() && originator->parent.ent() == self->ent)
                 return;
 LABEL_60:
             Actor_EventGrenadePing(self, originator, vOrigin);
@@ -572,7 +636,8 @@ void __fastcall Actor_EventNewEnemy(actor_s *self, sentient_s *originator)
     {
         __debugbreak();
     }
-    if ( !EntHandle::isDefined(&originator->targetEnt)
+    //if ( !EntHandle::isDefined(&originator->targetEnt)
+    if ( !originator->targetEnt.isDefined()
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_events.cpp",
                     607,
@@ -582,7 +647,8 @@ void __fastcall Actor_EventNewEnemy(actor_s *self, sentient_s *originator)
     {
         __debugbreak();
     }
-    if ( !EntHandle::ent(&originator->targetEnt)->sentient
+    //if ( !EntHandle::ent(&originator->targetEnt)->sentient
+    if ( !originator->targetEnt.ent()->sentient
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_events.cpp",
                     608,
@@ -592,7 +658,8 @@ void __fastcall Actor_EventNewEnemy(actor_s *self, sentient_s *originator)
     {
         __debugbreak();
     }
-    enemy = EntHandle::ent(&originator->targetEnt)->sentient;
+    //enemy = EntHandle::ent(&originator->targetEnt)->sentient;
+    enemy = originator->targetEnt.ent()->sentient;
     if ( originator->ent->actor )
         SentientInfo_Copy(self, originator->ent->actor, enemy - level.sentients);
     else

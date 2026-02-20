@@ -372,7 +372,7 @@ struct orientation_t // sizeof=0x30
 struct trajectory_t // sizeof=0x24
 {                                                                             // XREF: LerpEntityState/r
                                                                                 // LerpEntityState/r ...
-        unsigned __int8 trType;                         // XREF: CScriptMover_SetupMoveSpeed+6AD/w
+        unsigned __int8 trType; // KISAKTODO: trType_t                         // XREF: CScriptMover_SetupMoveSpeed+6AD/w
                                                                                 // CScr_LaunchRagdoll+147/w ...
         // padding byte
         // padding byte

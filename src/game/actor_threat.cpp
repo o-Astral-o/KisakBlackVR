@@ -1,4 +1,36 @@
 #include "actor_threat.h"
+#include "actor.h"
+#include <game_mp/actor_mp.h>
+#include <game_mp/g_main_mp.h>
+#include "actor_state.h"
+#include <game_mp/g_utils_mp.h>
+#include "bullet.h"
+#include <bgame/bg_perks.h>
+#include <cgame/cg_drawtools.h>
+#include <client_mp/cl_cgame_mp.h>
+#include "actor_pain.h"
+#include "g_debug.h"
+
+threat_bias_t g_threatBias;
+int g_skipDebugString;
+char g_threatDebugStrings[10][64];
+
+static const float AI_THREAT_DISTANCE_RATE = (float)(1.0 / (float)(2500.0 * 2500.0)) * 5000.0;
+
+const char *g_threatDebugLabels[10] =
+{
+  "Total:",
+  "Flashed",
+  "Suppressed",
+  "Bias",
+  "BiasGroup",
+  "Attacker",
+  "CurBonus",
+  "Awareness",
+  "Dist",
+  "Scariness"
+};
+
 
 bool __fastcall Actor_CheckIgnore(sentient_s *self, sentient_s *enemy)
 {
@@ -216,31 +248,36 @@ void __fastcall Actor_UpdateThreat(actor_s *self)
         pInfo = &self->sentientInfo[enemy - level.sentients];
         if ( self->sentientInfo[enemy - level.sentients].lastKnownPosTime <= 0 )
         {
-            DebugThreatStringSimple(self, enemy->ent, "unaware", colorRed);
+            DebugThreatStringSimple(self, enemy->ent, (char*)"unaware", colorRed);
             continue;
         }
         if ( (enemy->ent->flags & 4) != 0 || Actor_CheckIgnore(self->sentient, enemy) )
             goto LABEL_77;
         if ( enemy->ent->client && enemy->ent->client->sess.sessionState )
         {
-            DebugThreatStringSimple(self, enemy->ent, "client not-playing", colorRed);
+            DebugThreatStringSimple(self, enemy->ent, (char *)"client not-playing", colorRed);
             continue;
         }
         if ( self->sentient != enemy )
         {
-            if ( EntHandle::isDefined(&self->sentient->scriptOwner)
-                && enemy->ent == EntHandle::ent(&self->sentient->scriptOwner) )
+            //if ( EntHandle::isDefined(&self->sentient->scriptOwner)
+            if ( self->sentient->scriptOwner.isDefined()
+                //&& enemy->ent == EntHandle::ent(&self->sentient->scriptOwner) )
+                && enemy->ent == self->sentient->scriptOwner.ent() )
             {
-                DebugThreatStringSimple(self, enemy->ent, "client is owner", colorRed);
+                DebugThreatStringSimple(self, enemy->ent, (char *)"client is owner", colorRed);
                 continue;
             }
             if ( enemy->ent->actor
-                && EntHandle::isDefined(&self->sentient->scriptOwner)
-                && EntHandle::isDefined(&enemy->scriptOwner)
-                && (v3 = EntHandle::ent(&self->sentient->scriptOwner), v3 == EntHandle::ent(&enemy->scriptOwner))
+                //&& EntHandle::isDefined(&self->sentient->scriptOwner)
+                && self->sentient->scriptOwner.isDefined()
+                //&& EntHandle::isDefined(&enemy->scriptOwner)
+                && enemy->scriptOwner.isDefined()
+                //&& (v3 = EntHandle::ent(&self->sentient->scriptOwner), v3 == EntHandle::ent(&enemy->scriptOwner))
+                && (v3 = self->sentient->scriptOwner.ent(), v3 == enemy->scriptOwner.ent())
                 || enemy->ent->actor )
             {
-                DebugThreatStringSimple(self, enemy->ent, "same owner so friendly", colorRed);
+                DebugThreatStringSimple(self, enemy->ent, (char *)"same owner so friendly", colorRed);
                 continue;
             }
             if ( enemy->ent->client && (enemy->ent->client->ps.eFlags & 0x4000) != 0 )
@@ -253,18 +290,18 @@ void __fastcall Actor_UpdateThreat(actor_s *self)
                 }
                 if ( !BG_GetVehicleInfo(veh->scr_vehicle->infoIdx)->remoteControl )
                 {
-                    DebugThreatStringSimple(self, enemy->ent, "client in vehicle", colorRed);
+                    DebugThreatStringSimple(self, enemy->ent, (char*)"client in vehicle", colorRed);
                     continue;
                 }
             }
             if ( !perk_dogsAttackGhost->current.enabled && enemy->ent->client && (enemy->ent->client->ps.perks[1] & 8) != 0 )
             {
-                DebugThreatStringSimple(self, enemy->ent, "client has ghost perk", colorRed);
+                DebugThreatStringSimple(self, enemy->ent, (char *)"client has ghost perk", colorRed);
                 continue;
             }
             if ( enemy->ent->client && (enemy->ent->client->flags & 1) != 0 )
             {
-                DebugThreatStringSimple(self, enemy->ent, "client has no clip", colorRed);
+                DebugThreatStringSimple(self, enemy->ent, (char *)"client has no clip", colorRed);
                 continue;
             }
             v8 = pInfo->VisCache.iLastVisTime && level.time - pInfo->VisCache.iLastVisTime < 10000;
@@ -273,22 +310,23 @@ void __fastcall Actor_UpdateThreat(actor_s *self)
             self->hasThreateningEnemy = v6;
             if ( !v6 && goodEnemyOnly )
             {
-                DebugThreatStringSimple(self, enemy->ent, "goodOnly", colorRed);
+                DebugThreatStringSimple(self, enemy->ent, (char *)"goodOnly", colorRed);
                 continue;
             }
             threat = Actor_UpdateSingleThreat(self, enemy);
             if ( threat == 0x80000000 )
             {
 LABEL_77:
-                DebugThreatStringSimple(self, enemy->ent, "ignoreme", colorRed);
+                DebugThreatStringSimple(self, enemy->ent, (char *)"ignoreme", colorRed);
                 continue;
             }
             if ( maxThreat < threat
                 || !goodEnemyOnly && v6
-                || SentientHandle::isDefined(&self->pFavoriteEnemy) && enemy == SentientHandle::sentient(&self->pFavoriteEnemy) )
+                //|| SentientHandle::isDefined(&self->pFavoriteEnemy) && enemy == SentientHandle::sentient(&self->pFavoriteEnemy) )
+                || self->pFavoriteEnemy.isDefined() && enemy == self->pFavoriteEnemy.sentient())
             {
-                if ( SentientHandle::isDefined(&self->pFavoriteEnemy)
-                    && enemy == SentientHandle::sentient(&self->pFavoriteEnemy) )
+                //if ( SentientHandle::isDefined(&self->pFavoriteEnemy) && enemy == SentientHandle::sentient(&self->pFavoriteEnemy) )
+                if ( self->pFavoriteEnemy.isDefined() && enemy == self->pFavoriteEnemy.sentient())
                 {
                     maxThreat = 2147483646;
                 }
@@ -308,7 +346,7 @@ LABEL_77:
             v5 = va("enemy (%0.3f)", self->sentient->entityTargetThreat);
             DebugThreatStringSimple(self, scriptTargetEnt, v5, colorYellow);
             if ( pScariestEnemy )
-                DebugThreatStringSimple(self, pScariestEnemy, "enemy", colorGreen);
+                DebugThreatStringSimple(self, pScariestEnemy, (char *)"enemy", colorGreen);
         }
         else
         {
@@ -319,7 +357,7 @@ LABEL_77:
     }
     else if ( pScariestEnemy )
     {
-        DebugThreatStringSimple(self, pScariestEnemy, "enemy", colorGreen);
+        DebugThreatStringSimple(self, pScariestEnemy, (char *)"enemy", colorGreen);
     }
     Sentient_SetEnemy(self->sentient, pScariestEnemy, 1);
     //if ( g_DXDeviceThread == GetCurrentThreadId() )
@@ -447,10 +485,12 @@ int __fastcall Actor_UpdateSingleThreat(actor_s *self, sentient_s *enemy)
     }
     else
     {
-        DebugThreatStringSimple(self, enemy->ent, "pacifist", colorRed);
+        DebugThreatStringSimple(self, enemy->ent, (char *)"pacifist", colorRed);
         return 0x80000000;
     }
 }
+
+
 
 void __cdecl DebugResetThreatStrings(const actor_s *self)
 {
@@ -702,7 +742,8 @@ int __fastcall Actor_ThreatFromAttackerCount(actor_s *self, sentient_s *enemy, i
     else
         v4 = -150 * attackerCount;
     threat = v4;
-    if ( EntHandle::isDefined(&enemy->syncedMeleeEnt) && self->ent != EntHandle::ent(&enemy->syncedMeleeEnt) )
+    //if ( EntHandle::isDefined(&enemy->syncedMeleeEnt) && self->ent != EntHandle::ent(&enemy->syncedMeleeEnt) )
+    if ( enemy->syncedMeleeEnt.isDefined() && self->ent != enemy->syncedMeleeEnt.ent())
         threat = v4 - 10000;
     if ( Flame_GetLocalClientSourceRange() && !isCurrentEnemy && attackerCount >= ai_maxAttackerCount->current.integer )
         threat -= 10000;
@@ -848,6 +889,7 @@ void __fastcall Actor_IncrementThreatTime(actor_s *self)
 
 void __fastcall Actor_SetPotentialThreat(potential_threat_t *self, float yaw)
 {
+#if 0
     long double selfa; // [esp+0h] [ebp-4h]
     long double selfb; // [esp+0h] [ebp-4h]
     potential_threat_t *selfc; // [esp+0h] [ebp-4h]
@@ -858,6 +900,20 @@ void __fastcall Actor_SetPotentialThreat(potential_threat_t *self, float yaw)
     *(float *)(LODWORD(selfb) + 4) = yaw * 0.017453292;
     __libm_sse2_sin(selfb);
     selfc->direction[1] = yaw * 0.017453292;
+#endif
+    double v3; // fp31
+    long double v4; // fp2
+    long double v5; // fp2
+    long double v6; // fp2
+
+    v3 = (float)((float)yaw * (float)0.017453292);
+    self->isEnabled = 1;
+    *(double *)&v4 = v3;
+    v5 = cos(v4);
+    self->direction[0] = *(double *)&v5;
+    *(double *)&v5 = v3;
+    v6 = sin(v5);
+    self->direction[1] = *(double *)&v6;
 }
 
 void __fastcall Actor_ClearPotentialThreat(potential_threat_t *self)
@@ -880,7 +936,7 @@ void __cdecl Actor_PotentialThreat_Debug(actor_s *self)
     }
     else
     {
-        G_AddDebugString(xyz, colorWhite, 1.0, "No Threat", 1);
+        G_AddDebugString(xyz, colorWhite, 1.0, (char*)"No Threat", 1);
     }
 }
 

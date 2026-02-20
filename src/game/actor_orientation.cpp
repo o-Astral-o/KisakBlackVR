@@ -1,4 +1,21 @@
 #include "actor_orientation.h"
+#include <universal/com_math_anglevectors.h>
+#include <game_mp/g_main_mp.h>
+#include <clientscript/scr_const.h>
+#include <game_mp/g_spawn_mp.h>
+#include "bullet.h"
+#include "actor_navigation.h"
+#include "actor_exposed.h"
+#include <game_mp/actor_mp.h>
+#include "actor_senses.h"
+
+const float ACTOR_MAX_LOOK_PITCH_RATE = 0.8f;
+const float ACTOR_MAX_LOOK_YAW_RATE = 0.8f;
+const float ACTOR_MAX_BODY_YAW_RATE = 300.0f;
+const float ACTOR_MAX_PRONE_YAW_RATE = 360.0f;
+const float PATH_MAX_ENEMY_FACE_DISTANCE_SQRD = 122500.0f;
+const float ACTOR_FORCE_FACE_ENEMY_TIME = 300.0f;
+
 
 void __fastcall Actor_SetDesiredLookAngles(ai_orient_t *pOrient, float fPitch, float fYaw)
 {
@@ -91,8 +108,8 @@ void __fastcall Actor_UpdateLookAngles(actor_s *self)
     delta = AngleNormalize180(pOrient->fDesiredLookPitch - self->fLookPitch);
     if ( delta <= (float)(0.80000001 * 50.0) )
     {
-        if ( (float)(COERCE_FLOAT(LODWORD(ACTOR_MAX_LOOK_PITCH_RATE) ^ _mask__NegFloat_) * 50.0) > delta )
-            delta = COERCE_FLOAT(LODWORD(ACTOR_MAX_LOOK_PITCH_RATE) ^ _mask__NegFloat_) * 50.0;
+        if ( (float)((-(ACTOR_MAX_LOOK_PITCH_RATE)) * 50.0) > delta )
+            delta =  (-(ACTOR_MAX_LOOK_PITCH_RATE)) * 50.0;
     }
     else
     {
@@ -102,8 +119,8 @@ void __fastcall Actor_UpdateLookAngles(actor_s *self)
     deltaa = AngleNormalize180(pOrient->fDesiredLookYaw - self->fLookYaw);
     if ( deltaa <= (float)(0.80000001 * 50.0) )
     {
-        if ( (float)(COERCE_FLOAT(LODWORD(ACTOR_MAX_LOOK_YAW_RATE) ^ _mask__NegFloat_) * 50.0) > deltaa )
-            deltaa = COERCE_FLOAT(LODWORD(ACTOR_MAX_LOOK_YAW_RATE) ^ _mask__NegFloat_) * 50.0;
+        if ( (float)((-(ACTOR_MAX_LOOK_YAW_RATE)) * 50.0) > deltaa )
+            deltaa = (-(ACTOR_MAX_LOOK_YAW_RATE)) * 50.0;
     }
     else
     {
@@ -134,15 +151,15 @@ void __cdecl StepYaw(float dt, float *yaw, float *yawVeloc, float targetYaw, flo
     if ( angleDelta >= 0.0 )
         value = ai_angularYawAccelRate->current.value;
     else
-        LODWORD(value) = ai_angularYawAccelRate->current.integer ^ _mask__NegFloat_;
-    decel = COERCE_FLOAT(LODWORD(value) ^ _mask__NegFloat_) * ai_angularYawDecelFactor->current.value;
+        (value) = -ai_angularYawAccelRate->current.integer;
+    decel = (-(value)) * ai_angularYawDecelFactor->current.value;
     maxVeloc = sqrtf(
                              (float)((float)((float)((float)((float)(-2.0 * angleDelta) * value) * decel)
                                                          + (float)((float)(targetVeloc * targetVeloc) * value))
                                          - (float)((float)(*yawVeloc * *yawVeloc) * decel))
                          / (float)(value - decel));
-    if ( angleDelta < 0.0 )
-        LODWORD(maxVeloc) ^= _mask__NegFloat_;
+    if (angleDelta < 0.0)
+        (maxVeloc) = -maxVeloc; // ^= _mask__NegFloat_;
     if ( (float)((float)((float)(maxVeloc - *yawVeloc) / value) - dt) < 0.0 )
         v6 = (float)(maxVeloc - *yawVeloc) / value;
     else
@@ -211,7 +228,7 @@ void __fastcall Actor_UpdateBodyAngle(actor_s *self)
         maxTurnRate = v1 / 20.0;
         if ( delta <= (float)(v1 / 20.0) )
         {
-            if ( COERCE_FLOAT(LODWORD(maxTurnRate) ^ _mask__NegFloat_) > delta )
+            if ( (-(maxTurnRate)) > delta )
                 delta = -maxTurnRate;
         }
         else
@@ -242,7 +259,7 @@ void __fastcall Actor_SetAnglesToLikelyEnemyPath(actor_s *self)
 {
     float *currentAngles; // [esp+8h] [ebp-18h]
     float *currentOrigin; // [esp+Ch] [ebp-14h]
-    float *vOrigin; // [esp+10h] [ebp-10h]
+    const float *vOrigin; // [esp+10h] [ebp-10h]
     float vDelta[3]; // [esp+14h] [ebp-Ch] BYREF
 
     if ( !self
@@ -324,8 +341,10 @@ char __fastcall Actor_GetAnglesToLikelyEnemyPath(actor_s *self)
         if ( enemy->inuse
             && ((1 << eTeam) & (1 << enemy->eTeam)) != 0
             && !Actor_CheckIgnore(self->sentient, enemy)
-            && (!EntHandle::isDefined(&self->sentient->scriptOwner)
-             || enemy->ent != EntHandle::ent(&self->sentient->scriptOwner)) )
+            //&& (!EntHandle::isDefined(&self->sentient->scriptOwner)
+            && (!self->sentient->scriptOwner.isDefined()
+             //|| enemy->ent != EntHandle::ent(&self->sentient->scriptOwner)) )
+             || enemy->ent != self->sentient->scriptOwner.ent()) )
         {
             Sentient_GetOrigin(enemy, vEnemyPos);
             fDistSqrd = Vec3DistanceSq(vEnemyPos, self->ent->r.currentOrigin);
@@ -647,7 +666,8 @@ void __fastcall Actor_SetOrientMode(actor_s *self, ai_orient_mode_t eMode)
     {
         __debugbreak();
     }
-    if ( self->sentient && EntHandle::isDefined(&self->sentient->syncedMeleeEnt) )
+    //if ( self->sentient && EntHandle::isDefined(&self->sentient->syncedMeleeEnt) )
+    if ( self->sentient && self->sentient->syncedMeleeEnt.isDefined() )
         self->CodeOrient.eMode = AI_ORIENT_DONT_CHANGE;
     else
         self->CodeOrient.eMode = eMode;

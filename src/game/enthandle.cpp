@@ -2,11 +2,13 @@
 
 #include <string.h>
 #include <qcommon/common.h>
+#include <game_mp/g_main_mp.h>
 
 EntHandleInfo g_entHandleInfoArray[1024];
 EntHandleList g_entitiesHandleList[1024];
 unsigned int g_entHandleInfoHead;
 unsigned int g_usedEntHandle;
+unsigned int g_maxUsedEntHandle;
 
 EntHandleList g_sentientsHandleList[48];
 
@@ -124,16 +126,16 @@ void __cdecl EntHandleDissociateInternal(EntHandleList *entHandleList)
 
 void __cdecl SentientHandleDissociate(sentient_s *sentient)
 {
-    EntHandleDissociateInternal((EntHandleList *)(2 * (sentient - g_sentients) + 63688424));
+    EntHandleDissociateInternal(&g_sentientsHandleList[sentient - g_sentients]);
 }
 
-void __thiscall EntHandle::setEnt(EntHandle *this, gentity_s *ent)
+void __thiscall EntHandle::setEnt(gentity_s *ent)
 {
     gentity_s *oldEnt; // [esp+4h] [ebp-8h]
 
-    if ( EntHandle::isDefined(this) )
+    if ( EntHandle::isDefined() )
     {
-        oldEnt = EntHandle::ent(this);
+        oldEnt = EntHandle::ent();
         if ( ent == oldEnt )
             return;
         RemoveEntHandleInfo((EntHandleList *)(2 * (oldEnt - g_entities) + 63686360), this->infoIndex);
@@ -152,7 +154,7 @@ void __thiscall EntHandle::setEnt(EntHandle *this, gentity_s *ent)
     this->number = ent - g_entities + 1;
 }
 
-bool __thiscall EntHandle::isDefined(EntHandle *this)
+bool __thiscall EntHandle::isDefined() const
 {
     if ( this->number
         && !g_entities[this->number - 1].r.inuse
@@ -169,7 +171,7 @@ bool __thiscall EntHandle::isDefined(EntHandle *this)
     return this->number != 0;
 }
 
-gentity_s *__thiscall EntHandle::ent(EntHandle *this)
+gentity_s *__thiscall EntHandle::ent()
 {
     if ( (unsigned int)this->number - 1 >= 0x3FF
         && !Assert_MyHandler(
@@ -190,6 +192,33 @@ gentity_s *__thiscall EntHandle::ent(EntHandle *this)
                     "%s\n\t(number - 1) = %i",
                     "(g_entities[number - 1].r.inuse)",
                     this->number - 1) )
+    {
+        __debugbreak();
+    }
+    return &g_entities[this->number - 1];
+}
+
+const gentity_s *__thiscall EntHandle::ent() const
+{
+    if ((unsigned int)this->number - 1 >= 0x3FF
+        && !Assert_MyHandler(
+            "c:\\projects_pc\\cod\\codsrc\\src\\game\\../game_mp/g_public_mp.h",
+            396,
+            0,
+            "number - 1 doesn't index ENTITYNUM_NONE\n\t%i not in [0, %i)",
+            this->number - 1,
+            1023))
+    {
+        __debugbreak();
+    }
+    if (!g_entities[this->number - 1].r.inuse
+        && !Assert_MyHandler(
+            "c:\\projects_pc\\cod\\codsrc\\src\\game\\../game_mp/g_public_mp.h",
+            397,
+            0,
+            "%s\n\t(number - 1) = %i",
+            "(g_entities[number - 1].r.inuse)",
+            this->number - 1))
     {
         __debugbreak();
     }
@@ -269,13 +298,13 @@ unsigned int __cdecl AddEntHandleInfo(EntHandleList *entHandleList, void *handle
     return infoIndex;
 }
 
-void __thiscall SentientHandle::setSentient(SentientHandle *this, sentient_s *sentient)
+void __thiscall SentientHandle::setSentient(sentient_s *sentient)
 {
     sentient_s *oldSentient; // [esp+4h] [ebp-8h]
 
-    if ( SentientHandle::isDefined(this) )
+    if ( SentientHandle::isDefined() )
     {
-        oldSentient = SentientHandle::sentient(this);
+        oldSentient = SentientHandle::sentient();
         if ( sentient == oldSentient )
             return;
         RemoveEntHandleInfo((EntHandleList *)(2 * (oldSentient - g_sentients) + 63688424), this->infoIndex);
@@ -294,7 +323,7 @@ void __thiscall SentientHandle::setSentient(SentientHandle *this, sentient_s *se
     this->number = sentient - g_sentients + 1;
 }
 
-bool __thiscall SentientHandle::isDefined(SentientHandle *this)
+bool __thiscall SentientHandle::isDefined() const
 {
     if ( this->number
         && !g_sentients[this->number - 1].ent
@@ -323,7 +352,7 @@ bool __thiscall SentientHandle::isDefined(SentientHandle *this)
     return this->number != 0;
 }
 
-sentient_s *__thiscall SentientHandle::sentient(SentientHandle *this)
+sentient_s *__thiscall SentientHandle::sentient() 
 {
     if ( (unsigned int)this->number - 1 >= 0x30
         && !Assert_MyHandler(
@@ -361,3 +390,40 @@ sentient_s *__thiscall SentientHandle::sentient(SentientHandle *this)
     return &g_sentients[this->number - 1];
 }
 
+const sentient_s *__thiscall SentientHandle::sentient() const
+{
+    if ((unsigned int)this->number - 1 >= 0x30
+        && !Assert_MyHandler(
+            "c:\\projects_pc\\cod\\codsrc\\src\\game\\sentient.h",
+            106,
+            0,
+            "number - 1 doesn't index MAX_SENTIENTS\n\t%i not in [0, %i)",
+            this->number - 1,
+            48))
+    {
+        __debugbreak();
+    }
+    if (!g_sentients[this->number - 1].ent
+        && !Assert_MyHandler(
+            "c:\\projects_pc\\cod\\codsrc\\src\\game\\sentient.h",
+            107,
+            0,
+            "%s\n\t(number - 1) = %i",
+            "(g_sentients[number - 1].ent)",
+            this->number - 1))
+    {
+        __debugbreak();
+    }
+    if (!g_sentients[this->number - 1].ent->r.inuse
+        && !Assert_MyHandler(
+            "c:\\projects_pc\\cod\\codsrc\\src\\game\\sentient.h",
+            108,
+            0,
+            "%s\n\t(number - 1) = %i",
+            "(g_sentients[number - 1].ent->r.inuse)",
+            this->number - 1))
+    {
+        __debugbreak();
+    }
+    return &g_sentients[this->number - 1];
+}

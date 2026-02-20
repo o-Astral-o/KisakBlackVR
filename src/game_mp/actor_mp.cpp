@@ -15,9 +15,6 @@
 #include "g_spawn_mp.h"
 #include <game/actor_state.h>
 
-const float actorMins[3] = { -15.0, -15.0, 0.0 };
-const float actorMaxs[3] = { 15.0, 15.0, 48.0 };
-
 void __fastcall VisCache_Update(vis_cache_t *pCache, bool bVisible)
 {
     if ( !pCache && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\actor_mp.cpp", 140, 0, "%s", "pCache") )
@@ -1817,7 +1814,7 @@ bool __cdecl Actor_InScriptedState(const actor_s *self)
     return Actor_IsStateOnStack(self, AIS_SCRIPTEDANIM) || Actor_IsStateOnStack(self, AIS_NEGOTIATION) != 0;
 }
 
-void __cdecl Actor_Touch(gentity_s *self, gentity_s *other)
+void __cdecl Actor_Touch(gentity_s *self, gentity_s *other, int __formal)
 {
     actor_s *actor; // [esp+4h] [ebp-4h]
 
@@ -1981,10 +1978,10 @@ void __cdecl Actor_Die(
                 gentity_s *pInflictor,
                 gentity_s *pAttacker,
                 int iDamage,
-                unsigned int iMod,
-                unsigned int iWeapon,
-                float *vDir,
-                hitLocation_t hitLoc,
+                int iMod,
+                const int iWeapon,
+                const float *vDir,
+                const hitLocation_t hitLoc,
                 int timeOffset)
 {
     unsigned __int16 HitLocationString; // ax

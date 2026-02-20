@@ -1,7 +1,7 @@
 #pragma once
 #include "actor.h"
 
-char __fastcall Actor_Dog_Exposed_Start(actor_s *self, ai_state_t ePrevState);
+bool __fastcall Actor_Dog_Exposed_Start(actor_s *self, ai_state_t ePrevState);
 void __fastcall Actor_Dog_Exposed_Finish(actor_s *self, ai_state_t eNextState);
 void __fastcall Actor_Dog_Exposed_Suspend(actor_s *self, ai_state_t eNextState);
 bool __fastcall Actor_Dog_PointNearAttackPoint(const float *vPoint, const float *vGoalPos, float buffer);

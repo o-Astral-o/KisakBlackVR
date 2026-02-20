@@ -1,4 +1,41 @@
 #include "g_mover.h"
+#include <game_mp/g_main_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <server/sv_world.h>
+#include <qcommon/cm_world.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include <physics/physpreset_load_obj.h>
+#include <universal/com_math_anglevectors.h>
+#include <qcommon/cm_load.h>
+#include <qcommon/dobj_management.h>
+#include <xanim/dobj_utils.h>
+#include <bgame/bg_misc.h>
+#include <server/sv_game.h>
+#include "g_load_utils.h"
+#include <server_mp/sv_init_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <glass/glass_server.h>
+#include <cgame/cg_event.h>
+#include "actor_script_cmd.h"
+#include <ragdoll/ragdoll_update.h>
+#include <physics/physics_system.h>
+#include <bgame/bg_slidemove.h>
+
+const char *hintStrings[] =
+{
+  "",
+  "HINT_NOICON",
+  "HINT_SEAT",
+  "HINT_ACTIVATE",
+  "HINT_HEALTH",
+  "HINT_FRIENDLY",
+  "HINT_SPECTATOR",
+  "HINT_TEAMPOT"
+};
+
+phys_inplace_avl_tree<unsigned int, generic_avl_map_node_t, generic_avl_map_node_t> g_mover_info_map;
+phys_simple_allocator<mover_info_t> g_mover_info_allocator;
 
 mover_info_t *__cdecl get_mover_info(gentity_s *ent)
 {
@@ -22,7 +59,8 @@ mover_info_t *__cdecl create_mover_info(gentity_s *ent)
 {
     mover_info_t *mi; // [esp+10h] [ebp-8h]
 
-    mi = phys_simple_allocator<mover_info_t>::allocate(&g_mover_info_allocator);
+    //mi = phys_simple_allocator<mover_info_t>::allocate(&g_mover_info_allocator);
+    mi = g_mover_info_allocator.allocate();
     generic_avl_map_add(&g_mover_info_map, mi, (unsigned int)ent);
     return mi;
 }
@@ -32,7 +70,7 @@ bool __cdecl entity_is_a_mover(int entnum)
     return entnum >= 0 && entnum < level.num_entities && get_mover_info(&level.gentities[entnum]) != 0;
 }
 
-void __userpurge mover_info_t::apply_rotation(mover_info_t *this@<ecx>, int a2@<ebp>, float *v)
+void mover_info_t::apply_rotation(float *v)
 {
     const phys_vec3 *v3; // eax
     const phys_vec3 *v4; // [esp-30h] [ebp-50h]
@@ -41,11 +79,11 @@ void __userpurge mover_info_t::apply_rotation(mover_info_t *this@<ecx>, int a2@<
     unsigned int v7[3]; // [esp-Ch] [ebp-2Ch] BYREF
     mover_info_t *v8; // [esp+10h] [ebp-10h]
     int v9; // [esp+14h] [ebp-Ch]
-    void *v10; // [esp+18h] [ebp-8h]
-    void *retaddr; // [esp+20h] [ebp+0h]
-
-    v9 = a2;
-    v10 = retaddr;
+    //void *v10; // [esp+18h] [ebp-8h]
+    //void *retaddr; // [esp+20h] [ebp+0h]
+    //
+    //v9 = a2;
+    //v10 = retaddr;
     v8 = this;
     Phys_Vec3ToNitrousVec(v, (phys_vec3 *)v7);
     v3 = phys_inv_multiply(&v6, &v8->m_prev_mat, (const phys_vec3 *)v7);
@@ -56,7 +94,7 @@ void __userpurge mover_info_t::apply_rotation(mover_info_t *this@<ecx>, int a2@<
     Phys_NitrousVecToVec3((const phys_vec3 *)v7, v);
 }
 
-void __userpurge mover_info_t::apply_rotation_translation(mover_info_t *this@<ecx>, int a2@<ebp>, float *v)
+void mover_info_t::apply_rotation_translation(float *v)
 {
     phys_vec3 *v3; // eax
     const phys_vec3 *v4; // [esp-30h] [ebp-50h]
@@ -65,14 +103,14 @@ void __userpurge mover_info_t::apply_rotation_translation(mover_info_t *this@<ec
     unsigned int v7[3]; // [esp-Ch] [ebp-2Ch] BYREF
     mover_info_t *v8; // [esp+10h] [ebp-10h]
     unsigned int v9[2]; // [esp+14h] [ebp-Ch] BYREF
-    _UNKNOWN *retaddr; // [esp+20h] [ebp+0h]
-
-    v9[0] = a2;
-    v9[1] = retaddr;
+    //_UNKNOWN *retaddr; // [esp+20h] [ebp+0h]
+    //
+    //v9[0] = a2;
+    //v9[1] = retaddr;
     v8 = this;
     Phys_Vec3ToNitrousVec(v, (phys_vec3 *)v7);
-    v3 = phys_full_inv_multiply((int)v9, &v6, &v8->m_prev_mat, (const phys_vec3 *)v7);
-    v4 = phys_full_multiply((int)v9, &v5, &v8->m_mat, v3);
+    v3 = phys_full_inv_multiply(&v6, &v8->m_prev_mat, (const phys_vec3 *)v7);
+    v4 = phys_full_multiply(&v5, &v8->m_mat, v3);
     v7[0] = LODWORD(v4->x);
     v7[1] = LODWORD(v4->y);
     v7[2] = LODWORD(v4->z);
@@ -88,7 +126,8 @@ void __cdecl G_PushEntity(gentity_s *check, gentity_s *pusher, const float *move
     vOrigin[0] = check->r.currentOrigin[0];
     vOrigin[1] = check->r.currentOrigin[1];
     vOrigin[2] = check->r.currentOrigin[2];
-    mover_info_t::apply_rotation_translation(mi, (int)&savedregs, vOrigin);
+    //mover_info_t::apply_rotation_translation(mi, (int)&savedregs, vOrigin);
+    mi->apply_rotation_translation(vOrigin);
     check->r.currentOrigin[0] = vOrigin[0];
     check->r.currentOrigin[1] = vOrigin[1];
     check->r.currentOrigin[2] = vOrigin[2];
@@ -111,7 +150,8 @@ void __cdecl G_PushEntity(gentity_s *check, gentity_s *pusher, const float *move
         check->s.lerp.apos.trBase[0] = check->s.lerp.apos.trBase[0] + *amove;
         check->s.lerp.apos.trBase[1] = check->s.lerp.apos.trBase[1] + amove[1];
         check->s.lerp.apos.trBase[2] = check->s.lerp.apos.trBase[2] + amove[2];
-        mover_info_t::apply_rotation(mi, (int)&savedregs, &check->mover.midTime);
+        //mover_info_t::apply_rotation(mi, (int)&savedregs, &check->mover.midTime);
+        mi->apply_rotation(&check->mover.midTime); // KISAKTODO: sus ^^^
     }
 }
 
@@ -143,131 +183,127 @@ gentity_s *__cdecl GetEntity(const unsigned __int16 *targetname)
     return 0;
 }
 
-void    CreateConstraint(rigid_body *a1@<ebp>, PhysConstraint *constraint)
+void    CreateConstraint(PhysConstraint *constraint)
 {
     const phys_vec3 *v2; // eax
     phys_vec3 *max_distance; // [esp+4h] [ebp-120h]
-    rigid_body_constraint_distance *rbc_dist; // [esp+8h] [ebp-11Ch]
-    float v5; // [esp+Ch] [ebp-118h]
-    gentity_s *v6; // [esp+10h] [ebp-114h]
-    rigid_body_constraint_distance *phys_constraint; // [esp+14h] [ebp-110h]
-    float temp[3]; // [esp+18h] [ebp-10Ch] BYREF
-    float v9; // [esp+24h] [ebp-100h]
-    float rb2_anchor_loc[3]; // [esp+28h] [ebp-FCh] BYREF
-    const phys_vec3 *v11; // [esp+44h] [ebp-E0h]
-    phys_vec3 v12; // [esp+48h] [ebp-DCh] BYREF
-    _BYTE v13[12]; // [esp+58h] [ebp-CCh] BYREF
-    float v14[3]; // [esp+74h] [ebp-B0h] BYREF
-    float ent2_anchor_loc[3]; // [esp+80h] [ebp-A4h]
-    float v16; // [esp+8Ch] [ebp-98h] BYREF
-    gentity_s *ent2; // [esp+90h] [ebp-94h]
-    float v18; // [esp+94h] [ebp-90h]
-    float rb1_anchor_loc[3]; // [esp+98h] [ebp-8Ch] BYREF
-    phys_vec3 rb1_anchor_loc_; // [esp+A4h] [ebp-80h] BYREF
-    phys_vec3 v21; // [esp+B8h] [ebp-6Ch] BYREF
-    float *p_m_smallest_lambda; // [esp+D4h] [ebp-50h]
-    _BYTE v23[12]; // [esp+D8h] [ebp-4Ch] BYREF
-    float v24[3]; // [esp+F4h] [ebp-30h] BYREF
-    float ent1_anchor_loc[3]; // [esp+100h] [ebp-24h]
-    float x; // [esp+10Ch] [ebp-18h]
-    gentity_s *ent1; // [esp+110h] [ebp-14h]
-    rigid_body *rb2; // [esp+114h] [ebp-10h]
-    rigid_body *rb1; // [esp+118h] [ebp-Ch] BYREF
-    PhysObjUserData *userData2; // [esp+11Ch] [ebp-8h]
-    PhysObjUserData *retaddr; // [esp+124h] [ebp+0h]
-
-    rb1 = a1;
-    userData2 = retaddr;
-    rb2 = 0;
-    ent1 = 0;
-    x = COERCE_FLOAT(phys_sys::get_environment_rigid_body());
-    LODWORD(ent1_anchor_loc[2]) = phys_sys::get_environment_rigid_body();
-    if ( constraint->type == CONSTRAINT_ROPE )
+    rigid_body_constraint_distance *phys_constraint; // [esp+8h] [ebp-11Ch]
+    float temp; // [esp+Ch] [ebp-118h]
+    float temp_4; // [esp+10h] [ebp-114h]
+    float temp_8; // [esp+14h] [ebp-110h]
+    float rb2_anchor_loc[3]; // [esp+1Ch] [ebp-108h] BYREF
+    phys_vec3 rb2_anchor_loc_; // [esp+28h] [ebp-FCh] BYREF
+    const phys_vec3 *v10; // [esp+44h] [ebp-E0h]
+    phys_vec3 v11; // [esp+48h] [ebp-DCh] BYREF
+    phys_vec3 ent2_anchor_loc_; // [esp+58h] [ebp-CCh] BYREF
+    float ent2_anchor_loc[4]; // [esp+74h] [ebp-B0h] BYREF
+    gentity_s *ent2; // [esp+84h] [ebp-A0h]
+    float *pos; // [esp+88h] [ebp-9Ch]
+    float rb1_anchor_loc[3]; // [esp+8Ch] [ebp-98h] BYREF
+    phys_vec3 rb1_anchor_loc_; // [esp+98h] [ebp-8Ch] BYREF
+    phys_vec3 v18; // [esp+A8h] [ebp-7Ch] BYREF
+    phys_vec3 v19; // [esp+B8h] [ebp-6Ch] BYREF
+    phys_mat44 *p_cg2rb; // [esp+D4h] [ebp-50h]
+    phys_vec3 ent1_anchor_loc_; // [esp+D8h] [ebp-4Ch] BYREF
+    float ent1_anchor_loc[4]; // [esp+F4h] [ebp-30h] BYREF
+    gentity_s *ent1; // [esp+104h] [ebp-20h]
+    rigid_body *rb2; // [esp+108h] [ebp-1Ch]
+    rigid_body *rb1; // [esp+10Ch] [ebp-18h]
+    PhysObjUserData *userData2; // [esp+110h] [ebp-14h]
+    PhysObjUserData *userData1; // [esp+114h] [ebp-10h]
+    //_UNKNOWN *v28[2]; // [esp+118h] [ebp-Ch] BYREF
+    //int vars0; // [esp+124h] [ebp+0h]
+    //
+    //v28[0] = a1;
+    //v28[1] = (_UNKNOWN *)vars0;
+    userData1 = 0;
+    userData2 = 0;
+    rb1 = phys_sys::get_environment_rigid_body();
+    rb2 = phys_sys::get_environment_rigid_body();
+    if (constraint->type == CONSTRAINT_ROPE)
     {
-        if ( constraint->attach_point_type1 == ATTACH_POINT_ENT )
+        if (constraint->attach_point_type1 == ATTACH_POINT_ENT)
         {
-            LODWORD(ent1_anchor_loc[1]) = GetEntity(&constraint->target_ent1);
-            constraint->target_index1 = *(unsigned int *)LODWORD(ent1_anchor_loc[1]);
-            if ( !*(unsigned int *)(LODWORD(ent1_anchor_loc[1]) + 740)
-                && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_mover.cpp", 624, 0, "%s", "ent1->physObjId") )
+            ent1 = GetEntity(&constraint->target_ent1);
+            constraint->target_index1 = ent1->s.number;
+            if (!ent1->physObjId
+                && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_mover.cpp", 624, 0, "%s", "ent1->physObjId"))
             {
                 __debugbreak();
             }
-            rb2 = *(rigid_body **)(LODWORD(ent1_anchor_loc[1]) + 740);
-            x = rb2->m_last_position.x;
-            LODWORD(ent1_anchor_loc[0]) = constraint->pos;
-            v24[0] = constraint->pos[0];
-            v24[1] = constraint->pos[1];
-            v24[2] = constraint->pos[2];
-            Phys_Vec3ToNitrousVec(v24, (phys_vec3 *)v23);
-            p_m_smallest_lambda = &rb2->m_smallest_lambda;
-            max_distance = &rb2->m_mat.z;
-            v2 = phys_multiply(&v21, (const phys_mat44 *)&rb2->m_smallest_lambda, (const phys_vec3 *)v23);
-            operator+((phys_vec3 *)&rb1_anchor_loc_.y, v2, max_distance);
-            rb1_anchor_loc[0] = rb1_anchor_loc_.y;
-            rb1_anchor_loc[1] = rb1_anchor_loc_.z;
-            rb1_anchor_loc[2] = rb1_anchor_loc_.w;
-            Phys_NitrousVecToVec3((const phys_vec3 *)rb1_anchor_loc, &v16);
+            userData1 = (PhysObjUserData *)ent1->physObjId;
+            rb1 = userData1->body;
+            //LODWORD(ent1_anchor_loc[3]) = constraint->pos;
+            ent1_anchor_loc[0] = constraint->pos[0];
+            ent1_anchor_loc[1] = constraint->pos[1];
+            ent1_anchor_loc[2] = constraint->pos[2];
+            Phys_Vec3ToNitrousVec(ent1_anchor_loc, &ent1_anchor_loc_);
+            p_cg2rb = &userData1->cg2rb;
+            max_distance = &userData1->cg2rb.w;
+            v2 = phys_multiply(&v19, &userData1->cg2rb, &ent1_anchor_loc_);
+            //operator+(&v18, v2, max_distance);
+            v18 = *v2 + *max_distance;
+            rb1_anchor_loc_.x = v18.x;
+            rb1_anchor_loc_.y = v18.y;
+            rb1_anchor_loc_.z = v18.z;
+            Phys_NitrousVecToVec3(&rb1_anchor_loc_, rb1_anchor_loc);
         }
         else
         {
-            LODWORD(ent2_anchor_loc[2]) = constraint->pos;
-            v16 = constraint->pos[0];
-            ent2 = (gentity_s *)LODWORD(constraint->pos[1]);
-            v18 = constraint->pos[2];
-            Phys_Vec3ToNitrousVec(&v16, (phys_vec3 *)rb1_anchor_loc);
+            pos = constraint->pos;
+            rb1_anchor_loc[0] = constraint->pos[0];
+            rb1_anchor_loc[1] = constraint->pos[1];
+            rb1_anchor_loc[2] = constraint->pos[2];
+            Phys_Vec3ToNitrousVec(rb1_anchor_loc, &rb1_anchor_loc_);
         }
-        if ( constraint->attach_point_type2 == ATTACH_POINT_ENT )
+        if (constraint->attach_point_type2 == ATTACH_POINT_ENT)
         {
-            LODWORD(ent2_anchor_loc[1]) = GetEntity(&constraint->target_ent2);
-            constraint->target_index2 = *(unsigned int *)LODWORD(ent2_anchor_loc[1]);
-            ent1 = *(gentity_s **)(LODWORD(ent2_anchor_loc[1]) + 740);
-            ent1_anchor_loc[2] = rb2->m_last_position.x;
-            LODWORD(ent2_anchor_loc[0]) = constraint->pos2;
-            v14[0] = constraint->pos2[0];
-            v14[1] = constraint->pos2[1];
-            v14[2] = constraint->pos2[2];
-            Phys_Vec3ToNitrousVec(v14, (phys_vec3 *)v13);
-            v11 = phys_full_multiply((int)&rb1, &v12, (const phys_mat44 *)&ent1->s.lerp.pos.trBase[2], (const phys_vec3 *)v13);
-            rb2_anchor_loc[0] = v11->x;
-            rb2_anchor_loc[1] = v11->y;
-            rb2_anchor_loc[2] = v11->z;
-            Phys_NitrousVecToVec3((const phys_vec3 *)rb2_anchor_loc, &temp[1]);
+            ent2 = GetEntity(&constraint->target_ent2);
+            constraint->target_index2 = ent2->s.number;
+            userData2 = (PhysObjUserData *)ent2->physObjId;
+            rb2 = userData1->body;
+            //LODWORD(ent2_anchor_loc[3]) = constraint->pos2;
+            ent2_anchor_loc[0] = constraint->pos2[0];
+            ent2_anchor_loc[1] = constraint->pos2[1];
+            ent2_anchor_loc[2] = constraint->pos2[2];
+            Phys_Vec3ToNitrousVec(ent2_anchor_loc, &ent2_anchor_loc_);
+            v10 = phys_full_multiply(&v11, &userData2->cg2rb, &ent2_anchor_loc_);
+            rb2_anchor_loc_.x = v10->x;
+            rb2_anchor_loc_.y = v10->y;
+            rb2_anchor_loc_.z = v10->z;
+            Phys_NitrousVecToVec3(&rb2_anchor_loc_, rb2_anchor_loc);
         }
         else
         {
-            temp[1] = constraint->pos2[0];
-            temp[2] = constraint->pos2[1];
-            v9 = constraint->pos2[2];
-            Phys_Vec3ToNitrousVec(&temp[1], (phys_vec3 *)rb2_anchor_loc);
+            rb2_anchor_loc[0] = constraint->pos2[0];
+            rb2_anchor_loc[1] = constraint->pos2[1];
+            rb2_anchor_loc[2] = constraint->pos2[2];
+            Phys_Vec3ToNitrousVec(rb2_anchor_loc, &rb2_anchor_loc_);
         }
-        if ( (environment_rigid_body *)LODWORD(x) == phys_sys::get_environment_rigid_body() )
+        if (rb1 == phys_sys::get_environment_rigid_body())
         {
-            x = ent1_anchor_loc[2];
-            LODWORD(ent1_anchor_loc[2]) = phys_sys::get_environment_rigid_body();
-            v5 = temp[1];
-            v6 = (gentity_s *)LODWORD(temp[2]);
-            phys_constraint = (rigid_body_constraint_distance *)LODWORD(v9);
-            temp[1] = v16;
-            LODWORD(temp[2]) = ent2;
-            v9 = v18;
-            v16 = v5;
-            ent2 = v6;
-            v18 = *(float *)&phys_constraint;
+            rb1 = rb2;
+            rb2 = phys_sys::get_environment_rigid_body();
+            temp = rb2_anchor_loc[0];
+            temp_4 = rb2_anchor_loc[1];
+            temp_8 = rb2_anchor_loc[2];
+            rb2_anchor_loc[0] = rb1_anchor_loc[0];
+            rb2_anchor_loc[1] = rb1_anchor_loc[1];
+            rb2_anchor_loc[2] = rb1_anchor_loc[2];
+            rb1_anchor_loc[0] = temp;
+            rb1_anchor_loc[1] = temp_4;
+            rb1_anchor_loc[2] = temp_8;
         }
-        rbc_dist = phys_sys::create_rbc_dist(
-                                 (environment_rigid_body *)LODWORD(x),
-                                 (environment_rigid_body *)LODWORD(ent1_anchor_loc[2]),
-                                 0);
-        if ( rbc_dist )
+        phys_constraint = phys_sys::create_rbc_dist((environment_rigid_body *)rb1, (environment_rigid_body *)rb2, 0);
+        if (phys_constraint)
         {
-            rigid_body_constraint_distance::set(
-                rbc_dist,
-                (const phys_vec3 *)rb1_anchor_loc,
-                (const phys_vec3 *)rb2_anchor_loc,
+            //rigid_body_constraint_distance::set(
+                phys_constraint->set(
+                &rb1_anchor_loc_,
+                &rb2_anchor_loc_,
                 0.0,
                 constraint->distance);
-            constraint->constraintHandle = (int)rbc_dist;
+            constraint->constraintHandle = (int)phys_constraint;
         }
     }
 }
@@ -294,37 +330,37 @@ void __cdecl DeleteConstraint(phys_free_list<RagdollBody>::T_internal_base *rope
 
 void __cdecl G_MoverTeam(gentity_s *ent, mover_info_t *mi)
 {
-    void (__cdecl *reached)(gentity_s *); // [esp+0h] [ebp-4h]
-    void (__cdecl *reacheda)(gentity_s *); // [esp+0h] [ebp-4h]
+    void(__cdecl * reached)(gentity_s *); // [esp+0h] [ebp-4h]
+    void(__cdecl * reacheda)(gentity_s *); // [esp+0h] [ebp-4h]
     int savedregs; // [esp+4h] [ebp+0h] BYREF
 
-    if ( ent->s.lerp.pos.trType == 10 )
+    if (ent->s.lerp.pos.trType == 10)
     {
         GlassSv_PredictTouch(ent);
         G_CalcEntityPhysicsPositions(ent);
-        SV_LinkEntity((int)&savedregs, ent);
+        SV_LinkEntity(ent);
     }
-    else if ( !Com_IsRagdollTrajectory(&ent->s.lerp.pos) && ent->s.lerp.pos.trType != 11 )
+    else if (!Com_IsRagdollTrajectory(&ent->s.lerp.pos) && ent->s.lerp.pos.trType != 11)
     {
         G_MoverPush(ent, mi);
-        if ( ent->s.lerp.pos.trType )
+        if (ent->s.lerp.pos.trType)
         {
-            if ( ent->s.lerp.pos.trType != 10
+            if (ent->s.lerp.pos.trType != 10
                 && ent->s.lerp.pos.trType != 2
-                && level.time >= ent->s.lerp.pos.trDuration + ent->s.lerp.pos.trTime )
+                && level.time >= ent->s.lerp.pos.trDuration + ent->s.lerp.pos.trTime)
             {
-                reached = (void (__cdecl *)(gentity_s *))dword_E07CD4[12 * ent->handler];
-                if ( reached )
+                reached = entityHandlers[ent->handler].reached;
+                if (reached)
                     reached(ent);
             }
         }
-        if ( ent->s.lerp.apos.trType
+        if (ent->s.lerp.apos.trType
             && ent->s.lerp.pos.trType != 10
             && ent->s.lerp.apos.trType != 2
-            && level.time >= ent->s.lerp.apos.trDuration + ent->s.lerp.apos.trTime )
+            && level.time >= ent->s.lerp.apos.trDuration + ent->s.lerp.apos.trTime)
         {
-            reacheda = (void (__cdecl *)(gentity_s *))dword_E07CD4[12 * ent->handler];
-            if ( reacheda )
+            reacheda = entityHandlers[ent->handler].reached;
+            if (reacheda)
                 reacheda(ent);
         }
     }
@@ -366,7 +402,7 @@ void __cdecl G_MoverPush(gentity_s *pusher, mover_info_t *mi)
     maxs[0] = pusher->r.maxs[0];
     maxs[1] = pusher->r.maxs[1];
     maxs[2] = pusher->r.maxs[2];
-    parented_pathnode_list_update((generic_avl_map_node_t *)&savedregs, pusher, &mi->m_mat);
+    parented_pathnode_list_update(pusher, &mi->m_mat);
     if ( pusher->s.eType == 6 && pusher->model && G_GetModelBounds(pusher->model, outMins, outMaxs) )
     {
         for ( i = 0; i < 3; ++i )
@@ -416,7 +452,7 @@ void __cdecl G_MoverPush(gentity_s *pusher, mover_info_t *mi)
     pusher->r.currentAngles[0] = pusher->r.currentAngles[0] + __formal;
     pusher->r.currentAngles[1] = pusher->r.currentAngles[1] + v14;
     pusher->r.currentAngles[2] = pusher->r.currentAngles[2] + v15;
-    SV_LinkEntity((int)&savedregs, pusher);
+    SV_LinkEntity(pusher);
     for ( j = 0; j < v4; ++j )
     {
         other = &g_entities[entityList[j]];
@@ -595,7 +631,7 @@ void __cdecl G_CreatePhysicsObject(gentity_s *ent)
         Sys_EnterCriticalSection(CRITSECT_PHYSICS);
         gjk_geom_list.m_first_geom = 0;
         gjk_geom_list.m_geom_count = 0;
-        collision_visitor.__vftable = (create_gjk_geom_collision_visitor_vtbl *)&create_gjk_geom_collision_visitor::`vftable';
+        //collision_visitor.__vftable = (create_gjk_geom_collision_visitor_vtbl *)&create_gjk_geom_collision_visitor::`vftable';
         collision_visitor.gjk_geom_list = &gjk_geom_list;
         create_gjk_geom(ent, &collision_visitor, 0, (unsigned int)&cls.recentServers[7546].city[57], 1);
         physObjId = (int)Phys_ObjCreate(0, position, quat, velocity, physPreset, &gjk_geom_list, 1, ent->s.number);
@@ -617,7 +653,7 @@ void __cdecl G_CreatePhysicsObject(gentity_s *ent)
                 if ( constraint->attach_point_type1 == ATTACH_POINT_ENT && constraint->target_ent1 == ent->targetname
                     || constraint->attach_point_type2 == ATTACH_POINT_ENT && constraint->target_ent2 == ent->targetname )
                 {
-                    CreateConstraint((rigid_body *)&savedregs, constraint);
+                    CreateConstraint(constraint);
                 }
             }
             Sys_LeaveCriticalSection(CRITSECT_PHYSICS);
@@ -694,12 +730,14 @@ void __cdecl G_MoverTeam_New(gentity_s *ent)
             mi = get_mover_info(ent);
             if ( mi )
             {
-                mover_info_t::update(mi, ent->r.currentOrigin, ent->r.currentAngles);
+                //mover_info_t::update(mi, ent->r.currentOrigin, ent->r.currentAngles);
+                mi->update(ent->r.currentOrigin, ent->r.currentAngles);
             }
             else
             {
                 mi = create_mover_info(ent);
-                mover_info_t::init(mi, ent->r.currentOrigin, ent->r.currentAngles, 0);
+                //mover_info_t::init(mi, ent->r.currentOrigin, ent->r.currentAngles, 0);
+                mi->init(ent->r.currentOrigin, ent->r.currentAngles, 0);
             }
             save_pos_delta[0] = ent->s.lerp.pos.trDelta[0];
             save_pos_delta[1] = ent->s.lerp.pos.trDelta[1];
@@ -754,20 +792,22 @@ void __cdecl G_MoverTeam_New(gentity_s *ent)
                 mover_info = create_mover_info(ent);
             BG_EvaluateTrajectory(&ent->s.lerp.pos, level.time, origin);
             BG_EvaluateTrajectory(&ent->s.lerp.apos, level.time, angles);
-            mover_info_t::init(mover_info, origin, angles, ent->r.currentOrigin, ent->r.currentAngles, 1);
+            //mover_info_t::init(mover_info, origin, angles, ent->r.currentOrigin, ent->r.currentAngles, 1);
+            mover_info->init(origin, angles, 1); // KISAKTODO: sus ^^
             G_MoverTeam(ent, mover_info);
         }
     }
 }
 
-void __thiscall mover_info_t::init(mover_info_t *this, float *origin, const float *angles, bool do_collision)
+void __thiscall mover_info_t::init(float *origin, const float *angles, bool do_collision)
 {
     float axis[9]; // [esp+24h] [ebp-24h] BYREF
 
     AnglesToAxis(angles, (float (*)[3])axis);
     Phys_AxisToNitrousMat((float (*)[3])axis, &this->m_mat);
     Phys_Vec3ToNitrousVec(origin, &this->m_mat.w);
-    phys_mat44::operator=(&this->m_prev_mat, &this->m_mat);
+    //phys_mat44::operator=(&this->m_prev_mat, &this->m_mat);
+    this->m_prev_mat = this->m_mat;
     this->m_origin[0] = *origin;
     this->m_origin[1] = origin[1];
     this->m_origin[2] = origin[2];
@@ -784,7 +824,6 @@ void __thiscall mover_info_t::init(mover_info_t *this, float *origin, const floa
 }
 
 void __thiscall mover_info_t::init(
-                mover_info_t *this,
                 float *origin,
                 const float *angles,
                 float *prev_origin,
@@ -815,11 +854,12 @@ void __thiscall mover_info_t::init(
     this->m_do_collision = do_collision;
 }
 
-void __thiscall mover_info_t::update(mover_info_t *this, float *origin, const float *angles)
+void __thiscall mover_info_t::update(float *origin, const float *angles)
 {
     float axis[13]; // [esp+1Ch] [ebp-34h] BYREF
 
-    phys_mat44::operator=(&this->m_prev_mat, &this->m_mat);
+    //phys_mat44::operator=(&this->m_prev_mat, &this->m_mat);
+    this->m_prev_mat = this->m_mat;
     AnglesToAxis(angles, (float (*)[3])axis);
     Phys_AxisToNitrousMat((float (*)[3])axis, &this->m_mat);
     Phys_Vec3ToNitrousVec(origin, &this->m_mat.w);
@@ -853,7 +893,7 @@ void __cdecl G_RunMover(gentity_s *ent)
             G_SetFixedLink(ent, 2);
             G_SetOrigin(ent, ent->r.currentOrigin);
             ent->s.lerp.pos.trType = 1;
-            SV_LinkEntity((int)&savedregs, ent);
+            SV_LinkEntity(ent);
             v1 = ent->tagInfo->axis[3];
             ent->s.lerp.pos.trDelta[0] = *v1;
             ent->s.lerp.pos.trDelta[1] = v1[1];
@@ -890,7 +930,7 @@ void __cdecl trigger_use_shared(gentity_s *self, SpawnVar *spawnVar)
         self->r.contents = 0x200000;
         self->trigger.perk = 52;
         self->s.otherEntityNum = 1023;
-        SV_LinkEntity((int)&savedregs, self);
+        SV_LinkEntity(self);
         self->item[1].ammoCount = 1023;
         self->s.lerp.pos.trType = 0;
         self->s.lerp.pos.trBase[0] = self->r.currentOrigin[0];
@@ -947,7 +987,7 @@ void __cdecl trigger_use_shared(gentity_s *self, SpawnVar *spawnVar)
                 }
             }
             if ( i == 96 )
-                Com_Error(ERR_DROP, &byte_CBF558, 96);
+                Com_Error(ERR_DROP, "Too many different hintstring key values on trigger_use entities. Max allowed is %i different strings", 96);
         }
     }
     else
@@ -967,16 +1007,16 @@ void __cdecl trigger_use_touch(gentity_s *ent, SpawnVar *spawnVar)
     trigger_use_shared(ent, spawnVar);
 }
 
-mover_info_t *__thiscall phys_simple_allocator<mover_info_t>::allocate(phys_simple_allocator<mover_info_t> *this)
-{
-    char *slot; // [esp+18h] [ebp-4h]
-
-    slot = PMM_ALLOC(0xC0u, 0x10u);
-    if ( !slot )
-        return 0;
-    ++this->m_count;
-    return (mover_info_t *)slot;
-}
+//mover_info_t *__thiscall phys_simple_allocator<mover_info_t>::allocate(phys_simple_allocator<mover_info_t> *this)
+//{
+//    char *slot; // [esp+18h] [ebp-4h]
+//
+//    slot = PMM_ALLOC(0xC0u, 0x10u);
+//    if ( !slot )
+//        return 0;
+//    ++this->m_count;
+//    return (mover_info_t *)slot;
+//}
 
 gentity_s *__cdecl GetEntity(scr_entref_t entref)
 {

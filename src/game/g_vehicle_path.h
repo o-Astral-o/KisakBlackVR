@@ -17,10 +17,14 @@ struct vehicle_path_node_t // sizeof=0x8
     float radius;
 };
 
-union $D7144489F720B3BEDA1018D511D72833 // sizeof=0x14
-{                                       // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+34D/r
-    vehicle_spline_node_t splineNode;
-    vehicle_path_node_t pathNode;
+struct vehicle_path_node_link_t // sizeof=0x14
+{                                       // XREF: .data:s_node_links/r
+    __int16 nextIdx;                    // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+3DC/r
+                                        // VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+556/r ...
+    // padding byte
+    // padding byte
+    float length;                       // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+828/r
+    float dir[3];                       // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+595/o
 };
 
 struct vehicle_node_t // sizeof=0x44
@@ -39,9 +43,12 @@ struct vehicle_node_t // sizeof=0x44
     float origin[3];                    // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+8F/o
                                         // VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+9D/o ...
     float angles[3];
-    $D7144489F720B3BEDA1018D511D72833 ___u11;
-                                        // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+34D/r
-                                        // VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+365/r ...
+    //$D7144489F720B3BEDA1018D511D72833 ___u11;
+    union // union $D7144489F720B3BEDA1018D511D72833 // sizeof=0x14
+    {                                       // XREF: VP_FindPath(float const * const,float const * const,vehicle_pathpos_t &)+34D/r
+        vehicle_spline_node_t splineNode;
+        vehicle_path_node_t pathNode;
+    };
 };
 
 struct __declspec(align(2)) vehicle_custom_path_t // sizeof=0x202
@@ -75,6 +82,18 @@ struct vehicle_pathpos_t // sizeof=0xDC
     vehicle_custom_path_t *customPath;
     float customGoalLength;
     float customGoalDir[3];
+};
+
+struct __declspec(align(4)) vn_field_t // sizeof=0x14
+{                                       // XREF: .data:vn_fields/r
+    const char *name;
+    int ofs;
+    int size[1];
+    fieldtype_t type;
+    bool writable;
+    // padding byte
+    // padding byte
+    // padding byte
 };
 
 void __cdecl VP_ResetLinks();

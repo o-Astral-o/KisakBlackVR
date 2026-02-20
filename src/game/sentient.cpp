@@ -1,4 +1,24 @@
 #include "sentient.h"
+#include <game_mp/g_main_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <game_mp/actor_mp.h>
+#include "actor_senses.h"
+#include <client_mp/g_client_mp.h>
+#include "actor_events.h"
+#include <clientscript/cscr_vm.h>
+#include <clientscript/scr_const.h>
+#include <game_mp/g_spawn_mp.h>
+#include "actor_exposed.h"
+
+struct SentientGlobals // sizeof=0x28
+{                                       // XREF: .data:glob/r
+    int lastTime;                       // XREF: G_InitSentients(void)+8/w
+    int lastSample;                     // XREF: G_InitSentients(void)+D/w
+    float playerTrail[2][3];            // XREF: G_InitSentients(void)+12/w
+                                        // G_InitSentients(void)+17/w ...
+    int sampleTime[2];                  // XREF: G_InitSentients(void)+30/w
+                                        // G_InitSentients(void)+35/w
+} glob;
 
 sentient_s *__cdecl Sentient_Alloc()
 {
@@ -141,7 +161,8 @@ void __cdecl Sentient_DissociateSentient(sentient_s *self, sentient_s *other)
     client = self->ent->client;
     if ( client && client->ps.throwBackGrenadeOwner == other->ent->s.number )
         client->ps.throwBackGrenadeOwner = 1022;
-    if ( EntHandle::isDefined(&self->targetEnt) && EntHandle::ent(&self->targetEnt)->sentient == other && actor )
+    //if ( EntHandle::isDefined(&self->targetEnt) && EntHandle::ent(&self->targetEnt)->sentient == other && actor )
+    if ( self->targetEnt.isDefined() && self->targetEnt.ent()->sentient == other && actor)
         actor->lastEnemySightPosValid = 0;
     for ( i = 0; i < 4; ++i )
     {
@@ -476,19 +497,19 @@ void __fastcall Sentient_SetEnemy(sentient_s *self, gentity_s *enemy, int bNotif
     {
         __debugbreak();
     }
-    if ( !EntHandle::isDefined(&self->targetEnt) )
+    if ( !self->targetEnt.isDefined() )
     {
         if ( !enemy )
             return;
         goto LABEL_21;
     }
-    myEnemy = EntHandle::ent(&self->targetEnt);
+    myEnemy = self->targetEnt.ent();
     if ( bNotify && myEnemy->sentient && self->iEnemyNotifyTime && level.time >= self->iEnemyNotifyTime )
     {
         Actor_BroadcastTeamEvent(self, AI_EV_NEW_ENEMY);
         self->iEnemyNotifyTime = 0;
     }
-    if ( EntHandle::ent(&self->targetEnt) != enemy )
+    if ( self->targetEnt.ent() != enemy )
     {
         if ( myEnemy->sentient )
         {
@@ -510,7 +531,8 @@ LABEL_21:
         {
             self->iEnemyNotifyTime = 0;
         }
-        EntHandle::setEnt(&self->targetEnt, enemy);
+        //EntHandle::setEnt(&self->targetEnt, enemy);
+        self->targetEnt.setEnt(enemy);
         if ( bNotify && Scr_IsSystemActive(1u, SCRIPTINSTANCE_SERVER) )
             Scr_Notify(self->ent, scr_const.enemy, 0);
         if ( actor )
@@ -532,8 +554,9 @@ LABEL_21:
                 actor->lastEnemySightPosValid = 0;
                 Actor_UpdateLastEnemySightPos(actor);
             }
-            if ( EntHandle::isDefined(&self->targetEnt) )
-                self->ent->s.lerp.u.turret.ownerNum = EntHandle::entnum(&self->targetEnt);
+            //if ( EntHandle::isDefined(&self->targetEnt) )
+            if ( self->targetEnt.isDefined() )
+                self->ent->s.lerp.u.turret.ownerNum = self->targetEnt.entnum();
             else
                 self->ent->s.lerp.u.turret.ownerNum = 1023;
         }
@@ -614,6 +637,8 @@ sentient_s *__fastcall Sentient_NextSentient(sentient_s *pPrevSentient, int iTea
     }
     return 0;
 }
+
+const char *pszTeamName[4] = { "free", "axis", "allies", "spectator" };
 
 const char *__fastcall Sentient_NameForTeam(unsigned int eTeam)
 {

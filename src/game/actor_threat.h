@@ -26,6 +26,16 @@ struct potential_threat_t // sizeof=0xC
     float direction[2];
 };
 
+struct threat_bias_t // sizeof=0x424
+{                                       // XREF: .data:threat_bias_t g_threatBias/r
+    unsigned __int16 groupName[16];     // XREF: Actor_InitThreatBiasGroups(void)+5/w
+                                        // Actor_InitThreatBiasGroups(void)+A/w ...
+    int threatTable[16][16];            // XREF: Actor_InitThreatBiasGroups(void)+34/o
+                                        // Actor_GetThreatBias(int,int)+83/r
+    int threatGroupCount;               // XREF: Actor_InitThreatBiasGroups(void)+41/w
+                                        // Actor_GetThreatBias(int,int)+15/r ...
+};
+
 bool __fastcall Actor_CheckIgnore(sentient_s *self, sentient_s *enemy);
 void __cdecl Actor_InitThreatBiasGroups();
 int __fastcall Actor_GetThreatBias(int groupSelf, int groupEnemy);

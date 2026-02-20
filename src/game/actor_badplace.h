@@ -44,6 +44,7 @@ struct actor_s;
 struct pathsort_t;
 struct pathnode_t;
 enum ai_state_t : __int32;
+enum actor_think_result_t : __int32;
 
 void __cdecl Path_UpdateBadPlaceCount(badplace_t *place, int delta);
 void __cdecl Path_UpdateBadPlaces();
@@ -57,7 +58,7 @@ void __cdecl Path_InitBadPlaces();
 void __cdecl Path_ShutdownBadPlaces();
 bool __cdecl Actor_IsInAnyBadPlace(actor_s *self);
 actor_s *Actor_BadPlace_UpdateFleeingActors();
-char __fastcall Actor_BadPlace_Flee_Start(actor_s *self, ai_state_t ePrevState);
+bool __fastcall Actor_BadPlace_Flee_Start(actor_s *self, ai_state_t ePrevState);
 char __cdecl Actor_BadPlace_AttemptEscape(actor_s *self);
 double __cdecl Actor_BadPlace_GetMaximumFleeRadius();
 int __cdecl Actor_BadPlace_FindSafeNodeOutsideBadPlace(actor_s *self, pathsort_t *potentialNodes, float maxFleeDist);
@@ -68,5 +69,5 @@ char __cdecl Actor_BadPlace_HasPotentialNodeDuplicates(
                 pathnode_t *checkNode);
 bool __cdecl Actor_BadPlace_IsNodeInAnyBadPlace(pathnode_t *node);
 pathnode_t *__cdecl Actor_BadPlace_FindSafeNodeAlongPath(actor_s *self);
-int __fastcall Actor_BadPlace_Flee_Think(actor_s *self);
-void Actor_BadPlace_Flee_Finish();
+actor_think_result_t __fastcall Actor_BadPlace_Flee_Think(actor_s *self);
+void __fastcall Actor_BadPlace_Flee_Finish(actor_s *self, ai_state_t eNextState);

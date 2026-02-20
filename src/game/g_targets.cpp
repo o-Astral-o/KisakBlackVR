@@ -1,4 +1,19 @@
 #include "g_targets.h"
+#include <server_mp/sv_init_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <client_mp/g_client_mp.h>
+#include <server/sv_game.h>
+#include <server_mp/sv_main_mp.h>
+#include <clientscript/scr_const.h>
+
+
+struct //$A5C519FFED38118F396585C413DE405F // sizeof=0x384
+{                                       // XREF: .data:targGlob/r
+    target_t targets[32];               // XREF: G_InitTargets(void)+2C/w
+    unsigned int targetCount;           // XREF: G_InitTargets(void)+4/w
+} targGlob;
 
 void __cdecl G_InitTargets()
 {
@@ -355,6 +370,7 @@ char __cdecl ScrGetTargetScreenPos(float *screenPos)
 
 char __cdecl G_WorldDirToScreenPos(const gentity_s *player, float fov_x, const float *worldDir, float *outScreenPos)
 {
+#if 0
     float dirCamera[3]; // [esp+0h] [ebp-40h] BYREF
     float vertTan; // [esp+Ch] [ebp-34h]
     float tanHalfFovX; // [esp+10h] [ebp-30h]
@@ -389,6 +405,74 @@ char __cdecl G_WorldDirToScreenPos(const gentity_s *player, float fov_x, const f
     *outScreenPos = (float)(-320.0 * horzTan) / tanHalfFovX;
     outScreenPos[1] = (float)(-240.0 * vertTan) / tanHalfFovY;
     return 1;
+#else
+    // AISLOP! (sse tan)
+    float dirCamera[3];
+    float cameraMtx[3][3];
+    float horzTan, vertTan;
+    float tanHalfFovX, tanHalfFovY;
+    float halfFovRad;
+
+    if (fov_x <= 0.0f &&
+        !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_targets.cpp",
+            401,
+            0,
+            "%s",
+            "fov_x > 0"))
+    {
+        __debugbreak();
+    }
+
+    G_GetPlayerViewDirection(player,
+        cameraMtx[0],
+        cameraMtx[1],
+        cameraMtx[2]);
+
+    MatrixTransposeTransformVector(worldDir, cameraMtx, dirCamera);
+
+    /* Behind camera */
+    if (dirCamera[0] <= 0.0f)
+        return 0;
+
+    horzTan = dirCamera[1] / dirCamera[0];
+    vertTan = dirCamera[2] / dirCamera[0];
+
+    /* ---- Correct tan() usage ---- */
+
+    halfFovRad = (fov_x * 0.017453292f) * 0.5f;
+    tanHalfFovX = tanf(halfFovRad);
+
+    /* IW engine uses 4:3 virtual projection (320x240) */
+    tanHalfFovY = tanHalfFovX * 0.75f;
+
+    if (tanHalfFovX <= 0.0f &&
+        !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_targets.cpp",
+            415,
+            1,
+            "%s",
+            "tanHalfFovX > 0"))
+    {
+        __debugbreak();
+    }
+
+    if (tanHalfFovY <= 0.0f &&
+        !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_targets.cpp",
+            416,
+            1,
+            "%s",
+            "tanHalfFovY > 0"))
+    {
+        __debugbreak();
+    }
+
+    outScreenPos[0] = (-320.0f * horzTan) / tanHalfFovX;
+    outScreenPos[1] = (-240.0f * vertTan) / tanHalfFovY;
+
+    return 1;
+#endif
 }
 
 void __cdecl Scr_Target_IsInRect()
@@ -540,8 +624,8 @@ void __cdecl Scr_Target_SetJavelinOnly()
     SV_SetConfigstring(targIdx + 387, configString);
 }
 
-$A5C519FFED38118F396585C413DE405F *__cdecl Target_GetTargetArray()
+target_t *__cdecl Target_GetTargetArray()
 {
-    return &targGlob;
+    return targGlob.targets;
 }
 

@@ -1,4 +1,53 @@
 #include "g_weapon.h"
+#include <game_mp/g_main_mp.h>
+#include <server/sv_world.h>
+#include <glass/glass_server.h>
+#include <game_mp/g_utils_mp.h>
+#include <game_mp/g_combat_mp.h>
+#include <game_mp/g_trigger_mp.h>
+#include <server/sv_game.h>
+#include <client/cl_debugdata.h>
+#include "g_missile.h"
+#include <cgame/cg_drawtools.h>
+#include <bgame/bg_misc.h>
+#include "turret.h"
+#include <game_mp/g_team_mp.h>
+#include <universal/com_math_anglevectors.h>
+#include <client_mp/g_client_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include "g_targets.h"
+#include "bullet.h"
+#include "g_debug.h"
+#include <bgame/bg_weapons_ammo.h>
+#include <server_mp/sv_main_mp.h>
+
+const float traceOffsets[9][2] =
+{
+  { 0.0, 0.0 },
+  { 0.5, 0.0 },
+  { -0.5, 0.0 },
+  { 0.0, 0.5 },
+  { 0.0, -0.5 },
+  { 1.0, 1.0 },
+  { -1.0, 1.0 },
+  { 1.0, -1.0 },
+  { -1.0, -1.0 }
+};
+
+float directionTweak = 0.25;
+float bulletLedgeHeightRaiseAdd = 18.0;
+float traceNoHitPushDist = 4.0;
+float ledgeDepthNudgeReductionEnd = 1.0;
+float ledgeDepthNudgeReductionStart = 8.0;
+float traceEndPosAdd = 8.0;
+int secondmask = 64;
+int startmask = 1;
+int linemask = 8415283;
+float traceOffset = 12.0;
+float bipodNudgeDistDefault = 8.0;
+
 
 void __cdecl Weapon_SetWeaponParamsWeapon(weaponParms *wp, unsigned int weapon)
 {
@@ -76,44 +125,45 @@ void __cdecl G_AntiLagRewindClientPos(int gameTime, AntilagClientStore *antilagS
                     && level.clients[client].sess.connected == CON_CONNECTED
                     && level.clients[client].sess.sessionState == SESS_STATE_PLAYING )
                 {
-                    if ( (LODWORD(clientPositions[client][0]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(clientPositions[client][1]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(clientPositions[client][2]) & 0x7F800000) == 0x7F800000 )
-                    {
-                        v2 = va(
-                                     "client %i's antilag origin is invalid - (%f, %f, %f)",
-                                     client,
-                                     clientPositions[client][0],
-                                     clientPositions[client][1],
-                                     clientPositions[client][2]);
-                        if ( !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
-                                        86,
-                                        0,
-                                        "%s\n\t%s",
-                                        "!IS_NAN(clientPositions[client][0]) && !IS_NAN(clientPositions[client][1]) && !IS_NAN(clientPositions[client][2])",
-                                        v2) )
-                            __debugbreak();
-                    }
-                    if ( (LODWORD(clientAngles[client][0]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(clientAngles[client][1]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(clientAngles[client][2]) & 0x7F800000) == 0x7F800000 )
-                    {
-                        v3 = va(
-                                     "client %i's antilag angles are invalid - (%f, %f, %f)",
-                                     client,
-                                     clientAngles[client][0],
-                                     clientAngles[client][1],
-                                     clientAngles[client][2]);
-                        if ( !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
-                                        87,
-                                        0,
-                                        "%s\n\t%s",
-                                        "!IS_NAN(clientAngles[client][0]) && !IS_NAN(clientAngles[client][1]) && !IS_NAN(clientAngles[client][2])",
-                                        v3) )
-                            __debugbreak();
-                    }
+                    // kisaktodo: grug. fix these commented zones. they dont matter right now (make sure to get the whole file :))
+                    //if ( (LODWORD(clientPositions[client][0]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(clientPositions[client][1]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(clientPositions[client][2]) & 0x7F800000) == 0x7F800000 )
+                    //{
+                    //    v2 = va(
+                    //                 "client %i's antilag origin is invalid - (%f, %f, %f)",
+                    //                 client,
+                    //                 clientPositions[client][0],
+                    //                 clientPositions[client][1],
+                    //                 clientPositions[client][2]);
+                    //    if ( !Assert_MyHandler(
+                    //                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
+                    //                    86,
+                    //                    0,
+                    //                    "%s\n\t%s",
+                    //                    "!IS_NAN(clientPositions[client][0]) && !IS_NAN(clientPositions[client][1]) && !IS_NAN(clientPositions[client][2])",
+                    //                    v2) )
+                    //        __debugbreak();
+                    //}
+                    //if ( (LODWORD(clientAngles[client][0]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(clientAngles[client][1]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(clientAngles[client][2]) & 0x7F800000) == 0x7F800000 )
+                    //{
+                    //    v3 = va(
+                    //                 "client %i's antilag angles are invalid - (%f, %f, %f)",
+                    //                 client,
+                    //                 clientAngles[client][0],
+                    //                 clientAngles[client][1],
+                    //                 clientAngles[client][2]);
+                    //    if ( !Assert_MyHandler(
+                    //                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
+                    //                    87,
+                    //                    0,
+                    //                    "%s\n\t%s",
+                    //                    "!IS_NAN(clientAngles[client][0]) && !IS_NAN(clientAngles[client][1]) && !IS_NAN(clientAngles[client][2])",
+                    //                    v3) )
+                    //        __debugbreak();
+                    //}
                     snapshotTime = gameTime;
                     v11 = antilagStore->realClientPositions[client];
                     currentOrigin = g_entities[client].r.currentOrigin;
@@ -123,47 +173,47 @@ void __cdecl G_AntiLagRewindClientPos(int gameTime, AntilagClientStore *antilagS
                     currentAngles = g_entities[client].r.currentAngles;
                     v11[96] = *currentAngles;
                     v11[97] = currentAngles[1];
-                    v11[98] = currentAngles[2];
-                    if ( (*(unsigned int *)v11 & 0x7F800000) == 0x7F800000
-                        || (LODWORD(antilagStore->realClientPositions[client][1]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(antilagStore->realClientPositions[client][2]) & 0x7F800000) == 0x7F800000 )
-                    {
-                        v4 = va(
-                                     "client %i's origin is invalid - (%f, %f, %f)",
-                                     client,
-                                     antilagStore->realClientPositions[client][0],
-                                     antilagStore->realClientPositions[client][1],
-                                     antilagStore->realClientPositions[client][2]);
-                        if ( !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
-                                        95,
-                                        0,
-                                        "%s\n\t%s",
-                                        "!IS_NAN( antilagStore->realClientPositions[client][0]) && !IS_NAN(antilagStore->realClientPositions["
-                                        "client][1]) && !IS_NAN(antilagStore->realClientPositions[client][2])",
-                                        v4) )
-                            __debugbreak();
-                    }
-                    if ( (LODWORD(antilagStore->realClientAngles[client][0]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(antilagStore->realClientAngles[client][1]) & 0x7F800000) == 0x7F800000
-                        || (LODWORD(antilagStore->realClientAngles[client][2]) & 0x7F800000) == 0x7F800000 )
-                    {
-                        v5 = va(
-                                     "client %i's angles are invalid - (%f, %f, %f)",
-                                     client,
-                                     antilagStore->realClientAngles[client][0],
-                                     antilagStore->realClientAngles[client][1],
-                                     antilagStore->realClientAngles[client][2]);
-                        if ( !Assert_MyHandler(
-                                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
-                                        96,
-                                        0,
-                                        "%s\n\t%s",
-                                        "!IS_NAN( antilagStore->realClientAngles[client][0]) && !IS_NAN(antilagStore->realClientAngles[client"
-                                        "][1]) && !IS_NAN(antilagStore->realClientAngles[client][2])",
-                                        v5) )
-                            __debugbreak();
-                    }
+                    //v11[98] = currentAngles[2];
+                    //if ( (*(unsigned int *)v11 & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(antilagStore->realClientPositions[client][1]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(antilagStore->realClientPositions[client][2]) & 0x7F800000) == 0x7F800000 )
+                    //{
+                    //    v4 = va(
+                    //                 "client %i's origin is invalid - (%f, %f, %f)",
+                    //                 client,
+                    //                 antilagStore->realClientPositions[client][0],
+                    //                 antilagStore->realClientPositions[client][1],
+                    //                 antilagStore->realClientPositions[client][2]);
+                    //    if ( !Assert_MyHandler(
+                    //                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
+                    //                    95,
+                    //                    0,
+                    //                    "%s\n\t%s",
+                    //                    "!IS_NAN( antilagStore->realClientPositions[client][0]) && !IS_NAN(antilagStore->realClientPositions["
+                    //                    "client][1]) && !IS_NAN(antilagStore->realClientPositions[client][2])",
+                    //                    v4) )
+                    //        __debugbreak();
+                    //}
+                    //if ( (LODWORD(antilagStore->realClientAngles[client][0]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(antilagStore->realClientAngles[client][1]) & 0x7F800000) == 0x7F800000
+                    //    || (LODWORD(antilagStore->realClientAngles[client][2]) & 0x7F800000) == 0x7F800000 )
+                    //{
+                    //    v5 = va(
+                    //                 "client %i's angles are invalid - (%f, %f, %f)",
+                    //                 client,
+                    //                 antilagStore->realClientAngles[client][0],
+                    //                 antilagStore->realClientAngles[client][1],
+                    //                 antilagStore->realClientAngles[client][2]);
+                    //    if ( !Assert_MyHandler(
+                    //                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
+                    //                    96,
+                    //                    0,
+                    //                    "%s\n\t%s",
+                    //                    "!IS_NAN( antilagStore->realClientAngles[client][0]) && !IS_NAN(antilagStore->realClientAngles[client"
+                    //                    "][1]) && !IS_NAN(antilagStore->realClientAngles[client][2])",
+                    //                    v5) )
+                    //        __debugbreak();
+                    //}
                     v8 = g_entities[client].r.currentOrigin;
                     v9 = clientPositions[client];
                     *v8 = *v9;
@@ -174,7 +224,7 @@ void __cdecl G_AntiLagRewindClientPos(int gameTime, AntilagClientStore *antilagS
                     *v6 = *v7;
                     v6[1] = v7[1];
                     v6[2] = v7[2];
-                    SV_LinkEntity((int)&savedregs, &g_entities[client]);
+                    SV_LinkEntity(&g_entities[client]);
                     antilagStore->clientMoved[client] = 1;
                 }
                 else
@@ -205,46 +255,46 @@ void __cdecl G_AntiLag_RestoreClientPos(AntilagClientStore *antilagStore)
     {
         if ( antilagStore->clientMoved[client] )
         {
-            if ( (LODWORD(antilagStore->realClientPositions[client][0]) & 0x7F800000) == 0x7F800000
-                || (LODWORD(antilagStore->realClientPositions[client][1]) & 0x7F800000) == 0x7F800000
-                || (LODWORD(antilagStore->realClientPositions[client][2]) & 0x7F800000) == 0x7F800000 )
-            {
-                v1 = va(
-                             "client %i's origin is invalid - (%f, %f, %f)",
-                             client,
-                             antilagStore->realClientPositions[client][0],
-                             antilagStore->realClientPositions[client][1],
-                             antilagStore->realClientPositions[client][2]);
-                if ( !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
-                                130,
-                                0,
-                                "%s\n\t%s",
-                                "!IS_NAN(antilagStore->realClientPositions[client][0]) && !IS_NAN(antilagStore->realClientPositions[clien"
-                                "t][1]) && !IS_NAN(antilagStore->realClientPositions[client][2])",
-                                v1) )
-                    __debugbreak();
-            }
-            if ( (LODWORD(antilagStore->realClientAngles[client][0]) & 0x7F800000) == 0x7F800000
-                || (LODWORD(antilagStore->realClientAngles[client][1]) & 0x7F800000) == 0x7F800000
-                || (LODWORD(antilagStore->realClientAngles[client][2]) & 0x7F800000) == 0x7F800000 )
-            {
-                v2 = va(
-                             "client %i's angles are invalid - (%f, %f, %f)",
-                             client,
-                             antilagStore->realClientAngles[client][0],
-                             antilagStore->realClientAngles[client][1],
-                             antilagStore->realClientAngles[client][2]);
-                if ( !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
-                                131,
-                                0,
-                                "%s\n\t%s",
-                                "!IS_NAN(antilagStore->realClientAngles[client][0]) && !IS_NAN(antilagStore->realClientAngles[client][1])"
-                                " && !IS_NAN(antilagStore->realClientAngles[client][2])",
-                                v2) )
-                    __debugbreak();
-            }
+            //if ( (LODWORD(antilagStore->realClientPositions[client][0]) & 0x7F800000) == 0x7F800000
+            //    || (LODWORD(antilagStore->realClientPositions[client][1]) & 0x7F800000) == 0x7F800000
+            //    || (LODWORD(antilagStore->realClientPositions[client][2]) & 0x7F800000) == 0x7F800000 )
+            //{
+            //    v1 = va(
+            //                 "client %i's origin is invalid - (%f, %f, %f)",
+            //                 client,
+            //                 antilagStore->realClientPositions[client][0],
+            //                 antilagStore->realClientPositions[client][1],
+            //                 antilagStore->realClientPositions[client][2]);
+            //    if ( !Assert_MyHandler(
+            //                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
+            //                    130,
+            //                    0,
+            //                    "%s\n\t%s",
+            //                    "!IS_NAN(antilagStore->realClientPositions[client][0]) && !IS_NAN(antilagStore->realClientPositions[clien"
+            //                    "t][1]) && !IS_NAN(antilagStore->realClientPositions[client][2])",
+            //                    v1) )
+            //        __debugbreak();
+            //}
+            //if ( (LODWORD(antilagStore->realClientAngles[client][0]) & 0x7F800000) == 0x7F800000
+            //    || (LODWORD(antilagStore->realClientAngles[client][1]) & 0x7F800000) == 0x7F800000
+            //    || (LODWORD(antilagStore->realClientAngles[client][2]) & 0x7F800000) == 0x7F800000 )
+            //{
+            //    v2 = va(
+            //                 "client %i's angles are invalid - (%f, %f, %f)",
+            //                 client,
+            //                 antilagStore->realClientAngles[client][0],
+            //                 antilagStore->realClientAngles[client][1],
+            //                 antilagStore->realClientAngles[client][2]);
+            //    if ( !Assert_MyHandler(
+            //                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp",
+            //                    131,
+            //                    0,
+            //                    "%s\n\t%s",
+            //                    "!IS_NAN(antilagStore->realClientAngles[client][0]) && !IS_NAN(antilagStore->realClientAngles[client][1])"
+            //                    " && !IS_NAN(antilagStore->realClientAngles[client][2])",
+            //                    v2) )
+            //        __debugbreak();
+            //}
             currentOrigin = g_entities[client].r.currentOrigin;
             v5 = antilagStore->realClientPositions[client];
             *currentOrigin = *v5;
@@ -254,7 +304,7 @@ void __cdecl G_AntiLag_RestoreClientPos(AntilagClientStore *antilagStore)
             *currentAngles = v5[96];
             currentAngles[1] = v5[97];
             currentAngles[2] = v5[98];
-            SV_LinkEntity((int)&savedregs, &g_entities[client]);
+            SV_LinkEntity(&g_entities[client]);
             antilagStore->clientMoved[client] = 0;
         }
     }
@@ -271,6 +321,7 @@ gentity_s *__cdecl Weapon_Melee(gentity_s *ent, weaponParms *wp, float range, fl
     return traceEnt;
 }
 
+static const float directionTweak = 0.25;
 gentity_s *__cdecl Weapon_Melee_internal(gentity_s *ent, weaponParms *wp, float range, float width, float height)
 {
     bool IsBayonetWeapon; // al
@@ -372,7 +423,7 @@ gentity_s *__cdecl Weapon_Melee_internal(gentity_s *ent, weaponParms *wp, float 
         {
             partName = tr.partName;
             modelIndex = tr.modelIndex;
-            partGroup = tr.partGroup;
+            partGroup = (hitLocation_t)tr.partGroup;
             v8 = BG_IsBayonetWeapon(ent->s.weapon) + 7;
             v7 = G_rand();
             G_Damage(
@@ -467,7 +518,7 @@ bool __cdecl Melee_Trace(
             end[0] = (float)(v11 * wp->right[0]) + end[0];
             end[1] = (float)(v11 * wp->right[1]) + end[1];
             end[2] = (float)(v11 * wp->right[2]) + end[2];
-            v10 = height * dword_CCD5D4[2 * traceIndex];
+            v10 = height * (float)traceOffsets[traceIndex][1];
             end[0] = (float)(v10 * wp->up[0]) + end[0];
             end[1] = (float)(v10 * wp->up[1]) + end[1];
             end[2] = (float)(v10 * wp->up[2]) + end[2];
@@ -641,8 +692,7 @@ gentity_s *__cdecl Weapon_GrenadeLauncher_Fire(
     return m;
 }
 
-gentity_s * Weapon_RocketLauncher_Fire@<eax>(
-                float a1@<ebp>,
+gentity_s * Weapon_RocketLauncher_Fire(
                 gentity_s *ent,
                 unsigned int weaponIndex,
                 float spread,
@@ -664,19 +714,19 @@ gentity_s * Weapon_RocketLauncher_Fire@<eax>(
     float v19; // [esp+2Ch] [ebp-24h]
     float dir[3]; // [esp+30h] [ebp-20h] BYREF
     float v21; // [esp+3Ch] [ebp-14h]
-    float r; // [esp+40h] [ebp-10h]
+    ///float r; // [esp+40h] [ebp-10h]
     float u; // [esp+44h] [ebp-Ch]
     float fAimOffset; // [esp+48h] [ebp-8h]
     float retaddr; // [esp+50h] [ebp+0h]
 
-    u = a1;
-    fAimOffset = retaddr;
-    if ( !ent && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp", 563, 0, "%s", "ent") )
-        __debugbreak();
-    if ( !wp && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp", 564, 0, "%s", "wp") )
-        __debugbreak();
-    __libm_sse2_tan(v10);
-    r = spread * 0.017453292;
+    //u = a1;
+    //fAimOffset = retaddr;
+    iassert(ent);
+    iassert(wp);
+
+    //__libm_sse2_tan(v10);
+    //r = spread * 0.017453292;
+
     v21 = (float)(spread * 0.017453292) * 16.0;
     gunrandom(&dir[1], &dir[2]);
     dir[1] = dir[1] * v21;
@@ -685,22 +735,22 @@ gentity_s * Weapon_RocketLauncher_Fire@<eax>(
     v17 = 16.0 * wp->forward[0];
     v18 = 16.0 * wp->forward[1];
     v19 = 16.0 * wp->forward[2];
-    LODWORD(launchpos[4]) = wp->right;
-    launchpos[3] = dir[1];
+    //LODWORD(launchpos[4]) = wp->right;
+    //launchpos[3] = dir[1];
     v17 = (float)(dir[1] * wp->right[0]) + v17;
     v18 = (float)(dir[1] * wp->right[1]) + v18;
     v19 = (float)(dir[1] * wp->right[2]) + v19;
-    LODWORD(launchpos[2]) = wp->up;
-    launchpos[1] = dir[2];
+    //LODWORD(launchpos[2]) = wp->up;
+    //launchpos[1] = dir[2];
     v17 = (float)(dir[2] * wp->up[0]) + v17;
     v18 = (float)(dir[2] * wp->up[1]) + v18;
     v19 = (float)(dir[2] * wp->up[2]) + v19;
     Vec3Normalize(&v17);
-    LODWORD(launchpos[0]) = wp->muzzleTrace;
+    //LODWORD(launchpos[0]) = wp->muzzleTrace;
     kickBack[1] = wp->muzzleTrace[0];
     kickBack[2] = wp->muzzleTrace[1];
     m = (gentity_s *)LODWORD(wp->muzzleTrace[2]);
-    LODWORD(kickBack[0]) = G_FireRocket(ent, weaponIndex, &kickBack[1], &v17, gunVel, target, targetOffset);
+    gentity_s *proj = G_FireRocket(ent, weaponIndex, &kickBack[1], &v17, gunVel, target, targetOffset);
     if ( ent->client && wp->weapDef->fireType )
     {
         v12 = -wp->forward[1];
@@ -709,11 +759,11 @@ gentity_s * Weapon_RocketLauncher_Fire@<eax>(
             v13 = 0.0f;
         velocity = ent->client->ps.velocity;
         client = ent->client;
-        *velocity = (float)(64.0 * COERCE_FLOAT(LODWORD(wp->forward[0]) ^ _mask__NegFloat_)) + client->ps.velocity[0];
+        *velocity = (float)(64.0 * (-(wp->forward[0]))) + client->ps.velocity[0];
         velocity[1] = (float)(64.0 * v12) + client->ps.velocity[1];
         velocity[2] = (float)(64.0 * v13) + client->ps.velocity[2];
     }
-    return (gentity_s *)LODWORD(kickBack[0]);
+    return proj;
 }
 
 void __cdecl gunrandom(float *x, float *y)
@@ -755,8 +805,9 @@ gentity_s *__cdecl Weapon_BombDrop_Fire(
         __debugbreak();
     if ( !wp && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_weapon.cpp", 609, 0, "%s", "wp") )
         __debugbreak();
-    __libm_sse2_tan(v8);
-    fAimOffset = (float)(spread * 0.017453292) * fDist;
+    //__libm_sse2_tan(v8);
+    //fAimOffset = (float)(spread * 0.017453292) * fDist;
+    fAimOffset = (float)tan(spread * 0.017453292) * fDist;
     gunrandom(&r, &u);
     r = r * fAimOffset;
     u = u * fAimOffset;
@@ -776,7 +827,7 @@ gentity_s *__cdecl Weapon_BombDrop_Fire(
     return G_DropBomb(ent, weaponIndex, launchpos, dir, gunVel, target, targetOffset);
 }
 
-void    Weapon_Overheat_Update(__m128 amount@<xmm0>, gentity_s *ent)
+void    Weapon_Overheat_Update(gentity_s *ent)
 {
     PlayerHeldWeapon *weaponState; // [esp+10h] [ebp-2Ch]
     const vehicle_info_t *info; // [esp+14h] [ebp-28h]
@@ -830,9 +881,10 @@ void    Weapon_Overheat_Update(__m128 amount@<xmm0>, gentity_s *ent)
                     || weapDef->coolWhileFiring
                     || ps->ps.waterlevel >= 3 )
                 {
-                    amount.m128_f32[0] = (float)((float)frametime * weapDef->cooldownRate) / 1000.0;
-                    amount = _mm_xor_ps(amount, (__m128)_mask__NegFloat_);
-                    BG_PlayerWeaponOverheatUpdate(&ps->ps, weaponIndex, amount.m128_f32[0]);
+                    //amount.m128_f32[0] = (float)((float)frametime * weapDef->cooldownRate) / 1000.0;
+                    //amount = _mm_xor_ps(amount, (__m128)_mask__NegFloat_);
+                    //BG_PlayerWeaponOverheatUpdate(&ps->ps, weaponIndex, amount.m128_f32[0]);
+                    BG_PlayerWeaponOverheatUpdate(&ps->ps, weaponIndex, -(frametime * weapDef->cooldownRate) / 1000.0);
                 }
             }
         }
@@ -1013,7 +1065,7 @@ void __cdecl Weapon_Napalm_Flame(gentity_s *ent, trace_t *trace, int count)
     float forward[3]; // [esp+28h] [ebp-54h] BYREF
     weaponParms wp; // [esp+34h] [ebp-48h] BYREF
 
-    iWeaponIndex = G_GetWeaponIndexForName("napalmblob_mp");
+    iWeaponIndex = G_GetWeaponIndexForName((char*)"napalmblob_mp");
     Weapon_SetWeaponParamsWeapon(&wp, iWeaponIndex);
     if ( wp.weapDef->weapType != WEAPTYPE_GRENADE
         && wp.weapDef->weapType != WEAPTYPE_MINE
@@ -1039,25 +1091,26 @@ void __cdecl Weapon_Napalm_Flame(gentity_s *ent, trace_t *trace, int count)
         v5 = G_flrand(-36.0, 36.0);
         new_origin[2] = v5 + new_origin[2];
         AngleVectors(ent->r.currentAngles, forward, 0, 0);
-        LODWORD(forward[0]) ^= _mask__NegFloat_;
-        LODWORD(forward[1]) ^= _mask__NegFloat_;
-        LODWORD(forward[2]) ^= _mask__NegFloat_;
+        forward[0] = -forward[0];
+        forward[1] = -forward[1];
+        forward[2] = -forward[2];
         v8 = G_flrand((float)wp.weapDef->iProjectileSpeed / 8.0, (float)wp.weapDef->iProjectileSpeed / 4.0);
         forward[0] = v8 * forward[0];
         forward[1] = v8 * forward[1];
         forward[2] = v8 * forward[2];
         forward[2] = (float)wp.weapDef->iProjectileSpeedUp + forward[2];
-        if ( EntHandle::isDefined(&ent->parent) )
+        if ( ent->parent.isDefined() )
         {
             v7 = iWeaponIndex;
-            v6 = EntHandle::ent(&ent->parent);
+            //v6 = EntHandle::ent(&ent->parent);
+            v6 = ent->parent.ent();
             G_FireGrenade(v6, new_origin, forward, v7, 0, 0, 0);
         }
         else
         {
             grenade = G_FireGrenade(ent, new_origin, forward, iWeaponIndex, 0, 0, 0);
-            EntHandle::setEnt(&grenade->r.ownerNum, 0);
-            EntHandle::setEnt(&grenade->parent, 0);
+            grenade->r.ownerNum.setEnt(0);
+            grenade->parent.setEnt(0);
         }
     }
 }
@@ -1104,7 +1157,7 @@ void __cdecl G_CalcMuzzlePoints(const gentity_s *ent, weaponParms *wp, int shotC
                 if ( ent->client->ps.weaponShotCount == 2 )
                     angle = spreadAngle / 2.0;
                 else
-                    angle = COERCE_FLOAT(LODWORD(spreadAngle) ^ _mask__NegFloat_) / 2.0;
+                    angle = (-(spreadAngle)) / 2.0;
             }
             else
             {
@@ -1168,7 +1221,6 @@ void __cdecl FireWeapon(gentity_s *ent, int gametime, int shotCount)
                             memset(offset, 0, sizeof(offset));
                         }
                         Weapon_RocketLauncher_Fire(
-                            COERCE_FLOAT(&savedregs),
                             ent,
                             ent->s.weapon,
                             fAimSpreadAmount,
@@ -1182,7 +1234,7 @@ void __cdecl FireWeapon(gentity_s *ent, int gametime, int shotCount)
                     Weapon_Flamethrower_Fire(ent, &wp);
                     break;
                 default:
-                    Com_Error(ERR_DROP, &byte_CCD7B0, wp.weapDef->weapType, wp.weapVariantDef->szInternalName);
+                    Com_Error(ERR_DROP, "Unknown weapon type %i for %s", wp.weapDef->weapType, wp.weapVariantDef->szInternalName);
                     break;
             }
         }
@@ -1298,8 +1350,8 @@ void __cdecl DeployWeapon(gentity_s *ent)
             traceEnd[0] = (float)(distToTurret * ledgeDir[0]) + ledgePos[0];
             traceEnd[1] = (float)(distToTurret * ledgeDir[1]) + ledgePos[1];
             traceEnd[2] = (float)((float)(distToTurret * ledgeDir[2]) + ledgePos[2]) - traceOffset;
-            mins[0] = FLOAT_N0_1;
-            mins[1] = FLOAT_N0_1;
+            mins[0] = -0.1f;
+            mins[1] = -0.1f;
             mins[2] = 0.0f;
             v10 = traceOffset * 2.0;
             maxs[0] = 0.1f;
@@ -1510,12 +1562,9 @@ void __cdecl DeployWeapon(gentity_s *ent)
                 maxs[0] = traceOffset;
                 maxs[1] = traceOffset;
                 maxs[2] = traceOffset * 2.0;
-                tracedLedgePos[0] = (float)(COERCE_FLOAT(LODWORD(bipodNudgeDist) ^ _mask__NegFloat_) * toLedge[0])
-                                                    + tracedLedgePos[0];
-                tracedLedgePos[1] = (float)(COERCE_FLOAT(LODWORD(bipodNudgeDist) ^ _mask__NegFloat_) * toLedge[1])
-                                                    + tracedLedgePos[1];
-                tracedLedgePos[2] = (float)(COERCE_FLOAT(LODWORD(bipodNudgeDist) ^ _mask__NegFloat_) * toLedge[2])
-                                                    + tracedLedgePos[2];
+                tracedLedgePos[0] = (float)((-(bipodNudgeDist)) * toLedge[0]) + tracedLedgePos[0];
+                tracedLedgePos[1] = (float)((-(bipodNudgeDist)) * toLedge[1]) + tracedLedgePos[1];
+                tracedLedgePos[2] = (float)((-(bipodNudgeDist)) * toLedge[2]) + tracedLedgePos[2];
                 G_TraceCapsule(&trace, traceStart, mins, maxs, traceEnd, ent->s.number, 65, &context);
                 if ( trace.fraction > 0.0 && trace.fraction < 1.0 )
                     tracedLedgePos[2] = (float)((float)(traceEnd[2] - traceStart[2]) * trace.fraction) + traceStart[2];
@@ -1753,7 +1802,8 @@ int __cdecl G_GivePlayerWeapon(
             __debugbreak();
         }
         weaponState->model = altModelIndex;
-        renderOptions_s::CopyWeaponOptions(&weaponState->options, &weaponOptions);
+        //renderOptions_s::CopyWeaponOptions(&weaponState->options, &weaponOptions);
+        weaponState->options.CopyWeaponOptions(&weaponOptions);
         if ( weapDef->weapClass == WEAPCLASS_ITEM )
         {
             return 1;
@@ -1806,7 +1856,8 @@ int __cdecl G_GivePlayerWeapon(
                         __debugbreak();
                     }
                     weaponStatea->model = altModelIndex;
-                    renderOptions_s::CopyWeaponOptions(&weaponStatea->options, &weaponOptions);
+                    //renderOptions_s::CopyWeaponOptions(&weaponStatea->options, &weaponOptions);
+                    weaponStatea->options.CopyWeaponOptions(&weaponOptions);
                 }
                 return 1;
             }
@@ -1833,7 +1884,7 @@ void __cdecl G_SetupWeaponDef()
         Com_SetWeaponInfoMemory(1);
         ClearRegisteredItems();
         BG_ClearWeaponDef();
-        G_GetWeaponIndexForName("defaultweapon_mp");
+        G_GetWeaponIndexForName((char*)"defaultweapon_mp");
         BG_LoadWeaponTable("_mp", G_RegisterWeapon);
     }
     Com_DPrintf(17, "----------------------\n");

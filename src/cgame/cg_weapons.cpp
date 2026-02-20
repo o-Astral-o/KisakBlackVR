@@ -64,7 +64,7 @@
 #include <client/client.h>
 #include <server/sv_world.h>
 
-unsigned __int8 bulletPriorityMap[] = { 1u, 3u, 3u, 3u };
+unsigned __int8 bulletPriorityMap[4] = { 1u, 3u, 3u, 3u };
 unsigned __int8 riflePriorityMap[19] = { 1u, 9u, 9u, 9u, 8u, 7u, 6u, 6u, 6u, 6u, 5u, 5u, 4u, 4u, 4u, 4u, 3u, 3u, 0u };
 
 unsigned int snd_autosim_time;

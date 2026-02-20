@@ -1332,3 +1332,6 @@ inline cgs_t *CG_GetLocalClientStaticGlobals(int32_t localClientNum)
 
         return &cgsArray[localClientNum];
 }
+
+
+constexpr float factor[2] = { -1.0, 1.0 };

@@ -421,7 +421,7 @@ actor_s *Actor_BadPlace_UpdateFleeingActors()
     return result;
 }
 
-char __fastcall Actor_BadPlace_Flee_Start(actor_s *self, ai_state_t ePrevState)
+bool __fastcall Actor_BadPlace_Flee_Start(actor_s *self, ai_state_t ePrevState)
 {
     if ( !self && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_badplace.cpp", 995, 0, "%s", "self") )
         __debugbreak();
@@ -682,7 +682,7 @@ pathnode_t *__cdecl Actor_BadPlace_FindSafeNodeAlongPath(actor_s *self)
     return 0;
 }
 
-int __fastcall Actor_BadPlace_Flee_Think(actor_s *self)
+actor_think_result_t __fastcall Actor_BadPlace_Flee_Think(actor_s *self)
 {
     bool isInBadPlace; // [esp+32h] [ebp-2h]
 
@@ -694,7 +694,7 @@ int __fastcall Actor_BadPlace_Flee_Think(actor_s *self)
         Actor_SetState(self, AIS_EXPOSED);
         ////if ( GetCurrentThreadId() == g_DXDeviceThread )
         //    //D3DPERF_EndEvent();
-        return 1;
+        return ACTOR_THINK_REPEAT;
     }
     Actor_PreThink(self);
     self->pszDebugInfo = "badplace_flee";
@@ -717,16 +717,16 @@ LABEL_22:
         Actor_PostThink(self);
         ////if ( GetCurrentThreadId() == g_DXDeviceThread )
         //    //D3DPERF_EndEvent();
-        return 0;
+        return ACTOR_THINK_DONE;
     }
     self->aiBadPlace = AI_BADPLACE_NONE;
     Actor_SetState(self, AIS_EXPOSED);
     ////if ( GetCurrentThreadId() == g_DXDeviceThread )
     //    //D3DPERF_EndEvent();
-    return 1;
+    return ACTOR_THINK_REPEAT;
 }
 
-void Actor_BadPlace_Flee_Finish()
+void __fastcall Actor_BadPlace_Flee_Finish(actor_s *self, ai_state_t eNextState)
 {
     ;
 }

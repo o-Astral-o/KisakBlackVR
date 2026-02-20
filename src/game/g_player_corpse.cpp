@@ -1,4 +1,12 @@
 #include "g_player_corpse.h"
+#include <game_mp/g_scr_main_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <clientscript/scr_const.h>
+#include <game_mp/g_main_mp.h>
+#include <cgame/cg_event.h>
+#include <universal/com_math_anglevectors.h>
+#include <server/sv_world.h>
+#include <qcommon/dobj_management.h>
 
 int __cdecl G_GetPlayerCorpseIndex(gentity_s *ent, const char *error_msg)
 {
@@ -193,9 +201,11 @@ void __cdecl G_RunCorpseMove(gentity_s *ent)
         {
             __debugbreak();
         }
-        if ( EntHandle::isDefined(&ent->r.ownerNum) )
+        //if ( EntHandle::isDefined(&ent->r.ownerNum) )
+        if ( ent->r.ownerNum.isDefined() )
         {
-            passEntityNum = EntHandle::entnum(&ent->r.ownerNum);
+            //passEntityNum = EntHandle::entnum(&ent->r.ownerNum);
+            passEntityNum = ent->r.ownerNum.entnum();
             G_TraceCapsule(&tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passEntityNum, mask, &context);
         }
         else
@@ -208,7 +218,7 @@ void __cdecl G_RunCorpseMove(gentity_s *ent)
         ent->r.currentOrigin[2] = endpos[2];
         if ( tr.startsolid )
             tr.fraction = 0.0f;
-        SV_LinkEntity((int)&savedregs, ent);
+        SV_LinkEntity(ent);
         G_RunThink(ent);
         if ( ent->r.inuse )
         {
@@ -227,8 +237,12 @@ void __cdecl G_RunCorpseMove(gentity_s *ent)
                     ent->s.lerp.pos.trDelta[2] = 0.0f;
                     origin[2] = origin[2] - 1.0;
                     //col_context_t::col_context_t(&v10, mask);
-                    if ( EntHandle::isDefined(&ent->r.ownerNum) )
-                        v2 = EntHandle::entnum(&ent->r.ownerNum);
+                    //if ( EntHandle::isDefined(&ent->r.ownerNum) )
+                    if (ent->r.ownerNum.isDefined())
+                    {
+                        //v2 = EntHandle::entnum(&ent->r.ownerNum);
+                        v2 = ent->r.ownerNum.entnum();
+                    }
                     else
                         v2 = 1023;
                     v10.passEntityNum0 = v2;
@@ -270,9 +284,11 @@ void __cdecl G_RunCorpseMove(gentity_s *ent)
                     start[2] = ent->r.currentOrigin[2];
                     start[2] = start[2] + 32.0;
                     //col_context_t::col_context_t(&v7);
-                    if ( EntHandle::isDefined(&ent->r.ownerNum) )
+                    //if ( EntHandle::isDefined(&ent->r.ownerNum) )
+                    if ( ent->r.ownerNum.isDefined() )
                     {
-                        v1 = EntHandle::entnum(&ent->r.ownerNum);
+                        //v1 = EntHandle::entnum(&ent->r.ownerNum);
+                        v1 = ent->r.ownerNum.entnum();
                         G_TraceCapsule(&tr, start, ent->r.mins, ent->r.maxs, origin, v1, mask & 0xFFFEFFFF, &v7);
                     }
                     else
@@ -333,7 +349,7 @@ void __cdecl G_BounceCorpse(gentity_s *ent, corpseInfo_t *corpseInfo, trace_t *t
             AxisToAngles(vAxis, vAngles);
             G_SetAngle(ent, vAngles);
         }
-        SV_LinkEntity((int)&savedregs, ent);
+        SV_LinkEntity(ent);
     }
     else
     {

@@ -1,4 +1,14 @@
 #include "g_svcmds.h"
+#include <universal/q_shared.h>
+#include <game_mp/g_main_mp.h>
+#include <game_mp/g_cmds_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <clientscript/cscr_stringlist.h>
+#include <server/sv_game.h>
+#include <server_mp/sv_main_mp.h>
+
+int numIPFilters;
+ipFilter_s ipFilters[1024];
 
 void __cdecl G_ProcessIPBans()
 {
@@ -12,7 +22,7 @@ void __cdecl G_ProcessIPBans()
     s = str;
     for ( t = str; *t; t = s )
     {
-        strchr((unsigned __int8 *)s, 0x20u);
+        v0 = strchr(s, 0x20u);
         s = v0;
         if ( !v0 )
             break;
@@ -199,7 +209,7 @@ int __cdecl ConsoleCommand()
                     else
                     {
                         v1 = ConcatArgs(1);
-                        v2 = va(aCGameServer, 101, v1);
+                        v2 = va("%c \"GAME_SERVER : %s\"", 101, v1);
                         SV_GameSendServerCommand(-1, SV_CMD_CAN_IGNORE, v2);
                         return 1;
                     }

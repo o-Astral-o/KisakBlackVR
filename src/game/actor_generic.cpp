@@ -1,4 +1,6 @@
 #include "actor_generic.h"
+#include <game_mp/g_main_mp.h>
+#include <game_mp/actor_mp.h>
 
 void __fastcall Actor_Generic_Suspend(actor_s *self, ai_state_t eNextState)
 {
@@ -41,7 +43,7 @@ void __fastcall Actor_Generic_Suspend(actor_s *self, ai_state_t eNextState)
         //D3DPERF_EndEvent();
 }
 
-int __fastcall Actor_Generic_Resume(actor_s *self, ai_state_t ePrevState)
+bool __fastcall Actor_Generic_Resume(actor_s *self, ai_state_t ePrevState)
 {
     if ( self->stateLevel >= 5
         && !Assert_MyHandler(
@@ -81,7 +83,8 @@ int __fastcall Actor_Generic_Resume(actor_s *self, ai_state_t ePrevState)
                      ePrevState);
 }
 
-void __stdcall Actor_Generic_Pain(int iDamage, const float *vPoint, int iMod, const float *vDir, hitLocation_t hitLoc)
+//void __stdcall Actor_Generic_Pain(int iDamage, const float *vPoint, int iMod, const float *vDir, hitLocation_t hitLoc)
+void __fastcall Actor_Generic_Pain(actor_s *, gentity_s *, int, const float *, const int, const float *, const hitLocation_t)
 {
     ;
 }

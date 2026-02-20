@@ -33,11 +33,6 @@ const int overheating_masks[2] = { 16777216, 33554432 };
 const int overheat_flags[2] = { 4, 8 };
 
 
-
-const float factor[2] =
-{ -1.0, 1.0 };
-
-
 // *WARNING* One or more selections were skipped as they could not be interpreted as c data
 
 float foam = 1.9;

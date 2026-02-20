@@ -672,4 +672,7 @@ extern level_locals_t level;
 
 extern gentity_s g_entities[MAX_GENTITIES];
 
+extern sentient_s g_sentients[48];
+extern gclient_s g_clients[32];
+
 extern playerState_s g_defaultPlayerState;

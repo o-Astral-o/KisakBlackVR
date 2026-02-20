@@ -1,4 +1,43 @@
 #include "g_scr_helicopter.h"
+#include <clientscript/cscr_vm.h>
+#include <qcommon/cm_load.h>
+#include <game_mp/g_utils_mp.h>
+#include <cgame/cg_scr_main.h>
+#include <qcommon/dobj_management.h>
+
+const BuiltinMethodDef s_methods[27] =
+{
+  { "freehelicopter", &CMD_Heli_FreeHelicopter, 0 },
+  { "setspeed", &CMD_VEH_SetSpeed, 0 },
+  { "getspeed", &CMD_VEH_GetSpeed, 0 },
+  { "getspeedmph", &CMD_VEH_GetSpeedMPH, 0 },
+  { "resumespeed", &CMD_VEH_ResumeSpeed, 0 },
+  { "setyawspeed", &CMD_VEH_SetYawSpeed, 0 },
+  { "setmaxpitchroll", &CMD_VEH_SetMaxPitchRoll, 0 },
+  { "setturningability", &CMD_VEH_SetTurningAbility, 0 },
+  { "setairresistance", &CMD_VEH_SetAirResitance, 0 },
+  { "sethoverparams", &CMD_VEH_SetHoverParams, 0 },
+  { "setneargoalnotifydist", &CMD_VEH_NearGoalNotifyDist, 0 },
+  { "setvehgoalpos", &CMD_VEH_SetGoalPos, 0 },
+  { "setgoalyaw", &CMD_VEH_SetGoalYaw, 0 },
+  { "cleargoalyaw", &CMD_VEH_ClearGoalYaw, 0 },
+  { "settargetyaw", &CMD_VEH_SetTargetYaw, 0 },
+  { "cleartargetyaw", &CMD_VEH_ClearTargetYaw, 0 },
+  { "setlookatent", &CMD_VEH_SetLookAtEnt, 0 },
+  { "clearlookatent", &CMD_VEH_ClearLookAtEnt, 0 },
+  { "setvehweapon", &CMD_VEH_SetWeapon, 0 },
+  { "fireweapon", &CMD_VEH_FireWeapon, 0 },
+  { "stopfireweapon", &CMD_VEH_StopFireWeapon, 0 },
+  { "setturrettargetvec", &CMD_VEH_SetTurretTargetVec, 0 },
+  { "setturrettargetent", &CMD_VEH_SetTurretTargetEnt, 0 },
+  { "clearturrettarget", &CMD_VEH_ClearTurretTarget, 0 },
+  { "setdamagestage", &CMD_Heli_SetDamageStage, 0 },
+  { "setheliheightlock", &CMD_Heli_SetHeliHeightLock, 0 },
+  { "isinsideheliheightlock", &CMD_Heli_IsInsideHeliHeightLock, 0 }
+};
+
+
+heli_height_lock_patches_t heli_height_lock_patches[32];
 
 void __cdecl CMD_Heli_FreeHelicopter(scr_entref_t entref)
 {
@@ -31,9 +70,9 @@ void __cdecl CMD_Heli_SetHeliHeightLock(scr_entref_t entref)
 
 void __cdecl CMD_Heli_IsInsideHeliHeightLock(scr_entref_t entref)
 {
-    float v1; // [esp+0h] [ebp-4Ch]
-    float v2; // [esp+4h] [ebp-48h]
-    float v3; // [esp+8h] [ebp-44h]
+    float v2; // [esp+0h] [ebp-4Ch]
+    float v3; // [esp+4h] [ebp-48h]
+    float v4; // [esp+8h] [ebp-44h]
     float meshMaxs[3]; // [esp+28h] [ebp-24h] BYREF
     float meshMins[3]; // [esp+34h] [ebp-18h] BYREF
     int i; // [esp+40h] [ebp-Ch]
@@ -41,54 +80,54 @@ void __cdecl CMD_Heli_IsInsideHeliHeightLock(scr_entref_t entref)
     float *heliOrigin; // [esp+48h] [ebp-4h]
 
     ent = GScr_GetVehicle(entref);
-    if ( !ent && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_helicopter.cpp", 88, 0, "%s", "ent") )
+    if (!ent && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_helicopter.cpp", 88, 0, "%s", "ent"))
         __debugbreak();
-    if ( !ent->scr_vehicle
+    if (!ent->scr_vehicle
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_helicopter.cpp",
-                    89,
-                    0,
-                    "%s",
-                    "ent->scr_vehicle") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_helicopter.cpp",
+            89,
+            0,
+            "%s",
+            "ent->scr_vehicle"))
     {
         __debugbreak();
     }
     heliOrigin = ent->scr_vehicle->phys.origin;
-    for ( i = 0; ; ++i )
+    for (i = 0; ; ++i)
     {
-        if ( i >= num_heli_height_lock_patches )
+        if (i >= num_heli_height_lock_patches)
         {
             Scr_AddInt(0, SCRIPTINSTANCE_SERVER);
             return;
         }
         CM_ModelBounds(heli_height_lock_patches[i].brushmodel, meshMins, meshMaxs);
-        meshMins[0] = meshMins[0] + *((float *)&unk_3F3CE8C + 6 * i);
-        meshMins[1] = meshMins[1] + *((float *)&unk_3F3CE8C + 6 * i + 1);
-        meshMins[2] = meshMins[2] + *((float *)&unk_3F3CE8C + 6 * i + 2);
-        meshMaxs[0] = meshMaxs[0] + *((float *)&unk_3F3CE8C + 6 * i);
-        meshMaxs[1] = meshMaxs[1] + *((float *)&unk_3F3CE8C + 6 * i + 1);
-        meshMaxs[2] = meshMaxs[2] + *((float *)&unk_3F3CE8C + 6 * i + 2);
-        if ( *heliOrigin >= meshMins[0]
+        meshMins[0] = meshMins[0] + heli_height_lock_patches[i].origin[0];
+        meshMins[1] = meshMins[1] + heli_height_lock_patches[i].origin[1];
+        meshMins[2] = meshMins[2] + heli_height_lock_patches[i].origin[2];
+        meshMaxs[0] = meshMaxs[0] + heli_height_lock_patches[i].origin[0];
+        meshMaxs[1] = meshMaxs[1] + heli_height_lock_patches[i].origin[1];
+        meshMaxs[2] = meshMaxs[2] + heli_height_lock_patches[i].origin[2];
+        if (*heliOrigin >= meshMins[0]
             && meshMaxs[0] >= *heliOrigin
             && heliOrigin[1] >= meshMins[1]
-            && meshMaxs[1] >= heliOrigin[1] )
+            && meshMaxs[1] >= heliOrigin[1])
         {
             break;
         }
     }
-    if ( (float)((float)(meshMaxs[0] - *heliOrigin) - (float)(*heliOrigin - meshMins[0])) < 0.0 )
-        v3 = meshMaxs[0] - *heliOrigin;
+    if ((float)((float)(meshMaxs[0] - *heliOrigin) - (float)(*heliOrigin - meshMins[0])) < 0.0)
+        v4 = meshMaxs[0] - *heliOrigin;
     else
-        v3 = *heliOrigin - meshMins[0];
-    if ( (float)((float)(heliOrigin[1] - meshMins[1]) - v3) < 0.0 )
-        v2 = heliOrigin[1] - meshMins[1];
+        v4 = *heliOrigin - meshMins[0];
+    if ((float)((float)(heliOrigin[1] - meshMins[1]) - v4) < 0.0)
+        v3 = heliOrigin[1] - meshMins[1];
+    else
+        v3 = v4;
+    if ((float)((float)(meshMaxs[1] - heliOrigin[1]) - v3) < 0.0)
+        v2 = meshMaxs[1] - heliOrigin[1];
     else
         v2 = v3;
-    if ( (float)((float)(meshMaxs[1] - heliOrigin[1]) - v2) < 0.0 )
-        v1 = meshMaxs[1] - heliOrigin[1];
-    else
-        v1 = v2;
-    Scr_AddInt((int)v1, SCRIPTINSTANCE_SERVER);
+    Scr_AddInt((int)v2, SCRIPTINSTANCE_SERVER);
 }
 
 void (__cdecl *__cdecl Helicopter_GetMethod(const char **pName))(scr_entref_t)
@@ -119,16 +158,9 @@ void __cdecl G_SpawnHelicopter(gentity_s *ent, gentity_s *owner, char *vehicleIn
     veh = ent->scr_vehicle;
     bg_vehicleInfos[veh->infoIdx].type = 6;
     veh->targetEnt = 1023;
-    if ( EntHandle::isDefined(&veh->lookAtEnt)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_helicopter.cpp",
-                    238,
-                    0,
-                    "%s",
-                    "!veh->lookAtEnt.isDefined()") )
-    {
-        __debugbreak();
-    }
+
+    iassert(!veh->lookAtEnt.isDefined());
+    
     veh->phys.mins[0] = -50.0f;
     veh->phys.mins[1] = -50.0f;
     veh->phys.mins[2] = -50.0f;
@@ -214,12 +246,14 @@ void __cdecl Heli_InitFirstThink(gentity_s *pSelf)
 }
 
 void __cdecl Helicopter_Pain(
-                gentity_s *pSelf,
-                gentity_s *pAttacker,
-                int damage,
-                const float *point,
-                int mod,
-                const float *dir)
+    gentity_s *pSelf,
+    gentity_s *pAttacker,
+    int damage,
+    const float *point,
+    const int mod,
+    const float *dir,
+    const hitLocation_t __formal,
+    const int __formal2)
 {
     const WeaponDef *weapDef; // [esp+Ch] [ebp-4h]
 
@@ -235,13 +269,15 @@ void __cdecl Helicopter_Pain(
 }
 
 void __cdecl Helicopter_Die(
-                gentity_s *pSelf,
-                gentity_s *pInflictor,
-                gentity_s *pAttacker,
-                int damage,
-                int mod,
-                int weapon,
-                const float *dir)
+    gentity_s *pSelf,
+    gentity_s *pInflictor,
+    gentity_s *pAttacker,
+    int damage,
+    int mod,
+    const int weapon,
+    const float *dir,
+    const hitLocation_t __formal,
+    int __formal2)
 {
     const WeaponDef *weapDef; // [esp+Ch] [ebp-4h]
 

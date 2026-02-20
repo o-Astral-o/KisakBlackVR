@@ -362,7 +362,7 @@ cspField_t s_vehicleFields[345] =
 
 
 
-int __cdecl VEH_ParseSpecificField(unsigned __int8 *pStruct, char *pValue, int fieldType, int fieldOffset)
+int __cdecl VEH_ParseSpecificField(unsigned __int8 *pStruct, const char *pValue, const int fieldType, const int fieldOffset)
 {
     const char *v4; // eax
     const char *v5; // eax
@@ -465,7 +465,7 @@ int __cdecl VEH_ParseSpecificField(unsigned __int8 *pStruct, char *pValue, int f
             *(unsigned int *)&pStruct[fieldOffset] = Key_StringToKeynum(pValue);
             return 1;
         case 24:
-            *(unsigned int *)&pStruct[fieldOffset] = (unsigned int)GraphFloat_Load(pValue);
+            *(unsigned int *)&pStruct[fieldOffset] = (unsigned int)GraphFloat_Load((char*)pValue);
             return 1;
         default:
             v5 = va("Bad vehicle field type %i\n", fieldType);

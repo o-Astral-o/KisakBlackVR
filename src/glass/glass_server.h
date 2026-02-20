@@ -70,3 +70,6 @@ void __cdecl GlassSv_Touch(unsigned int glassId, gentity_s *other);
 void __cdecl GlassSv_PredictTouch(gentity_s *other);
 void __cdecl GlassSv_WriteSnapshotToClient(msg_t *msg, int sinceTime);
 void __cdecl GlassSv_WriteGameState(msg_t *msg);
+
+constexpr int GLASS_MIN_DAMAGE = 5;
+

@@ -1,4 +1,14 @@
 #include "actor_navigation.h"
+#include <game_mp/g_main_mp.h>
+#include <game_mp/actor_mp.h>
+#include "actor_senses.h"
+#include <clientscript/cscr_stringlist.h>
+#include <qcommon/cm_world.h>
+#include <server_mp/sv_main_mp.h>
+#include "g_debug.h"
+#include <cgame/cg_drawtools.h>
+
+float g_pathAttemptGoalPos[3];
 
 double __fastcall Path_GetPathDir(float *delta, const float *vFrom, const float *vTo)
 {
@@ -243,6 +253,1263 @@ double __fastcall Path_GetDistToPathSegment(const float *vStartPos, const pathpo
     return (float)fabs((float)((float)(pt->fDir2D[0] * offset_4) - (float)(pt->fDir2D[1] * offset)));
 }
 
+int __cdecl Path_AStarAlgorithm_CustomSearchInfo_FindCloseNode_(
+    path_t *pPath,
+    team_t eTeam,
+    const float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_FindCloseNode *custom,
+    int bIgnoreBadPlaces)
+{
+    double v10; // st7
+    float v[7]; // [esp+8h] [ebp-C0h] BYREF
+    pathnode_t *pEval; // [esp+24h] [ebp-A4h]
+    pathnode_t *pCurrent; // [esp+2Ch] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+30h] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+B4h] [ebp-14h]
+    pathnode_t *pInsert; // [esp+B8h] [ebp-10h]
+    int i; // [esp+BCh] [ebp-Ch]
+    float fCost; // [esp+C0h] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+C4h] [ebp-4h]
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (TopParent.transient.pNextOpen)
+    {
+        pCurrent = TopParent.transient.pNextOpen;
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                //if (!CustomSearchInfo_FindCloseNode::IgnoreNode(custom, pSuccessor)
+                if (!custom->IgnoreNode(pSuccessor)
+                    && (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                        || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                        || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount))
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        v[0] = *vGoalPos - pSuccessor->constant.vOrigin[0];
+                        v[1] = vGoalPos[1] - pSuccessor->constant.vOrigin[1];
+                        v10 = Vec2Length(v);
+                        pSuccessor->transient.fHeuristic = v10;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent; pInsert->transient.pNextOpen; pInsert = pEval)
+                    {
+                        pEval = pInsert->transient.pNextOpen;
+                        if ((float)(pEval->transient.fCost + pEval->transient.fHeuristic) >= fApproxTotalCost)
+                            break;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int Path_AStarAlgorithm_CustomSearchInfo_FindPath_(
+    path_t *pPath,
+    team_t eTeam,
+    float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_FindPath *custom,
+    int bIgnoreBadPlaces)
+{
+    double v11; // st7
+    int success; // [esp+28h] [ebp-A0h]
+    pathnode_t *pCurrent; // [esp+2Ch] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+30h] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+B4h] [ebp-14h]
+    pathnode_t *pInsert; // [esp+B8h] [ebp-10h]
+    int i; // [esp+BCh] [ebp-Ch]
+    float fCost; // [esp+C0h] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+C4h] [ebp-4h]
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (!TopParent.transient.pNextOpen)
+        return 0;
+    pCurrent = TopParent.transient.pNextOpen;
+    if (TopParent.transient.pNextOpen != custom->m_pNodeTo)
+    {
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                if (IsNodeEnabled(pSuccessor)
+                    && (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                        || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                        || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount))
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        //v11 = CustomSearchInfo_FindPath::EvaluateHeuristic(custom, pSuccessor, vGoalPos);
+                        v11 = custom->EvaluateHeuristic(pSuccessor, vGoalPos);
+                        pSuccessor->transient.fHeuristic = v11;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent;
+                        pInsert->transient.pNextOpen
+                        && (float)(pInsert->transient.pNextOpen->transient.fCost
+                            + pInsert->transient.pNextOpen->transient.fHeuristic) < fApproxTotalCost;
+                        pInsert = pInsert->transient.pNextOpen)
+                    {
+                        ;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    if (!pPath)
+        return 1;
+    success = Path_GeneratePath(
+        pPath,
+        eTeam,
+        vStartPos,
+        vGoalPos,
+        pNodeFrom,
+        TopParent.transient.pNextOpen,
+        bIncludeGoalInPath,
+        bAllowNegotiationLinks);
+    if (pPath->wPathLen > pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            708,
+            0,
+            "%s",
+            "pPath->wPathLen <= pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    if (!success
+        && pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            709,
+            0,
+            "%s",
+            "success || !pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    return success;
+}
+
+int Path_AStarAlgorithm_CustomSearchInfo_FindPathWithWidth_(
+    path_t *pPath,
+    team_t eTeam,
+    float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_FindPathWithWidth *custom,
+    int bIgnoreBadPlaces)
+{
+    double v11; // st7
+    int success; // [esp+30h] [ebp-A0h]
+    pathnode_t *pCurrent; // [esp+34h] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+38h] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+BCh] [ebp-14h]
+    pathnode_t *pInsert; // [esp+C0h] [ebp-10h]
+    int i; // [esp+C4h] [ebp-Ch]
+    float fCost; // [esp+C8h] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+CCh] [ebp-4h]
+    int savedregs; // [esp+D0h] [ebp+0h] BYREF
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (!TopParent.transient.pNextOpen)
+        return 0;
+    pCurrent = TopParent.transient.pNextOpen;
+    if (TopParent.transient.pNextOpen != custom->m_pNodeTo)
+    {
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                if (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                    || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                    || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount)
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * pSuccessor->transient.costFactor)
+                            + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        //v11 = CustomSearchInfo_FindPathWithWidth::EvaluateHeuristic(
+                        //    custom,
+                        //    COERCE_FLOAT(&savedregs),
+                        //    pSuccessor,
+                        //    vGoalPos);
+                        v11 = custom->EvaluateHeuristic(pSuccessor, vGoalPos);
+                        pSuccessor->transient.fHeuristic = v11;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * pSuccessor->transient.costFactor)
+                            + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent;
+                        pInsert->transient.pNextOpen
+                        && (float)(pInsert->transient.pNextOpen->transient.fCost
+                            + pInsert->transient.pNextOpen->transient.fHeuristic) < fApproxTotalCost;
+                        pInsert = pInsert->transient.pNextOpen)
+                    {
+                        ;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    if (!pPath)
+        return 1;
+    success = Path_GeneratePath(
+        pPath,
+        eTeam,
+        vStartPos,
+        vGoalPos,
+        pNodeFrom,
+        TopParent.transient.pNextOpen,
+        bIncludeGoalInPath,
+        bAllowNegotiationLinks);
+    if (pPath->wPathLen > pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            708,
+            0,
+            "%s",
+            "pPath->wPathLen <= pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    if (!success
+        && pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            709,
+            0,
+            "%s",
+            "success || !pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    return success;
+}
+
+int Path_AStarAlgorithm_CustomSearchInfo_FindPathNotCrossPlanes_(
+    path_t *pPath,
+    team_t eTeam,
+    float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_FindPathNotCrossPlanes *custom,
+    int bIgnoreBadPlaces)
+{
+    double v11; // st7
+    int success; // [esp+30h] [ebp-A0h]
+    pathnode_t *pCurrent; // [esp+34h] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+38h] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+BCh] [ebp-14h]
+    pathnode_t *pInsert; // [esp+C0h] [ebp-10h]
+    int i; // [esp+C4h] [ebp-Ch]
+    float fCost; // [esp+C8h] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+CCh] [ebp-4h]
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (!TopParent.transient.pNextOpen)
+        return 0;
+    pCurrent = TopParent.transient.pNextOpen;
+    if (TopParent.transient.pNextOpen != custom->m_pNodeTo)
+    {
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                //if (!CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(custom, pSuccessor)
+                if (!custom->IgnoreNode(pSuccessor)
+                    && (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                        || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                        || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount))
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        //v11 = CustomSearchInfo_FindPath::EvaluateHeuristic(custom, pSuccessor, vGoalPos);
+                        v11 = custom->EvaluateHeuristic(pSuccessor, vGoalPos);
+                        pSuccessor->transient.fHeuristic = v11;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent;
+                        pInsert->transient.pNextOpen
+                        && (float)(pInsert->transient.pNextOpen->transient.fCost
+                            + pInsert->transient.pNextOpen->transient.fHeuristic) < fApproxTotalCost;
+                        pInsert = pInsert->transient.pNextOpen)
+                    {
+                        ;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    if (!pPath)
+        return 1;
+    success = Path_GeneratePath(
+        pPath,
+        eTeam,
+        vStartPos,
+        vGoalPos,
+        pNodeFrom,
+        TopParent.transient.pNextOpen,
+        bIncludeGoalInPath,
+        bAllowNegotiationLinks);
+    if (pPath->wPathLen > pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            708,
+            0,
+            "%s",
+            "pPath->wPathLen <= pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    if (!success
+        && pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            709,
+            0,
+            "%s",
+            "success || !pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    return success;
+}
+
+int Path_AStarAlgorithm_CustomSearchInfo_FindPathInCylinderWithLOS_(
+    path_t *pPath,
+    team_t eTeam,
+    float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_FindPathInCylinderWithLOS *custom,
+    int bIgnoreBadPlaces)
+{
+    double v11; // st7
+    int success; // [esp+34h] [ebp-A0h]
+    pathnode_t *pCurrent; // [esp+38h] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+3Ch] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+C0h] [ebp-14h]
+    pathnode_t *pInsert; // [esp+C4h] [ebp-10h]
+    int i; // [esp+C8h] [ebp-Ch]
+    float fCost; // [esp+CCh] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+D0h] [ebp-4h]
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (!TopParent.transient.pNextOpen)
+        return 0;
+    pCurrent = TopParent.transient.pNextOpen;
+    if (custom->m_fWithinDistSqrd <= Vec3DistanceSq(TopParent.transient.pNextOpen->constant.vOrigin, vGoalPos)
+        || !Path_NodesVisible(pCurrent, custom->m_pNodeTo))
+    {
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                if (Actor_PointAtGoal(pSuccessor->constant.vOrigin, custom->goal)
+                    && (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                        || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                        || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount))
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        //v11 = CustomSearchInfo_FindPathWithLOS::EvaluateHeuristic(custom, pSuccessor, vGoalPos);
+                        v11 = custom->EvaluateHeuristic(pSuccessor, vGoalPos);
+                        pSuccessor->transient.fHeuristic = v11;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent;
+                        pInsert->transient.pNextOpen
+                        && (float)(pInsert->transient.pNextOpen->transient.fCost
+                            + pInsert->transient.pNextOpen->transient.fHeuristic) < fApproxTotalCost;
+                        pInsert = pInsert->transient.pNextOpen)
+                    {
+                        ;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    if (!pPath)
+        return 1;
+    success = Path_GeneratePath(
+        pPath,
+        eTeam,
+        vStartPos,
+        vGoalPos,
+        pNodeFrom,
+        pCurrent,
+        bIncludeGoalInPath,
+        bAllowNegotiationLinks);
+    if (pPath->wPathLen > pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            708,
+            0,
+            "%s",
+            "pPath->wPathLen <= pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    if (!success
+        && pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            709,
+            0,
+            "%s",
+            "success || !pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    return success;
+}
+
+int Path_AStarAlgorithm_CustomSearchInfo_CouldAttack_(
+    path_t *pPath,
+    team_t eTeam,
+    float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_CouldAttack *custom,
+    int bIgnoreBadPlaces)
+{
+    char v11; // [esp+3h] [ebp-A5h]
+    int success; // [esp+8h] [ebp-A0h]
+    pathnode_t *pCurrent; // [esp+Ch] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+10h] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+94h] [ebp-14h]
+    pathnode_t *pInsert; // [esp+98h] [ebp-10h]
+    int i; // [esp+9Ch] [ebp-Ch]
+    float fCost; // [esp+A0h] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+A4h] [ebp-4h]
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (!TopParent.transient.pNextOpen)
+        return 0;
+    pCurrent = TopParent.transient.pNextOpen;
+    if (Path_NodesVisible(TopParent.transient.pNextOpen, custom->m_pNodeTo))
+    {
+        custom->attackNode = pCurrent;
+        v11 = 1;
+    }
+    else
+    {
+        v11 = 0;
+    }
+    if (!v11)
+    {
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                if (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                    || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                    || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount)
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        pSuccessor->transient.fHeuristic = 0.0f;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent;
+                        pInsert->transient.pNextOpen
+                        && (float)(pInsert->transient.pNextOpen->transient.fCost
+                            + pInsert->transient.pNextOpen->transient.fHeuristic) < fApproxTotalCost;
+                        pInsert = pInsert->transient.pNextOpen)
+                    {
+                        ;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    if (!pPath)
+        return 1;
+    success = Path_GeneratePath(
+        pPath,
+        eTeam,
+        vStartPos,
+        vGoalPos,
+        pNodeFrom,
+        pCurrent,
+        bIncludeGoalInPath,
+        bAllowNegotiationLinks);
+    if (pPath->wPathLen > pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            708,
+            0,
+            "%s",
+            "pPath->wPathLen <= pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    if (!success
+        && pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            709,
+            0,
+            "%s",
+            "success || !pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    return success;
+}
+
+int Path_AStarAlgorithm_CustomSearchInfo_FindPathClosestPossible_(
+    path_t *pPath,
+    team_t eTeam,
+    float *vStartPos,
+    pathnode_t *pNodeFrom,
+    const float *vGoalPos,
+    int bIncludeGoalInPath,
+    int bAllowNegotiationLinks,
+    CustomSearchInfo_FindPathClosestPossible *custom,
+    int bIgnoreBadPlaces)
+{
+    double v11; // st7
+    char v12; // [esp+17h] [ebp-B5h]
+    float v13; // [esp+24h] [ebp-A8h]
+    int success; // [esp+2Ch] [ebp-A0h]
+    pathnode_t *pCurrent; // [esp+30h] [ebp-9Ch]
+    pathnode_t TopParent; // [esp+34h] [ebp-98h] BYREF
+    float fApproxTotalCost; // [esp+B8h] [ebp-14h]
+    pathnode_t *pInsert; // [esp+BCh] [ebp-10h]
+    int i; // [esp+C0h] [ebp-Ch]
+    float fCost; // [esp+C4h] [ebp-8h]
+    pathnode_t *pSuccessor; // [esp+C8h] [ebp-4h]
+
+    if (!vGoalPos
+        && bIncludeGoalInPath
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            675,
+            0,
+            "%s",
+            "vGoalPos || !bIncludeGoalInPath"))
+    {
+        __debugbreak();
+    }
+    if ((unsigned int)eTeam >= TEAM_NUM_TEAMS
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            676,
+            0,
+            "eTeam doesn't index ARRAY_COUNT( ((pathlink_t *) 0)->ubBadPlaceCount )\n\t%i not in [0, %i)",
+            eTeam,
+            4))
+    {
+        __debugbreak();
+    }
+    if (vGoalPos)
+    {
+        g_pathAttemptGoalPos[0] = *vGoalPos;
+        g_pathAttemptGoalPos[1] = vGoalPos[1];
+        g_pathAttemptGoalPos[2] = vGoalPos[2];
+    }
+    else
+    {
+        g_pathAttemptGoalPos[0] = 0.0f;
+        g_pathAttemptGoalPos[1] = 0.0f;
+        g_pathAttemptGoalPos[2] = 0.0f;
+    }
+    pNodeFrom->transient.iSearchFrame = ++level.iSearchFrame;
+    pNodeFrom->transient.pParent = &TopParent;
+    pNodeFrom->transient.pNextOpen = 0;
+    pNodeFrom->transient.pPrevOpen = &TopParent;
+    pNodeFrom->transient.fCost = 0.0f;
+    TopParent.transient.pNextOpen = pNodeFrom;
+LABEL_12:
+    if (!TopParent.transient.pNextOpen)
+        return 0;
+    pCurrent = TopParent.transient.pNextOpen;
+    if (TopParent.transient.pNextOpen == custom->m_pNodeTo)
+    {
+        custom->m_pBestNode = custom->m_pNodeTo;
+        v12 = 1;
+    }
+    else
+    {
+        v13 = Vec3DistanceSq(custom->m_pNodeTo->constant.vOrigin, TopParent.transient.pNextOpen->constant.vOrigin);
+        if (custom->m_fBestScore > v13)
+        {
+            custom->m_fBestScore = v13;
+            custom->m_pBestNode = pCurrent;
+        }
+        v12 = 0;
+    }
+    if (!v12)
+    {
+        TopParent.transient.pNextOpen = TopParent.transient.pNextOpen->transient.pNextOpen;
+        if (TopParent.transient.pNextOpen)
+            TopParent.transient.pNextOpen->transient.pPrevOpen = &TopParent;
+        for (i = 0; ; ++i)
+        {
+            if (i >= pCurrent->dynamic.wLinkCount)
+            {
+                pCurrent->transient.pPrevOpen = 0;
+                goto LABEL_12;
+            }
+            if (bIgnoreBadPlaces || !pCurrent->constant.Links[i].ubBadPlaceCount[eTeam])
+            {
+                pSuccessor = Path_ConvertIndexToNode(pCurrent->constant.Links[i].nodeNum);
+                if (pSuccessor == pCurrent
+                    && !Assert_MyHandler(
+                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                        725,
+                        0,
+                        "%s",
+                        "pSuccessor != pCurrent"))
+                {
+                    __debugbreak();
+                }
+                if (pCurrent->constant.type != NODE_NEGOTIATION_BEGIN
+                    || pSuccessor->constant.type != NODE_NEGOTIATION_END
+                    || !pCurrent->dynamic.wOverlapCount && !pSuccessor->dynamic.wOverlapCount)
+                {
+                    if (pSuccessor->transient.iSearchFrame == level.iSearchFrame)
+                    {
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                        if (fCost >= pSuccessor->transient.fCost)
+                            continue;
+                        if (pSuccessor->transient.pPrevOpen)
+                        {
+                            pSuccessor->transient.pPrevOpen->transient.pNextOpen = pSuccessor->transient.pNextOpen;
+                            if (pSuccessor->transient.pNextOpen)
+                                pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor->transient.pPrevOpen;
+                        }
+                    }
+                    else
+                    {
+                        pSuccessor->transient.iSearchFrame = level.iSearchFrame;
+                        //v11 = CustomSearchInfo_FindPathClosestPossible::EvaluateHeuristic(custom, pSuccessor, vGoalPos);
+                        v11 = custom->EvaluateHeuristic(pSuccessor, vGoalPos);
+                        pSuccessor->transient.fHeuristic = v11;
+                        fCost = (float)(pCurrent->constant.Links[i].fDist * 1.0) + pCurrent->transient.fCost;
+                    }
+                    pSuccessor->transient.pParent = pCurrent;
+                    pSuccessor->transient.fCost = fCost;
+                    fApproxTotalCost = pSuccessor->transient.fCost + pSuccessor->transient.fHeuristic;
+                    for (pInsert = &TopParent;
+                        pInsert->transient.pNextOpen
+                        && (float)(pInsert->transient.pNextOpen->transient.fCost
+                            + pInsert->transient.pNextOpen->transient.fHeuristic) < fApproxTotalCost;
+                        pInsert = pInsert->transient.pNextOpen)
+                    {
+                        ;
+                    }
+                    if (!pInsert
+                        && !Assert_MyHandler(
+                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+                            780,
+                            0,
+                            "%s",
+                            "pInsert"))
+                    {
+                        __debugbreak();
+                    }
+                    pSuccessor->transient.pPrevOpen = pInsert;
+                    pSuccessor->transient.pNextOpen = pInsert->transient.pNextOpen;
+                    pInsert->transient.pNextOpen = pSuccessor;
+                    if (pSuccessor->transient.pNextOpen)
+                        pSuccessor->transient.pNextOpen->transient.pPrevOpen = pSuccessor;
+                }
+            }
+        }
+    }
+    if (!pPath)
+        return 1;
+    success = Path_GeneratePath(
+        pPath,
+        eTeam,
+        vStartPos,
+        vGoalPos,
+        pNodeFrom,
+        pCurrent,
+        bIncludeGoalInPath,
+        bAllowNegotiationLinks);
+    if (pPath->wPathLen > pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            708,
+            0,
+            "%s",
+            "pPath->wPathLen <= pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    if (!success
+        && pPath->wOrigPathLen
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
+            709,
+            0,
+            "%s",
+            "success || !pPath->wOrigPathLen"))
+    {
+        __debugbreak();
+    }
+    return success;
+}
+
 pathnode_t *__fastcall Path_FindCloseNode(
                 team_t eTeam,
                 pathnode_t *pNodeFrom,
@@ -393,7 +1660,7 @@ int __fastcall Path_FindPathFromTo(
     return Path_AStarAlgorithm_CustomSearchInfo_FindPath_(
                      pPath,
                      eTeam,
-                     vStartPos,
+                     (float*)vStartPos,
                      pNodeFrom,
                      vGoalPos,
                      1,
@@ -486,7 +1753,7 @@ int __fastcall Path_FindPathFromToWithWidth(
     return Path_AStarAlgorithm_CustomSearchInfo_FindPathWithWidth_(
                      pPath,
                      eTeam,
-                     vStartPos,
+                     (float*)vStartPos,
                      pNodeFrom,
                      vGoalPos,
                      1,
@@ -592,8 +1859,8 @@ int __fastcall Path_FindPathFromToNotCrossPlanes(
     info.startPos[0] = *vStartPos;
     info.startPos[1] = vStartPos[1];
     info.startPos[2] = vStartPos[2];
-    if ( CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(&info, pNodeFrom)
-        || CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(&info, pNodeTo) )
+    //if ( CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(&info, pNodeFrom) || CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(&info, pNodeTo) )
+    if ( info.IgnoreNode(pNodeFrom) || info.IgnoreNode(pNodeTo) )
     {
         return 0;
     }
@@ -602,7 +1869,7 @@ int __fastcall Path_FindPathFromToNotCrossPlanes(
         return Path_AStarAlgorithm_CustomSearchInfo_FindPathNotCrossPlanes_(
                          pPath,
                          eTeam,
-                         vStartPos,
+                         (float*)vStartPos,
                          pNodeFrom,
                          vGoalPos,
                          1,
@@ -612,9 +1879,7 @@ int __fastcall Path_FindPathFromToNotCrossPlanes(
     }
 }
 
-char __thiscall CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(
-                CustomSearchInfo_FindPathNotCrossPlanes *this,
-                pathnode_t *pNode)
+char __thiscall CustomSearchInfo_FindPathNotCrossPlanes::IgnoreNode(pathnode_t *pNode)
 {
     int i; // [esp+Ch] [ebp-4h]
 
@@ -855,12 +2120,12 @@ int __fastcall Path_GeneratePath(
     {
         if ( (prevFlags & 0x80) != 0 )
         {
-            pPath->fLookaheadAmount = FLOAT_21845_334;
+            pPath->fLookaheadAmount = 21845.334f;
             pPath->minLookAheadNodes = 0;
         }
         else
         {
-            pPath->fLookaheadAmount = FLOAT_4096_0;
+            pPath->fLookaheadAmount = 4096.0f;
             pPath->minLookAheadNodes = 2;
         }
         pPath->lookaheadDir[0] = 0.0f;
@@ -1153,8 +2418,8 @@ void __fastcall Path_TransferLookahead(path_t *pPath, const float *vStartPos)
             {
                 __debugbreak();
             }
-            vLookaheadPos_4 = (float)(COERCE_FLOAT(LODWORD(dist) ^ _mask__NegFloat_) * pt->fDir2D[1]) + pt->vOrigPoint[1];
-            offset[0] = (float)((float)(COERCE_FLOAT(LODWORD(dist) ^ _mask__NegFloat_) * pt->fDir2D[0]) + pt->vOrigPoint[0])
+            vLookaheadPos_4 = (float)(  (-(dist)) * pt->fDir2D[1]) + pt->vOrigPoint[1];
+            offset[0] = (float)((float)((-(dist)) * pt->fDir2D[0]) + pt->vOrigPoint[0])
                                 - *vStartPos;
             offset[1] = vLookaheadPos_4 - vStartPos[1];
             Vec2Normalize(offset);
@@ -1195,6 +2460,8 @@ LABEL_79:
         pPath->fLookaheadAmount = closestTotalArea;
     }
 }
+
+static int numIter = 1;
 
 void __fastcall Path_SetLookaheadToStart(path_t *pPath, const float *vStartPos, int bTrimAmount)
 {
@@ -1247,7 +2514,7 @@ int __fastcall Path_FindPathInCylinderWithLOS(
     return Path_AStarAlgorithm_CustomSearchInfo_FindPathInCylinderWithLOS_(
                      pPath,
                      eTeam,
-                     vStartPos,
+                     (float*)vStartPos,
                      pNodeFrom,
                      vGoalPos,
                      0,
@@ -1344,7 +2611,7 @@ int __fastcall Path_FindPathGetCloseAsPossible(
     if ( Path_AStarAlgorithm_CustomSearchInfo_FindPathClosestPossible_(
                  pPath,
                  eTeam,
-                 vStartPos,
+                 (float*)vStartPos,
                  pNodeFrom,
                  vGoalPos,
                  1,
@@ -1805,7 +3072,7 @@ int __fastcall Path_TrimToSeePoint(
 void __fastcall Path_Begin(path_t *pPath)
 {
     memset((unsigned __int8 *)pPath, 0, sizeof(path_t));
-    pPath->fLookaheadAmount = FLOAT_21845_334;
+    pPath->fLookaheadAmount = 21845.334f;
     pPath->wDodgeEntity = 1023;
 }
 
@@ -2355,7 +3622,8 @@ bool __fastcall Path_LookaheadPredictionTrace(path_t *pPath, float *vStartPos, f
     int entities[1]; // [esp+1Ch] [ebp-8h] BYREF
     int mask; // [esp+20h] [ebp-4h]
 
-    mask = (int)&loc_82000C + 5;
+    //mask = (int)&loc_82000C + 5;
+    mask = 0x820011;
     if ( pPath->wDodgeCount && pPath->wDodgeEntity != 1023 )
     {
         if ( level.gentities[pPath->wDodgeEntity].actor )
@@ -2363,7 +3631,7 @@ bool __fastcall Path_LookaheadPredictionTrace(path_t *pPath, float *vStartPos, f
             entities[0] = pPath->wDodgeEntity;
             return Path_PredictionTraceCheckForEntities(vStartPos, vEndPos, entities, 1, 1023, mask, vTraceEndPos) == 0;
         }
-        mask = (int)&cls.recentServers[7734].game[12];
+        mask = 0x2820011;
     }
     return Path_PredictionTrace(vStartPos, vEndPos, 1023, mask, vTraceEndPos, 18.0, 1);
 }
@@ -2466,6 +3734,7 @@ int __fastcall Path_GetForwardStartPos(path_t *pPath, const float *vStartPos, fl
     return 1;
 }
 
+static float minSpeed = 3.0f;
 void __fastcall Path_UpdateLookahead_NonCodeMove(path_t *pPath, const float *vPrevPos, const float *vStartPos)
 {
     float fLookaheadAmount; // [esp+0h] [ebp-34h]
@@ -3073,7 +4342,7 @@ void __fastcall Path_BacktrackCompletedPath(path_t *pPath, const float *vStartPo
         __debugbreak();
     }
     height = fabs((float)(nextPt->fDir2D[0] * offset_4) - (float)(nextPt->fDir2D[1] * offset));
-    LODWORD(amount) = COERCE_UNSIGNED_INT(height * pPath->fCurrLength) ^ _mask__NegFloat_;
+    (amount) = -(height * pPath->fCurrLength);
     if ( nextPt->fOrigLength < pPath->fCurrLength
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp",
@@ -3178,7 +4447,7 @@ LABEL_127:
                     amounta = amounta * 0.75;
                 pPath->fLookaheadAmount = pPath->fLookaheadAmount + amounta;
                 if ( pPath->fLookaheadAmount > 65536.0 )
-                    pPath->fLookaheadAmount = FLOAT_65536_0;
+                    pPath->fLookaheadAmount = 65536.0f;
             }
             return;
         }
@@ -3324,7 +4593,7 @@ LABEL_127:
                     amount = amount * 0.75;
                 pPath->fLookaheadAmount = pPath->fLookaheadAmount + amount;
                 if ( pPath->fLookaheadAmount > 65536.0 )
-                    pPath->fLookaheadAmount = FLOAT_65536_0;
+                    pPath->fLookaheadAmount = 65536.0;
             }
             return;
         }
@@ -3519,7 +4788,7 @@ handleFraction:
             amount = amount * 0.75;
         pPath->fLookaheadAmount = pPath->fLookaheadAmount + amount;
         if ( pPath->fLookaheadAmount > 65536.0 )
-            pPath->fLookaheadAmount = FLOAT_65536_0;
+            pPath->fLookaheadAmount = 65536.0;
     }
 }
 
@@ -3676,8 +4945,8 @@ void __fastcall Path_CalcLookahead(
     }
     if ( dist > fLength )
         dist = fLength;
-    vLookaheadPos[0] = (float)(COERCE_FLOAT(LODWORD(dist) ^ _mask__NegFloat_) * pt->fDir2D[0]) + pt->vOrigPoint[0];
-    vLookaheadPos[1] = (float)(COERCE_FLOAT(LODWORD(dist) ^ _mask__NegFloat_) * pt->fDir2D[1]) + pt->vOrigPoint[1];
+    vLookaheadPos[0] = (float)((-(dist)) * pt->fDir2D[0]) + pt->vOrigPoint[0];
+    vLookaheadPos[1] = (float)((-(dist)) * pt->fDir2D[1]) + pt->vOrigPoint[1];
     if ( bAtStart )
         vCurrPoint = (pathpoint_t *)pPath->vCurrPoint;
     else
@@ -3688,7 +4957,7 @@ void __fastcall Path_CalcLookahead(
     pPath->flags &= 0xFFFFFFBE;
     Path_UpdateLookaheadAmount(
         pPath,
-        vStartPos,
+        (float*)vStartPos,
         vLookaheadPos,
         bReduceLookaheadAmount,
         dist,
@@ -3697,6 +4966,7 @@ void __fastcall Path_CalcLookahead(
         bAllowRestore);
 }
 
+static float minLookaheadDist = 24.0f;
 void __fastcall Path_UpdateLookaheadAmount(
                 path_t *pPath,
                 float *vStartPos,
@@ -3981,6 +5251,7 @@ void __fastcall Path_ReduceLookaheadAmount(path_t *pPath, float maxLookaheadAmou
     pPath->flags &= 0xFFFFFDFC;
 }
 
+static float momentumFactor = 1.5f;
 void __fastcall Path_IncreaseLookaheadAmount(path_t *pPath)
 {
     int v1; // eax
@@ -3996,7 +5267,7 @@ void __fastcall Path_IncreaseLookaheadAmount(path_t *pPath)
     }
     pPath->fLookaheadAmount = pPath->fLookaheadAmount + 6.4000001;
     if ( pPath->fLookaheadAmount > 65536.0 )
-        pPath->fLookaheadAmount = FLOAT_65536_0;
+        pPath->fLookaheadAmount = 65536.0;
     if ( (pPath->flags & 2) != 0 )
         v1 = pPath->flags | 0x200;
     else
@@ -4037,7 +5308,7 @@ void __fastcall Path_CalcLookahead_Completed(
         vLookaheadPos = pPath->pts[pPath->wNegotiationStartNode].vOrigPoint;
     Path_UpdateLookaheadAmount(
         pPath,
-        vStartPos,
+        (float*)vStartPos,
         vLookaheadPos,
         bReduceLookaheadAmount,
         0.0,
@@ -4046,7 +5317,7 @@ void __fastcall Path_CalcLookahead_Completed(
         bAllowRestore);
 
     if ( (float)(totalArea - 21845.334) < 0.0 )
-        v6 = FLOAT_21845_334;
+        v6 = 21845.334f;
     else
         v6 = totalArea;
     if ( (float)(v6 - pPath->fLookaheadAmount) < 0.0 )
@@ -4064,7 +5335,7 @@ void __fastcall PathCalcLookahead_CheckMinLookaheadNodes(path_t *pPath, const pa
     float cos30; // [esp+38h] [ebp-8h]
     float dot; // [esp+3Ch] [ebp-4h]
 
-    cos30 = FLOAT_0_866;
+    cos30 = 0.866f;
     if ( !pPath
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_navigation.cpp", 3269, 0, "%s", "pPath") )
     {
@@ -4390,10 +5661,8 @@ void __fastcall Path_UpdateForwardLookahead_IncompletePath(
     {
         __debugbreak();
     }
-    pPath->forwardLookaheadDir2D[0] = (float)(COERCE_FLOAT(LODWORD(dist) ^ _mask__NegFloat_) * pt->fDir2D[0])
-                                                                    + pt->vOrigPoint[0];
-    pPath->forwardLookaheadDir2D[1] = (float)(COERCE_FLOAT(LODWORD(dist) ^ _mask__NegFloat_) * pt->fDir2D[1])
-                                                                    + pt->vOrigPoint[1];
+    pPath->forwardLookaheadDir2D[0] = (float)((-(dist)) * pt->fDir2D[0]) + pt->vOrigPoint[0];
+    pPath->forwardLookaheadDir2D[1] = (float)((-(dist)) * pt->fDir2D[1]) + pt->vOrigPoint[1];
     pPath->forwardLookaheadDir2D[0] = pPath->forwardLookaheadDir2D[0] - *vForwardStartPos;
     pPath->forwardLookaheadDir2D[1] = pPath->forwardLookaheadDir2D[1] - vForwardStartPos[1];
     Vec2Normalize(pPath->forwardLookaheadDir2D);
@@ -4652,10 +5921,10 @@ ai_stance_e __fastcall Path_AllowedStancesForPath(path_t *pPath)
     {
         i = pPath->wPathLen - 1;
         if ( pPath->pts[i].iNodeNum < 0 )
-            return 7;
+            return STANCE_ANY;
         v3 = Path_ConvertIndexToNode(pPath->pts[i].iNodeNum);
         if ( !Path_IsPathStanceNode(v3) )
-            return 7;
+            return STANCE_ANY;
     }
     if ( pPath->pts[i].iNodeNum < 0
         && !Assert_MyHandler(
@@ -4767,10 +6036,10 @@ char __fastcall Path_AttemptDodge(
     {
         __debugbreak();
     }
-    Path_PredictionTraceCheckForEntities(vOrg, vDodgeStart, entities, entityCount, entityIgnore, mask, vNewDodgeStart);
+    Path_PredictionTraceCheckForEntities((float*)vOrg, (float *)vDodgeStart, entities, entityCount, entityIgnore, mask, vNewDodgeStart);
     Path_PredictionTraceCheckForEntities(
         vNewDodgeStart,
-        vDodgeEnd,
+        (float *)vDodgeEnd,
         entities,
         entityCount,
         entityIgnore,
@@ -4874,7 +6143,7 @@ fail_2:
         vEnd[2] = pt->vOrigPoint[2];
         if ( ai_showDodge->current.enabled )
             CG_DebugLine(vNewDodgeEnd, vEnd, colorRed, 0, 25);
-        result = Path_PredictionTraceCheckForEntities(
+        result = (PredictionTraceResult)Path_PredictionTraceCheckForEntities(
                              vNewDodgeEnd,
                              vEnd,
                              entities,
@@ -5347,7 +6616,7 @@ void __fastcall Path_TrimToBadPlaceLink(path_t *pPath, team_t eTeam)
     }
 }
 
-char __thiscall CustomSearchInfo_FindCloseNode::IgnoreNode(CustomSearchInfo_FindCloseNode *this, pathnode_t *pNode)
+char __thiscall CustomSearchInfo_FindCloseNode::IgnoreNode(pathnode_t *pNode)
 {
     float v3; // [esp+Ch] [ebp-Ch]
     float heightDist; // [esp+10h] [ebp-8h]
@@ -5368,7 +6637,6 @@ char __thiscall CustomSearchInfo_FindCloseNode::IgnoreNode(CustomSearchInfo_Find
 }
 
 double __thiscall CustomSearchInfo_FindPath::EvaluateHeuristic(
-                CustomSearchInfo_FindPath *this,
                 pathnode_t *pSuccessor,
                 const float *vGoalPos)
 {
@@ -5387,12 +6655,11 @@ double __thiscall CustomSearchInfo_FindPath::EvaluateHeuristic(
     return dist;
 }
 
-double __userpurge CustomSearchInfo_FindPathWithWidth::EvaluateHeuristic@<st0>(
-                CustomSearchInfo_FindPathWithWidth *this@<ecx>,
-                float a2@<ebp>,
+double  CustomSearchInfo_FindPathWithWidth::EvaluateHeuristic(
                 pathnode_t *pSuccessor,
                 const float *vGoalPos)
 {
+#if 0
     double v4; // xmm0_8
     long double v6; // [esp-18h] [ebp-3Ch]
     float v7; // [esp+8h] [ebp-1Ch] BYREF
@@ -5413,10 +6680,26 @@ double __userpurge CustomSearchInfo_FindPathWithWidth::EvaluateHeuristic@<st0>(
     *(float *)&v4 = v4;
     pSuccessor->transient.costFactor = *(float *)&v4;
     return Vec2Length(&v7) * *(float *)&v4;
+#endif
+
+    // aislop
+    // 
+    // Compute delta vector from successor to goal
+    float dx = pSuccessor->constant.vOrigin[0] - vGoalPos[0];
+    float dy = pSuccessor->constant.vOrigin[1] - vGoalPos[1];
+
+    // Project delta onto the "perp" vector, subtract width, scale
+    float proj = (perp[0] * dx + perp[1] * dy) - width;
+    float factor = expf(fabsf(proj) * 0.0069077001f); // approximate exponential decay
+
+    // Store factor in successor costFactor
+    pSuccessor->transient.costFactor = factor;
+
+    // Return 2D distance to goal multiplied by the factor
+    return Vec2Length(&dx) * factor;
 }
 
 double __thiscall CustomSearchInfo_FindPathWithLOS::EvaluateHeuristic(
-                CustomSearchInfo_FindPathWithLOS *this,
                 pathnode_t *pSuccessor,
                 const float *vGoalPos)
 {
@@ -5436,7 +6719,6 @@ double __thiscall CustomSearchInfo_FindPathWithLOS::EvaluateHeuristic(
 }
 
 double __thiscall CustomSearchInfo_FindPathClosestPossible::EvaluateHeuristic(
-                CustomSearchInfo_FindPathClosestPossible *this,
                 pathnode_t *pSuccessor,
                 const float *vGoalPos)
 {

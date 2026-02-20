@@ -430,18 +430,18 @@ void __cdecl Scr_Vehicle_Pain(
                 const float *dir,
                 hitLocation_t hitLoc,
                 int weaponIdx);
-void __cdecl Scr_Vehicle_Touch(gentity_s *pSelf, gentity_s *pOther);
+void __cdecl Scr_Vehicle_Touch(gentity_s *pSelf, gentity_s *pOther, int __formal);
 unsigned __int16 __cdecl G_GetVehicleTypeString(int clientNum, int entityNum);
-void __cdecl Scr_Vehicle_Use(gentity_s *pEnt, gentity_s *pOther);
+void __cdecl Scr_Vehicle_Use(gentity_s *pEnt, gentity_s *pOther, gentity_s *__formal);
 void __cdecl Scr_Vehicle_Die(
                 gentity_s *pSelf,
                 gentity_s *pInflictor,
                 gentity_s *pAttacker,
                 int damage,
                 int mod,
-                int weapon,
-                float *dir,
-                hitLocation_t hitLoc,
+                const int weapon,
+                const float *dir,
+                const hitLocation_t hitLoc,
                 int timeOffset);
 void __cdecl SP_script_vehicle(gentity_s *pSelf, SpawnVar *spawnVar);
 void __cdecl SP_script_vehicle_collmap(gentity_s *pSelf);
@@ -482,7 +482,7 @@ void __cdecl CMD_VEH_IsVehicleUsable(scr_entref_t entref);
 void __cdecl CMD_VEH_MakeVehicleUsable(scr_entref_t entref);
 void __cdecl CMD_VEH_MakeVehicleUnusable(scr_entref_t entref);
 void __cdecl CMD_VEH_UseVehicle(scr_entref_t entref);
-void __cdecl CMD_VEH_SetViewClamp();
+void __cdecl CMD_VEH_SetViewClamp(scr_entref_t entref);
 void __cdecl CMD_VEH_ResetViewClamp(scr_entref_t entref);
 void __cdecl CMD_VEH_SetVehicleLookatText(scr_entref_t entref);
 void __cdecl CMD_VEH_NearGoalNotifyDist(scr_entref_t entref);

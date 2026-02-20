@@ -22,3 +22,5 @@ void __cdecl Com_ShutdownDObj();
 void __cdecl DB_SaveDObjs();
 void __cdecl DB_LoadDObjs();
 DObj *__cdecl Com_GetClientDObj(unsigned int handle, int localClientNum);
+
+extern unsigned int objBuf[3072][31];

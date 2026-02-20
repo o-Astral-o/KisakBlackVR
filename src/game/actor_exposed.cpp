@@ -1,4 +1,12 @@
 #include "actor_exposed.h"
+#include <game_mp/actor_mp.h>
+#include <game_mp/g_main_mp.h>
+#include "actor_senses.h"
+#include "actor_state.h"
+#include <game_mp/g_utils_mp.h>
+#include "actor_navigation.h"
+#include "actor_orientation.h"
+#include "actor_events.h"
 
 void __fastcall Actor_Exposed_FindReacquireNode(actor_s *self)
 {

@@ -1,4 +1,257 @@
 #include "g_hudelem.h"
+#include <cgame/cg_hudelem.h>
+#include <game_mp/g_spawn_mp.h>
+#include <game_mp/g_utils_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <clientscript/cscr_stringlist.h>
+#include <clientscript/scr_const.h>
+#include <server_mp/sv_init_mp.h>
+#include <bgame/bg_misc.h>
+#include <server/sv_game.h>
+#include <cgame/cg_scr_main.h>
+
+const game_hudelem_field_t fields_0[28] =
+{
+  { "x", 0, 4, F_FLOAT, 0, 0, NULL, NULL },
+  { "y", 4, 4, F_FLOAT, 0, 0, NULL, NULL },
+  { "z", 8, 4, F_FLOAT, 0, 0, NULL, NULL },
+  { "fontscale", 12, 4, F_FLOAT, -1, 0, &HudElem_SetFontScale, NULL },
+  { "font", 101, 1, F_INT, -1, 0, &HudElem_SetFont, &HudElem_GetFont },
+  { "alignx", 102, 1, F_INT, 3, 2, &HudElem_SetAlignX, &HudElem_GetAlignX },
+  { "aligny", 102, 1, F_INT, 3, 0, &HudElem_SetAlignY, &HudElem_GetAlignY },
+  {
+    "horzalign",
+    103,
+    1,
+    F_INT,
+    15,
+    4,
+    &HudElem_SetHorzAlign,
+    &HudElem_GetHorzAlign
+  },
+  {
+    "vertalign",
+    103,
+    1,
+    F_INT,
+    15,
+    0,
+    &HudElem_SetVertAlign,
+    &HudElem_GetVertAlign
+  },
+  { "color", 16, 4, F_INT, -1, 0, &HudElem_SetColor, &HudElem_GetColor },
+  { "alpha", 16, 4, F_INT, -1, 0, &HudElem_SetAlpha, &HudElem_GetAlpha },
+  { "label", 72, 2, F_INT, -1, 0, &HudElem_SetLocalizedString, NULL },
+  { "sort", 56, 4, F_FLOAT, 0, 0, NULL, NULL },
+  {
+    "foreground",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagForeground,
+    &HudElem_GetFlagForeground
+  },
+  {
+    "hidewhendead",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagHideWhenDead,
+    &HudElem_GetFlagHideWhenDead
+  },
+  {
+    "hidewheninkillcam",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagHideWhenInKillCam,
+    &HudElem_GetFlagHideWhenInKillCam
+  },
+  {
+    "hidewhenindemo",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagHideWhenInDemo,
+    &HudElem_GetFlagHideWhenInDemo
+  },
+  {
+    "overrridewhenindemo",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagOverrideWhenInDemo,
+    &HudElem_GetFlagOverrideWhenInDemo
+  },
+  {
+    "hidewhileremotecontrolling",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagHideWhileRemoteControlling,
+    &HudElem_GetFlagHideWhileRemoteControlling
+  },
+  {
+    "hidewheninmenu",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagHideWhenInMenu,
+    &HudElem_GetFlagHideWhenInMenu
+  },
+  {
+    "fadewhentargeted",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFlagFadeWhenTargeted,
+    &HudElem_GetFlagFadeWhenTargeted
+  },
+  {
+    "fontstyle3d",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFontStyle3d,
+    &HudElem_GetFontStyle3d
+  },
+  {
+    "font3duseglowcolor",
+    98,
+    2,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetFont3dUseGlowColor,
+    &HudElem_GetFont3dUseGlowColor
+  },
+  {
+    "glowcolor",
+    60,
+    4,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetGlowColor,
+    &HudElem_GetGlowColor
+  },
+  {
+    "glowalpha",
+    60,
+    4,
+    F_INT,
+    -1,
+    0,
+    &HudElem_SetGlowAlpha,
+    &HudElem_GetGlowAlpha
+  },
+  { "archived", 120, 4, F_INT, -1, 0, &HudElem_SetBoolean, NULL },
+  {
+    "ui3dwindow",
+    109,
+    1,
+    F_BYTE,
+    -1,
+    0,
+    &HudElem_SetUI3DWindow,
+    &HudElem_GetUI3DWindow
+  },
+  { NULL, 0, 0, F_INT, 0, 0, NULL, NULL }
+};
+
+const BuiltinMethodDef methods_0[26] =
+{
+  { "settext", &HECmd_SetText, 0 },
+  { "clearalltextafterhudelem", &HECmd_ClearAllTextAfterHudElem, 0 },
+  { "setshader", &HECmd_SetMaterial, 0 },
+  { "settargetent", &HECmd_SetTargetEnt, 0 },
+  { "cleartargetent", &HECmd_ClearTargetEnt, 0 },
+  { "settimer", &HECmd_SetTimer, 0 },
+  { "settimerup", &HECmd_SetTimerUp, 0 },
+  { "settenthstimer", &HECmd_SetTenthsTimer, 0 },
+  { "settenthstimerup", &HECmd_SetTenthsTimerUp, 0 },
+  { "setclock", &HECmd_SetClock, 0 },
+  { "setclockup", &HECmd_SetClockUp, 0 },
+  { "setvalue", &HECmd_SetValue, 0 },
+  { "setwaypoint", &HECmd_SetWaypoint, 0 },
+  { "fadeovertime", &HECmd_FadeOverTime, 0 },
+  { "scaleovertime", &HECmd_ScaleOverTime, 0 },
+  { "moveovertime", &HECmd_MoveOverTime, 0 },
+  { "reset", &HECmd_Reset, 0 },
+  { "destroy", &HECmd_Destroy, 0 },
+  { "setpulsefx", &HECmd_SetPulseFX, 0 },
+  { "setcod7decodefx", &HECmd_SetCOD7DecodeFX, 0 },
+  { "setredactfx", &HECmd_SetRedactFX, 0 },
+  { "gettextwidth", &HECmd_GetTextWidth, 0 },
+  { "setplayernamestring", &HECmd_SetPlayerNameString, 0 },
+  { "setmapnamestring", &HECmd_SetMapNameString, 0 },
+  { "setgametypestring", &HECmd_SetGameTypeString, 0 },
+  { "setwargamedata", &HECmd_SetWarGameData, 0 }
+};
+
+
+
+const char *g_he_textstyle[3] = { "normal", "shadowed", "shadowedmore" };
+const char *g_he_font[7] = { "default", "bigfixed", "smallfixed", "objective", "big", "small", "extrabig" };
+const char *g_he_alignx[3] =
+{ "left", "center", "right" };
+
+const char *g_he_aligny[3] =
+{ "top", "middle", "bottom" };
+
+const char *g_he_textstyle[3] =
+{ "normal", "shadowed", "shadowedmore" };
+
+const char *g_he_horzalign[11] =
+{
+  "subleft",
+  "left",
+  "center",
+  "right",
+  "fullscreen",
+  "noscale",
+  "alignto640",
+  "center_safearea",
+  "user_left",
+  "user_center",
+  "user_right"
+};
+
+const char *g_he_vertalign[11] =
+{
+  "subtop",
+  "top",
+  "middle",
+  "bottom",
+  "fullscreen",
+  "noscale",
+  "alignto480",
+  "center_safearea",
+  "user_top",
+  "user_center",
+  "user_bottom"
+};
+
+hudelem_s g_dummyHudCurrent_0;
+
 
 int __cdecl GetField(const int *i, int size)
 {
@@ -170,7 +423,7 @@ void __cdecl HudElem_SetLocalizedString(game_hudelem_s *hud, int offset)
 {
     int size; // [esp+0h] [ebp-18h]
     int v3; // [esp+4h] [ebp-14h]
-    _BYTE *v4; // [esp+Ch] [ebp-Ch]
+    char *v4; // [esp+Ch] [ebp-Ch]
     char *string; // [esp+10h] [ebp-8h]
     const game_hudelem_field_t *f; // [esp+14h] [ebp-4h]
 
@@ -952,7 +1205,7 @@ void __cdecl HudElem_SetBoolean(game_hudelem_s *hud, int offset)
 {
     const game_hudelem_field_t *v2; // eax
     int size; // [esp+0h] [ebp-14h]
-    _BYTE *v4; // [esp+8h] [ebp-Ch]
+    char *v4; // [esp+8h] [ebp-Ch]
     int value; // [esp+10h] [ebp-4h]
 
     value = Scr_GetInt(0, SCRIPTINSTANCE_SERVER).intValue;
@@ -1236,7 +1489,7 @@ void __cdecl HudElem_SetEnumString(
 {
     const char *v4; // eax
     int size; // [esp+0h] [ebp-820h]
-    _BYTE *v6; // [esp+8h] [ebp-818h]
+    char *v6; // [esp+8h] [ebp-818h]
     char *selectedName; // [esp+Ch] [ebp-814h]
     char errormsg[2052]; // [esp+10h] [ebp-810h] BYREF
     int nameIndex; // [esp+818h] [ebp-8h]

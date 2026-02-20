@@ -1,6 +1,125 @@
 #include "pathnode.h"
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include <bgame/bg_slidemove.h>
+#include <universal/com_math_anglevectors.h>
+#include <clientscript/cscr_stringlist.h>
+#include <universal/com_memory.h>
+#include <gfx_d3d/r_dvars.h>
+#include "pathnode_load_obj.h"
+#include <qcommon/com_bsp_load_obj.h>
+#include <qcommon/cm_world.h>
+#include <win32/win_main.h>
+#include "actor_navigation.h"
+#include <clientscript/scr_const.h>
+#include <cgame/cg_drawtools.h>
+#include <game_mp/g_utils_mp.h>
+#include "g_debug.h"
+#include <client_mp/cl_cgame_mp.h>
+#include "actor_exposed.h"
 
-void __cdecl Path_GetType(pathnode_t *node)
+#include <algorithm>
+#include <game_mp/actor_mp.h>
+#include <qcommon/dobj_management.h>
+#include <server/sv_game.h>
+
+node_field_t fields_3[12] =
+{
+  { "targetname", 6, { 2 }, F_STRING, NULL },
+  { "target", 12, { 2 }, F_STRING, NULL },
+  { "animscript", 14, { 2 }, F_STRING, NULL },
+  { "script_linkname", 8, { 2 }, F_STRING, NULL },
+  { "script_noteworthy", 10, { 2 }, F_STRING, NULL },
+  { "origin", 20, { 12 }, F_VECTOR, NULL },
+  { "angles", 32, { 4 }, F_VECTORHACK, NULL },
+  { "radius", 44, { 4 }, F_FLOAT, NULL },
+  { "minusedistsq", 48, { 4 }, F_FLOAT, NULL },
+  { "spawnflags", 4, { 2 }, F_SHORT, NULL },
+  { "type", 0, { 4 }, F_INT, Path_GetType },
+  { NULL, 0, { 0 }, F_INT, NULL }
+};
+
+const char *nodeStringTable[21] =
+{
+  "BAD NODE",
+  "Path",
+  "Cover Stand",
+  "Cover Crouch",
+  "Cover Crouch Window",
+  "Cover Prone",
+  "Cover Right",
+  "Cover Left",
+  "Cover Wide Right",
+  "Cover Wide Left",
+  "Cover Pillar",
+  "Conceal Stand",
+  "Conceal Crouch",
+  "Conceal Prone",
+  "Reacquire",
+  "Balcony",
+  "Scripted",
+  "Begin",
+  "End",
+  "Turret",
+  "Guard"
+};
+
+const float nodeColorTable[21][4] =
+{
+  { 1.0, 0.0, 0.0, 1.0 },
+  { 1.0, 0.0, 1.0, 1.0 },
+  { 0.0, 0.54000002, 0.66000003, 1.0 },
+  { 0.0, 0.93000001, 0.72000003, 1.0 },
+  { 0.0, 0.69999999, 0.5, 1.0 },
+  { 0.0, 0.60000002, 0.46000001, 1.0 },
+  { 0.85000002, 0.85000002, 0.1, 1.0 },
+  { 1.0, 0.69999999, 0.0, 1.0 },
+  { 0.75, 0.75, 0.0, 1.0 },
+  { 0.75, 0.52999997, 0.38, 1.0 },
+  { 0.1, 0.85000002, 0.1, 1.0 },
+  { 0.0, 0.0, 1.0, 1.0 },
+  { 0.0, 0.0, 0.75, 1.0 },
+  { 0.0, 0.0, 0.5, 1.0 },
+  { 0.51999998, 0.51999998, 0.60000002, 1.0 },
+  { 0.5, 0.5, 0.0, 1.0 },
+  { 0.72000003, 0.72000003, 0.82999998, 1.0 },
+  { 0.5, 0.60000002, 0.5, 1.0 },
+  { 0.60000002, 0.5, 0.5, 1.0 },
+  { 0.0, 0.93000001, 0.72000003, 1.0 },
+  { 0.69999999, 0.0, 0.0, 1.0 }
+};
+
+pathlocal_t g_path;
+path_t *debugPath;
+path_t debugPathBuf;
+phys_inplace_avl_tree<unsigned int, generic_avl_map_node_t, generic_avl_map_node_t> g_pathnode_resized_links_map;
+phys_simple_allocator<pathnode_parent_t> g_pathnode_parent_allocator;
+phys_inplace_avl_tree<unsigned int, generic_avl_map_node_t, generic_avl_map_node_t> g_parented_pathnode_list_map;
+phys_inplace_avl_tree<unsigned int, generic_avl_map_node_t, generic_avl_map_node_t> g_pathnode_parent_map;
+
+pathnode_parent_t node_parent_world;
+
+int overCount;
+float adjust_maxs[3];
+float adjust_mins[3];
+float perp[2];
+float width;
+float vGoalPos[3];
+int iValidBits;
+float vStartPos[3];
+const char *g_pathsError;
+pathstatic_t pathstatic;
+GameWorldMp *gameWorldCurrent = &gameWorldMp;
+void *g_oldContents;
+pathlink_s g_tempPathNodeLinks[2048];
+int g_tempPathNodeLinksCount;
+
+pathnode_t *g_radiant_selected_pathnode;
+
+// *WARNING* One or more selections were skipped as they could not be interpreted as c data
+
+
+void __cdecl Path_GetType(pathnode_t *node, int)
 {
     if ( node->constant.type > (unsigned int)NODE_GUARD
         && !Assert_MyHandler(
@@ -103,45 +222,48 @@ void __cdecl GScr_SetDynamicPathnodeField(pathnode_t *node, unsigned int index)
     Scr_SetDynamicEntityField(v2, 2u, index, SCRIPTINSTANCE_SERVER, 0);
 }
 
-void    parented_pathnode_list_update(generic_avl_map_node_t *a1@<ebp>, gentity_s *gent, const phys_mat44 *mat)
+void    parented_pathnode_list_update(gentity_s *gent, const phys_mat44 *mat)
 {
     const phys_vec3 *v3; // [esp-20h] [ebp-40h]
     phys_vec3 v4; // [esp-1Ch] [ebp-3Ch] BYREF
-    unsigned int v5[3]; // [esp-Ch] [ebp-2Ch] BYREF
-    phys_vec3 v; // [esp+0h] [ebp-20h]
-    pathnode_parent_t *node_parent; // [esp+10h] [ebp-10h]
-    generic_avl_map_node_t *gamn[2]; // [esp+14h] [ebp-Ch] BYREF
-    generic_avl_map_node_t *retaddr; // [esp+20h] [ebp+0h]
-
-    gamn[0] = a1;
-    gamn[1] = retaddr;
-    if ( enable_moving_paths->current.integer == 1 )
+    phys_vec3 v5; // [esp-Ch] [ebp-2Ch] BYREF
+    pathnode_parent_t *node_parent; // [esp+4h] [ebp-1Ch]
+    generic_avl_map_node_t *gamn; // [esp+8h] [ebp-18h]
+    generic_avl_map_node_t *m_tree_root; // [esp+Ch] [ebp-14h]
+    unsigned int avl_key; // [esp+10h] [ebp-10h]
+    //_UNKNOWN *v10[2]; // [esp+14h] [ebp-Ch] BYREF
+    //const float *__formal; // [esp+20h] [ebp+0h]
+    //
+    //v10[0] = a1;
+    //v10[1] = __formal;
+    if (enable_moving_paths->current.integer == 1)
     {
-        node_parent = (pathnode_parent_t *)gent->s.number;
-        LODWORD(v.w) = (phys_inplace_avl_tree<unsigned int,generic_avl_map_node_t,generic_avl_map_node_t>)g_parented_pathnode_list_map.m_tree_root;
-        while ( LODWORD(v.w) && node_parent != *(pathnode_parent_t **)(LODWORD(v.w) + 4) )
+        avl_key = gent->s.number;
+        m_tree_root = g_parented_pathnode_list_map.m_tree_root;
+        while (m_tree_root && avl_key != m_tree_root->m_avl_key)
         {
-            if ( (unsigned int)node_parent >= *(unsigned int *)(LODWORD(v.w) + 4) )
-                v.w = *(float *)(LODWORD(v.w) + 12);
+            if (avl_key >= m_tree_root->m_avl_key)
+                m_tree_root = m_tree_root->m_avl_node_info.m_right;
             else
-                v.w = *(float *)(LODWORD(v.w) + 8);
+                m_tree_root = m_tree_root->m_avl_node_info.m_left;
         }
-        v.z = v.w;
-        if ( LODWORD(v.w) )
+        gamn = m_tree_root;
+        if (m_tree_root)
         {
-            for ( v.y = *(float *)LODWORD(v.z); LODWORD(v.y); v.y = *(float *)(LODWORD(v.y) + 20) )
+            for (node_parent = (pathnode_parent_t *)gamn->m_data; node_parent; node_parent = node_parent->m_next)
             {
-                Phys_Vec3ToNitrousVec((float *)LODWORD(v.y), (phys_vec3 *)v5);
-                v3 = phys_full_multiply((int)gamn, &v4, mat, (const phys_vec3 *)v5);
-                v5[0] = LODWORD(v3->x);
-                v5[1] = LODWORD(v3->y);
-                v5[2] = LODWORD(v3->z);
-                Phys_NitrousVecToVec3((const phys_vec3 *)v5, (float *)(*(unsigned int *)(LODWORD(v.y) + 16) + 20));
+                Phys_Vec3ToNitrousVec(node_parent->origin_loc, &v5);
+                v3 = phys_full_multiply(&v4, mat, &v5);
+                v5.x = v3->x;
+                v5.y = v3->y;
+                v5.z = v3->z;
+                Phys_NitrousVecToVec3(&v5, node_parent->m_node->constant.vOrigin);
             }
         }
     }
 }
 
+int first_time_called = 1;
 const pathnode_parent_t *__cdecl get_pathnode_parent(const pathnode_t *node)
 {
     generic_avl_map_node_t *m_tree_root; // [esp+0h] [ebp-Ch]
@@ -199,144 +321,123 @@ void __cdecl G_DropPathNodeToFloor(unsigned int nodeIndex)
 {
     int savedregs; // [esp+4h] [ebp+0h] BYREF
 
-    node_droptofloor((cStaticModel_s *)&savedregs, &gameWorldCurrent->path.nodes[nodeIndex]);
+    node_droptofloor(&gameWorldCurrent->path.nodes[nodeIndex]);
     G_InitPathBaseNode(&gameWorldCurrent->path.basenodes[nodeIndex], &gameWorldCurrent->path.nodes[nodeIndex]);
 }
 
 // local variable allocation has failed, the output may be wrong!
-void    node_droptofloor(cStaticModel_s *a1@<ebp>, pathnode_t *node)
+void    node_droptofloor(pathnode_t *node)
 {
-    float v2[3]; // [esp+18h] [ebp-15Ch] BYREF
-    float origin_loc[5]; // [esp+24h] [ebp-150h] BYREF
-    unsigned int v4[3]; // [esp+38h] [ebp-13Ch] BYREF
-    phys_vec3 node_pos; // [esp+44h] [ebp-130h] BYREF
-    _BYTE gent_mat_36[32]; // [esp+78h] [ebp-FCh] OVERLAPPED BYREF
-    gentity_s *v7; // [esp+B0h] [ebp-C4h]
-    int v8; // [esp+B4h] [ebp-C0h]
-    float *v9; // [esp+B8h] [ebp-BCh]
-    gentity_s *gent; // [esp+BCh] [ebp-B8h]
-    int gentnum; // [esp+C0h] [ebp-B4h]
-    float v12; // [esp+C4h] [ebp-B0h] BYREF
-    int save_hitId; // [esp+C8h] [ebp-ACh] OVERLAPPED
-    TraceHitType save_hitType; // [esp+CCh] [ebp-A8h]
-    float dropMaxs[3]; // [esp+D0h] [ebp-A4h] BYREF
-    float dropMins[3]; // [esp+DCh] [ebp-98h] BYREF
-    float endpos[3]; // [esp+E8h] [ebp-8Ch] BYREF
-    float vEnd[3]; // [esp+F4h] [ebp-80h]
-    float vOrigin[4]; // [esp+100h] [ebp-74h] BYREF
-    col_context_t context; // [esp+110h] [ebp-64h] BYREF
-    trace_t trace; // [esp+138h] [ebp-3Ch] BYREF
-    int retaddr; // [esp+174h] [ebp+0h]
-
-    trace.staticModel = a1;
-    trace.hitPartition = retaddr;
-    memset(&context.locational, 0, 12);
-    trace.normal.vec.u[0] = 0;
-    col_context_t::col_context_t((col_context_t *)&vOrigin[1]);
-    LODWORD(vOrigin[0]) = node->constant.vOrigin;
-    vEnd[0] = node->constant.vOrigin[0];
-    vEnd[1] = node->constant.vOrigin[1];
-    vEnd[2] = node->constant.vOrigin[2];
-    endpos[0] = vEnd[0];
-    endpos[1] = vEnd[1];
-    endpos[2] = vEnd[2] - 256.0;
-    dropMins[0] = vEnd[0];
-    dropMins[1] = vEnd[1];
-    dropMins[2] = vEnd[2] + 1.0;
-    dropMaxs[0] = actorMins[0];
-    dropMaxs[1] = -15.0;
-    dropMaxs[2] = 0.0;
-    v12 = actorMaxs[0];
-    save_hitId = 1097859072;
-    *(float *)&save_hitType = (float)(15.0 - -15.0) + 0.0;
-    G_TraceCapsule(
-        (trace_t *)&context.locational,
-        dropMins,
-        dropMaxs,
-        &v12,
-        endpos,
-        1023,
-        (int)&loc_82000C + 5,
-        (col_context_t *)&vOrigin[1]);
-    if ( HIWORD(trace.hitType) )
-        goto LABEL_2;
-    if ( trace.normal.vec.v[1] == 1.0 )
+    float origin_loc[3]; // [esp+18h] [ebp-15Ch] BYREF
+    phys_vec3 *v3; // [esp+24h] [ebp-150h]
+    phys_vec3 v4; // [esp+28h] [ebp-14Ch] BYREF
+    phys_vec3 node_pos; // [esp+38h] [ebp-13Ch] BYREF
+    phys_mat44 gent_mat; // [esp+48h] [ebp-12Ch] BYREF
+    float v7[6]; // [esp+8Ch] [ebp-E8h] BYREF
+    gentity_s *gent; // [esp+B0h] [ebp-C4h]
+    int gentnum; // [esp+B4h] [ebp-C0h]
+    float *v10; // [esp+B8h] [ebp-BCh]
+    float save_hitId; // [esp+BCh] [ebp-B8h]
+    TraceHitType save_hitType; // [esp+C0h] [ebp-B4h]
+    float dropMaxs[3]; // [esp+C4h] [ebp-B0h] BYREF
+    float dropMins[3]; // [esp+D0h] [ebp-A4h] BYREF
+    float endpos[3]; // [esp+DCh] [ebp-98h] BYREF
+    float vEnd[3]; // [esp+E8h] [ebp-8Ch] BYREF
+    float vOrigin[4]; // [esp+F4h] [ebp-80h]
+    col_context_t context; // [esp+104h] [ebp-70h] BYREF
+    trace_t trace; // [esp+12Ch] [ebp-48h] BYREF
+    //_UNKNOWN *v20[2]; // [esp+168h] [ebp-Ch] BYREF
+    //int v21; // [esp+170h] [ebp-4h] BYREF
+    //int vars0; // [esp+174h] [ebp+0h]
+    //
+    //v20[0] = a1;
+    //v20[1] = (_UNKNOWN *)vars0;
+    memset(&trace, 0, 16);
+    //col_context_t::col_context_t(&context);
+    //LODWORD(vOrigin[3]) = node + 20;
+    vOrigin[0] = *(float *)(node + 20);
+    vOrigin[1] = *(float *)(node + 24);
+    vOrigin[2] = *(float *)(node + 28);
+    vEnd[0] = vOrigin[0];
+    vEnd[1] = vOrigin[1];
+    vEnd[2] = vOrigin[2] - 256.0;
+    endpos[0] = vOrigin[0];
+    endpos[1] = vOrigin[1];
+    endpos[2] = vOrigin[2] + 1.0;
+    dropMins[0] = actorMins[0];
+    dropMins[1] = actorMins[1];
+    dropMins[2] = actorMins[2];
+    dropMaxs[0] = actorMaxs[0];
+    dropMaxs[1] = actorMaxs[1];
+    dropMaxs[2] = (float)(15.0 - -15.0) + 0.0;
+    G_TraceCapsule(&trace, endpos, dropMins, dropMaxs, vEnd, 1023, (int)0x82000C + 5, &context);
+    if (trace.startsolid || trace.allsolid)
+        goto LABEL_3;
+    if (trace.fraction == 1.0)
     {
         printf(
             "ERROR: Pathnode (%s) at (%g %g %g) is floating\n",
-            nodeStringTable[node->constant.type],
-            vEnd[0],
-            vEnd[1],
-            vEnd[2]);
+            nodeStringTable[*(_DWORD *)node],
+            vOrigin[0],
+            vOrigin[1],
+            vOrigin[2]);
         Com_PrintError(
             1,
             "ERROR: Pathnode (%s) at (%g %g %g) is floating\n",
-            nodeStringTable[node->constant.type],
-            vEnd[0],
-            vEnd[1],
-            vEnd[2]);
-        node->constant.type = NODE_BADNODE;
+            nodeStringTable[*(_DWORD *)node],
+            vOrigin[0],
+            vOrigin[1],
+            vOrigin[2]);
+        *(_DWORD *)node = 0;
     }
     else
     {
-        Vec3Lerp(dropMins, endpos, trace.normal.vec.v[1], dropMins);
-        gentnum = LODWORD(trace.fraction);
-        LOWORD(gent) = trace.sflags;
-        G_TraceCapsule(
-            (trace_t *)&context.locational,
-            dropMins,
-            actorMins,
-            actorMaxs,
-            dropMins,
-            1023,
-            (int)&loc_82000C + 5,
-            (col_context_t *)&vOrigin[1]);
-        if ( HIWORD(trace.hitType) )
+        Vec3Lerp(endpos, vEnd, trace.fraction, endpos);
+        save_hitType = trace.hitType;
+        LOWORD(save_hitId) = trace.hitId;
+        G_TraceCapsule(&trace, endpos, actorMins, actorMaxs, endpos, 1023, (int)0x82000C + 5, &context);
+        if (trace.startsolid || trace.allsolid)
         {
-LABEL_2:
+        LABEL_3:
             printf(
                 "ERROR: Pathnode (%s) at (%g %g %g) is in solid\n",
-                nodeStringTable[node->constant.type],
-                vEnd[0],
-                vEnd[1],
-                vEnd[2]);
+                nodeStringTable[*(_DWORD *)node],
+                vOrigin[0],
+                vOrigin[1],
+                vOrigin[2]);
             Com_PrintError(
                 1,
                 "ERROR: Pathnode (%s) at (%g %g %g) is in solid\n",
-                nodeStringTable[node->constant.type],
-                vEnd[0],
-                vEnd[1],
-                vEnd[2]);
-            node->constant.type = NODE_BADNODE;
+                nodeStringTable[*(_DWORD *)node],
+                vOrigin[0],
+                vOrigin[1],
+                vOrigin[2]);
+            *(_DWORD *)node = 0;
             return;
         }
-        v9 = node->constant.vOrigin;
-        node->constant.vOrigin[0] = dropMins[0];
-        v9[1] = dropMins[1];
-        v9[2] = dropMins[2];
-        if ( (node->constant.spawnflags & 0x100) != 0
-            && gentnum == 1
-            && (unsigned __int16)gent < 0x3FEu
-            && enable_moving_paths->current.integer == 1 )
+        v10 = (float *)(node + 20);
+        *(float *)(node + 20) = endpos[0];
+        v10[1] = endpos[1];
+        v10[2] = endpos[2];
+        if ((*(_WORD *)(node + 4) & 0x100) != 0
+            && save_hitType == TRACE_HITTYPE_ENTITY
+            && LOWORD(save_hitId) < 0x3FEu
+            && enable_moving_paths->current.integer == 1)
         {
-            v8 = (unsigned __int16)gent;
-            v7 = &g_entities[(unsigned __int16)gent];
-            if ( is_moving_entity(v7) )
+            gentnum = LOWORD(save_hitId);
+            gent = &g_entities[LOWORD(save_hitId)];
+            if (is_moving_entity(gent))
             {
-                AnglesToAxis(v7->r.currentAngles, (float (*)[3])&gent_mat_36[20]);
-                Phys_AxisToNitrousMat((float (*)[3])&gent_mat_36[20], (phys_mat44 *)&node_pos.y);
-                Phys_Vec3ToNitrousVec(v7->r.currentOrigin, (phys_vec3 *)gent_mat_36);
-                Phys_Vec3ToNitrousVec(node->constant.vOrigin, (phys_vec3 *)v4);
-                LODWORD(origin_loc[0]) = phys_full_inv_multiply(
-                                                                     (int)&trace.staticModel,
-                                                                     (phys_vec3 *)&origin_loc[1],
-                                                                     (const phys_mat44 *)&node_pos.y,
-                                                                     (const phys_vec3 *)v4);
-                v4[0] = *(unsigned int *)LODWORD(origin_loc[0]);
-                v4[1] = *(unsigned int *)(LODWORD(origin_loc[0]) + 4);
-                v4[2] = *(unsigned int *)(LODWORD(origin_loc[0]) + 8);
-                Phys_NitrousVecToVec3((const phys_vec3 *)v4, v2);
-                setup_pathnode_parent(node, v8, v2);
+                AnglesToAxis(gent->r.currentAngles, (float (*)[3])v7);
+                Phys_AxisToNitrousMat((float (*)[3])v7, &gent_mat);
+                Phys_Vec3ToNitrousVec(gent->r.currentOrigin, &gent_mat.w);
+                Phys_Vec3ToNitrousVec((float *)(node + 20), &node_pos);
+                v3 = phys_full_inv_multiply(&v4, &gent_mat, &node_pos);
+                node_pos.x = v3->x;
+                node_pos.y = v3->y;
+                node_pos.z = v3->z;
+                Phys_NitrousVecToVec3(&node_pos, origin_loc);
+                setup_pathnode_parent((pathnode_t *)node, gentnum, origin_loc);
             }
         }
     }
@@ -356,7 +457,8 @@ void __cdecl setup_pathnode_parent(pathnode_t *node, int entnum, const float *or
     {
         __debugbreak();
     }
-    node_parent = phys_simple_allocator<pathnode_parent_t>::allocate(&g_pathnode_parent_allocator);
+    //node_parent = phys_simple_allocator<pathnode_parent_t>::allocate(&g_pathnode_parent_allocator);
+    node_parent = g_pathnode_parent_allocator.allocate();
     if ( !node_parent
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 1219, 0, "%s", "node_parent") )
     {
@@ -456,7 +558,11 @@ void __cdecl G_SpawnPathnodeDynamic(SpawnVar *spawnVar)
                 if ( g_path.actualNodeCount > gameWorldCurrent->path.nodeCount )
                 {
                     p_dynamic = &loadNode->dynamic;
-                    loadNode->dynamic.pOwner = 0;
+                    SentientHandle shit; // lwss hack
+                    shit.infoIndex = 0;
+                    shit.number = 0;
+                    //loadNode->dynamic.pOwner = 0;
+                    loadNode->dynamic.pOwner = shit;
                     p_dynamic->iFreeTime = 0;
                     p_dynamic->iValidTime[0] = 0;
                     p_dynamic->iValidTime[1] = 0;
@@ -698,16 +804,9 @@ void __cdecl Scr_FreePathnode(pathnode_t *node)
 
     if ( !useFastFile->current.enabled )
         Scr_FreePathnodeFields(node);
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                    1616,
-                    0,
-                    "%s",
-                    "!node->dynamic.pOwner.isDefined()") )
-    {
-        __debugbreak();
-    }
+
+    iassert(!node->dynamic.pOwner.isDefined());
+
     v1 = Path_ConvertNodeToIndex(node);
     Scr_FreeEntityNum(v1, 2u, SCRIPTINSTANCE_SERVER);
 }
@@ -827,7 +926,8 @@ pathnode_t *__cdecl Scr_GetPathnode(unsigned int index, scriptInstance_t inst)
     scr_entref_t v4; // [esp+Ah] [ebp-Eh]
     scr_entref_t entref; // [esp+10h] [ebp-8h]
 
-    v4 = *Scr_GetEntityRef(&v3, index, inst);
+    //v4 = *Scr_GetEntityRef(&v3, index, inst);
+    v4 = Scr_GetEntityRef(index, inst);
     entref = v4;
     if ( v4.classnum == 2 )
     {
@@ -993,53 +1093,52 @@ void __cdecl Path_NodesInCylinder_process(pathnode_t *pnode)
     }
 }
 
+bool first_time_called_0 = true;
 void __cdecl Path_MovingNodesInCylinder()
 {
     generic_avl_map_node_t *m_tree_root; // [esp+0h] [ebp-106Ch]
     void *j; // [esp+18h] [ebp-1054h]
-    unsigned int v2; // [esp+20h] [ebp-104Ch]
+    unsigned int v3; // [esp+20h] [ebp-104Ch]
     int i; // [esp+24h] [ebp-1048h]
     int entityList[1025]; // [esp+4Ch] [ebp-1020h] BYREF
     float maxs[3]; // [esp+1050h] [ebp-1Ch] BYREF
-    int v6; // [esp+105Ch] [ebp-10h]
+    int v7; // [esp+105Ch] [ebp-10h]
     float mins[3]; // [esp+1060h] [ebp-Ch] BYREF
 
-    if ( enable_moving_paths->current.integer == 1 && g_pathnode_parent_allocator.m_count > 0 )
+    if (enable_moving_paths->current.integer == 1 && g_pathnode_parent_allocator.m_count > 0)
     {
-        if ( first_time_called_0 )
+        if (first_time_called_0)
         {
             first_time_called_0 = 0;
             adjust_mins[0] = -15.0 - 2.0;
-            *(float *)&dword_A07A04C = -15.0 - 2.0;
-            *(float *)&dword_A07A050 = 0.0 - 2.0;
+            adjust_mins[1] = -15.0 - 2.0;
+            adjust_mins[2] = 0.0 - 2.0;
             adjust_maxs[0] = 2.0 + 15.0;
-            *(float *)&dword_A07A040 = 2.0 + 15.0;
-            *(float *)&dword_A07A044 = (float)((float)(15.0 - -15.0) + 0.0) + 2.0;
+            adjust_maxs[1] = 2.0 + 15.0;
+            adjust_maxs[2] = (float)((float)(15.0 - -15.0) + 0.0) + 2.0;
         }
-        mins[0] = (float)(COERCE_FLOAT(LODWORD(g_path.circle.maxDist) ^ _mask__NegFloat_) + g_path.circle.origin[0])
-                        + adjust_mins[0];
-        mins[1] = (float)(COERCE_FLOAT(LODWORD(g_path.circle.maxDist) ^ _mask__NegFloat_) + g_path.circle.origin[1])
-                        + *(float *)&dword_A07A04C;
-        mins[2] = (float)(g_path.circle.origin[2] + 0.0) + *(float *)&dword_A07A050;
+        mins[0] = (float)((-(g_path.circle.maxDist)) + g_path.circle.origin[0]) + adjust_mins[0];
+        mins[1] = (float)((-(g_path.circle.maxDist)) + g_path.circle.origin[1]) + adjust_mins[1];
+        mins[2] = (float)(g_path.circle.origin[2] + 0.0) + adjust_mins[2];
         maxs[0] = (float)(g_path.circle.maxDist + g_path.circle.origin[0]) + adjust_maxs[0];
-        maxs[1] = (float)(g_path.circle.maxDist + g_path.circle.origin[1]) + *(float *)&dword_A07A040;
-        maxs[2] = (float)(g_path.circle.maxHeight + g_path.circle.origin[2]) + *(float *)&dword_A07A044;
-        entityList[1024] = (int)&loc_82000C + 5;
-        v6 = CM_AreaEntities(mins, maxs, entityList, 1024, (int)&loc_82000C + 5);
-        for ( i = 0; i < v6; ++i )
+        maxs[1] = (float)(g_path.circle.maxDist + g_path.circle.origin[1]) + adjust_maxs[1];
+        maxs[2] = (float)(g_path.circle.maxHeight + g_path.circle.origin[2]) + adjust_maxs[2];
+        entityList[1024] = (int)0x82000C + 5;
+        v7 = CM_AreaEntities(mins, maxs, entityList, 1024, (int)0x82000C + 5);
+        for (i = 0; i < v7; ++i)
         {
-            v2 = entityList[i];
+            v3 = entityList[i];
             m_tree_root = g_parented_pathnode_list_map.m_tree_root;
-            while ( m_tree_root && v2 != m_tree_root->m_avl_key )
+            while (m_tree_root && v3 != m_tree_root->m_avl_key)
             {
-                if ( v2 >= m_tree_root->m_avl_key )
+                if (v3 >= m_tree_root->m_avl_key)
                     m_tree_root = m_tree_root->m_avl_node_info.m_right;
                 else
                     m_tree_root = m_tree_root->m_avl_node_info.m_left;
             }
-            if ( m_tree_root )
+            if (m_tree_root)
             {
-                for ( j = m_tree_root->m_data; j; j = (void *)*((unsigned int *)j + 5) )
+                for (j = m_tree_root->m_data; j; j = (void *)*((_DWORD *)j + 5))
                     Path_NodesInCylinder_process(*((pathnode_t **)j + 4));
             }
         }
@@ -1084,7 +1183,7 @@ void __cdecl Path_NodesInCylinder_r(pathnode_tree_t *tree)
         dist = g_path.circle.origin[tree->axis] - tree->dist;
         if ( g_path.circle.maxDist < dist )
             goto LABEL_6;
-        if ( COERCE_FLOAT(LODWORD(g_path.circle.maxDist) ^ _mask__NegFloat_) <= dist )
+        if ( (-(g_path.circle.maxDist)) <= dist )
         {
             Path_NodesInCylinder_r(tree->u.child[0]);
 LABEL_6:
@@ -1223,7 +1322,12 @@ void __cdecl Path_InitNodeDynamic(pathnode_t *loadNode)
 {
     float forward[3]; // [esp+10h] [ebp-Ch] BYREF
 
-    loadNode->dynamic.pOwner = 0;
+    SentientHandle shit; // lwss hack
+    shit.number = 0;
+    shit.infoIndex = 0;
+
+    //loadNode->dynamic.pOwner = 0;
+    loadNode->dynamic.pOwner = shit;
     loadNode->dynamic.iFreeTime = 0;
     loadNode->dynamic.iValidTime[0] = 0;
     loadNode->dynamic.iValidTime[1] = 0;
@@ -1260,7 +1364,7 @@ void __cdecl Path_InitPaths()
     if ( !useFastFile->current.enabled && Path_FindOverlappingNodes() && g_connectpaths->current.integer >= 2 )
     {
         printf("FATAL ERROR: Overlapping path nodes. Check console log.\n");
-        Com_Error(ERR_FATAL, &byte_D38194);
+        Com_Error(ERR_FATAL, "Overlapping path nodes. Check console log.");
     }
     Path_ValidateAllNodes();
     if ( g_connectpaths->current.integer )
@@ -1270,8 +1374,9 @@ void __cdecl Path_InitPaths()
         if ( g_connectpaths->current.integer >= 2 )
         {
             Sys_NormalExit();
-            v0 = __iob_func();
-            fflush(v0 + 1);
+            //v0 = __iob_func();
+            //fflush(v0 + 1);
+            fflush(stdout);
             ExitProcess(0);
         }
         Dvar_SetInt((dvar_s *)g_connectpaths, 0);
@@ -1393,43 +1498,42 @@ void __cdecl Path_DrawDebugNoLinks(const pathnode_t *node, const float (*color)[
     vStart[0] = (float)(8.0 * 0.86602539) + vOrg;
     vStart[1] = (float)(8.0 * 0.5) + vOrg_4;
     vStart[2] = (float)(8.0 * 0.0) + vOrg_8;
-    vEnd[0] = (float)(COERCE_FLOAT(LODWORD(8.0f) ^ _mask__NegFloat_) * 0.86602539) + vOrg;
-    vEnd[1] = (float)(COERCE_FLOAT(LODWORD(8.0f) ^ _mask__NegFloat_) * 0.5) + vOrg_4;
-    vEnd[2] = (float)(COERCE_FLOAT(LODWORD(8.0f) ^ _mask__NegFloat_) * 0.0) + vOrg_8;
+    vEnd[0] = (float)((-(8.0f)) * 0.86602539) + vOrg;
+    vEnd[1] = (float)((-(8.0f)) * 0.5) + vOrg_4;
+    vEnd[2] = (float)((-(8.0f)) * 0.0) + vOrg_8;
     CG_DebugLine(vStart, vEnd, (const float *)color, 0, duration);
     vStart[0] = (float)(8.0 * -0.5) + vOrg;
     vStart[1] = (float)(8.0 * 0.86602539) + vOrg_4;
     vStart[2] = (float)(8.0 * 0.0) + vOrg_8;
-    vEnd[0] = (float)(COERCE_FLOAT(LODWORD(8.0f) ^ _mask__NegFloat_) * -0.5) + vOrg;
-    vEnd[1] = (float)(COERCE_FLOAT(LODWORD(8.0f) ^ _mask__NegFloat_) * 0.86602539) + vOrg_4;
-    vEnd[2] = (float)(COERCE_FLOAT(LODWORD(8.0f) ^ _mask__NegFloat_) * 0.0) + vOrg_8;
+    vEnd[0] = (float)((-(8.0f)) * -0.5) + vOrg;
+    vEnd[1] = (float)((-(8.0f)) * 0.86602539) + vOrg_4;
+    vEnd[2] = (float)((-(8.0f)) * 0.0) + vOrg_8;
     CG_DebugLine(vStart, vEnd, (const float *)color, 0, duration);
 }
 
 void __cdecl Path_DrawDebugNode(const float *cameraPos, const pathnode_t *node)
 {
-    char *v3; // [esp+14h] [ebp-178h]
-    char *v5; // [esp+1Ch] [ebp-170h]
-    char *v7; // [esp+24h] [ebp-168h]
-    char v8; // [esp+2Bh] [ebp-161h]
-    unsigned int *v9; // [esp+2Ch] [ebp-160h]
-    char *v11; // [esp+34h] [ebp-158h]
-    char *v13; // [esp+3Ch] [ebp-150h]
-    char *v15; // [esp+44h] [ebp-148h]
-    char *v17; // [esp+4Ch] [ebp-140h]
-    char *v19; // [esp+54h] [ebp-138h]
+    char *v4; // [esp+14h] [ebp-178h]
+    char *v6; // [esp+1Ch] [ebp-170h]
+    char *v8; // [esp+24h] [ebp-168h]
+    char *v10; // [esp+2Ch] [ebp-160h]
+    char *v12; // [esp+34h] [ebp-158h]
+    char *v14; // [esp+3Ch] [ebp-150h]
+    char *v16; // [esp+44h] [ebp-148h]
+    char *v18; // [esp+4Ch] [ebp-140h]
+    char *v20; // [esp+54h] [ebp-138h]
     float boxsizeMin[3]; // [esp+68h] [ebp-124h] BYREF
     char temp[260]; // [esp+74h] [ebp-118h] BYREF
     float org[3]; // [esp+17Ch] [ebp-10h] BYREF
     float scale; // [esp+188h] [ebp-4h]
 
     boxsizeMin[2] = 0.0f;
-    if ( !cameraPos
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2736, 0, "%s", "cameraPos") )
+    if (!cameraPos
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2736, 0, "%s", "cameraPos"))
     {
         __debugbreak();
     }
-    if ( !node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2737, 0, "%s", "node") )
+    if (!node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2737, 0, "%s", "node"))
         __debugbreak();
     Path_DrawDebugNodeBox(node);
     org[0] = node->constant.vOrigin[0];
@@ -1438,78 +1542,73 @@ void __cdecl Path_DrawDebugNode(const float *cameraPos, const pathnode_t *node)
     org[2] = (float)((float)(16.0 - boxsizeMin[2]) * 0.5) + org[2];
     scale = Path_GetDebugStringScale(cameraPos, org);
     sprintf(temp, "%s", nodeStringTable[node->constant.type]);
-    if ( !IsNodeEnabled(node) )
+    if (!IsNodeEnabled(node))
     {
-        v19 = (char *)&boxsizeMin[2] + 3;
-        while ( *++v19 )
+        v20 = (char *)&boxsizeMin[2] + 3;
+        while (*++v20)
             ;
-        strcpy(v19, ": DL");
+        strcpy(v20, ": DL");
     }
-    if ( (node->constant.spawnflags & 4) != 0 )
+    if ((node->constant.spawnflags & 4) != 0)
     {
-        v17 = (char *)&boxsizeMin[2] + 3;
-        while ( *++v17 )
+        v18 = (char *)&boxsizeMin[2] + 3;
+        while (*++v18)
             ;
-        strcpy(v17, ":DS");
+        strcpy(v18, ":DS");
     }
-    if ( (node->constant.spawnflags & 8) != 0 )
+    if ((node->constant.spawnflags & 8) != 0)
     {
-        v15 = (char *)&boxsizeMin[2] + 3;
-        while ( *++v15 )
+        v16 = (char *)&boxsizeMin[2] + 3;
+        while (*++v16)
             ;
-        strcpy(v15, ":DC");
+        strcpy(v16, ":DC");
     }
-    if ( (node->constant.spawnflags & 0x10) != 0 )
+    if ((node->constant.spawnflags & 0x10) != 0)
     {
-        v13 = (char *)&boxsizeMin[2] + 3;
-        while ( *++v13 )
+        v14 = (char *)&boxsizeMin[2] + 3;
+        while (*++v14)
             ;
-        strcpy(v13, ":DP");
+        strcpy(v14, ":DP");
     }
-    if ( (node->constant.spawnflags & 0x800) != 0 )
+    if ((node->constant.spawnflags & 0x800) != 0)
     {
-        if ( node->constant.type == NODE_COVER_PILLAR )
+        if (node->constant.type == NODE_COVER_PILLAR)
         {
-            v11 = (char *)&boxsizeMin[2] + 3;
-            while ( *++v11 )
+            v12 = (char *)&boxsizeMin[2] + 3;
+            while (*++v12)
                 ;
-            strcpy(v11, ":DR");
+            strcpy(v12, ":DR");
         }
-        else if ( node->constant.type == NODE_NEGOTIATION_BEGIN || node->constant.type == NODE_NEGOTIATION_END )
+        else if (node->constant.type == NODE_NEGOTIATION_BEGIN || node->constant.type == NODE_NEGOTIATION_END)
         {
-            v9 = (unsigned int *)((char *)&boxsizeMin[2] + 3);
-            do
-            {
-                v8 = *((_BYTE *)v9 + 1);
-                v9 = (unsigned int *)((char *)v9 + 1);
-            }
-            while ( v8 );
-            *v9 = *(unsigned int *)aStr_0;
-            v9[1] = (char *)&loc_544343 + 6;
+            v10 = (char *)&boxsizeMin[2] + 3;
+            while (*++v10)
+                ;
+            strcpy(v10, ":STRICT");
         }
         else
         {
-            v7 = (char *)&boxsizeMin[2] + 3;
-            while ( *++v7 )
+            v8 = (char *)&boxsizeMin[2] + 3;
+            while (*++v8)
                 ;
-            strcpy(v7, ":BYNR");
+            strcpy(v8, ":BYNR");
         }
     }
-    if ( (node->constant.spawnflags & 0x400) != 0 )
+    if ((node->constant.spawnflags & 0x400) != 0)
     {
-        if ( node->constant.type == NODE_COVER_PILLAR )
+        if (node->constant.type == NODE_COVER_PILLAR)
         {
-            v5 = (char *)&boxsizeMin[2] + 3;
-            while ( *++v5 )
+            v6 = (char *)&boxsizeMin[2] + 3;
+            while (*++v6)
                 ;
-            strcpy(v5, ":DL");
+            strcpy(v6, ":DL");
         }
         else
         {
-            v3 = (char *)&boxsizeMin[2] + 3;
-            while ( *++v3 )
+            v4 = (char *)&boxsizeMin[2] + 3;
+            while (*++v4)
                 ;
-            strcpy(v3, ":BY");
+            strcpy(v4, ":BY");
         }
     }
     G_AddDebugString(org, colorYellow, scale, temp, 0);
@@ -1544,6 +1643,70 @@ double __cdecl Path_GetDebugStringScale(const float *cameraPos, const float *ori
         return 0.5f;
     else
         return scale;
+}
+
+void Path_DrawDebugNodeBox_0(const pathnode_t *node, float size, const float *color_)
+{
+    float v4; // [esp+10h] [ebp-78h]
+    float v5; // [esp+1Ch] [ebp-6Ch]
+    float mins; // [esp+28h] [ebp-60h]
+    float mins_4; // [esp+2Ch] [ebp-5Ch]
+    float mins_8; // [esp+30h] [ebp-58h]
+    float start[3]; // [esp+34h] [ebp-54h] BYREF
+    float end[3]; // [esp+40h] [ebp-48h] BYREF
+    float maxs[3]; // [esp+4Ch] [ebp-3Ch]
+    float fCos; // [esp+58h] [ebp-30h]
+    float fSin; // [esp+5Ch] [ebp-2Ch]
+    float boxsizeMax[3]; // [esp+60h] [ebp-28h] BYREF
+    float boxsizeMin[3]; // [esp+6Ch] [ebp-1Ch] BYREF
+    float color[4]; // [esp+78h] [ebp-10h] BYREF
+
+    if (get_pathnode_parent(node)->entnum == 1022)
+    {
+        color[0] = *color_;
+        color[1] = color_[1];
+        color[2] = color_[2];
+        color[3] = color_[3];
+    }
+    else
+    {
+        color[0] = 0.0f;
+        color[1] = 1.0f;
+        color[2] = 0.0f;
+        color[3] = 1.0f;
+    }
+    if (size > 0.0)
+        v4 = size;
+    else
+        v4 = 16.0f;
+    boxsizeMin[0] = -(v4);
+    boxsizeMin[1] = -(v4);
+    boxsizeMin[2] = 0.0f;
+    boxsizeMax[0] = v4;
+    boxsizeMax[1] = v4;
+    boxsizeMax[2] = v4;
+    if (!node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2692, 0, "%s", "node"))
+        __debugbreak();
+    CG_DebugBox(node->constant.vOrigin, boxsizeMin, boxsizeMax, node->constant.fAngle, color, 1, 0);
+    if (Path_IsValidClaimNode(node))
+    {
+        mins = node->constant.vOrigin[0] + boxsizeMin[0];
+        mins_4 = node->constant.vOrigin[1] + boxsizeMin[1];
+        mins_8 = node->constant.vOrigin[2] + boxsizeMin[2];
+        maxs[0] = node->constant.vOrigin[0] + boxsizeMax[0];
+        maxs[1] = node->constant.vOrigin[1] + boxsizeMax[1];
+        maxs[2] = node->constant.vOrigin[2] + boxsizeMax[2];
+        start[0] = 0.5 * (float)(mins + maxs[0]);
+        start[1] = 0.5 * (float)(mins_4 + maxs[1]);
+        start[2] = 0.5 * (float)(mins_8 + maxs[2]);
+        v5 = node->constant.fAngle * 0.017453292;
+        fCos = cos(v5);
+        fSin = sin(v5);
+        end[0] = (float)(boxsizeMax[0] * fCos) + start[0];
+        end[1] = (float)(boxsizeMax[0] * fSin) + start[1];
+        end[2] = start[2];
+        G_DebugLine(start, end, color, 1);
+    }
 }
 
 void __cdecl Path_DrawDebugNodeBox(const pathnode_t *node)
@@ -1590,107 +1753,105 @@ void __cdecl Path_DrawDebugFindPath(const float *vOrigin)
     float p2[3]; // [esp+44h] [ebp-10h] BYREF
     unsigned int i; // [esp+50h] [ebp-4h]
 
-    switch ( ai_debugFindPath->current.integer )
+    switch (ai_debugFindPath->current.integer)
     {
-        case 0:
-            iValidBits = 0;
-            return;
-        case 1:
-        case 4:
-        case 5:
-            vStartPos[0] = *vOrigin;
-            dword_A07A074 = *((unsigned int *)vOrigin + 1);
-            dword_A07A078 = *((unsigned int *)vOrigin + 2);
-            iValidBits |= 1u;
-            break;
-        case 2:
-            vGoalPos[0] = *vOrigin;
-            dword_A07A064 = *((unsigned int *)vOrigin + 1);
-            dword_A07A068 = *((unsigned int *)vOrigin + 2);
-            iValidBits |= 2u;
-            break;
-        default:
-            if ( ai_debugFindPath->current.integer != 3 )
-            {
-                Dvar_SetInt((dvar_s *)ai_debugFindPath, 0);
-                Com_Printf(
-                    18,
-                    "^51 continuously copies your position to path start\n"
-                    "2 continuously copies your position to path goal\n"
-                    "3 doesn't change path start or path goal, but will still find a path\n"
-                    "4 continuously moves through the path simulating AI movement\n"
-                    "5 continuously moves through the path simulating AI movement, but continuously recalculates the path\n"
-                    "0 resets start and end and disables path finding\n"
-                    "While there are valid start and goal positions, it will find and draw a path\n");
-            }
-            break;
+    case 0:
+        iValidBits = 0;
+        return;
+    case 1:
+    case 4:
+    case 5:
+        vStartPos[0] = *vOrigin;
+        vStartPos[1] = vOrigin[1];
+        vStartPos[2] = vOrigin[2];
+        iValidBits |= 1u;
+        break;
+    case 2:
+        vGoalPos[0] = *vOrigin;
+        vGoalPos[1] = vOrigin[1];
+        vGoalPos[2] = vOrigin[2];
+        iValidBits |= 2u;
+        break;
+    default:
+        if (ai_debugFindPath->current.integer != 3)
+        {
+            Dvar_SetInt((dvar_s*)ai_debugFindPath, 0);
+            Com_Printf(
+                18,
+                "^51 continuously copies your position to path start\n"
+                "2 continuously copies your position to path goal\n"
+                "3 doesn't change path start or path goal, but will still find a path\n"
+                "4 continuously moves through the path simulating AI movement\n"
+                "5 continuously moves through the path simulating AI movement, but continuously recalculates the path\n"
+                "0 resets start and end and disables path finding\n"
+                "While there are valid start and goal positions, it will find and draw a path\n");
+        }
+        break;
     }
-    if ( iValidBits == 3
-        && (vStartPos[0] != vGoalPos[0]
-         || *(float *)&dword_A07A074 != *(float *)&dword_A07A064
-         || *(float *)&dword_A07A078 != *(float *)&dword_A07A068) )
+    if (iValidBits == 3 && (vStartPos[0] != vGoalPos[0] || vStartPos[1] != vGoalPos[1] || vStartPos[2] != vGoalPos[2]))
     {
-        if ( !debugPath )
+        if (!debugPath)
         {
             debugPath = &debugPathBuf;
             Path_Begin(&debugPathBuf);
             Path_FindPath(debugPath, TEAM_FREE, vStartPos, vGoalPos, 1);
         }
-        if ( ai_debugFindPath->current.integer != 4 )
+        if (ai_debugFindPath->current.integer != 4)
         {
-            if ( ai_debugFindPathDirect->current.enabled )
+            if (ai_debugFindPathDirect->current.enabled)
             {
-                if ( !Path_FindPath(debugPath, TEAM_FREE, vStartPos, vGoalPos, 1) || !Path_Exists(debugPath) )
+                if (!Path_FindPath(debugPath, TEAM_FREE, vStartPos, vGoalPos, 1) || !Path_Exists(debugPath))
                     return;
             }
             else
             {
-                if ( !ai_debugFindPathLock->current.enabled )
+                if (!ai_debugFindPathLock->current.enabled)
                 {
                     width = ai_debugFindPathWidth->current.value;
-                    if ( width <= 5000.0 )
+                    if (width <= 5000.0)
                     {
-                        if ( width < -5000.0 )
-                            width = FLOAT_N5000_0;
+                        if (width < -5000.0)
+                            width = -5000.0;
                     }
                     else
                     {
                         width = 5000.0f;
                     }
                     delta[0] = vStartPos[0] - vGoalPos[0];
-                    delta[1] = *(float *)&dword_A07A074 - *(float *)&dword_A07A064;
+                    delta[1] = vStartPos[1] - vGoalPos[1];
                     Vec2Normalize(delta);
+                    //LODWORD(perp[0]) = LODWORD(delta[1]) ^ _mask__NegFloat_;
                     perp[0] = -delta[1];
-                    dword_A07A058 = LODWORD(delta[0]);
+                    perp[1] = delta[0];
                 }
-                LODWORD(startPos[2]) = dword_A07A068;
+                startPos[2] = vGoalPos[2];
                 startPos[0] = vStartPos[0];
-                LODWORD(startPos[1]) = dword_A07A074;
+                startPos[1] = vStartPos[1];
                 G_DebugLine(startPos, vGoalPos, colorCyan, 0);
-                p1[0] = (float)(startPos[0] - (float)(5000.0 * *(float *)&dword_A07A058)) + (float)(perp[0] * width);
-                p1[1] = (float)((float)(5000.0 * perp[0]) + startPos[1]) + (float)(*(float *)&dword_A07A058 * width);
+                p1[0] = (float)(startPos[0] - (float)(5000.0 * perp[1])) + (float)(perp[0] * width);
+                p1[1] = (float)((float)(5000.0 * perp[0]) + startPos[1]) + (float)(perp[1] * width);
                 p1[2] = startPos[2];
-                p2[0] = (float)((float)(5000.0 * *(float *)&dword_A07A058) + startPos[0]) + (float)(perp[0] * width);
-                p2[1] = (float)(startPos[1] - (float)(5000.0 * perp[0])) + (float)(*(float *)&dword_A07A058 * width);
+                p2[0] = (float)((float)(5000.0 * perp[1]) + startPos[0]) + (float)(perp[0] * width);
+                p2[1] = (float)(startPos[1] - (float)(5000.0 * perp[0])) + (float)(perp[1] * width);
                 p2[2] = startPos[2];
                 G_DebugLine(p1, p2, colorCyan, 0);
-                if ( !Path_FindPathWithWidth(debugPath, TEAM_FREE, vStartPos, vGoalPos, 1, width, perp)
-                    || !Path_Exists(debugPath) )
+                if (!Path_FindPathWithWidth(debugPath, TEAM_FREE, vStartPos, vGoalPos, 1, width, perp)
+                    || !Path_Exists(debugPath))
                 {
                     return;
                 }
             }
-            for ( i = 0; i < g_path.actualNodeCount; ++i )
+            for (i = 0; i < g_path.actualNodeCount; ++i)
             {
                 node = &gameWorldCurrent->path.nodes[i];
-                if ( node->transient.iSearchFrame == level.iSearchFrame )
+                if (node->transient.iSearchFrame == level.iSearchFrame)
                 {
                     pszText = va("%i", i);
                     G_AddDebugString(node->constant.vOrigin, colorWhite, 1.0, pszText, 0);
                 }
             }
         }
-        if ( ai_debugFindPath->current.integer == 4 || ai_debugFindPath->current.integer == 5 )
+        if (ai_debugFindPath->current.integer == 4 || ai_debugFindPath->current.integer == 5)
         {
             Path_UpdateLookahead(debugPath, vStartPos, 0, 0, 1, 1);
             Path_DebugDraw(debugPath, vStartPos, 1, -1);
@@ -1938,9 +2099,9 @@ void __cdecl Path_DrawDebugLink(const pathnode_t *node, int i, bool bShowAll)
                 Vec3Normalize(vDir);
                 if ( iBadDirs == 1 )
                 {
-                    LODWORD(vDir[0]) ^= _mask__NegFloat_;
-                    LODWORD(vDir[1]) ^= _mask__NegFloat_;
-                    LODWORD(vDir[2]) ^= _mask__NegFloat_;
+                    vDir[0] = -vDir[0];
+                    vDir[1] = -vDir[1];
+                    vDir[2] = -vDir[2];
                 }
                 vTop[0] = (float)(fArrowSize * vDir[0]) + vMid[0];
                 vTop[1] = (float)(fArrowSize * vDir[1]) + vMid[1];
@@ -1990,25 +2151,18 @@ void __cdecl Path_DrawDebugClaimedNodes(const float *origin, int numNodes)
         pos[0] = node->constant.vOrigin[0];
         pos[1] = node->constant.vOrigin[1];
         pos[2] = node->constant.vOrigin[2];
-        if ( SentientHandle::isDefined(&node->dynamic.pOwner) )
+        //if ( SentientHandle::isDefined(&node->dynamic.pOwner) )
+        if ( node->dynamic.pOwner.isDefined() )
         {
-            if ( !SentientHandle::sentient(&node->dynamic.pOwner)->ent
-                && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                            3347,
-                            0,
-                            "%s",
-                            "node->dynamic.pOwner.sentient()->ent") )
-            {
-                __debugbreak();
-            }
-            v2 = SentientHandle::sentient(&node->dynamic.pOwner);
+            iassert(node->dynamic.pOwner.sentient()->ent);
+            //v2 = SentientHandle::sentient(&node->dynamic.pOwner);
+            v2 = node->dynamic.pOwner.sentient();;
             pszText = va("Owner: %d", v2->ent->s.number);
             G_AddDebugString(pos, colorGreen, scale, pszText, 0);
         }
         else
         {
-            G_AddDebugString(pos, colorWhite, scale, "Owner: None", 0);
+            G_AddDebugString(pos, colorWhite, scale, (char*)"Owner: None", 0);
         }
         pos[2] = (float)(12.0 * scale) + pos[2];
         if ( level.time < node->dynamic.iValidTime[1] )
@@ -2204,17 +2358,25 @@ pathnode_t *__cdecl Path_NearestNodeNotCrossPlanes(
         adjustedOrigin[2] = adjustedOrigin[2] - 120.0;
         iNodeCount = Path_NodesInCylinder(adjustedOrigin, fMaxDist, 184.0, nodes, maxNodes, typeFlags);
     }
-    std::_Sort<GfxCachedShaderText *,int,bool (__cdecl *)(GfxCachedShaderText const &,GfxCachedShaderText const &)>(
-        (GfxCachedShaderText *)nodes,
-        (GfxCachedShaderText *)&nodes[iNodeCount],
-        12 * iNodeCount / 12,
-        (bool (__cdecl *)(const GfxCachedShaderText *, const GfxCachedShaderText *))Path_CompareNodesIncreasing);
+
+    //std::_Sort<GfxCachedShaderText *,int,bool (__cdecl *)(GfxCachedShaderText const &,GfxCachedShaderText const &)>(
+    //    (GfxCachedShaderText *)nodes,
+    //    (GfxCachedShaderText *)&nodes[iNodeCount],
+    //    12 * iNodeCount / 12,
+    //    (bool (__cdecl *)(const GfxCachedShaderText *, const GfxCachedShaderText *))Path_CompareNodesIncreasing);
+
+    std::sort(&nodes[0], &nodes[iNodeCount], Path_CompareNodesIncreasing);
+    
     mins[0] = actorMins[0];
     mins[1] = -15.0;
     maxs[0] = actorMaxs[0];
     maxs[1] = 15.0;
     maxs[2] = 48.0;
     mins[2] = 0.0 + 17.0;
+
+    static const float zombie_fudge = 14.0f;
+    static const float fudge_0 = 5.0f;
+
     if ( zombiemode->current.enabled )
     {
         mins[0] = mins[0] + zombie_fudge;
@@ -2302,43 +2464,44 @@ bool __cdecl Path_CanClaimNode(const pathnode_t *node, sentient_s *claimer)
     {
         __debugbreak();
     }
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner) && SentientHandle::sentient(&node->dynamic.pOwner) == claimer )
+    //if ( SentientHandle::isDefined(&node->dynamic.pOwner) && SentientHandle::sentient(&node->dynamic.pOwner) == claimer )
+    if ( node->dynamic.pOwner.isDefined() && node->dynamic.pOwner.sentient() == claimer)
         return 1;
     if ( level.time <= *(&node->dynamic.iFreeTime + claimer->eTeam) )
         return 0;
     if ( level.time > node->dynamic.iFreeTime )
         return 1;
-    if ( node->dynamic.iFreeTime != 0x7FFFFFFF || !Path_CanStealNode(node, claimer) )
-        return (node->constant.spawnflags & 0x40) != 0 && Path_CanStealPriorityNode(node, claimer);
-    NodeOwner = Path_GetNodeOwner(node);
+    if ( node->dynamic.iFreeTime != 0x7FFFFFFF || !Path_CanStealNode((pathnode_t*)node, claimer) )
+        return (node->constant.spawnflags & 0x40) != 0 && Path_CanStealPriorityNode((pathnode_t *)node, claimer);
+    NodeOwner = Path_GetNodeOwner((pathnode_t *)node);
     Path_RelinquishNodeNow(NodeOwner);
     return 1;
 }
 
-sentient_s *__cdecl Path_GetNodeOwner(const pathnode_t *node)
+sentient_s *__cdecl Path_GetNodeOwner(pathnode_t *node)
 {
     pathnode_t *overlappedNode; // [esp+0h] [ebp-4h]
 
     if ( !node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 4493, 0, "%s", "node") )
         __debugbreak();
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner) )
-        return SentientHandle::sentient(&node->dynamic.pOwner);
+    if ( node->dynamic.pOwner.isDefined() )
+        return node->dynamic.pOwner.sentient();
     if ( node->constant.wOverlapNode[0] >= 0 )
     {
         overlappedNode = &gameWorldCurrent->path.nodes[node->constant.wOverlapNode[0]];
-        if ( SentientHandle::isDefined(&overlappedNode->dynamic.pOwner) )
-            return SentientHandle::sentient(&overlappedNode->dynamic.pOwner);
+        if ( overlappedNode->dynamic.pOwner.isDefined() )
+            return overlappedNode->dynamic.pOwner.sentient();
         if ( node->constant.wOverlapNode[1] >= 0 )
         {
             overlappedNode = &gameWorldCurrent->path.nodes[node->constant.wOverlapNode[1]];
-            if ( SentientHandle::isDefined(&overlappedNode->dynamic.pOwner) )
-                return SentientHandle::sentient(&overlappedNode->dynamic.pOwner);
+            if ( overlappedNode->dynamic.pOwner.isDefined() )
+                return overlappedNode->dynamic.pOwner.sentient();
         }
     }
     return 0;
 }
 
-bool __cdecl Path_CanStealPriorityNode(const pathnode_t *node, sentient_s *claimer)
+bool __cdecl Path_CanStealPriorityNode(pathnode_t *node, sentient_s *claimer)
 {
     float v3; // [esp+Ch] [ebp-20h]
     float v4; // [esp+1Ch] [ebp-10h]
@@ -2410,21 +2573,12 @@ bool __cdecl Path_CanStealPriorityNode(const pathnode_t *node, sentient_s *claim
     }
     else
     {
-        if ( SentientHandle::isDefined(&node->dynamic.pOwner) )
-        {
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                            4544,
-                            0,
-                            "%s",
-                            "!node->dynamic.pOwner.isDefined()") )
-                __debugbreak();
-        }
+        iassert(!node->dynamic.pOwner.isDefined());
         return 0;
     }
 }
 
-bool __cdecl Path_CanStealNode(const pathnode_t *node, sentient_s *claimer)
+bool __cdecl Path_CanStealNode(pathnode_t *node, sentient_s *claimer)
 {
     sentient_s *owner; // [esp+0h] [ebp-4h]
 
@@ -2462,16 +2616,7 @@ bool __cdecl Path_CanStealNode(const pathnode_t *node, sentient_s *claimer)
     }
     else
     {
-        if ( SentientHandle::isDefined(&node->dynamic.pOwner) )
-        {
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                            4619,
-                            0,
-                            "%s",
-                            "!node->dynamic.pOwner.isDefined()") )
-                __debugbreak();
-        }
+        iassert(!node->dynamic.pOwner.isDefined());
         return 0;
     }
 }
@@ -2499,44 +2644,26 @@ void __cdecl Path_ClaimNode(pathnode_t *node, sentient_s *claimer)
     {
         __debugbreak();
     }
-    if ( (!SentientHandle::isDefined(&node->dynamic.pOwner) || SentientHandle::sentient(&node->dynamic.pOwner) != claimer)
-        && node->dynamic.iFreeTime >= level.time
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                    4754,
-                    0,
-                    "%s\n\t(node->dynamic.iFreeTime) = %i",
-                    "((node->dynamic.pOwner.isDefined() && (node->dynamic.pOwner.sentient() == claimer)) || node->dynamic.iFreeTime < level.time)",
-                    node->dynamic.iFreeTime) )
-    {
-        __debugbreak();
-    }
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner)
-        && SentientHandle::sentient(&node->dynamic.pOwner) != claimer
-        && level.time <= *(&node->dynamic.iFreeTime + claimer->eTeam)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                    4755,
-                    0,
-                    "%s",
-                    "!node->dynamic.pOwner.isDefined() || node->dynamic.pOwner.sentient() == claimer || level.time > node->dynamic."
-                    "iValidTime[claimer->eTeam - TEAM_AXIS]") )
-    {
-        __debugbreak();
-    }
-    SentientHandle::setSentient(&node->dynamic.pOwner, claimer);
+    iassert(((node->dynamic.pOwner.isDefined() && (node->dynamic.pOwner.sentient() == claimer)) || node->dynamic.iFreeTime < level.time));
+    iassert(!node->dynamic.pOwner.isDefined() || node->dynamic.pOwner.sentient() == claimer || level.time > node->dynamic.iValidTime[claimer->eTeam - TEAM_AXIS]);
+    
+    //SentientHandle::setSentient(&node->dynamic.pOwner, claimer);
+    node->dynamic.pOwner.setSentient(claimer);
     node->dynamic.iFreeTime = 0x7FFFFFFF;
     for ( i = 0; i < 2 && node->constant.wOverlapNode[i] >= 0; ++i )
     {
         otherNode = &gameWorldCurrent->path.nodes[node->constant.wOverlapNode[i]];
-        if ( (!SentientHandle::isDefined(&otherNode->dynamic.pOwner)
-             || SentientHandle::sentient(&otherNode->dynamic.pOwner) != claimer)
+        //if ( (!SentientHandle::isDefined(&otherNode->dynamic.pOwner)
+        if ( (!otherNode->dynamic.pOwner.isDefined()
+             //|| SentientHandle::sentient(&otherNode->dynamic.pOwner) != claimer)
+             || otherNode->dynamic.pOwner.sentient() != claimer)
             && otherNode->dynamic.iFreeTime == 0x7FFFFFFF
             && !otherNode->dynamic.wOverlapCount )
         {
-            if ( SentientHandle::isDefined(&otherNode->dynamic.pOwner) )
+            if ( otherNode->dynamic.pOwner.isDefined() )
             {
-                v3 = SentientHandle::sentient(&otherNode->dynamic.pOwner) - level.sentients;
+                //v3 = SentientHandle::sentient(&otherNode->dynamic.pOwner) - level.sentients;
+                v3 = otherNode->dynamic.pOwner.sentient() - level.sentients;
                 v2 = va(
                              "node = %i, owner = %i, free time = %i",
                              otherNode - gameWorldCurrent->path.nodes,
@@ -2610,7 +2737,8 @@ void __cdecl Path_MarkNodeOverlap(pathnode_t *node)
 {
     if ( !node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 4734, 0, "%s", "node") )
         __debugbreak();
-    SentientHandle::setSentient(&node->dynamic.pOwner, 0);
+    //SentientHandle::setSentient(&node->dynamic.pOwner, 0);
+    node->dynamic.pOwner.setSentient(0);
     node->dynamic.iFreeTime = 0x7FFFFFFF;
     ++node->dynamic.wOverlapCount;
 }
@@ -2619,15 +2747,15 @@ void __cdecl Path_RevokeClaim(pathnode_t *node, sentient_s *pNewClaimer)
 {
     sentient_s *v2; // eax
 
-    if ( !SentientHandle::isDefined(&node->dynamic.pOwner)
-        || !SentientHandle::sentient(&node->dynamic.pOwner)->ent
-        || SentientHandle::sentient(&node->dynamic.pOwner)->ent->actor )
+    if ( !node->dynamic.pOwner.isDefined()
+        || !node->dynamic.pOwner.sentient()->ent
+        || node->dynamic.pOwner.sentient()->ent->actor)
     {
-        if ( SentientHandle::isDefined(&node->dynamic.pOwner) )
+        if ( node->dynamic.pOwner.isDefined() )
         {
-            if ( SentientHandle::sentient(&node->dynamic.pOwner) != pNewClaimer && node->dynamic.iFreeTime == 0x7FFFFFFF )
+            if ( node->dynamic.pOwner.sentient() != pNewClaimer && node->dynamic.iFreeTime == 0x7FFFFFFF )
             {
-                v2 = SentientHandle::sentient(&node->dynamic.pOwner);
+                v2 = node->dynamic.pOwner.sentient();
                 Sentient_NodeClaimRevoked(v2, node);
                 if ( node->dynamic.iFreeTime == 0x7FFFFFFF
                     && !Assert_MyHandler(
@@ -2664,7 +2792,7 @@ void __cdecl Path_ForceClaimNode(pathnode_t *node, sentient_s *claimer)
     }
     if ( claimer->pClaimedNode && claimer->pClaimedNode != node )
         Path_RelinquishNodeSoon(claimer);
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner) && SentientHandle::sentient(&node->dynamic.pOwner) == claimer )
+    if ( node->dynamic.pOwner.isDefined() && node->dynamic.pOwner.sentient() == claimer)
     {
         if ( claimer->pClaimedNode != node )
             Path_ClaimNode(node, claimer);
@@ -2680,7 +2808,7 @@ void __cdecl Path_ForceClaimNode(pathnode_t *node, sentient_s *claimer)
         }
         if ( node->dynamic.iFreeTime != 0x7FFFFFFF )
         {
-            SentientHandle::setSentient(&node->dynamic.pOwner, claimer);
+            node->dynamic.pOwner.setSentient(claimer);
             node->dynamic.iFreeTime = 0x7FFFFFFF;
             if ( node->constant.wOverlapNode[0] >= 0 )
             {
@@ -2715,26 +2843,10 @@ void __cdecl Path_RelinquishNode(sentient_s *claimer, int timeUntilRelinquished)
     node = claimer->pClaimedNode;
     if ( !node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 4896, 0, "%s", "node") )
         __debugbreak();
-    if ( !SentientHandle::isDefined(&node->dynamic.pOwner)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                    4897,
-                    0,
-                    "%s",
-                    "node->dynamic.pOwner.isDefined()") )
-    {
-        __debugbreak();
-    }
-    if ( SentientHandle::sentient(&node->dynamic.pOwner) != claimer
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                    4898,
-                    0,
-                    "%s",
-                    "node->dynamic.pOwner.sentient() == claimer") )
-    {
-        __debugbreak();
-    }
+
+    iassert(node->dynamic.pOwner.isDefined());
+    iassert(node->dynamic.pOwner.sentient() == claimer);
+
     if ( !claimer && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 4899, 0, "%s", "claimer") )
         __debugbreak();
     if ( claimer->eTeam != TEAM_AXIS
@@ -2766,23 +2878,16 @@ void __cdecl Path_RelinquishNode(sentient_s *claimer, int timeUntilRelinquished)
         newOwner = 0;
     }
     node->dynamic.iFreeTime = newFreeTime;
-    SentientHandle::setSentient(&node->dynamic.pOwner, newOwner);
+    node->dynamic.pOwner.setSentient(newOwner);
     for ( i = 0; i < 2 && node->constant.wOverlapNode[i] >= 0; ++i )
     {
         otherNode = &gameWorldCurrent->path.nodes[node->constant.wOverlapNode[i]];
-        if ( SentientHandle::isDefined(&otherNode->dynamic.pOwner)
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                        4934,
-                        0,
-                        "%s",
-                        "!otherNode->dynamic.pOwner.isDefined()") )
-        {
-            __debugbreak();
-        }
+        iassert(!otherNode->dynamic.pOwner.isDefined());
+
         if ( !--otherNode->dynamic.wOverlapCount )
         {
-            SentientHandle::setSentient(&otherNode->dynamic.pOwner, newOwner);
+            //SentientHandle::setSentient(&otherNode->dynamic.pOwner, newOwner);
+            otherNode->dynamic.pOwner.setSentient(newOwner);
             otherNode->dynamic.iFreeTime = newFreeTime;
         }
     }
@@ -2808,15 +2913,17 @@ void __cdecl Path_MarkNodeInvalid(pathnode_t *node, team_t eTeam)
     {
         __debugbreak();
     }
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner)
-        && SentientHandle::sentient(&node->dynamic.pOwner)->eTeam == eTeam )
+    //if ( SentientHandle::isDefined(&node->dynamic.pOwner) && SentientHandle::sentient(&node->dynamic.pOwner)->eTeam == eTeam )
+    if ( node->dynamic.pOwner.isDefined() && node->dynamic.pOwner.sentient()->eTeam == eTeam)
     {
-        if ( SentientHandle::sentient(&node->dynamic.pOwner)->pClaimedNode )
+        //if ( SentientHandle::sentient(&node->dynamic.pOwner)->pClaimedNode )
+        if ( node->dynamic.pOwner.sentient()->pClaimedNode)
         {
-            v2 = SentientHandle::sentient(&node->dynamic.pOwner);
+            //v2 = SentientHandle::sentient(&node->dynamic.pOwner);
+            v2 = node->dynamic.pOwner.sentient();
             Path_RelinquishNodeSoon(v2);
         }
-        SentientHandle::setSentient(&node->dynamic.pOwner, 0);
+        node->dynamic.pOwner.setSentient(0);
     }
     *(&node->dynamic.iFreeTime + eTeam) = level.time + 5000;
     if ( !node->dynamic.wOverlapCount )
@@ -2827,31 +2934,32 @@ void __cdecl Path_MarkNodeInvalid(pathnode_t *node, team_t eTeam)
             otherNode = &gameWorldCurrent->path.nodes[node->constant.wOverlapNode[i]];
             if ( !otherNode->dynamic.wOverlapCount && otherNode->dynamic.iFreeTime != 0x7FFFFFFF )
             {
-                if ( SentientHandle::isDefined(&otherNode->dynamic.pOwner) )
+                if ( otherNode->dynamic.pOwner.isDefined() )
                 {
-                    if ( SentientHandle::sentient(&otherNode->dynamic.pOwner)->eTeam == eTeam )
-                        SentientHandle::setSentient(&otherNode->dynamic.pOwner, 0);
+                    if ( otherNode->dynamic.pOwner.sentient()->eTeam == eTeam)
+                        otherNode->dynamic.pOwner.setSentient(0);
                 }
                 otherNode->dynamic.iFreeTime = 0;
             }
         }
     }
-    if ( SentientHandle::isDefined(&node->dynamic.pOwner)
-        && SentientHandle::sentient(&node->dynamic.pOwner)->eTeam == eTeam
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
-                    4984,
-                    0,
-                    "%s",
-                    "!node->dynamic.pOwner.isDefined() || node->dynamic.pOwner.sentient()->eTeam != eTeam") )
-    {
-        __debugbreak();
-    }
+
+    iassert(!node->dynamic.pOwner.isDefined() || node->dynamic.pOwner.sentient()->eTeam != eTeam);
+    //if ( SentientHandle::isDefined(&node->dynamic.pOwner) && SentientHandle::sentient(&node->dynamic.pOwner)->eTeam == eTeam
+    //    && !Assert_MyHandler(
+    //                "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+    //                4984,
+    //                0,
+    //                "%s",
+    //                "!node->dynamic.pOwner.isDefined() || node->dynamic.pOwner.sentient()->eTeam != eTeam") )
+    //{
+    //    __debugbreak();
+    //}
 }
 
 ai_stance_e __cdecl Path_AllowedStancesForNode(pathnode_t *node)
 {
-    ai_stance_e eAllowedStances; // [esp+0h] [ebp-4h]
+    int eAllowedStances; // [esp+0h] [ebp-4h]
 
     if ( !node && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 4992, 0, "%s", "node") )
         __debugbreak();
@@ -2873,7 +2981,7 @@ ai_stance_e __cdecl Path_AllowedStancesForNode(pathnode_t *node)
     {
         __debugbreak();
     }
-    return eAllowedStances;
+    return (ai_stance_e)eAllowedStances;
 }
 
 void __cdecl Path_ValidateNode(pathnode_t *node)
@@ -3028,6 +3136,40 @@ void __cdecl Path_ConnectPathsForEntity(gentity_s *ent)
     }
 }
 
+void __cdecl Path_ConnectPath_0(pathnode_t *node, pathlink_s *link)
+{
+    pathlink_s tempLink; // [esp+0h] [ebp-10h]
+
+    if (!link->disconnectCount
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+            5140,
+            0,
+            "%s",
+            "link->disconnectCount"))
+    {
+        __debugbreak();
+    }
+    if (&node->constant.Links[node->dynamic.wLinkCount] > link
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+            5141,
+            0,
+            "%s",
+            "&node->constant.Links[node->dynamic.wLinkCount] <= link"))
+    {
+        __debugbreak();
+    }
+    Path_ValidateNode(node);
+    if (!--link->disconnectCount)
+    {
+        tempLink = *link;
+        *link = node->constant.Links[node->dynamic.wLinkCount];
+        node->constant.Links[node->dynamic.wLinkCount++] = tempLink;
+    }
+    Path_ValidateNode(node);
+}
+
 void __cdecl Path_ConnectPath(pathnode_t *node, int toNodeNum)
 {
     int j; // [esp+0h] [ebp-8h]
@@ -3052,6 +3194,10 @@ void __cdecl Path_ConnectPath(pathnode_t *node, int toNodeNum)
             __debugbreak();
     }
 }
+
+const float dist_cutoff = 266.0f;
+const float disconnectMins[3] = { -15.0, -15.0, 18.0 };
+const float disconnectMaxs[3] = { 15.0, 15.0, 48.0 };
 
 void __cdecl Path_DisconnectPathsForEntity(gentity_s *ent)
 {
@@ -3131,6 +3277,87 @@ void __cdecl Path_DisconnectPathsForEntity(gentity_s *ent)
     }
 }
 
+void Path_DisconnectPath_0(pathnode_t *node, pathlink_s *link)
+{
+    char *v3; // eax
+    char *v4; // eax
+    char *v5; // eax
+    pathlink_s tempLink; // [esp+0h] [ebp-10h]
+
+    Path_ValidateNode(node);
+    if (!++link->disconnectCount)
+        Scr_Error("too many disconnects on a single path link (overflow on disconnect count)", 0);
+    if (!link->disconnectCount
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+            5114,
+            0,
+            "%s",
+            "link->disconnectCount"))
+    {
+        __debugbreak();
+    }
+    if (link->disconnectCount <= 1u)
+    {
+        if (--node->dynamic.wLinkCount < 0)
+        {
+            v4 = va("node: %d, %d", node - gameWorldCurrent->path.nodes, node->dynamic.wLinkCount);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+                5125,
+                0,
+                "%s\n\t%s",
+                "node->dynamic.wLinkCount >= 0",
+                v4))
+                __debugbreak();
+        }
+        if (&node->constant.Links[node->dynamic.wLinkCount] < link)
+        {
+            v5 = va(
+                "node: %d, %d (%d) %d (%d)",
+                node - gameWorldCurrent->path.nodes,
+                node->dynamic.wLinkCount,
+                node->constant.Links[node->dynamic.wLinkCount].nodeNum,
+                link - node->constant.Links,
+                link->nodeNum);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+                5126,
+                0,
+                "%s\n\t%s",
+                "&node->constant.Links[node->dynamic.wLinkCount] >= link",
+                v5))
+                __debugbreak();
+        }
+        tempLink = *link;
+        *link = node->constant.Links[node->dynamic.wLinkCount];
+        node->constant.Links[node->dynamic.wLinkCount] = tempLink;
+        Path_ValidateNode(node);
+    }
+    else
+    {
+        if (&node->constant.Links[node->dynamic.wLinkCount] > link)
+        {
+            v3 = va(
+                "node: %d, %d (%d) %d (%d)",
+                node - gameWorldCurrent->path.nodes,
+                node->dynamic.wLinkCount,
+                node->constant.Links[node->dynamic.wLinkCount].nodeNum,
+                link - node->constant.Links,
+                link->nodeNum);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp",
+                5118,
+                0,
+                "%s\n\t%s",
+                "&node->constant.Links[node->dynamic.wLinkCount] <= link",
+                v3))
+                __debugbreak();
+        }
+        Path_ValidateNode(node);
+    }
+}
+
 void __cdecl Path_DisconnectPath(gentity_s *ent, pathnode_t *node, pathlink_s *link)
 {
     PathLinkInfo *newInfo; // [esp+0h] [ebp-8h]
@@ -3138,7 +3365,7 @@ void __cdecl Path_DisconnectPath(gentity_s *ent, pathnode_t *node, pathlink_s *l
 
     newInfoIndex = g_path.pathLinkInfoArray[0].next;
     if ( !g_path.pathLinkInfoArray[0].next )
-        Com_Error(ERR_DROP, &byte_D38CAC);
+        Com_Error(ERR_DROP, "Max number of disconnected paths exceeded");
     newInfo = (PathLinkInfo *)(8 * newInfoIndex + 168254208);
     g_path.pathLinkInfoArray[0].next = g_path.pathLinkInfoArray[newInfoIndex].next;
     g_path.pathLinkInfoArray[g_path.pathLinkInfoArray[newInfoIndex].next].prev = 0;
@@ -3160,7 +3387,7 @@ void __cdecl Path_DisconnectPath(gentity_s *ent, pathnode_t *node, pathlink_s *l
     Path_DisconnectPath_0(node, link);
 }
 
-void    Path_UpdateArcBadPlaceCount(float a1@<ebp>, badplace_arc_t *arc, int teamflags, int delta)
+void    Path_UpdateArcBadPlaceCount(badplace_arc_t *arc, int teamflags, int delta)
 {
     double v4; // xmm0_8
     long double v5; // [esp+Ch] [ebp-11Ch]
@@ -3205,15 +3432,15 @@ void    Path_UpdateArcBadPlaceCount(float a1@<ebp>, badplace_arc_t *arc, int tea
     float angle; // [esp+10Ch] [ebp-1Ch]
     float side1[3]; // [esp+110h] [ebp-18h] BYREF
     float side0[3]; // [esp+11Ch] [ebp-Ch]
-    float retaddr; // [esp+128h] [ebp+0h]
-
-    side0[0] = a1;
-    side0[1] = retaddr;
+    //float retaddr; // [esp+128h] [ebp+0h]
+    //
+    //side0[0] = a1;
+    //side0[1] = retaddr;
     YawVectors(arc->angle0, 0, side1);
     YawVectors(arc->angle1, 0, (float *)&bArcLessThan180);
-    LODWORD(side1[0]) ^= _mask__NegFloat_;
-    LODWORD(side1[1]) ^= _mask__NegFloat_;
-    LODWORD(side1[2]) ^= _mask__NegFloat_;
+    side1[0] = -side1[0];
+    side1[1] = -side1[1];
+    side1[2] = -side1[2];
     side1[2] = (float)(side1[0] * arc->origin[0]) + (float)(side1[1] * arc->origin[1]);
     angle = (float)(*(float *)&bArcLessThan180 * arc->origin[0]) + (float)(v43 * arc->origin[1]);
     forward[2] = arc->angle1 - arc->angle0;
@@ -3223,8 +3450,9 @@ void    Path_UpdateArcBadPlaceCount(float a1@<ebp>, badplace_arc_t *arc, int tea
     forward[0] = forward[1];
     YawVectors((float)(forward[2] * 0.5) + arc->angle0, &centroid[2], 0);
     v4 = (float)(forward[2] * 0.0087266462);
-    __libm_sse2_sin(v5);
-    *(float *)&v4 = v4;
+    //__libm_sse2_sin(v5);
+    //*(float *)&v4 = v4;
+    v4 = sin(v4);
     centroid[0] = (float)((float)(*(float *)&v4 / forward[2]) * 76.394371) * arc->radius;
     fMaxRadiusSqrd = (float)(centroid[0] * centroid[2]) + arc->origin[0];
     fHeightSqrd = (float)(centroid[0] * scale) + arc->origin[1];
@@ -3257,8 +3485,7 @@ void    Path_UpdateArcBadPlaceCount(float a1@<ebp>, badplace_arc_t *arc, int tea
                 {
                     if ( fPosDeltaSqrd < arc->halfheight )
                     {
-                        if ( COERCE_FLOAT(LODWORD(arc->halfheight) ^ _mask__NegFloat_) >= fPosDeltaSqrd
-                            && COERCE_FLOAT(LODWORD(arc->halfheight) ^ _mask__NegFloat_) >= fOtherDeltaSqrd )
+                        if ( (-(arc->halfheight)) >= fPosDeltaSqrd && (-(arc->halfheight)) >= fOtherDeltaSqrd )
                         {
                             continue;
                         }
@@ -3277,8 +3504,8 @@ void    Path_UpdateArcBadPlaceCount(float a1@<ebp>, badplace_arc_t *arc, int tea
                     fC = vOtherDelta_4->constant.vOrigin[0] - vPosDelta_4->constant.vOrigin[0];
                     fA = vOtherDelta_4->constant.vOrigin[1] - vPosDelta_4->constant.vOrigin[1];
                     fB = vOtherDelta_4->constant.vOrigin[2] - vPosDelta_4->constant.vOrigin[2];
-                    LODWORD(fDiscriminant) = COERCE_UNSIGNED_INT((float)(fC * v28) + (float)(fA * fPosHeightSqrd))
-                                                                 ^ _mask__NegFloat_;
+                    //LODWORD(fDiscriminant) = COERCE_UNSIGNED_INT((float)(fC * v28) + (float)(fA * fPosHeightSqrd)) ^ _mask__NegFloat_;
+                    (fDiscriminant) = -((float)(fC * v28) + (float)(fA * fPosHeightSqrd));
                     if ( fDiscriminant > 0.0 )
                     {
                         fSqrtDisc = (float)(fC * fC) + (float)(fA * fA);
@@ -3455,8 +3682,7 @@ LABEL_3:
                 {
                     if ( vPosDelta_8 < arc->halfheight )
                     {
-                        if ( COERCE_FLOAT(LODWORD(arc->halfheight) ^ _mask__NegFloat_) >= vPosDelta_8
-                            && COERCE_FLOAT(LODWORD(arc->halfheight) ^ _mask__NegFloat_) >= vOtherDelta_8 )
+                        if ( (-(arc->halfheight)) >= vPosDelta_8 && (-(arc->halfheight)) >= vOtherDelta_8 )
                         {
                             continue;
                         }
@@ -3475,8 +3701,8 @@ LABEL_3:
                     vLineDelta = otherNode->constant.vOrigin[0] - node->constant.vOrigin[0];
                     vLineDelta_4 = otherNode->constant.vOrigin[1] - node->constant.vOrigin[1];
                     vLineDelta_8 = otherNode->constant.vOrigin[2] - node->constant.vOrigin[2];
-                    LODWORD(fB) = COERCE_UNSIGNED_INT((float)(vLineDelta * vPosDelta) + (float)(vLineDelta_4 * vPosDelta_4))
-                                            ^ _mask__NegFloat_;
+                    //LODWORD(fB) = COERCE_UNSIGNED_INT((float)(vLineDelta * vPosDelta) + (float)(vLineDelta_4 * vPosDelta_4)) ^ _mask__NegFloat_;
+                    (fB) = -((float)(vLineDelta * vPosDelta) + (float)(vLineDelta_4 * vPosDelta_4));
                     if ( fB > 0.0 )
                     {
                         fA = (float)(vLineDelta * vLineDelta) + (float)(vLineDelta_4 * vLineDelta_4);
@@ -3568,116 +3794,120 @@ LABEL_36:
 
 // local variable allocation has failed, the output may be wrong!
 void    Path_UpdateLimitedDepthArcBadPlaceCount(
-                float a1@<ebp>,
                 badplace_arc_t *arc,
                 int teamflags,
                 int delta,
                 int depth)
 {
     double v5; // xmm0_8
-    long double v6; // [esp+28h] [ebp-3FCh] BYREF
-    float v7; // [esp+30h] [ebp-3F4h]
-    float side1end[3]; // [esp+34h] [ebp-3F0h] BYREF
-    float side0end[3]; // [esp+40h] [ebp-3E4h] BYREF
-    _BYTE TopParent_92[812]; // [esp+A8h] [ebp-37Ch] OVERLAPPED BYREF
-    float fMaxHeightSqrd; // [esp+3D4h] [ebp-50h]
-    float fMaxRadiusSqrd; // [esp+3D8h] [ebp-4Ch] BYREF
-    float fHeightSqrd; // [esp+3DCh] [ebp-48h]
-    float fRadiusSqrd; // [esp+3E0h] [ebp-44h]
-    float centroid[3]; // [esp+3E4h] [ebp-40h] BYREF
-    float scale; // [esp+3F0h] [ebp-34h]
-    float v17; // [esp+3F4h] [ebp-30h]
-    float forward[3]; // [esp+3F8h] [ebp-2Ch] BYREF
-    float side1[3]; // [esp+404h] [ebp-20h] BYREF
-    float side0[3]; // [esp+410h] [ebp-14h]
-    float angle; // [esp+41Ch] [ebp-8h]
-    float retaddr; // [esp+424h] [ebp+0h]
-
-    side0[2] = a1;
-    angle = retaddr;
-    side0[0] = arc->angle1 - arc->angle0;
-    AngleNormalize360(side0[0]);
-    YawVectors(arc->angle0, 0, side1);
-    YawVectors(arc->angle1, 0, forward);
-    LODWORD(side1[0]) ^= _mask__NegFloat_;
-    LODWORD(side1[1]) ^= _mask__NegFloat_;
-    LODWORD(side1[2]) ^= _mask__NegFloat_;
+    float side1end[3]; // [esp+28h] [ebp-3FCh] BYREF
+    float side0end[3]; // [esp+34h] [ebp-3F0h] BYREF
+    pathnode_t TopParent; // [esp+40h] [ebp-3E4h] BYREF
+    pathnode_t *node; // [esp+C0h] [ebp-364h]
+    int nodeCount; // [esp+C4h] [ebp-360h] BYREF
+    pathsort_t pathReturn[64]; // [esp+C8h] [ebp-35Ch] BYREF
+    float fMaxHeightSqrd; // [esp+3C8h] [ebp-5Ch]
+    float fMaxRadiusSqrd; // [esp+3CCh] [ebp-58h]
+    float fHeightSqrd; // [esp+3D0h] [ebp-54h]
+    float fRadiusSqrd; // [esp+3D4h] [ebp-50h]
+    float centroid[3]; // [esp+3D8h] [ebp-4Ch] BYREF
+    float scale; // [esp+3E4h] [ebp-40h]
+    int v18; // [esp+3E8h] [ebp-3Ch]
+    float forward[3]; // [esp+3ECh] [ebp-38h] BYREF
+    float side1[3]; // [esp+3F8h] [ebp-2Ch] BYREF
+    float side0[3]; // [esp+404h] [ebp-20h] BYREF
+    float angle; // [esp+410h] [ebp-14h]
+    //_UNKNOWN *v23; // [esp+418h] [ebp-Ch]
+    //badplace_arc_t *arca; // [esp+41Ch] [ebp-8h]
+    //int teamflagsa; // [esp+420h] [ebp-4h] BYREF
+    //int deltaa; // [esp+424h] [ebp+0h]
+    //
+    //v23 = a1;
+    //arca = (badplace_arc_t *)deltaa;
+    angle = arc->angle1 - arc->angle0;
+    AngleNormalize360(angle);
+    YawVectors(arc->angle0, 0, side0);
+    YawVectors(arc->angle1, 0, side1);
+    side0[0] = -side0[0];
+    side0[1] = -side0[1];
+    side0[2] = -side0[2];
+    side0[2] = (float)(side0[0] * arc->origin[0]) + (float)(side0[1] * arc->origin[1]);
     side1[2] = (float)(side1[0] * arc->origin[0]) + (float)(side1[1] * arc->origin[1]);
-    forward[2] = (float)(forward[0] * arc->origin[0]) + (float)(forward[1] * arc->origin[1]);
-    YawVectors((float)(side0[0] * 0.5) + arc->angle0, &centroid[2], 0);
-    v5 = (float)(side0[0] * 0.0087266462);
-    __libm_sse2_sin(v6);
-    *(float *)&v5 = v5;
-    centroid[1] = *(float *)&v5;
-    centroid[0] = (float)((float)(*(float *)&v5 / side0[0]) * 76.394371) * arc->radius;
-    fMaxRadiusSqrd = (float)(centroid[0] * centroid[2]) + arc->origin[0];
-    fHeightSqrd = (float)(centroid[0] * scale) + arc->origin[1];
-    fRadiusSqrd = (float)(centroid[0] * v17) + arc->origin[2];
-    fMaxHeightSqrd = arc->radius * arc->radius;
-    *(float *)&TopParent_92[808] = arc->halfheight * arc->halfheight;
-    *(float *)&TopParent_92[804] = (float)(arc->radius + 256.0) * (float)(arc->radius + 256.0);
-    *(float *)&TopParent_92[800] = (float)(arc->halfheight + 128.0) * (float)(arc->halfheight + 128.0);
-    memset(&TopParent_92[32], 0, 0x300u);
-    *(unsigned int *)&TopParent_92[24] = Path_NearestNode(
-                                                                     arc->origin,
-                                                                     (pathsort_t *)&TopParent_92[32],
-                                                                     -2,
-                                                                     arc->radius,
-                                                                     (int *)&TopParent_92[28],
-                                                                     64,
-                                                                     NEAREST_NODE_DONT_DO_HEIGHT_CHECK);
-    if ( *(unsigned int *)&TopParent_92[24] || *(int *)&TopParent_92[28] > 0 )
+    YawVectors((float)(angle * 0.5) + arc->angle0, forward, 0);
+    v5 = (float)(angle * 0.0087266462);
+    //__libm_sse2_sin(*(long double *)side1end);
+    //*(float *)&v5 = v5;
+    v5 = sin(v5);
+    v18 = LODWORD(v5);
+    scale = (float)((float)(*(float *)&v5 / angle) * 76.394371) * arc->radius;
+    centroid[0] = (float)(scale * forward[0]) + arc->origin[0];
+    centroid[1] = (float)(scale * forward[1]) + arc->origin[1];
+    centroid[2] = (float)(scale * forward[2]) + arc->origin[2];
+    fRadiusSqrd = arc->radius * arc->radius;
+    fHeightSqrd = arc->halfheight * arc->halfheight;
+    fMaxRadiusSqrd = (float)(arc->radius + 256.0) * (float)(arc->radius + 256.0);
+    fMaxHeightSqrd = (float)(arc->halfheight + 128.0) * (float)(arc->halfheight + 128.0);
+    memset((unsigned __int8 *)pathReturn, 0, sizeof(pathReturn));
+    node = Path_NearestNode(
+        arc->origin,
+        pathReturn,
+        -2,
+        arc->radius,
+        &nodeCount,
+        64,
+        NEAREST_NODE_DONT_DO_HEIGHT_CHECK);
+    if (node || nodeCount > 0)
     {
-        if ( !*(unsigned int *)&TopParent_92[24] )
-            *(unsigned int *)&TopParent_92[24] = *(unsigned int *)&TopParent_92[32];
+        if (!node)
+            node = pathReturn[0].node;
         goto LABEL_10;
     }
-    *(unsigned int *)&TopParent_92[24] = Path_NearestNode(
-                                                                     &fMaxRadiusSqrd,
-                                                                     (pathsort_t *)&TopParent_92[32],
-                                                                     -2,
-                                                                     arc->radius * 0.5,
-                                                                     (int *)&TopParent_92[28],
-                                                                     64,
-                                                                     NEAREST_NODE_DONT_DO_HEIGHT_CHECK);
-    if ( *(unsigned int *)&TopParent_92[24] || *(int *)&TopParent_92[28] > 0 )
+    node = Path_NearestNode(
+        centroid,
+        pathReturn,
+        -2,
+        arc->radius * 0.5,
+        &nodeCount,
+        64,
+        NEAREST_NODE_DONT_DO_HEIGHT_CHECK);
+    if (node || nodeCount > 0)
     {
-        if ( !*(unsigned int *)&TopParent_92[24] )
-            *(unsigned int *)&TopParent_92[24] = *(unsigned int *)&TopParent_92[32];
-LABEL_10:
-        *(unsigned int *)(*(unsigned int *)&TopParent_92[24] + 108) = side0end;
-        *(unsigned int *)(*(unsigned int *)&TopParent_92[24] + 104) = 0;
-        *(unsigned int *)(*(unsigned int *)&TopParent_92[24] + 100) = level.iSearchFrame + 1;
-        *(unsigned int *)TopParent_92 = *(unsigned int *)&TopParent_92[24];
+        if (!node)
+            node = pathReturn[0].node;
+    LABEL_10:
+        node->transient.pPrevOpen = &TopParent;
+        node->transient.pNextOpen = 0;
+        node->transient.iSearchFrame = level.iSearchFrame + 1;
+        TopParent.transient.pNextOpen = node;
         Path_CheckForInwardLinks(
-            *(pathnode_t **)&TopParent_92[24],
+            node,
             0,
             depth,
+            fRadiusSqrd,
+            fHeightSqrd,
+            fMaxRadiusSqrd,
             fMaxHeightSqrd,
-            *(float *)&TopParent_92[808],
-            *(float *)&TopParent_92[804],
-            *(float *)&TopParent_92[800],
-            &fMaxRadiusSqrd,
+            centroid,
             arc,
+            side0,
             side1,
-            forward,
             teamflags,
             delta);
-        while ( *(unsigned int *)&TopParent_92[24] )
+        while (node)
         {
-            *(unsigned int *)(*(unsigned int *)&TopParent_92[24] + 100) = level.iSearchFrame;
-            *(unsigned int *)&TopParent_92[24] = *(unsigned int *)(*(unsigned int *)&TopParent_92[24] + 104);
+            node->transient.iSearchFrame = level.iSearchFrame;
+            node = node->transient.pNextOpen;
         }
+        side0end[0] = arc->origin[0] + side0[0];
+        side0end[1] = arc->origin[1] + side0[1];
+        side0end[2] = arc->origin[2] + side0[2];
         side1end[0] = arc->origin[0] + side1[0];
         side1end[1] = arc->origin[1] + side1[1];
         side1end[2] = arc->origin[2] + side1[2];
-        *(float *)&v6 = arc->origin[0] + forward[0];
-        *((float *)&v6 + 1) = arc->origin[1] + forward[1];
-        v7 = arc->origin[2] + forward[2];
-        v7 = arc->origin[2];
-        side1end[2] = v7;
-        G_DebugLine(arc->origin, (const float *)&v6, colorOrange, 0);
+        side1end[2] = arc->origin[2];
+        side0end[2] = side1end[2];
         G_DebugLine(arc->origin, side1end, colorOrange, 0);
+        G_DebugLine(arc->origin, side0end, colorOrange, 0);
     }
 }
 
@@ -3834,7 +4064,7 @@ void __cdecl G_ProcessPathnodeCommand(const RadiantCommand *command, SpawnVar *s
 
     node = 0;
     classname = GetPairValue(spawnVar, "classname");
-    nodetype = G_GetNodeTypeFromClassname(classname);
+    nodetype = (nodeType)G_GetNodeTypeFromClassname(classname);
     commandType = command->type;
     gameId = G_GetGameIdMapping(command->liveUpdateId);
     if ( commandType == RADIANT_COMMAND_CREATE )
@@ -3919,15 +4149,15 @@ void __cdecl G_ClearSelectedPathNode()
     //BLOPS_NULLSUB();
 }
 
-pathnode_parent_t *__thiscall phys_simple_allocator<pathnode_parent_t>::allocate(
-                phys_simple_allocator<pathnode_parent_t> *this)
-{
-    char *slot; // [esp+14h] [ebp-4h]
-
-    slot = PMM_ALLOC(0x18u, 4u);
-    if ( !slot )
-        return 0;
-    ++this->m_count;
-    return (pathnode_parent_t *)slot;
-}
-
+//pathnode_parent_t *__thiscall phys_simple_allocator<pathnode_parent_t>::allocate(
+//                phys_simple_allocator<pathnode_parent_t> *this)
+//{
+//    char *slot; // [esp+14h] [ebp-4h]
+//
+//    slot = PMM_ALLOC(0x18u, 4u);
+//    if ( !slot )
+//        return 0;
+//    ++this->m_count;
+//    return (pathnode_parent_t *)slot;
+//}
+//

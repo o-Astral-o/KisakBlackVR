@@ -107,10 +107,10 @@ void __cdecl player_die(
                 gentity_s *inflictor,
                 gentity_s *attacker,
                 int damage,
-                unsigned int meansOfDeath,
-                unsigned int iWeapon,
-                float *vDir,
-                hitLocation_t hitLoc,
+                int meansOfDeath,
+                const int iWeapon,
+                const float *vDir,
+                const hitLocation_t hitLoc,
                 int psTimeOffset)
 {
     float *viewangles; // [esp+4h] [ebp-2Ch]

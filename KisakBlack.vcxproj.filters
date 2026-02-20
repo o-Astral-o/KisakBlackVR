@@ -3513,6 +3513,9 @@
     <ClCompile Include="src\jpeg\jutils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\game\actor_function_table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\libs\libtomcrypt-1.17\src\headers\tomcrypt.h">

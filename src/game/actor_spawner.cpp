@@ -1,4 +1,31 @@
 #include "actor_spawner.h"
+#include <qcommon/cm_world.h>
+#include <game_mp/g_main_mp.h>
+#include <clientscript/cscr_stringlist.h>
+#include <game_mp/g_active_mp.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_utils_mp.h>
+#include <game_mp/g_spawn_mp.h>
+#include <game_mp/actor_mp.h>
+#include "actor_events.h"
+#include "actor_senses.h"
+#include <clientscript/scr_const.h>
+
+const float g_vSpawnCheckPoints[11][3] =
+{
+  { 0.5, 0.5, 0.80000001 },
+  { 0.5, 0.5, 0.5 },
+  { 0.5, 0.5, 0.2 },
+  { 0.0, 0.0, 1.0 },
+  { 0.0, 1.0, 1.0 },
+  { 1.0, 1.0, 1.0 },
+  { 1.0, 0.0, 1.0 },
+  { 1.0, 0.0, 0.0 },
+  { 1.0, 1.0, 0.0 },
+  { 0.0, 1.0, 0.0 },
+  { 0.0, 0.0, 0.0 }
+};
+
 
 int __cdecl SpotWouldTelefrag(gentity_s *spot)
 {

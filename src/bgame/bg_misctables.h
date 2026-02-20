@@ -1,6 +1,6 @@
 #pragma once
 
-int __cdecl VEH_ParseSpecificField(unsigned __int8 *pStruct, char *pValue, int fieldType, int fieldOffset);
+int __cdecl VEH_ParseSpecificField(unsigned __int8 *pStruct, const char *pValue, const int fieldType, const int fieldOffset);
 
 extern const char *s_vehicleCameraModes[6];
 extern const char *s_vehicleBoostModes [2];

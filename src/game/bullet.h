@@ -61,7 +61,7 @@ void __cdecl Bullet_ImpactEffect(
                 const float *normal,
                 const WeaponVariantDef *weapVariantDef,
                 gentity_s *attacker,
-                entityState_s::unnamed_type_un1 impactEffectFlags,
+                int impactEffectFlags,
                 gentity_s **outTempEnt);
 void __cdecl Bullet_ImpactEffect_SetAdditionalFlags(gentity_s *tempEnt, char impactEffectFlags);
 void __cdecl Bullet_FirePenetrate(
@@ -69,3 +69,7 @@ void __cdecl Bullet_FirePenetrate(
                 const WeaponVariantDef *weapVariantDef,
                 gentity_s *attacker,
                 int gameTime);
+
+
+extern unsigned __int8 scr_playerdamage_boneindex;
+

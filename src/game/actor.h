@@ -6,6 +6,34 @@
 #include "actor_physics.h"
 #include "sentient.h"
 #include "actor_threat.h"
+#include "actor_orientation.h"
+
+enum meansOfDeath_t : __int32
+{                                       // XREF: ActorCmd_finishActorDamage/r
+                                        // ?CMD_VEH_finishVehicleDamage@@YAXUscr_entref_t@@@Z/r ...
+    MOD_UNKNOWN           = 0x0,
+    MOD_PISTOL_BULLET     = 0x1,
+    MOD_RIFLE_BULLET      = 0x2,
+    MOD_GRENADE           = 0x3,
+    MOD_GRENADE_SPLASH    = 0x4,
+    MOD_PROJECTILE        = 0x5,
+    MOD_PROJECTILE_SPLASH = 0x6,
+    MOD_MELEE             = 0x7,
+    MOD_BAYONET           = 0x8,
+    MOD_HEAD_SHOT         = 0x9,
+    MOD_CRUSH             = 0xA,
+    MOD_TELEFRAG          = 0xB,
+    MOD_FALLING           = 0xC,
+    MOD_SUICIDE           = 0xD,
+    MOD_TRIGGER_HURT      = 0xE,
+    MOD_EXPLOSIVE         = 0xF,
+    MOD_IMPACT            = 0x10,
+    MOD_BURNED            = 0x11,
+    MOD_HIT_BY_OBJECT     = 0x12,
+    MOD_DROWN             = 0x13,
+    MOD_GAS               = 0x14,
+    MOD_NUM               = 0x15,
+};
 
 enum actor_think_result_t : __int32
 {                                       // XREF: ?Actor_Think@@YAXPAUgentity_s@@@Z/r
@@ -21,6 +49,17 @@ enum AISpecies : __int32
     MAX_AI_SPECIES = 0x1,
     AI_SPECIES_ALL = 0x1,
 };
+inline AISpecies &operator++(AISpecies &t)
+{
+    t = static_cast<AISpecies>((static_cast<int>(t) + 1));
+    return t;
+}
+inline AISpecies operator++(AISpecies &t, int)
+{
+    AISpecies old = t;
+    t = static_cast<AISpecies>((static_cast<int>(t) + 1));
+    return old;
+}
 
 enum ai_traverse_mode_t : __int32
 {                                       // XREF: actor_s/r
@@ -350,3 +389,25 @@ struct actor_s // sizeof=0x2780
     pathnode_t *pPotentialCoverNode[1000];
     int ikPriority;
 };
+
+struct ai_funcs_t // sizeof=0x1C
+{                                       // XREF: .rdata:AIDogFuncTable/r
+    bool (__fastcall *pfnStart)(actor_s *, ai_state_t);
+    void (__fastcall *pfnFinish)(actor_s *, ai_state_t);
+    void (__fastcall *pfnSuspend)(actor_s *, ai_state_t);
+    bool (__fastcall *pfnResume)(actor_s *, ai_state_t);
+    actor_think_result_t (__fastcall *pfnThink)(actor_s *);
+    void (__fastcall *pfnTouch)(actor_s *, gentity_s *);
+    void (__fastcall *pfnPain)(actor_s *, gentity_s *, int, const float *, const int, const float *, const hitLocation_t);
+};
+
+constexpr float actorMins[3] = { -15.0, -15.0, 0.0 };
+constexpr float actorMaxs[3] = { 15.0, 15.0, 48.0 };
+
+constexpr float meleeAttackOffsets[4][2] = { { 1.0, 0.0 }, { 0.0, 1.0 }, { -1.0, 0.0 }, { 0.0, -1.0 } };
+constexpr float ACTOR_EYE_OFFSET = 64.0f;
+
+
+extern const unsigned __int16 *g_AISpeciesNames[1];
+
+extern const ai_funcs_t *AIFuncTable[1];

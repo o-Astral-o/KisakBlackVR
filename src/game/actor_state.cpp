@@ -1,4 +1,53 @@
 #include "actor_state.h"
+#include <game_mp/g_main_mp.h>
+#include <game_mp/actor_mp.h>
+
+const ai_state_transition_t g_eSimplificationRules[4][4] =
+{
+  {
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_CANONICAL
+  },
+  {
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_SET,
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_POP
+  },
+  {
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_SET,
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_NONE
+  },
+  {
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_CANONICAL,
+    AIS_TRANSITION_SET,
+    AIS_TRANSITION_CANONICAL
+  }
+};
+
+const ai_state_t g_eSupercededStates[5][5] =
+{
+  { AIS_PAIN, AIS_REACT, AIS_CUSTOMANIM, AIS_INVALID, AIS_INVALID },
+  { AIS_REACT, AIS_CUSTOMANIM, AIS_INVALID, AIS_INVALID, AIS_INVALID },
+  { AIS_PAIN, AIS_REACT, AIS_SCRIPTEDANIM, AIS_CUSTOMANIM, AIS_NEGOTIATION },
+  { AIS_PAIN, AIS_REACT, AIS_SCRIPTEDANIM, AIS_CUSTOMANIM, AIS_NEGOTIATION },
+  { AIS_PAIN, AIS_REACT, AIS_SCRIPTEDANIM, AIS_CUSTOMANIM, AIS_NEGOTIATION }
+};
+
+const ai_state_t g_eSupercedingStates[5][5] =
+{
+  { AIS_SCRIPTEDANIM, AIS_NEGOTIATION, AIS_INVALID, AIS_INVALID, AIS_INVALID },
+  { AIS_PAIN, AIS_SCRIPTEDANIM, AIS_NEGOTIATION, AIS_INVALID, AIS_INVALID },
+  { AIS_INVALID, AIS_INVALID, AIS_INVALID, AIS_INVALID, AIS_INVALID },
+  { AIS_NEGOTIATION, AIS_INVALID, AIS_INVALID, AIS_INVALID, AIS_INVALID },
+  { AIS_SCRIPTEDANIM, AIS_INVALID, AIS_INVALID, AIS_INVALID, AIS_INVALID }
+};
+
 
 void __cdecl Actor_SetDefaultState(actor_s *actor)
 {
@@ -230,7 +279,7 @@ char __fastcall Actor_ResumeState(actor_s *self, ai_state_t ePrevState)
     }
     if ( AIFuncTable[self->species][eCurState].pfnResume(self, ePrevState) )
         return 1;
-    NextPopedState = Actor_GetNextPopedState(self);
+    NextPopedState = (ai_state_t)Actor_GetNextPopedState(self);
     Actor_FinishState(self, NextPopedState);
     return 0;
 }
@@ -321,8 +370,8 @@ void __fastcall Actor_SimplifyStateTransitions(actor_s *self)
 
     while ( self->transitionCount >= 2 )
     {
-        eCmd1 = self->eSubState[2 * self->transitionCount + 5];
-        eCmd2 = *(&self->iStateTime + 2 * self->transitionCount);
+        eCmd1 = (ai_state_transition_t)self->eSubState[2 * self->transitionCount + 5];
+        eCmd2 = (ai_state_transition_t )(*(&self->iStateTime + 2 * self->transitionCount));
         if ( (unsigned int)eCmd1 >= 4
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_state.cpp",
@@ -356,8 +405,8 @@ void __fastcall Actor_SimplifyStateTransitions(actor_s *self)
             return;
         if ( eTransition )
         {
-            self->eSubState[2 * self->transitionCount + 5] = eTransition;
-            self->eSubState[2 * self->transitionCount + 6] = *(&self->preThinkTime + 2 * self->transitionCount);
+            self->eSubState[2 * self->transitionCount + 5] = (ai_substate_t )(eTransition);
+            self->eSubState[2 * self->transitionCount + 6] = (ai_substate_t )(*(&self->preThinkTime + 2 * self->transitionCount));
             --self->transitionCount;
         }
         else

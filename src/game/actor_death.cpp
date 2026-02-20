@@ -1,6 +1,14 @@
 #include "actor_death.h"
+#include <game_mp/actor_mp.h>
+#include <game_mp/g_main_mp.h>
+#include <cgame/cg_event.h>
+#include "actor_corpse.h"
+#include "actor_state.h"
+#include "actor_orientation.h"
+#include <server/sv_world.h>
+#include "actor_events.h"
 
-char __fastcall Actor_Death_Start(actor_s *self, ai_state_t ePrevState)
+bool __fastcall Actor_Death_Start(actor_s *self, ai_state_t ePrevState)
 {
     if ( !self && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_death.cpp", 32, 0, "%s", "self") )
         __debugbreak();
@@ -39,7 +47,7 @@ char __fastcall Actor_Death_Start(actor_s *self, ai_state_t ePrevState)
     return 1;
 }
 
-int __fastcall Actor_Death_Think(actor_s *self)
+actor_think_result_t __fastcall Actor_Death_Think(actor_s *self)
 {
     int savedregs; // [esp+20h] [ebp+0h] BYREF
 
@@ -60,11 +68,11 @@ int __fastcall Actor_Death_Think(actor_s *self)
         if ( level.time >= self->iStateTime + 500 )
         {
             self->ent->r.contents = self->deathContents;
-            SV_LinkEntity((int)&savedregs, self->ent);
+            SV_LinkEntity(self->ent);
         }
         //if ( GetCurrentThreadId() == g_DXDeviceThread )
             //D3DPERF_EndEvent();
-        return 0;
+        return ACTOR_THINK_DONE;
     }
     else
     {
@@ -72,7 +80,7 @@ int __fastcall Actor_Death_Think(actor_s *self)
             Actor_Death_Cleanup(self);
         //if ( GetCurrentThreadId() == g_DXDeviceThread )
             //D3DPERF_EndEvent();
-        return 2;
+        return ACTOR_THINK_MOVE_TO_BODY_QUEUE;
     }
 }
 

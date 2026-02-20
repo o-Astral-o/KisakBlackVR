@@ -143,7 +143,7 @@ struct trace_t // sizeof=0x38
     // Flame_Phys_Update_Items_PerStream(bool,int,flameGeneric_s * *,int)+A30/w ...
     unsigned __int16 boneIndex;                 // XREF: FireBulletPenetrate+1133/r
     // Weapon_Melee_internal+400/r ...
-    unsigned __int16 partGroup;                 // XREF: Weapon_Melee_internal+444/r
+    unsigned __int16 partGroup; // hitLocation_t ?                 // XREF: Weapon_Melee_internal+444/r
     // Flame_Phys_Update_Items_PerStream(bool,int,flameGeneric_s * *,int)+A39/w ...
     bool allsolid;                                            // XREF: is_not_penetrating+9B/r
     // PM_GroundTrace:loc_432679/r ...
@@ -753,5 +753,3 @@ char __cdecl CM_GetHeliHeight(const float *pt, float checkdist, float *result);
 
 
 static const float traceOffsets_0[5][2] = { { 0.0, 0.0 }, { 1.0, 1.0 }, { -1.0, 1.0 }, { 1.0, -1.0 }, { -1.0, -1.0 } };
-
-extern heli_height_lock_patches_t heli_height_lock_patches[32];

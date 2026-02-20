@@ -1,4 +1,64 @@
 #include "g_helicopter1.h"
+#include <universal/com_math_anglevectors.h>
+#include <clientscript/cscr_vm.h>
+#include <game_mp/g_spawn_mp.h>
+#include <clientscript/scr_const.h>
+#include <bgame/bg_misc.h>
+#include <game_mp/g_utils_mp.h>
+
+const dvar_t *vehHelicopterMaxAccelVertical;
+const dvar_t *vehHelicopterLookaheadTime;
+const dvar_t *vehHelicopterHoverSpeedThreshold;
+const dvar_t *vehHelicopterRightStickDeadzone;
+const dvar_t *vehHelicopterStrafeDeadzone;
+const dvar_t *vehHelicopterScaleMovement;
+const dvar_t *vehHelicopterYawAltitudeControls;
+const dvar_t *vehHelicopterSoftCollisions;
+const dvar_t *vehHelicopterDecelerationFwd;
+const dvar_t *vehHelicopterDecelerationSide;
+const dvar_t *vehHelicopterInvertUpDown;
+const dvar_t *vehHelicopterYawOnLeftStick;
+const dvar_t *vehHelicopterTiltFromControllerAxes;
+const dvar_t *vehHelicopterTiltFromFwdAndYaw_VelAtMaxTilt;
+const dvar_t *vehHelicopterTiltFromViewangles;
+const dvar_t *vehHelicopterJitterJerkyness;
+const dvar_t *vehHelicopterHeadSwayDontSwayTheTurret;
+const dvar_t *vehHelicopterTiltMomentum;
+const dvar_t *vehHelicopterAlwaysFaceCamera;
+const dvar_t *vehHelicopterAlwaysFaceCameraRate;
+const dvar_t *vehHelicopterPathTransitionTime;
+const dvar_t *vehHelicopterFreeLook;
+const dvar_t *vehHelicopterDefaultPitch;
+const dvar_t *vehHelicopterRotDecel;
+const dvar_t *vehHelicopterTiltFromFwdAndYaw;
+const dvar_t *vehHelicopterMaxSpeedVertical;
+const dvar_t *vehHelicopterboundsOn;
+const dvar_t *vehHelicopterboundMapUpperLeftX;
+const dvar_t *vehHelicopterboundMapUpperLeftY;
+const dvar_t *vehHelicopterboundMapLowerRightX;
+const dvar_t *vehHelicopterboundMapLowerRightY;
+const dvar_t *vehHelicopterboundMapHeight;
+
+const char *g_helicopterYawAltitudeControlsNames[4] =
+{
+  "Altitude and yaw are both controlled by the thumbstick",
+  "Altitude: thumbstick         Yaw: bumper buttons",
+  "Altitude: bumper buttons     Yaw: thumbstick",
+  NULL
+};
+
+float stopInputRange = 15.0;
+float inputFallOffRange = 50.0;
+float lookAheadTime = 1.0;
+float vel_landing_scale = 0.5;
+float max_height_offset = 2000.0;
+float frame_inc = 50.0;
+float velInfluence = 12.0;
+float controllerInfleunce = 10.0;
+float viewDiffInfleunce = 80.0;
+float aircraftRotLag = 1.0;
+
+
 
 void __cdecl Helicopter_RegisterDvars()
 {
@@ -475,7 +535,8 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
         {
             move[0] = usercmd->forwardmove;
             move[1] = usercmd->rightmove;
-            if ( bitarray<51>::testBit(&usercmd->button_bits, 0xBu) && vehHelicopterFreeLook->current.enabled )
+            //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xBu) && vehHelicopterFreeLook->current.enabled )
+            if ( usercmd->button_bits.testBit(0xBu) && vehHelicopterFreeLook->current.enabled )
             {
                 player->client->linkAnglesMinClamp[1] = -info->turretViewLimits.horizSpanRight;
                 player->client->linkAnglesMaxClamp[1] = info->turretViewLimits.horizSpanLeft;
@@ -490,17 +551,21 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
                     if ( integer == 1 )
                     {
                         move[2] = usercmd->pitchmove;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0x24u) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0x24u) )
+                        if ( usercmd->button_bits.testBit(0x24u) )
                             move[3] = 127;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0x25u) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0x25u) )
+                        if ( usercmd->button_bits.testBit(0x25u) )
                             move[3] -= 127;
                     }
                     else if ( integer == 2 )
                     {
                         move[3] = usercmd->yawmove;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0x24u) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0x24u) )
+                        if ( usercmd->button_bits.testBit(0x24u) )
                             move[2] = 127;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0x25u) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0x25u) )
+                        if ( usercmd->button_bits.testBit(0x25u) )
                             move[2] -= 127;
                     }
                 }
@@ -535,7 +600,7 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
                         v24 = fraction * 128.0;
                     else
                         v24 = viewDiffInfleunce;
-                    if ( (float)(COERCE_FLOAT(LODWORD(viewDiffInfleunce) ^ _mask__NegFloat_) - (float)(fraction * 128.0)) < 0.0 )
+                    if ( (float)((-(viewDiffInfleunce)) - (float)(fraction * 128.0)) < 0.0 )
                         v10 = v24;
                     else
                         v10 = -viewDiffInfleunce;
@@ -565,10 +630,11 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
                     if ( (float)(-127.0 - diff) < 0.0 )
                         v8 = v21;
                     else
-                        v8 = FLOAT_N127_0;
+                        v8 = -127.0f;
                     move[3] = (int)v8;
                 }
-                if ( bitarray<51>::testBit(&usercmd->button_bits, 0xBu) && vehHelicopterFreeLook->current.enabled )
+                //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xBu) && vehHelicopterFreeLook->current.enabled )
+                if ( usercmd->button_bits.testBit(0xBu) && vehHelicopterFreeLook->current.enabled )
                 {
                     move[3] = 0;
                 }
@@ -583,11 +649,13 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
         }
         if ( (veh->flags & 0x200) != 0 )
         {
-            if ( bitarray<51>::testBit(&usercmd->button_bits, 0x24u) )
+            //if ( bitarray<51>::testBit(&usercmd->button_bits, 0x24u) )
+            if ( usercmd->button_bits.testBit(0x24u) )
             {
                 veh->heliHeightLockOffset = veh->heliHeightLockOffset + frame_inc;
             }
-            else if ( bitarray<51>::testBit(&usercmd->button_bits, 0x25u) )
+            //else if ( bitarray<51>::testBit(&usercmd->button_bits, 0x25u) )
+            else if ( usercmd->button_bits.testBit(0x25u) )
             {
                 veh->heliHeightLockOffset = veh->heliHeightLockOffset - frame_inc;
             }
@@ -606,7 +674,8 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
         if ( player_topDownCamMode->current.integer >= 2 )
         {
             moveVec[0] = (float)usercmd->forwardmove;
-            LODWORD(moveVec[1]) = COERCE_UNSIGNED_INT((float)usercmd->rightmove) ^ _mask__NegFloat_;
+            //LODWORD(moveVec[1]) = COERCE_UNSIGNED_INT((float)usercmd->rightmove) ^ _mask__NegFloat_;
+            (moveVec[1]) = -((float)usercmd->rightmove);
             len = Vec2Normalize(moveVec);
             if ( (float)(len - 127.0) < 0.0 )
                 v18 = len;
@@ -615,7 +684,7 @@ void __cdecl VEH_UpdateClientChopper(gentity_s *ent)
             if ( (float)(-127.0 - len) < 0.0 )
                 v6 = v18;
             else
-                v6 = FLOAT_N127_0;
+                v6 = -127.0f;
             len = v6;
             yaw = vectoyaw(moveVec) + player_topDownCamAngles->current.vector[1];
             deltaYaw = -AngleDelta(yaw, phys->angles[1]);
@@ -825,9 +894,9 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
     tgtSpeed = Vec3NormalizeTo(tgtVel, tgtDir);
     speedParallel = (float)((float)(phys->bodyVel[0] * tgtDir[0]) + (float)(phys->bodyVel[1] * tgtDir[1]))
                                 + (float)(phys->bodyVel[2] * tgtDir[2]);
-    velOrthogonal[0] = (float)(COERCE_FLOAT(LODWORD(speedParallel) ^ _mask__NegFloat_) * tgtDir[0]) + phys->bodyVel[0];
-    velOrthogonal[1] = (float)(COERCE_FLOAT(LODWORD(speedParallel) ^ _mask__NegFloat_) * tgtDir[1]) + phys->bodyVel[1];
-    velOrthogonal[2] = (float)(COERCE_FLOAT(LODWORD(speedParallel) ^ _mask__NegFloat_) * tgtDir[2]) + phys->bodyVel[2];
+    velOrthogonal[0] = (float)((-(speedParallel)) * tgtDir[0]) + phys->bodyVel[0];
+    velOrthogonal[1] = (float)((-(speedParallel)) * tgtDir[1]) + phys->bodyVel[1];
+    velOrthogonal[2] = (float)((-(speedParallel)) * tgtDir[2]) + phys->bodyVel[2];
     velParallel[0] = speedParallel * tgtDir[0];
     velParallel[1] = speedParallel * tgtDir[1];
     velParallel[2] = speedParallel * tgtDir[2];
@@ -858,7 +927,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
             v26 = bodyAccel[axis];
         else
             v26 = maxAccel[axis];
-        if ( (float)(COERCE_FLOAT(LODWORD(maxAccel[axis]) ^ _mask__NegFloat_) - v25) < 0.0 )
+        if ( (float)((-(maxAccel[axis])) - v25) < 0.0 )
             v12 = v26;
         else
             v12 = -maxAccel[axis];
@@ -868,7 +937,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
             v24 = newDecel[axis];
         else
             v24 = maxAccel[axis];
-        if ( (float)(COERCE_FLOAT(LODWORD(maxAccel[axis]) ^ _mask__NegFloat_) - v23) < 0.0 )
+        if ( (float)((-(maxAccel[axis])) - v23) < 0.0 )
             v11 = v24;
         else
             v11 = -maxAccel[axis];
@@ -878,7 +947,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
             v22 = newAccel[axis];
         else
             v22 = maxAccel[axis];
-        if ( (float)(COERCE_FLOAT(LODWORD(maxAccel[axis]) ^ _mask__NegFloat_) - v21) < 0.0 )
+        if ( (float)((-(maxAccel[axis])) - v21) < 0.0 )
             v10 = v22;
         else
             v10 = -maxAccel[axis];
@@ -891,7 +960,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
         v20 = bodyAccel[2];
     else
         v20 = maxAccel[2];
-    if ( (float)(COERCE_FLOAT(LODWORD(maxAccel[2]) ^ _mask__NegFloat_) - v19) < 0.0 )
+    if ( (float)((-(maxAccel[2])) - v19) < 0.0 )
         v9 = v20;
     else
         v9 = -maxAccel[2];
@@ -914,7 +983,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
         rotRate = tgtYawVel;
     else
         rotRate = info->rotRate;
-    if ( (float)(COERCE_FLOAT(LODWORD(info->rotRate) ^ _mask__NegFloat_) - tgtYawVel) < 0.0 )
+    if ( (float)((-(info->rotRate)) - tgtYawVel) < 0.0 )
         tgt = rotRate;
     else
         tgt = -info->rotRate;
@@ -926,7 +995,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
         accel = rotAccel[1];
     else
         accel = info->accel;
-    if ( (float)(COERCE_FLOAT(LODWORD(info->accel) ^ _mask__NegFloat_) - v16) < 0.0 )
+    if ( (float)((-(info->accel)) - v16) < 0.0 )
         v7 = accel;
     else
         v7 = -info->accel;
@@ -1030,7 +1099,7 @@ void __cdecl HELI_CalcAccel(gentity_s *ent, char *move, float *bodyAccel, float 
             __debugbreak();
         }
         targetTilt[1] = (float)((float)(vehHelicopterTiltFromFwdAndYaw->current.value * velScalea)
-                                                    * (float)(COERCE_FLOAT(LODWORD(phys->rotVel[1]) ^ _mask__NegFloat_) / info->rotRate))
+                                                    * (float)((-(phys->rotVel[1])) / info->rotRate))
                                     + targetTilt[1];
     }
     if ( (float)(targetTilt[1] - 1.0) < 0.0 )
@@ -1149,8 +1218,8 @@ void __cdecl HELI_CmdScale(char *move, float *outFracs)
             outFracs[1] = 0.0f;
         if ( vehHelicopterScaleMovement->current.enabled )
         {
-            LODWORD(absAxis) = *(unsigned int *)outFracs & _mask__AbsFloat_;
-            LODWORD(absAxis_4) = (unsigned int)outFracs[1] & _mask__AbsFloat_;
+            (absAxis) =   fabs(outFracs[0]);
+            (absAxis_4) = fabs(outFracs[1]);
             if ( absAxis > 1.0
                 && !Assert_MyHandler(
                             "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_helicopter.cpp",
@@ -1207,9 +1276,7 @@ void __cdecl HELI_UpdateJitter(VehicleJitter *jitter)
             {
                 if ( jitter->jitterOffsetRange[i] != 0.0 )
                 {
-                    v1 = G_flrand(
-                                 COERCE_FLOAT(LODWORD(jitter->jitterOffsetRange[i]) ^ _mask__NegFloat_),
-                                 jitter->jitterOffsetRange[i]);
+                    v1 = G_flrand((-(jitter->jitterOffsetRange[i])), jitter->jitterOffsetRange[i]);
                     newOffset[i] = v1;
                 }
             }
@@ -1300,9 +1367,9 @@ void __cdecl HELI_SoftenCollisions(gentity_s *ent, float *worldAccel)
                                      / errorMagSqr;
                 if ( errorAccel > 0.0 )
                 {
-                    *worldAccel = (float)(COERCE_FLOAT(LODWORD(errorAccel) ^ _mask__NegFloat_) * error[0]) + *worldAccel;
-                    worldAccel[1] = (float)(COERCE_FLOAT(LODWORD(errorAccel) ^ _mask__NegFloat_) * error[1]) + worldAccel[1];
-                    worldAccel[2] = (float)(COERCE_FLOAT(LODWORD(errorAccel) ^ _mask__NegFloat_) * error[2]) + worldAccel[2];
+                    worldAccel[0] = (float)((-(errorAccel)) * error[0]) + *worldAccel;
+                    worldAccel[1] = (float)((-(errorAccel)) * error[1]) + worldAccel[1];
+                    worldAccel[2] = (float)((-(errorAccel)) * error[2]) + worldAccel[2];
                 }
                 wishVel[0] = clippedPos[0] - veh->phys.origin[0];
                 wishVel[1] = clippedPos[1] - veh->phys.origin[1];
@@ -1385,14 +1452,13 @@ double __cdecl Vehicle_AdjustRollForInputDeadZone(float rollPercent)
     {
         __debugbreak();
     }
-    if ( vehPlaneRollDeadZone->current.value > rollPercent
-        && rollPercent > COERCE_FLOAT(vehPlaneRollDeadZone->current.integer ^ _mask__NegFloat_) )
+    if ( vehPlaneRollDeadZone->current.value > rollPercent && rollPercent > -(vehPlaneRollDeadZone->current.value) )
     {
         return 0.0;
     }
     if ( rollPercent > vehPlaneRollDeadZone->current.value )
         return (rollPercent - vehPlaneRollDeadZone->current.value) / (1.0 - vehPlaneRollDeadZone->current.value);
-    if ( COERCE_FLOAT(vehPlaneRollDeadZone->current.integer ^ _mask__NegFloat_) <= rollPercent )
+    if ( (-vehPlaneRollDeadZone->current.value) <= rollPercent )
         return 0.0;
     return (rollPercent + vehPlaneRollDeadZone->current.value) / (1.0 - vehPlaneRollDeadZone->current.value);
 }
@@ -1530,9 +1596,11 @@ void __cdecl VEH_UpdateClientPlane(gentity_s *ent)
     pitchStick = 0.0f;
     yawStick = 0.0f;
     speedStick = 0.0f;
-    if ( EntHandle::isDefined(&ent->r.ownerNum) )
+    //if ( EntHandle::isDefined(&ent->r.ownerNum) )
+    if ( ent->r.ownerNum.isDefined() )
     {
-        player = EntHandle::ent(&ent->r.ownerNum);
+        //player = EntHandle::ent(&ent->r.ownerNum);
+        player = ent->r.ownerNum.ent();
         if ( !player->client
             && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_helicopter.cpp", 1097, 0, "%s", "player->client") )
         {
@@ -1544,7 +1612,8 @@ void __cdecl VEH_UpdateClientPlane(gentity_s *ent)
         {
             move[0] = usercmd->forwardmove;
             move[1] = usercmd->rightmove;
-            if ( bitarray<51>::testBit(&usercmd->button_bits, 0xBu) )
+            //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xBu) )
+            if ( usercmd->button_bits.testBit(0xBu) )
             {
                 player->client->linkAnglesFrac = 1.0f;
                 player->client->linkAnglesMinClamp[1] = -info->turretViewLimits.horizSpanRight;
@@ -1560,29 +1629,37 @@ void __cdecl VEH_UpdateClientPlane(gentity_s *ent)
                     if ( integer == 1 )
                     {
                         move[2] = usercmd->pitchmove;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0xFu) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xFu) )
+                        if ( usercmd->button_bits.testBit(0xFu) )
                             move[3] = 127;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0xEu) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xEu) )
+                        if ( usercmd->button_bits.testBit(0xEu) )
                             move[3] -= 127;
                     }
                     else if ( integer == 2 )
                     {
                         move[3] = usercmd->yawmove;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0xEu) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xEu) )
+                        if ( usercmd->button_bits.testBit(0xEu) )
                             move[2] = 127;
-                        if ( bitarray<51>::testBit(&usercmd->button_bits, 0xFu) )
+                        //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xFu) )
+                        if ( usercmd->button_bits.testBit(0xFu) )
                             move[2] -= 127;
                     }
                 }
                 else
                 {
-                    if ( bitarray<51>::testBit(&usercmd->button_bits, 0xFu) )
+                    //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xFu) )
+                    if ( usercmd->button_bits.testBit(0xFu) )
                         rollStick = rollStick - 1.0;
-                    if ( bitarray<51>::testBit(&usercmd->button_bits, 0xEu) )
+                    //if ( bitarray<51>::testBit(&usercmd->button_bits, 0xEu) )
+                    if ( usercmd->button_bits.testBit(0xEu) )
                         rollStick = 1.0f;
-                    yawStick = COERCE_FLOAT(COERCE_UNSIGNED_INT((float)usercmd->rightmove) ^ _mask__NegFloat_) / 128.0;
+                    //yawStick = COERCE_FLOAT(COERCE_UNSIGNED_INT((float)usercmd->rightmove) ^ _mask__NegFloat_) / 128.0;
+                    yawStick = (-((float)usercmd->rightmove)) / 128.0;
                     pitchStick = (float)usercmd->forwardmove / 128.0;
-                    speedStick = COERCE_FLOAT(COERCE_UNSIGNED_INT((float)usercmd->pitchmove) ^ _mask__NegFloat_) / 128.0;
+                    //speedStick = COERCE_FLOAT(COERCE_UNSIGNED_INT((float)usercmd->pitchmove) ^ _mask__NegFloat_) / 128.0;
+                    speedStick = (-((float)usercmd->pitchmove)) / 128.0;
                     rollStick = Vehicle_AdjustRollForInputDeadZone((float)usercmd->rightmove / 128.0);
                 }
                 if ( vehHelicopterInvertUpDown->current.enabled )
