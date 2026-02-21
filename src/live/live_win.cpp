@@ -119,7 +119,11 @@ bool __cdecl Live_IsUserSignedInToLive()
 
 bool __cdecl Live_IsUserSignedInToDemonware(int controllerIndex)
 {
+#ifdef KISAK_LIVE
     return dwGetLogOnStatus(controllerIndex) == 4;
+#else
+    return false;
+#endif
 }
 
 char __cdecl Live_RequireUserToPlayOnline()
@@ -557,6 +561,7 @@ bool __cdecl Live_HandleDWChallengeResponse(
                 unsigned __int8 *message,
                 unsigned int messageSize)
 {
+#ifdef KISAK_LIVE
     unsigned int nonce; // [esp+4h] [ebp-44h] BYREF
     msg_t in_msg; // [esp+8h] [ebp-40h] BYREF
     unsigned int serverchallenge; // [esp+38h] [ebp-10h] BYREF
@@ -586,6 +591,9 @@ bool __cdecl Live_HandleDWChallengeResponse(
         return 1;
     }
     return retval;
+#else
+    return 1;
+#endif
 }
 
 int __cdecl Live_GetControllerFromXUID(unsigned __int64 player)
@@ -635,6 +643,7 @@ taskCompleteResults __cdecl Live_SetPlayerTeamRankComplete(int slot)
 
 taskCompleteResults __cdecl Live_SetPlayerTeamRanksComplete(int slot)
 {
+#ifdef KISAK_LIVE
     overlappedTask *statsWriteOverlapped; // [esp+0h] [ebp-8h]
     taskCompleteResults res; // [esp+4h] [ebp-4h]
 
@@ -667,19 +676,27 @@ taskCompleteResults __cdecl Live_SetPlayerTeamRanksComplete(int slot)
     if ( res == TASK_ERROR )
         Com_PrintError(16, "Error writing performance stats.\n");
     return res;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 unsigned __int64 g_fakeXUID; // KISAKTODO: value?
 char __cdecl XUserGetXUID(int controllerIndex, unsigned __int64 *xuid)
 {
+#ifdef KISAK_LIVE
     if ( dwGetLogOnStatus(0) == 4 )
         return dwGetOnlineUserID(controllerIndex, xuid);
     *xuid = g_fakeXUID << controllerIndex;
     return 1;
+#else
+    return 1;
+#endif
 }
 
 char __cdecl Live_UserGetName(int controllerIndex, char *buf, int bufsize)
 {
+#ifdef KISAK_LIVE
     char *v3; // eax
     char *v4; // eax
     char ok; // [esp+3h] [ebp-1h]
@@ -706,6 +723,9 @@ char __cdecl Live_UserGetName(int controllerIndex, char *buf, int bufsize)
         return 1;
     }
     return ok;
+#else
+    return 1;
+#endif
 }
 
 bool __cdecl Live_UserSignedInLocally(int controllerIndex, char **disconnectMessage)
@@ -1219,6 +1239,7 @@ int __cdecl Live_FetchPartyPerformanceValuesComplete()
 
 taskCompleteResults __cdecl Live_UpdatePerformanceValuesComplete(int slot)
 {
+#ifdef KISAK_LIVE
     unsigned __int64 v2; // [esp-8h] [ebp-224h]
     int RegisteredUser; // [esp+0h] [ebp-21Ch]
     int i; // [esp+4h] [ebp-218h]
@@ -1270,6 +1291,9 @@ taskCompleteResults __cdecl Live_UpdatePerformanceValuesComplete(int slot)
     if ( result == TASK_ERROR )
         Com_PrintError(16, "Unable to retreive performance value\n");
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 void Live_UpdateAveragePerformance()

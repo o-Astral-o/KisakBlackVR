@@ -2,6 +2,8 @@
 
 #include "live_storage.h"
 #include <universal/com_stringtable.h>
+#include <universal/dvar.h>
+#include <gfx_d3d/r_material.h>
 
 enum fileShareKeyIndex : __int32
 {                                       // XREF: ?Live_FileShare_GetItemInfo@@YA_NHW4fileShareKeyIndex@@HW4fileShareInfoLocation@@PAPBDPAM@Z/r
@@ -125,7 +127,7 @@ char __cdecl Live_FileShare_GetTag(
                 unsigned __int64 tagType,
                 unsigned __int64 *tag);
 fileSharePooledDetails_t *__cdecl Live_FileShare_GetFilePooledDetailsBuffer();
-bdFileMetaData *__cdecl Live_FileShare_FindFileInPrivateData(
+struct bdFileMetaData *__cdecl Live_FileShare_FindFileInPrivateData(
                 unsigned __int64 fileID,
                 fileShareBufferLocation bufferLocation);
 bool __cdecl Live_FileShare_ValidatePublicDDLBuffer(char *buffer);

@@ -1,6 +1,7 @@
 #include "live_presence_win.h"
 #include "live_win.h"
 #include <ui/ui_playlists.h>
+#include <qcommon/common.h>
 
 const MapnameRichPresenceInfo mapRichPresenceInfo[10] =
 {

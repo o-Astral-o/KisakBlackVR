@@ -2,6 +2,7 @@
 #include "live_storage.h"
 #include <win32/win_shared.h>
 #include "live_win.h"
+#include <qcommon/common.h>
 
 MetPlayerInfo metPlayersXuidinfo[1];
 int s_metPlayerLastUploadTime[1];

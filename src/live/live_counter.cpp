@@ -4,6 +4,8 @@
 #include <universal/com_stringtable.h>
 #include <DW/dwLogOn_pc.h>
 #include <win32/win_shared.h>
+#include <qcommon/common.h>
+#include <qcommon/cmd.h>
 
 const TaskDefinition task_downloadAllCounters[1] =
 {
@@ -341,6 +343,7 @@ void __cdecl LiveCounter_SetupCounters()
 
 void __cdecl LiveCounter_Update(int controllerIndex)
 {
+#ifdef KISAK_LIVE
     if ( s_countersInit && dwGetLogOnStatus(controllerIndex) == 4 )
     {
         if ( (int)Sys_Milliseconds() > s_nextCounterDownloadTime && s_countersRequested )
@@ -357,6 +360,7 @@ void __cdecl LiveCounter_Update(int controllerIndex)
                 s_nextCounterUploadTime = 60000 * counterUploadInterval->current.integer + Sys_Milliseconds();
         }
     }
+#endif
 }
 
 cmd_function_s LiveCounter_IncrementCounter_f_VAR;

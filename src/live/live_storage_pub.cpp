@@ -48,6 +48,7 @@ static void NULLSUB_LOCAL(const int, void *)
 
 TaskRecord *__cdecl LiveStorage_FetchOnlineWAD(int controllerIndex)
 {
+#ifdef KISAK_LIVE
     signed int fileLen; // [esp+0h] [ebp-14h]
     void *fileBuffer; // [esp+4h] [ebp-10h] BYREF
     const char *language; // [esp+8h] [ebp-Ch]
@@ -110,6 +111,9 @@ TaskRecord *__cdecl LiveStorage_FetchOnlineWAD(int controllerIndex)
         nestedTask = LiveStorage_ReadDWFile(controllerIndex, &s_onlineWADFileInfo);
         return LiveStorage_SetupNestedTask(task_LiveFetchOnlineWAD, controllerIndex, nestedTask, &s_onlineWADFileInfo);
     }
+#else
+    return 0;
+#endif
 }
 
 int __cdecl LiveStorage_FetchOnlineWADNotFound()

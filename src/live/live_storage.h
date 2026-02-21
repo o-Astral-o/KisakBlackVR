@@ -7,6 +7,13 @@
 #include <DemonWare/bdCore/bdTiming/bdStopwatch.h>
 #include <DemonWare/bdCore/bdContainers/bdBitBuffer.h>
 
+enum fileShareLocation : __int32
+{                                                                             // XREF: fileShareWriteFileInfo/r
+    FILESHARE_LOCATION_INVALID = 0x0,
+    FILESHARE_LOCATION_PUBLISHERSTORAGE = 0x1,
+    FILESHARE_LOCATION_USERSTORAGE = 0x2,
+    FILESHARE_LOCATION_POOLEDSTORAGE = 0x3,
+};
 enum statsLocation : __int32
 {                                       // XREF: ?LiveStorage_GetStatsBuffer@@YAPAEHW4statsLocation@@_N@Z/r
                                         // LiveStorage_GetPersStatsBuffer/r ...

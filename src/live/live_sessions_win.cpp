@@ -28,7 +28,9 @@ void __cdecl Session_ClearDWOverlappedTasks()
 
 void __cdecl Live_FindSessionsStart(bool reset, int servertype)
 {
+#ifdef KISAK_LIVE
     dwFindSessionsPaged(1044, servertype, 0, 1);
+#endif
 }
 
 void __cdecl Live_FindSessionsPump()
@@ -383,6 +385,7 @@ void __cdecl Session_Modify(
                 int publicSlots,
                 int privateSlots)
 {
+#ifdef KISAK_LIVE
     overlappedTask *sessionModifyOverlappedIO; // [esp+0h] [ebp-8h]
 
     if ( session->sessionHandle && g_matchmakingInfo->m_active )
@@ -398,10 +401,12 @@ void __cdecl Session_Modify(
             session->flags = flags;
         }
     }
+#endif
 }
 
 taskCompleteResults __cdecl Session_ModifyComplete(int slot)
 {
+#ifdef KISAK_LIVE
     taskCompleteResults res; // [esp+0h] [ebp-8h]
     overlappedTask *sessionModifyOverlappedIO; // [esp+4h] [ebp-4h]
 
@@ -444,6 +449,9 @@ taskCompleteResults __cdecl Session_ModifyComplete(int slot)
     if ( res == TASK_ERROR )
         Com_PrintError(16, "EXE_ERROR_MODIFYING_SESSION");
     return res;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 void __cdecl Session_EveryoneLeaveSessionAsync(int localControllerIndex, SessionData_s *session)

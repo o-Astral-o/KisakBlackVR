@@ -4113,6 +4113,7 @@ char __cdecl LiveStats_SpendCurrency(
                 pointsSpent_t reasonType,
                 int reasonIndex)
 {
+#ifdef KISAK_LIVE
     int currentCodPoints; // [esp+0h] [ebp-4h]
 
     currentCodPoints = LiveStats_GetCurrency(controllerIndex);
@@ -4135,6 +4136,9 @@ char __cdecl LiveStats_SpendCurrency(
         Com_PrintError(15, "Item costs %d and you only have %d\n", currencyAmount, currentCodPoints);
         return 0;
     }
+#else
+    return 0;
+#endif
 }
 
 void __cdecl LiveStats_TrackSpending(int controllerIndex, int currencyAmount)

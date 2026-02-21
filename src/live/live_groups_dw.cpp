@@ -1,4 +1,5 @@
 #include "live_groups_dw.h"
+#include <qcommon/cmd.h>
 
 unsigned int s_groupCounts[1024];
 GroupMembership s_groupMembership[1];

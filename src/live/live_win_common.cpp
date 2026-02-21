@@ -30,6 +30,7 @@ extern const dvar_t *live_service; // KISAKTODO: remove these later
 extern const dvar_t *dw_dupe_key;
 char __cdecl Live_Frame_MP(int localControllerIndex)
 {
+#ifdef KISAK_LIVE
     bool v2; // [esp+7h] [ebp-21h]
     char *disconnectMessage; // [esp+Ch] [ebp-1Ch] BYREF
     int LogOnStatus; // [esp+10h] [ebp-18h]
@@ -134,6 +135,9 @@ char __cdecl Live_Frame_MP(int localControllerIndex)
             return 0;
         }
     }
+#else
+return 0;
+#endif
 }
 
 extern dvar_t *dw_popup; // KISAKTODO: remove later

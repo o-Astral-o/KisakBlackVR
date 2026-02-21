@@ -1840,6 +1840,7 @@ void __cdecl SV_DWWriteClientStats(client_t *client)
     dwFileOperationInfo *fileInfo; // [esp+18h] [ebp-8h]
     int clientStableXP; // [esp+1Ch] [ebp-4h] BYREF
 
+#ifdef KISAK_LIVE
     if ( Com_CanWriteLeaderboards(v1) )
     {
         if ( client && client->dw_userID && !xblive_basictraining->current.enabled )
@@ -1910,6 +1911,9 @@ void __cdecl SV_DWWriteClientStats(client_t *client)
     {
         Com_DPrintf(15, "Not writing stats for %s, don't have permission\n", "unknown");
     }
+#else
+    Com_DPrintf(15, "[KISAK] Lol this got triggered.");
+#endif
 }
 
 void __cdecl SV_DWWriteClientGlobalStatsSuccess(int controllerIndex, unsigned __int8 **data)
@@ -3127,6 +3131,7 @@ bool __cdecl SV_ShouldMapRotate()
 
 void __cdecl SV_FetchWADDeferred()
 {
+#ifdef KISAK_LIVE
     bool v0; // [esp+0h] [ebp-4h]
 
     SV_SetPlaylistFetchedTime();
@@ -3137,6 +3142,7 @@ void __cdecl SV_FetchWADDeferred()
         LiveStorage_ForceWADFetch();
         dwLeaveDeferredCritsec();
     }
+#endif
 }
 
 TaskRecord *__cdecl LiveStorage_ReadPlayerGlobalBlob()

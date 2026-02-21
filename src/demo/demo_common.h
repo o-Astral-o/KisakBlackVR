@@ -827,14 +827,7 @@ struct __declspec(align(128)) demoMain // sizeof=0xB0B00
         // padding byte
 };
 
-enum fileShareLocation : __int32
-{                                                                             // XREF: fileShareWriteFileInfo/r
-                                                                                // dwFileShareReadFileTask/r ...
-        FILESHARE_LOCATION_INVALID             = 0x0,
-        FILESHARE_LOCATION_PUBLISHERSTORAGE = 0x1,
-        FILESHARE_LOCATION_USERSTORAGE     = 0x2,
-        FILESHARE_LOCATION_POOLEDSTORAGE = 0x3,
-};
+enum fileShareLocation : __int32;
 
 struct dwFileShareReadFileTask // sizeof=0x878
 {                                                                             // XREF: playerFileOperations/r

@@ -795,6 +795,7 @@ char __cdecl LB_GetStatsByXuids(int controllerIndex, Leaderboard *lb)
 
 char __cdecl LB_GetPlayerStats(int controllerIndex, Leaderboard *lb)
 {
+#ifdef KISAK_LIVE
     unsigned __int64 userID; // [esp+0h] [ebp-8h] BYREF
 
     g_lbGlob.numXuids = 0;
@@ -809,10 +810,14 @@ char __cdecl LB_GetPlayerStats(int controllerIndex, Leaderboard *lb)
         Com_PrintError(22, "dwGetOnlineUserID() failed, probably called before NP logon has completed\n");
         return 0;
     }
+#else
+    return 0;
+#endif
 }
 
 char __cdecl LB_GetFriends(Leaderboard *lb, int localClientNum)
 {
+#ifdef KISAK_LIVE
     unsigned int numXuids; // edx
     int i; // [esp+0h] [ebp-D4h]
     FriendInfo info; // [esp+4h] [ebp-D0h] BYREF
@@ -849,6 +854,9 @@ char __cdecl LB_GetFriends(Leaderboard *lb, int localClientNum)
         }
     }
     return LB_GetStatsByXuids(controllerIndex, lb);
+#else
+    return false;
+#endif
 }
 
 char __cdecl LB_CalcOffset(int offset, Leaderboard *lb)
@@ -1180,6 +1188,7 @@ void __cdecl LB_GetRankIconForXp(LeaderBoardRow<10> *row, LbType type, Material 
 
 unsigned int __cdecl LB_CalcPlayerIndex(int localControllerIndex, Leaderboard *lb)
 {
+#ifdef KISAK_LIVE
     unsigned int numStats; // [esp+8h] [ebp-14h]
     unsigned int i; // [esp+10h] [ebp-Ch]
     unsigned __int64 userID; // [esp+14h] [ebp-8h] BYREF
@@ -1194,6 +1203,9 @@ unsigned int __cdecl LB_CalcPlayerIndex(int localControllerIndex, Leaderboard *l
             return 0;
     }
     return i;
+#else
+    return 0;
+#endif
 }
 
 void __cdecl LB_SortXUserStatsByRank(Leaderboard *lb)
@@ -1233,6 +1245,7 @@ bool __cdecl LB_MakeRow(
                 LeaderBoardRow<10> *const row,
                 bool statWriteTypeAdd)
 {
+#ifdef KISAK_LIVE
     bool v7; // [esp+4h] [ebp-20h]
     LbStatEnum statType; // [esp+8h] [ebp-1Ch]
     unsigned int j; // [esp+Ch] [ebp-18h]
@@ -1282,6 +1295,9 @@ bool __cdecl LB_MakeRow(
         row->m_leaderboardID = lbViewIds[lbIndex];
     }
     return v7;
+#else
+    return 0;
+#endif
 }
 
 bool __cdecl LB_MakeGlobalRow(
@@ -1290,6 +1306,7 @@ bool __cdecl LB_MakeGlobalRow(
                 int lbIndex,
                 LeaderBoardRow<10> *const row)
 {
+#ifdef KISAK_LIVE
     bool v5; // [esp+4h] [ebp-20h]
     GlobalLbStatEnum statType; // [esp+8h] [ebp-1Ch]
     unsigned int j; // [esp+Ch] [ebp-18h]
@@ -1339,6 +1356,9 @@ bool __cdecl LB_MakeGlobalRow(
         row->m_leaderboardID = GlobalLbViewIds[lbIndex];
     }
     return v5;
+#else
+    return 0;
+#endif
 }
 
 void __cdecl LB_openDownloadingMenuCmd()
@@ -1650,6 +1670,7 @@ void __cdecl LB_SetStatsForRow(int controllerIndex, const char *gameModePrefix, 
 
 taskCompleteResults __cdecl LB_ReadLeaderboardMatchesCountComplete(unsigned int slot)
 {
+#ifdef KISAK_LIVE
     int totalResults; // [esp+4h] [ebp-10h] BYREF
     taskCompleteResults result; // [esp+8h] [ebp-Ch]
     int numResults; // [esp+Ch] [ebp-8h] BYREF
@@ -1703,10 +1724,14 @@ taskCompleteResults __cdecl LB_ReadLeaderboardMatchesCountComplete(unsigned int 
     if ( result )
         TaskManager_ClearTask(readStatsOverlappedIO);
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 taskCompleteResults __cdecl LB_ReadLeaderboardComplete(unsigned int slot)
 {
+#ifdef KISAK_LIVE
     const char *v1; // eax
     int filter; // [esp+0h] [ebp-1Ch]
     int controllerIndex; // [esp+4h] [ebp-18h]
@@ -1813,6 +1838,9 @@ taskCompleteResults __cdecl LB_ReadLeaderboardComplete(unsigned int slot)
     if ( result )
         TaskManager_ClearTask(readStatsOverlappedIO);
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 void __cdecl LB_ClearPlayerStats(int localControllerIndex)
@@ -1854,6 +1882,7 @@ void __cdecl LB_SetStat(int localControllerIndex, int statId, int value)
 
 void __cdecl LB_UpdateNeeded(int localControllerIndex)
 {
+#ifdef KISAK_LIVE
     LbPlayerStat *stat; // [esp+0h] [ebp-Ch]
     unsigned __int64 userID; // [esp+4h] [ebp-8h] BYREF
 
@@ -1879,6 +1908,7 @@ void __cdecl LB_UpdateNeeded(int localControllerIndex)
         HIDWORD(stat->userID) = 0;
         Com_PrintError(22, "dwGetOnlineUserID() failed, probably called before NP logon has completed\n");
     }
+#endif
 }
 
 void __cdecl LB_UploadPlayerGlobalStats(int localControllerIndex)
@@ -1940,6 +1970,7 @@ void __cdecl Lb_ReadHiddenLeaderboardEntry(
                 int lbIndex,
                 LbTaskEnum task)
 {
+#ifdef KISAK_LIVE
     overlappedTask *ov; // [esp+0h] [ebp-Ch]
     unsigned __int64 userID; // [esp+4h] [ebp-8h] BYREF
 
@@ -1963,6 +1994,7 @@ void __cdecl Lb_ReadHiddenLeaderboardEntry(
     {
         Com_PrintError(22, "dwGetOnlineUserID() failed, probably called before NP logon has completed\n");
     }
+#endif
 }
 
 void __cdecl Lb_InitiateWeeklyAndMonthlyLbWrite(int controllerIndex, LbType type)
@@ -2164,6 +2196,7 @@ char __cdecl LB_UploadPlayerStats(int localControllerIndex)
 
 taskCompleteResults __cdecl LB_UploadPlayerStatsComplete(unsigned int slot)
 {
+#ifdef KISAK_LIVE
     taskCompleteResults result; // [esp+0h] [ebp-8h]
     overlappedTask *uploadStatsOverlappedIO; // [esp+4h] [ebp-4h]
 
@@ -2203,10 +2236,14 @@ taskCompleteResults __cdecl LB_UploadPlayerStatsComplete(unsigned int slot)
     if ( result )
         TaskManager_ClearTask(uploadStatsOverlappedIO);
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 taskCompleteResults __cdecl LB_WriteStatsToLbComplete(unsigned int slot)
 {
+#ifdef KISAK_LIVE
     taskCompleteResults result; // [esp+0h] [ebp-8h]
     overlappedTask *uploadStatsOverlappedIO; // [esp+4h] [ebp-4h]
 
@@ -2236,10 +2273,14 @@ taskCompleteResults __cdecl LB_WriteStatsToLbComplete(unsigned int slot)
     if ( result )
         TaskManager_ClearTask(uploadStatsOverlappedIO);
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 taskCompleteResults __cdecl LB_IncrementEscrowComplete(unsigned int slot)
 {
+#ifdef KISAK_LIVE
     overlappedTask *incrementEscrowOverlappedIO; // [esp+0h] [ebp-8h]
     taskCompleteResults result; // [esp+4h] [ebp-4h]
 
@@ -2279,10 +2320,14 @@ taskCompleteResults __cdecl LB_IncrementEscrowComplete(unsigned int slot)
     if ( result )
         TaskManager_ClearTask(incrementEscrowOverlappedIO);
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 taskCompleteResults __cdecl LB_ResolveEscrowComplete(unsigned int slot)
 {
+#ifdef KISAK_LIVE
     int timeDifference; // [esp+Ch] [ebp-20h]
     int lastUpdatedTime; // [esp+10h] [ebp-1Ch]
     int i; // [esp+14h] [ebp-18h]
@@ -2355,6 +2400,9 @@ taskCompleteResults __cdecl LB_ResolveEscrowComplete(unsigned int slot)
         TaskManager_ClearTask(resolveEscrowOverlappedIO);
     }
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 taskCompleteResults __cdecl LB_RetrieveEscrowBalanceComplete(unsigned int slot)
@@ -2449,6 +2497,7 @@ taskCompleteResults __cdecl LB_RetrieveEscrowBalanceComplete(unsigned int slot)
 
 taskCompleteResults __cdecl LB_ClearEscrowComplete(int slot)
 {
+#ifdef KISAK_LIVE
     int LocalClientNum; // eax
     int escrowBalance; // [esp+0h] [ebp-Ch]
     taskCompleteResults result; // [esp+4h] [ebp-8h]
@@ -2471,6 +2520,9 @@ taskCompleteResults __cdecl LB_ClearEscrowComplete(int slot)
         TaskManager_ClearTask(clearEscrowOverlappedIO);
     }
     return result;
+#else
+    return TASK_COMPLETE;
+#endif
 }
 
 char *__cdecl LB_FeederItemText(int localClientNum, unsigned int index, int column, Material **material)
@@ -2586,6 +2638,7 @@ void __cdecl LB_ReadRowForUser(
                 int taskType,
                 LeaderBoardRow<10> *userStats)
 {
+#ifdef KISAK_LIVE
     bool statsReadStartSuccessful; // [esp+3h] [ebp-5h]
     overlappedTask *ov; // [esp+4h] [ebp-4h]
 
@@ -2619,10 +2672,12 @@ void __cdecl LB_ReadRowForUser(
         if ( !statsReadStartSuccessful )
             dwConnectionErrorHandler(8);
     }
+#endif
 }
 
 void __cdecl LB_WriteRows(int controllerIndex, bdStatsInfo **statsInfo, unsigned int numStats, int taskType)
 {
+#ifdef KISAK_LIVE
     bool statsWriteStartSuccessful; // [esp+3h] [ebp-5h]
     overlappedTask *ov; // [esp+4h] [ebp-4h]
 
@@ -2654,6 +2709,7 @@ void __cdecl LB_WriteRows(int controllerIndex, bdStatsInfo **statsInfo, unsigned
         if ( !statsWriteStartSuccessful )
             dwConnectionErrorHandler(6);
     }
+#endif
 }
 
 void __cdecl LB_InitAndRegisterStructure(LbStructure *const structure, int type)
