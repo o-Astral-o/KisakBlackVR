@@ -1475,11 +1475,9 @@ void SND_Update()
 
 void __cdecl SND_UpdateWait()
 {
-    void *v0; // ecx
-
     if ( SND_Active() )
     {
-        SND_Update(v0);
+        SND_Update();
         Sys_AssistAndWaitWorkerCmdInternal(&updatesound_workerWorkerCmd);
     }
 }

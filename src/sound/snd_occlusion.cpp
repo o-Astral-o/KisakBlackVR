@@ -501,13 +501,13 @@ void __cdecl SND_UpdateProximity()
     {
         for ( i = 0; i < 4; ++i )
         {
-            I_fmap(
+            float x = I_fmap(
                 snd_proximity_min_dist->current.value,
                 snd_proximity_max_dist->current.value,
                 snd_proximity_max_late_cut->current.value,
                 0.0,
                 g_snd.proximityDistance[i]);
-            scale = SND_dBToLinear();
+            scale = SND_dBToLinear(x);
             g_snd.proximityLateModifier[i] = (float)((float)(1.0 - snd_proximity_filter->current.value)
                                                                                          * g_snd.proximityLateModifier[i])
                                                                          + (float)(scale * snd_proximity_filter->current.value);

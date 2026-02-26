@@ -778,10 +778,10 @@ double __cdecl SND_DspDecayConstant(float time, float dt, float targetAmplitude)
         return 0.0;
 }
 
-double __cdecl logf(float _X)
-{
-    return (float)log(_X);
-}
+//double __cdecl logf(float _X)
+//{
+//    return (float)log(_X);
+//}
 
 void __cdecl SND_DspFutzMono(
                 const snd_dsp_futz_param *param,
