@@ -408,3 +408,11 @@ void __cdecl BG_UnlockablesSetCurrentItemIndexCmd();
 void __cdecl BG_UnlockablesCopyClassCmd();
 void __cdecl BG_UnlockablesSetClanTagCmd();
 int __cdecl SV_GetMaxAttachCount();
+
+extern const dvar_t *attachmentFilter;
+extern const dvar_t *maxAttachmentsPerWeapon;
+extern const dvar_t *allItemsUnlocked;
+extern const dvar_t *allItemsPurchased;
+extern const dvar_t *itemSellFactor;
+extern const dvar_t *ui_currentWeaponOptionGroup;
+extern const dvar_t *bodyTypeFromGun;

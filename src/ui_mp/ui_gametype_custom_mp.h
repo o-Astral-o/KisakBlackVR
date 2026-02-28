@@ -156,3 +156,5 @@ extern const dvar_t *ui_items_no_cost;
 extern const dvar_t *custom_killstreak_mode;
 extern const dvar_t *custom_killstreak_numkills;
 extern const dvar_t *ui_useCustomClassInfo;
+
+extern _CustomClassDescription g_customGameModeClassDescriptions[10];

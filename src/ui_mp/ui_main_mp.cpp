@@ -27,6 +27,45 @@
 #include <client_mp/cl_cgame_mp.h>
 #include <gfx_d3d/r_ui3d.h>
 #include <live/live_combatrecord.h>
+#include <live/live_contracts.h>
+#include <bgame/bg_unlockable_items.h>
+#include <cgame/cg_weapon_options.h>
+#include <ui/ui_playlists.h>
+#include <ui/ui_main_pc.h>
+#include <client/client.h>
+#include <cgame/cg_main.h>
+#include <server_mp/sv_init_mp.h>
+#include <client_mp/cl_ui_pc_mp.h>
+#include <client_mp/cl_main_pc_mp.h>
+#include <ui/ui_server.h>
+#include <sound/snd_public_async.h>
+#include <demo/demo_playback.h>
+#include <cgame_mp/cg_newDraw_mp.h>
+#include <client_mp/cl_ui_mp.h>
+#include <demo/demo_ui.h>
+#include <database/db_file_load.h>
+#include <cgame/cg_info.h>
+
+const char *lbTypeEnum_3[17] =
+{
+  "tdm",
+  "dm",
+  "ctf",
+  "dom",
+  "sab",
+  "sd",
+  "koth",
+  "dem",
+  "hctdm",
+  "hcdm",
+  "hcctf",
+  "hcdom",
+  "hcsab",
+  "hcsd",
+  "hckoth",
+  "hcdem",
+  NULL
+};
 
 const dvar_t *ui_ignoreMousePos;
 const dvar_t *ui_prevTextEntryBox;
@@ -386,6 +425,7 @@ unsigned int __cdecl UI_GetOffsetForTextureCoords(
 
 void __cdecl UI_GenerateHeatMapTextureCallback(GfxImage *param)
 {
+#ifdef KISAK_HEATMAP // probably requires DW? for MatchRecord stuff
     _D3DLOCKED_RECT lock; // [esp+0h] [ebp-Ch] BYREF
     GfxImage *img; // [esp+8h] [ebp-4h]
 
@@ -398,12 +438,15 @@ void __cdecl UI_GenerateHeatMapTextureCallback(GfxImage *param)
         0x2000);
     memcpy((unsigned __int8 *)lock.pBits, img->pixels, 4 * img->height * img->width);
     img->texture.basemap->__vftable[1].GetDevice(img->texture.basemap, 0);
+
     Z_VirtualFree(img->pixels, 19);
     img->pixels = 0;
+#endif
 }
 
 void __cdecl UI_GenerateHeatMapTexture(int controllerIndex)
 {
+#ifdef KISAK_HEATMAP // probably requires DW? for MatchRecord stuff
     const char *String; // eax
     unsigned __int64 v2; // rax
     unsigned __int8 *pixels; // [esp+0h] [ebp-1Ch]
@@ -454,6 +497,7 @@ void __cdecl UI_GenerateHeatMapTexture(int controllerIndex)
     {
         LargeLocal::~LargeLocal(&heatmap_large_local);
     }
+#endif
 }
 
 void __cdecl UI_GenerateHeatMapTextureInternal(
@@ -534,12 +578,12 @@ void __cdecl UI_DrawStatsMilestonesFeederProgressBar(
     float barColorEmpty[4]; // [esp+80h] [ebp-10h] BYREF
 
     barColorEmpty[0] = 0.96f;
-    barColorEmpty[1] = 0.5f7999998;
-    barColorEmpty[2] = 0.1f1;
+    barColorEmpty[1] = 0.57999998;
+    barColorEmpty[2] = 0.11;
     barColorEmpty[3] = 0.2f;
     barColorFilled[0] = 0.96f;
-    barColorFilled[1] = 0.5f7999998;
-    barColorFilled[2] = 0.1f1;
+    barColorFilled[1] = 0.57999998;
+    barColorFilled[2] = 0.11;
     barColorFilled[3] = 1.0f;
     if ( LiveStats_GetChallengeInfo(&challenge, index, type) )
     {
@@ -778,13 +822,10 @@ void __cdecl UI_DrawCombatRecordPieChart(int contextIndex, rectDef_s *rect, floa
     Material *v6; // eax
     unsigned __int16 v7; // ax
     Material *v8; // eax
-    double v9; // xmm0_8
-    double v10; // xmm0_8
-    double v11; // xmm0_8
-    double v12; // xmm0_8
-    long double v13; // [esp+20h] [ebp-A0h]
-    long double v14; // [esp+20h] [ebp-A0h]
-    long double v15; // [esp+20h] [ebp-A0h]
+    float v9; // xmm0_4
+    float v10; // xmm0_4
+    float v11; // xmm0_4
+    float v12; // xmm0_4
     float pt1[2]; // [esp+44h] [ebp-7Ch] BYREF
     float param[4]; // [esp+4Ch] [ebp-74h] BYREF
     float lineColor[4]; // [esp+5Ch] [ebp-64h] BYREF
@@ -802,26 +843,25 @@ void __cdecl UI_DrawCombatRecordPieChart(int contextIndex, rectDef_s *rect, floa
     endIndex = 0;
     totalItemTypes = 0;
     totalItems = 0;
-    LODWORD(v13) = pieChartType;
-    switch ( pieChartType )
+    switch (pieChartType)
     {
-        case 0:
-            goto LABEL_4;
-        case 1:
-            startIndex = 3;
-            endIndex = 6;
-            break;
-        case 2:
-LABEL_4:
-            startIndex = 0;
-            endIndex = 3;
-            break;
+    case 0:
+        goto LABEL_4;
+    case 1:
+        startIndex = 3;
+        endIndex = 6;
+        break;
+    case 2:
+    LABEL_4:
+        startIndex = 0;
+        endIndex = 3;
+        break;
     }
-    while ( startIndex < endIndex )
+    while (startIndex < endIndex)
     {
         Bool = Dvar_GetBool("ui_showFriendsCombatRecord");
-        numItems[currIndex] = (int)LiveCombatRecord_GetSortedItemData(startIndex, Bool, SORT_KEY);
-        if ( !numItems[currIndex] )
+        numItems[currIndex] = LiveCombatRecord_GetSortedItemData(startIndex, Bool, SORT_KEY);
+        if (!numItems[currIndex])
             break;
         ++totalItemTypes;
         totalItems += numItems[currIndex];
@@ -834,16 +874,24 @@ LABEL_4:
     pt2[1] = 0.0f;
     param[2] = 0.0f;
     param[3] = 0.0f;
-    *(_QWORD *)&pieColors[0][0] = __PAIR64__(LODWORD(0.5f7999998), LODWORD(0.96f));
-    *(_QWORD *)&pieColors[0][2] = __PAIR64__(LODWORD(1.0f), LODWORD(0.1f1));
-    pieColors[1][0] = 0.1f7;
-    pieColors[1][1] = 0.1f7;
-    *(_QWORD *)&pieColors[1][2] = __PAIR64__(LODWORD(1.0f), LODWORD(0.1f7));
-    pieColors[2][0] = 0.5f6999999;
-    pieColors[2][1] = 0.5f6999999;
-    *(_QWORD *)&pieColors[2][2] = __PAIR64__(LODWORD(1.0f), LODWORD(0.5f6999999));
+    //*&pieColors[0][0] = __PAIR64__(LODWORD(0.58f), LODWORD(0.96f));
+    pieColors[0][0] = 0.96f;
+    pieColors[0][1] = 0.58f;
+    //*&pieColors[0][2] = __PAIR64__(LODWORD(1.0f), LODWORD(0.11f));
+    pieColors[0][2] = 0.11f;
+    pieColors[0][3] = 1.0f;
+    pieColors[1][0] = 0.17f;
+    pieColors[1][1] = 0.17f;
+    //*&pieColors[1][2] = __PAIR64__(LODWORD(1.0f), LODWORD(0.17f));
+    pieColors[1][2] = 0.17f;
+    pieColors[1][3] = 1.0f;
+    pieColors[2][0] = 0.57f;
+    pieColors[2][1] = 0.57f;
+    pieColors[2][2] = 0.57f;
+    pieColors[2][3] = 1.0f;
+    //*&pieColors[2][2] = __PAIR64__(LODWORD(1.0f), LODWORD(0.57f));
     param[0] = 0.0f;
-    param[1] = 6.2831855f;
+    param[1] = M_2_PI; 
     memset(lineColor, 0, 12);
     lineColor[3] = 0.8f;
     CodeConst_GenericParam0 = GetCodeConst_GenericParam0();
@@ -859,10 +907,10 @@ LABEL_4:
         rect->vertAlign,
         pieColors[0],
         v6);
-    param[0] = 4.712389 - (float)((float)((float)numItems[1] / (float)totalItems) * 6.2831855);
-    for ( i = 1; i < totalItemTypes; ++i )
+    param[0] = 4.712389 - ((numItems[1] / totalItems) * 6.2831855);
+    for (i = 1; i < totalItemTypes; ++i)
     {
-        param[1] = (float)((float)numItems[i] / (float)totalItems) * 6.2831855;
+        param[1] = (numItems[i] / totalItems) * 6.2831855;
         v7 = GetCodeConst_GenericParam0();
         CL_SetCustomConstant(v7, param);
         v8 = Material_RegisterHandle("piechart", 3);
@@ -876,29 +924,25 @@ LABEL_4:
             rect->vertAlign,
             pieColors[i],
             v8);
-        pt1[0] = (float)(rect->w / 2.0) + rect->x;
-        pt1[1] = (float)(rect->h / 2.0) + rect->y;
-        v9 = param[0];
-        __libm_sse2_cos(v13);
-        *(float *)&v9 = v9;
-        pt2[0] = (float)((float)(rect->w / 2.0) + rect->x) + (float)((float)(rect->w / 2.0) * *(float *)&v9);
-        v10 = param[0];
-        __libm_sse2_sin(v14);
-        *(float *)&v10 = v10;
-        pt2[1] = (float)((float)(rect->h / 2.0) + rect->y) - (float)((float)(rect->h / 2.0) * *(float *)&v10);
+        pt1[0] = (rect->w / 2.0) + rect->x;
+        pt1[1] = (rect->h / 2.0) + rect->y;
+        //v9 = __libm_sse2_cos(param[0]);
+        v9 = cos(param[0]);
+        pt2[0] = ((rect->w / 2.0) + rect->x) + ((rect->w / 2.0) * v9);
+        //v10 = __libm_sse2_sin(param[0]);
+        v10 = sin(param[0]);
+        pt2[1] = ((rect->h / 2.0) + rect->y) - ((rect->h / 2.0) * v10);
         UI_DrawPrettyLine(contextIndex, pt1, pt2, 1.0, rect->horzAlign, rect->vertAlign, lineColor);
         param[0] = param[0] + param[1];
     }
-    if ( totalItemTypes > 1 )
+    if (totalItemTypes > 1)
     {
-        v11 = param[0];
-        __libm_sse2_cos(v13);
-        *(float *)&v11 = v11;
-        pt2[0] = (float)((float)(rect->w / 2.0) + rect->x) + (float)((float)(rect->w / 2.0) * *(float *)&v11);
-        v12 = param[0];
-        __libm_sse2_sin(v15);
-        *(float *)&v12 = v12;
-        pt2[1] = (float)((float)(rect->h / 2.0) + rect->y) - (float)((float)(rect->h / 2.0) * *(float *)&v12);
+        //v11 = __libm_sse2_cos(param[0]);
+        v11 = cos(param[0]);
+        pt2[0] = ((rect->w / 2.0) + rect->x) + ((rect->w / 2.0) * v11);
+        //v12 = __libm_sse2_sin(param[0]);
+        v12 = sin(param[0]);
+        pt2[1] = ((rect->h / 2.0) + rect->y) - ((rect->h / 2.0) * v12);
         UI_DrawPrettyLine(contextIndex, pt1, pt2, 1.0, rect->horzAlign, rect->vertAlign, lineColor);
     }
 }
@@ -980,8 +1024,8 @@ void __cdecl UI_DrawCombatRecordLineGraph(int contextIndex, rectDef_s *rect, flo
         white[2] = 1.0f;
         white[3] = 1.0f;
         red[0] = 0.73f;
-        red[1] = 0.1f9;
-        red[2] = 0.1f9;
+        red[1] = 0.19f;
+        red[2] = 0.19f;
         red[3] = 1.0f;
         green[0] = 0.42f;
         green[1] = 0.68f;
@@ -1144,8 +1188,8 @@ void __cdecl UI_DrawCombatRecordBarGraph(int contextIndex, rectDef_s *rect)
     if ( maxEarnings )
     {
         barColorRed[0] = 0.73f;
-        barColorRed[1] = 0.1f9;
-        barColorRed[2] = 0.1f9;
+        barColorRed[1] = 0.19f;
+        barColorRed[2] = 0.19f;
         barColorRed[3] = 1.0f;
         barColorGreen[0] = 0.42f;
         barColorGreen[1] = 0.68f;
@@ -1277,8 +1321,8 @@ void __cdecl UI_DrawCombatRecordHorizontalBarGraph(
     green[2] = 0.46f;
     green[3] = 1.0f;
     red[0] = 0.73f;
-    red[1] = 0.1f9;
-    red[2] = 0.1f9;
+    red[1] = 0.19f;
+    red[2] = 0.19f;
     red[3] = 1.0f;
     white[0] = 1.0f;
     white[1] = 1.0f;
@@ -1359,12 +1403,12 @@ void __cdecl UI_DrawCombatRecordHitLocHeatMap(int contextIndex, rectDef_s *rect)
         hitLocCount[currIndex] = hitLocCount[currIndex] / maxhitCount;
     }
     red[0] = 0.73f;
-    red[1] = 0.1f9;
-    red[2] = 0.1f9;
+    red[1] = 0.19f;
+    red[2] = 0.19f;
     red[3] = 1.0f;
     yellow[0] = 0.96f;
-    yellow[1] = 0.5f7999998;
-    yellow[2] = 0.1f1;
+    yellow[1] = 0.58f;
+    yellow[2] = 0.11f;
     yellow[3] = 1.0f;
     hitlocImage = 0;
     for ( currIndex = 1; currIndex < 18; ++currIndex )
@@ -1399,6 +1443,7 @@ void __cdecl UI_DrawCombatRecordHitLocHeatMap(int contextIndex, rectDef_s *rect)
 
 void __cdecl UI_DrawHeatMap(int contextIndex, const rectDef_s *rect, const float *color)
 {
+#ifdef KISAK_HEATMAP
     unsigned __int8 MapIndex; // al
     char *OverlayMapNameFromIndex; // eax
     Material *v5; // eax
@@ -1431,6 +1476,7 @@ void __cdecl UI_DrawHeatMap(int contextIndex, const rectDef_s *rect, const float
             color,
             material);
     }
+#endif
 }
 
 const char *__cdecl UI_GetOverlayMapNameFromIndex(int mapIndex)
@@ -1456,20 +1502,20 @@ void __cdecl UI_DrawAttributeBar(
                 const char *dvarName)
 {
     const char *String; // eax
-    const char *v6; // eax
+    const char *v7; // eax
     const char *ItemRef; // eax
-    const char *v8; // eax
     const char *v9; // eax
     const char *v10; // eax
     const char *v11; // eax
+    const char *v12; // eax
     const char *ItemAttachmentRef; // eax
-    const char *v13; // eax
     const char *v14; // eax
     const char *v15; // eax
-    const char *v16; // [esp+20h] [ebp-98h]
+    const char *v16; // eax
+    const char *v17; // [esp+20h] [ebp-98h]
     const char *AttachmentPointName; // [esp+20h] [ebp-98h]
-    const char *v18; // [esp+20h] [ebp-98h]
-    int v19; // [esp+24h] [ebp-94h]
+    char *v19; // [esp+20h] [ebp-98h]
+    int v20; // [esp+24h] [ebp-94h]
     int i; // [esp+28h] [ebp-90h]
     eAttachmentPoint currAttachPoint; // [esp+2Ch] [ebp-8Ch]
     int attributeColumn; // [esp+30h] [ebp-88h]
@@ -1500,101 +1546,101 @@ void __cdecl UI_DrawAttributeBar(
     attachmentEffectXpos = 0.0f;
     remainingPartOfLastBlock = 0.0f;
     barColorFilled[0] = 0.96f;
-    barColorFilled[1] = 0.5f7999998;
-    barColorFilled[2] = 0.1f1;
+    barColorFilled[1] = 0.58f;
+    barColorFilled[2] = 0.11f;
     barColorFilled[3] = 1.0f;
     attachmentEffectColor[0] = 0.96f;
-    attachmentEffectColor[1] = 0.5f7999998;
-    attachmentEffectColor[2] = 0.1f1;
+    attachmentEffectColor[1] = 0.58f;
+    attachmentEffectColor[2] = 0.11f;
     attachmentEffectColor[3] = 1.0f;
     arrowColor[0] = 0.96f;
-    arrowColor[1] = 0.5f7999998;
-    arrowColor[2] = 0.1f1;
+    arrowColor[1] = 0.58f;
+    arrowColor[2] = 0.11f;
     arrowColor[3] = 1.0f;
     barColorEmpty[0] = 0.96f;
-    barColorEmpty[1] = 0.5f7999998;
-    barColorEmpty[2] = 0.1f1;
+    barColorEmpty[1] = 0.58f;
+    barColorEmpty[2] = 0.11f;
     barColorEmpty[3] = 0.2f;
-    StringTable_GetAsset("mp/attributesTable.csv", (XAssetHeader *)&attributesTable);
+    StringTable_GetAsset("mp/attributesTable.csv", (XAssetHeader*)&attributesTable);
     controllerIndex = Com_LocalClient_GetControllerIndex(localClientNum);
     ownerDraw = Item_GetOwnerDrawDef(item);
-    if ( ownerDraw )
+    if (ownerDraw)
     {
         arrowDrawn = 0;
         attributeColumn = GetExpressionInt(localClientNum, item, &ownerDraw->dataExp).intVal;
         String = Dvar_GetString("ui_inside_popup");
         selectingAttachments = I_stricmp(String, "attachments") == 0;
-        v6 = Dvar_GetString("ui_inside_popup");
-        selectingWeapon = I_stricmp(v6, "select_weapon") == 0;
-        if ( selectingWeapon )
+        v7 = Dvar_GetString("ui_inside_popup");
+        selectingWeapon = I_stricmp(v7, "select_weapon") == 0;
+        if (selectingWeapon)
         {
             currentWeaponIndex = sharedUiInfo.itemIndex;
             ItemRef = BG_UnlockablesGetItemRef(sharedUiInfo.itemIndex);
         }
         else
         {
-            v16 = Dvar_GetString("selected_loadout_slot");
-            v8 = Dvar_GetString("ui_custom_name");
-            currentWeaponIndex = BG_UnlockablesGetEquippedItemInSlot(controllerIndex, v8, v16);
+            v17 = Dvar_GetString("selected_loadout_slot");
+            v9 = Dvar_GetString("ui_custom_name");
+            currentWeaponIndex = BG_UnlockablesGetEquippedItemInSlot(controllerIndex, v9, v17);
             ItemRef = BG_UnlockablesGetItemRef(currentWeaponIndex);
         }
         currentWeaponRef = ItemRef;
-        v9 = StringTable_Lookup(attributesTable, 1, ItemRef, attributeColumn);
-        attributeValue = (float)atoi(v9) / 10.0;
-        if ( !selectingWeapon && !selectingAttachments )
+        v10 = StringTable_Lookup(attributesTable, 1, ItemRef, attributeColumn);
+        attributeValue = atoi(v10) / 10.0;
+        if (!selectingWeapon && !selectingAttachments)
         {
-            for ( currAttachPoint = ATTACHMENT_POINT_TOP; currAttachPoint < ATTACHMENT_POINT_COUNT; ++currAttachPoint )
+            for (currAttachPoint = ATTACHMENT_POINT_TOP; currAttachPoint < ATTACHMENT_POINT_COUNT; ++currAttachPoint)
             {
                 AttachmentPointName = BG_GetAttachmentPointName(currAttachPoint);
-                v10 = Dvar_GetString("selected_loadout_slot");
-                v18 = va("%sattachment%s", v10, AttachmentPointName);
-                v11 = Dvar_GetString("ui_custom_name");
-                equippedAttachmentNum = BG_UnlockablesGetEquippedItemInSlot(controllerIndex, v11, v18);
+                v11 = Dvar_GetString("selected_loadout_slot");
+                v19 = va("%sattachment%s", v11, AttachmentPointName);
+                v12 = Dvar_GetString("ui_custom_name");
+                equippedAttachmentNum = BG_UnlockablesGetEquippedItemInSlot(controllerIndex, v12, v19);
                 ItemAttachmentRef = BG_UnlockablesGetItemAttachmentRef(currentWeaponIndex, equippedAttachmentNum);
-                v13 = StringTable_Lookup(attributesTable, 1, ItemAttachmentRef, 9, currentWeaponRef, attributeColumn);
-                attachmentEffectOnAttribute = (float)((float)atoi(v13) / 10.0) + attachmentEffectOnAttribute;
+                v14 = StringTable_Lookup(attributesTable, 1, ItemAttachmentRef, 9, currentWeaponRef, attributeColumn);
+                attachmentEffectOnAttribute = (atoi(v14) / 10.0) + attachmentEffectOnAttribute;
             }
         }
-        if ( !selectingWeapon && selectingAttachments )
+        if (!selectingWeapon && selectingAttachments)
         {
-            v14 = BG_UnlockablesGetItemAttachmentRef(currentWeaponIndex, sharedUiInfo.attachmentNum);
-            v15 = StringTable_Lookup(attributesTable, 1, v14, 9, currentWeaponRef, attributeColumn);
-            attachmentEffectOnAttribute = (float)atoi(v15) / 10.0;
+            v15 = BG_UnlockablesGetItemAttachmentRef(currentWeaponIndex, sharedUiInfo.attachmentNum);
+            v16 = StringTable_Lookup(attributesTable, 1, v15, 9, currentWeaponRef, attributeColumn);
+            attachmentEffectOnAttribute = atoi(v16) / 10.0;
         }
-        if ( attachmentEffectOnAttribute >= 0.0 )
+        if (attachmentEffectOnAttribute >= 0.0)
         {
-            if ( attachmentEffectOnAttribute > 0.0 )
+            if (attachmentEffectOnAttribute > 0.0)
             {
                 attachmentEffectColor[0] = newUIGreen[0];
-                LODWORD(attachmentEffectColor[1]) = dword_E0BD60;
-                LODWORD(attachmentEffectColor[2]) = dword_E0BD64;
-                LODWORD(attachmentEffectColor[3]) = dword_E0BD68;
+                attachmentEffectColor[1] = newUIGreen[1];
+                attachmentEffectColor[2] = newUIGreen[2];
+                attachmentEffectColor[3] = newUIGreen[3];
                 arrowColor[0] = newUIGreen[0];
-                LODWORD(arrowColor[1]) = dword_E0BD60;
-                LODWORD(arrowColor[2]) = dword_E0BD64;
-                LODWORD(arrowColor[3]) = dword_E0BD68;
+                arrowColor[1] = newUIGreen[1];
+                arrowColor[2] = newUIGreen[2];
+                arrowColor[3] = newUIGreen[3];
             }
         }
         else
         {
             attributeValue = attributeValue + attachmentEffectOnAttribute;
             attachmentEffectColor[0] = newUIRed[0];
-            LODWORD(attachmentEffectColor[1]) = dword_E0BD70;
-            LODWORD(attachmentEffectColor[2]) = dword_E0BD74;
-            LODWORD(attachmentEffectColor[3]) = dword_E0BD78;
+            attachmentEffectColor[1] = newUIRed[1];
+            attachmentEffectColor[2] = newUIRed[2];
+            attachmentEffectColor[3] = newUIRed[3];
         }
         numPartitions = Dvar_GetInt(dvarName);
-        if ( numPartitions <= 0 )
-            v19 = 1;
+        if (numPartitions <= 0)
+            v20 = 1;
         else
-            v19 = numPartitions;
-        numPartitions = v19;
-        partitionWidth = rect->w / (float)v19;
-        for ( i = 0; i < numPartitions; ++i )
+            v20 = numPartitions;
+        numPartitions = v20;
+        partitionWidth = rect->w / v20;
+        for (i = 0; i < numPartitions; ++i)
         {
             UI_DrawHandlePic(
                 &scrPlaceView[contextIndex],
-                (float)((float)((float)i * partitionWidth) + (float)i) + rect->x,
+                ((i * partitionWidth) + i) + rect->x,
                 rect->y,
                 partitionWidth,
                 rect->h,
@@ -1602,10 +1648,10 @@ void __cdecl UI_DrawAttributeBar(
                 rect->vertAlign,
                 barColorEmpty,
                 sharedUiInfo.assets.whiteMaterial);
-            if ( attributeValue >= (float)(i + 1) )
+            if (attributeValue >= (i + 1))
                 UI_DrawHandlePic(
                     &scrPlaceView[contextIndex],
-                    (float)((float)((float)i * partitionWidth) + (float)i) + rect->x,
+                    ((i * partitionWidth) + i) + rect->x,
                     rect->y,
                     partitionWidth,
                     rect->h,
@@ -1615,13 +1661,13 @@ void __cdecl UI_DrawAttributeBar(
                     sharedUiInfo.assets.whiteMaterial);
         }
         currBlock = 0;
-        while ( attributeValue > 0.0 )
+        while (attributeValue > 0.0)
         {
-            if ( attributeValue >= 1.0 )
+            if (attributeValue >= 1.0)
             {
                 UI_DrawHandlePic(
                     &scrPlaceView[contextIndex],
-                    (float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + rect->x,
+                    ((currBlock * partitionWidth) + currBlock) + rect->x,
                     rect->y,
                     partitionWidth,
                     rect->h,
@@ -1632,16 +1678,14 @@ void __cdecl UI_DrawAttributeBar(
                 attributeValue = attributeValue - 1.0;
                 ++currBlock;
             }
-            if ( attributeValue == 0.0 )
+            if (attributeValue == 0.0)
             {
-                attachmentEffectXpos = (float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + rect->x;
-                if ( attachmentEffectOnAttribute == 0.0 )
+                attachmentEffectXpos = ((currBlock * partitionWidth) + currBlock) + rect->x;
+                if (attachmentEffectOnAttribute == 0.0)
                 {
                     UI_DrawHandlePicRotated(
                         &scrPlaceView[contextIndex],
-                        (float)((float)((float)((float)((float)currBlock * partitionWidth) + (float)(currBlock - 1)) + rect->x)
-                                    + (float)(attributeValue * partitionWidth))
-                    - 3.0,
+                        ((((currBlock * partitionWidth) + (currBlock - 1)) + rect->x) + (attributeValue * partitionWidth)) - 3.0,
                         rect->y + rect->h,
                         7.0,
                         7.0,
@@ -1653,11 +1697,11 @@ void __cdecl UI_DrawAttributeBar(
                     return;
                 }
             }
-            if ( attributeValue < 1.0 )
+            if (attributeValue < 1.0)
             {
                 UI_DrawHandlePic(
                     &scrPlaceView[contextIndex],
-                    (float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + rect->x,
+                    ((currBlock * partitionWidth) + currBlock) + rect->x,
                     rect->y,
                     attributeValue * partitionWidth,
                     rect->h,
@@ -1665,16 +1709,13 @@ void __cdecl UI_DrawAttributeBar(
                     rect->vertAlign,
                     barColorFilled,
                     sharedUiInfo.assets.whiteMaterial);
-                attachmentEffectXpos = (float)((float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + rect->x)
-                                                         + (float)(attributeValue * partitionWidth);
-                if ( attachmentEffectOnAttribute <= 0.0 )
+                attachmentEffectXpos = (((currBlock * partitionWidth) + currBlock) + rect->x)
+                    + (attributeValue * partitionWidth);
+                if (attachmentEffectOnAttribute <= 0.0)
                 {
                     UI_DrawHandlePicRotated(
                         &scrPlaceView[contextIndex],
-                        (float)((float)((float)((float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + rect->x)
-                                                    + (float)(attributeValue * partitionWidth))
-                                    - 3.0)
-                    - 1.0,
+                        (((((currBlock * partitionWidth) + currBlock) + rect->x) + (attributeValue * partitionWidth)) - 3.0) - 1.0,
                         rect->y + rect->h,
                         7.0,
                         7.0,
@@ -1689,10 +1730,11 @@ void __cdecl UI_DrawAttributeBar(
                 attributeValue = 0.0f;
             }
         }
-        if ( attachmentEffectOnAttribute != 0.0 && attachmentEffectXpos != 0.0 && remainingPartOfLastBlock != 0.0 )
+        if (attachmentEffectOnAttribute != 0.0 && attachmentEffectXpos != 0.0 && remainingPartOfLastBlock != 0.0)
         {
-            LODWORD(attachmentEffectOnAttribute) &= _mask__AbsFloat_;
-            if ( remainingPartOfLastBlock < attachmentEffectOnAttribute )
+            //LODWORD(attachmentEffectOnAttribute) &= _mask__AbsFloat_;
+            attachmentEffectOnAttribute = fabs(attachmentEffectOnAttribute);
+            if (remainingPartOfLastBlock < attachmentEffectOnAttribute)
             {
                 UI_DrawHandlePic(
                     &scrPlaceView[contextIndex],
@@ -1705,15 +1747,15 @@ void __cdecl UI_DrawAttributeBar(
                     attachmentEffectColor,
                     sharedUiInfo.assets.whiteMaterial);
                 attachmentEffectOnAttribute = attachmentEffectOnAttribute - remainingPartOfLastBlock;
-                attachmentEffectXposa = (float)((float)(remainingPartOfLastBlock * partitionWidth) + 1.0) + attachmentEffectXpos;
+                attachmentEffectXposa = ((remainingPartOfLastBlock * partitionWidth) + 1.0) + attachmentEffectXpos;
                 currBlock = 0;
-                while ( attachmentEffectOnAttribute > 0.0 )
+                while (attachmentEffectOnAttribute > 0.0)
                 {
-                    if ( attachmentEffectOnAttribute >= 1.0 )
+                    if (attachmentEffectOnAttribute >= 1.0)
                     {
                         UI_DrawHandlePic(
                             &scrPlaceView[contextIndex],
-                            (float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + attachmentEffectXposa,
+                            ((currBlock * partitionWidth) + currBlock) + attachmentEffectXposa,
                             rect->y,
                             partitionWidth,
                             rect->h,
@@ -1724,14 +1766,13 @@ void __cdecl UI_DrawAttributeBar(
                         attachmentEffectOnAttribute = attachmentEffectOnAttribute - 1.0;
                         ++currBlock;
                     }
-                    if ( attachmentEffectOnAttribute == 0.0 && !arrowDrawn )
+                    if (attachmentEffectOnAttribute == 0.0 && !arrowDrawn)
                         UI_DrawHandlePicRotated(
                             &scrPlaceView[contextIndex],
-                            (float)((float)((float)((float)((float)((float)currBlock * partitionWidth) + (float)currBlock)
-                                                                        + attachmentEffectXposa)
-                                                        + (float)(attachmentEffectOnAttribute * partitionWidth))
-                                        - 3.0)
-                        - 1.0,
+                            (((((currBlock * partitionWidth) + currBlock) + attachmentEffectXposa)
+                                + (attachmentEffectOnAttribute * partitionWidth))
+                                - 3.0)
+                            - 1.0,
                             rect->y + rect->h,
                             7.0,
                             7.0,
@@ -1740,11 +1781,11 @@ void __cdecl UI_DrawAttributeBar(
                             arrowColor,
                             -90.0,
                             sharedUiInfo.assets.sliderThumb);
-                    if ( attachmentEffectOnAttribute < 1.0 )
+                    if (attachmentEffectOnAttribute < 1.0)
                     {
                         UI_DrawHandlePic(
                             &scrPlaceView[contextIndex],
-                            (float)((float)((float)currBlock * partitionWidth) + (float)currBlock) + attachmentEffectXposa,
+                            ((currBlock * partitionWidth) + currBlock) + attachmentEffectXposa,
                             rect->y,
                             attachmentEffectOnAttribute * partitionWidth,
                             rect->h,
@@ -1752,14 +1793,13 @@ void __cdecl UI_DrawAttributeBar(
                             rect->vertAlign,
                             attachmentEffectColor,
                             sharedUiInfo.assets.whiteMaterial);
-                        if ( !arrowDrawn )
+                        if (!arrowDrawn)
                             UI_DrawHandlePicRotated(
                                 &scrPlaceView[contextIndex],
-                                (float)((float)((float)((float)((float)((float)currBlock * partitionWidth) + (float)currBlock)
-                                                                            + attachmentEffectXposa)
-                                                            + (float)(attachmentEffectOnAttribute * partitionWidth))
-                                            - 3.0)
-                            - 1.0,
+                                (((((currBlock * partitionWidth) + currBlock) + attachmentEffectXposa)
+                                    + (attachmentEffectOnAttribute * partitionWidth))
+                                    - 3.0)
+                                - 1.0,
                                 rect->y + rect->h,
                                 7.0,
                                 7.0,
@@ -1784,10 +1824,10 @@ void __cdecl UI_DrawAttributeBar(
                     rect->vertAlign,
                     attachmentEffectColor,
                     sharedUiInfo.assets.whiteMaterial);
-                if ( !arrowDrawn )
+                if (!arrowDrawn)
                     UI_DrawHandlePicRotated(
                         &scrPlaceView[contextIndex],
-                        (float)((float)((float)(attachmentEffectOnAttribute * partitionWidth) + attachmentEffectXpos) - 3.0) - 1.0,
+                        (((attachmentEffectOnAttribute * partitionWidth) + attachmentEffectXpos) - 3.0) - 1.0,
                         rect->y + rect->h,
                         7.0,
                         7.0,
@@ -2421,6 +2461,7 @@ void __cdecl UI_RunMenuScript_ResetServerSettings()
     Dvar_SetStringByName("ui_mapname", &sharedUiInfo.mapList[ui_currentNetMap->current.integer].mapName[28]);
 }
 
+char info_6[1024];
 void __cdecl UI_RunMenuScript_WagerWarning(int localClientNum, int contextIndex)
 {
     char *v2; // eax
@@ -2433,31 +2474,32 @@ void __cdecl UI_RunMenuScript_WagerWarning(int localClientNum, int contextIndex)
     codpoints = 0;
     LAN_GetServerInfo(
         ui_netSource->current.integer,
-        *(unsigned int *)&sharedUiInfo.gap0[4 * *(unsigned int *)&sharedUiInfo.gap0[1124] + 1128],
+        sharedUiInfo.serverStatus.displayServers[sharedUiInfo.serverStatus.currentServer],
         info_6,
         1024);
     v2 = Info_ValueForKey(info_6, "wagerbet");
     wagerbet = atoi(v2);
     Dvar_SetIntByName("ui_wagerbet", wagerbet);
-    if ( wagerbet )
+    if (wagerbet)
     {
         ControllerIndex = Com_LocalClient_GetControllerIndex(localClientNum);
         LiveStats_GetIntPlayerStat(ControllerIndex, &codpoints, "CODPOINTS");
-        if ( codpoints < wagerbet )
+        if (codpoints < wagerbet)
             Menus_OpenByName(localClientNum, &uiInfo->uiDC, "WagerDeadBeat");
         else
             Menus_OpenByName(localClientNum, &uiInfo->uiDC, "WagerConfirmation");
     }
 }
 
+char info_7[1024];
 void __cdecl UI_RunMenuScript_JoinServer(int localClientNum, int contextIndex)
 {
-    char *v2; // eax
+    char *v3; // eax
     int *count; // [esp+0h] [ebp-10h] BYREF
     serverInfo_t *servers; // [esp+4h] [ebp-Ch] BYREF
     uiInfo_s *uiInfo; // [esp+8h] [ebp-8h]
 
-    if ( Dvar_GetInt("ui_joiningwagerfrominvite") )
+    if (Dvar_GetInt("ui_joiningwagerfrominvite"))
     {
         Dvar_SetIntByName("ui_joiningwagerfrominvite", 0);
         Live_JoinWagerFromInvite();
@@ -2469,24 +2511,25 @@ void __cdecl UI_RunMenuScript_JoinServer(int localClientNum, int contextIndex)
         UI_UpdateDisplayServers(localClientNum, uiInfo);
         LAN_GetServerInfo(
             ui_netSource->current.integer,
-            *(unsigned int *)&sharedUiInfo.gap0[4 * *(unsigned int *)&sharedUiInfo.gap0[1124] + 1128],
+            sharedUiInfo.serverStatus.displayServers[sharedUiInfo.serverStatus.currentServer],
             info_7,
             1024);
-        v2 = Info_ValueForKey(info_7, "pswrd");
-        if ( !atoi(v2) || Menu_IsMenuOpenAndVisible(contextIndex, "join_password_popmenu") )
+        v3 = Info_ValueForKey(info_7, "pswrd");
+        if (!atoi(v3) || Menu_IsMenuOpenAndVisible(contextIndex, "join_password_popmenu"))
         {
-            if ( *(int *)&sharedUiInfo.gap0[1124] >= 0 && *(int *)&sharedUiInfo.gap0[1124] < *(int *)&sharedUiInfo.gap0[81128] )
+            if (sharedUiInfo.serverStatus.currentServer >= 0
+                && sharedUiInfo.serverStatus.currentServer < sharedUiInfo.serverStatus.numDisplayServers)
             {
                 servers = 0;
-                if ( CL_GetServerList(ui_netSource->current.integer, &servers, &count)
+                if (CL_GetServerList(ui_netSource->current.integer, &servers, &count)
                     && servers
-                    && *(unsigned int *)&sharedUiInfo.gap0[4 * *(unsigned int *)&sharedUiInfo.gap0[1124] + 1128] < *count )
+                    && sharedUiInfo.serverStatus.displayServers[sharedUiInfo.serverStatus.currentServer] < *count)
                 {
-                    CL_Connect(&servers[*(unsigned int *)&sharedUiInfo.gap0[4 * *(unsigned int *)&sharedUiInfo.gap0[1124] + 1128]]);
+                    CL_Connect(&servers[sharedUiInfo.serverStatus.displayServers[sharedUiInfo.serverStatus.currentServer]]);
                 }
                 Dvar_SetStringByName(
                     "ui_mapname",
-                    servers[*(unsigned int *)&sharedUiInfo.gap0[4 * *(unsigned int *)&sharedUiInfo.gap0[1124] + 1128]].mapName);
+                    servers[sharedUiInfo.serverStatus.displayServers[sharedUiInfo.serverStatus.currentServer]].mapName);
             }
         }
         else
@@ -2502,17 +2545,17 @@ void __cdecl UI_RunMenuScript_RefreshServer(int localClientNum, int contextIndex
     serverInfo_t *servers; // [esp+4h] [ebp-8h] BYREF
     int *count; // [esp+8h] [ebp-4h] BYREF
 
-    if ( !*(unsigned int *)&sharedUiInfo.gap0[1120] )
+    if (!sharedUiInfo.serverStatus.refreshActive)
     {
         uiInfo = UI_UIContext_GetInfo(contextIndex);
         servers = 0;
         UI_UpdateDisplayServers(localClientNum, uiInfo);
-        if ( CL_GetServerList(ui_netSource->current.integer, &servers, &count)
+        if (CL_GetServerList(ui_netSource->current.integer, &servers, &count)
             && servers
-            && *(int *)&sharedUiInfo.gap0[1124] >= 0
-            && *(int *)&sharedUiInfo.gap0[1124] < *(int *)&sharedUiInfo.gap0[81128] )
+            && sharedUiInfo.serverStatus.currentServer >= 0
+            && sharedUiInfo.serverStatus.currentServer < sharedUiInfo.serverStatus.numDisplayServers)
         {
-            CL_RawPingServer(&servers[*(unsigned int *)&sharedUiInfo.gap0[4 * *(unsigned int *)&sharedUiInfo.gap0[1124] + 1128]], 2u);
+            CL_RawPingServer(&servers[sharedUiInfo.serverStatus.displayServers[sharedUiInfo.serverStatus.currentServer]], 2u);
         }
     }
 }
@@ -2747,10 +2790,10 @@ char *__cdecl UI_TranslateIntegerToOrdinal(int integer)
 
 int __cdecl UI_Popup(int localClientNum, const char *menu)
 {
-    if ( !CL_AllowPopup(localClientNum) || UI_IsFullscreen(localClientNum) )
+    if (!CL_AllowPopup(localClientNum) || UI_IsFullscreen(localClientNum))
         return 0;
-    if ( !I_stricmp(menu, "UIMENU_WM_QUICKMESSAGE") )
-        UI_SetActiveMenu(localClientNum, 5);
+    if (!I_stricmp(menu, "UIMENU_WM_QUICKMESSAGE"))
+        UI_SetActiveMenu(localClientNum, UIMENU_WM_QUICKMESSAGE);
     return 1;
 }
 

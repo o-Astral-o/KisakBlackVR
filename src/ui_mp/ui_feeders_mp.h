@@ -1,4 +1,6 @@
 #pragma once
+#include <ui/ui_utils.h>
+#include <client/cl_milestone.h>
 
 int __cdecl UI_GetMilestoneType(float feederID);
 int __cdecl UI_Project_FeederCount(int localClientNum, int contextIndex, float feederID, listBoxDef_s *listPtr);
@@ -58,7 +60,7 @@ char *__cdecl UI_PrepareStatsMilestoneName(
                 int milestone,
                 const char *statName,
                 const char *itemName);
-_CustomClassDescription *__cdecl UI_Project_FeederItemText(
+struct _CustomClassDescription *__cdecl UI_Project_FeederItemText(
                 int localClientNum,
                 int contextIndex,
                 itemDef_s *item,

@@ -23,14 +23,6 @@
 #include <live/live_fileshare_search.h>
 #include <cgame/cg_compass.h>
 
-static float newUIfeederHighlight[4] = { 1.0, 1.0, 1.0, 0.2 };
-static float newUIFeederBackgroundColor[4] = { 0.0, 0.0, 0.0, 0.2 };
-static float newUIGrey[4] = { 0.40000001, 0.40000001, 0.40000001, 1.0 };
-static float newUIRed[4] = { 0.73000002, 0.19, 0.19, 1.0 };
-static float newUIGreen[4] = { 0.41999999, 0.68000001, 0.46000001, 1.0 };
-
-
-
 
 XuidInfo recentPlayerInfo;
 FriendInfo friendInfo;

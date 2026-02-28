@@ -1,4 +1,34 @@
 #include "ui_feeders_mp.h"
+#include <qcommon/com_clients.h>
+#include "ui_gametype_variants_mp.h"
+#include <qcommon/com_gamemodes.h>
+#include <bgame/bg_unlockable_items.h>
+#include <live/live_friends_pc.h>
+#include <ui/ui_friends.h>
+#include <live/live_contracts.h>
+#include <live/live_stats.h>
+#include <live/live_presence_win.h>
+#include <ui/ui_feeders.h>
+#include <live/live_pcache_profile.h>
+#include <client/cl_rank.h>
+#include <live/live_clans.h>
+#include "ui_gametype_custom_mp.h"
+#include <live/live_win.h>
+#include "ui_main_mp.h"
+#include <ui/ui_playlists.h>
+#include <ui/ui_main_pc.h>
+
+float playerColor[4] = { 0.94999999, 0.72000003, 0.20999999, 1.0 };
+float alliesColor[4] = { 0.80000001, 0.80000001, 0.89999998, 0.5 };
+float axisColor[4] = { 0.89999998, 0.80000001, 0.80000001, 0.5 };
+float fadedBlack[4] = { 0.0, 0.0, 0.0, 0.15000001 };
+float white[4] = { 1.0, 1.0, 1.0, 1.0 };
+float darkRowMultiplier = 0.75;
+float axisColor[4] = { 0.5, 0.55000001, 0.60000002, 0.5 };
+float alliesColor[4] = { 0.60000002, 0.5, 0.5, 0.5 };
+
+FriendInfo friendInfo_0;
+FriendInfo info_5;
 
 int __cdecl UI_GetMilestoneType(float feederID)
 {
@@ -496,7 +526,7 @@ char *__cdecl UI_FeederItemText_WeaponOptions(
 
     currentWeaponGroup = WEAPONOPTION_GROUP_FIRST;
     if ( ui_currentWeaponOptionGroup )
-        currentWeaponGroup = ui_currentWeaponOptionGroup->current.integer;
+        currentWeaponGroup = (eWeaponOptionGroup)ui_currentWeaponOptionGroup->current.integer;
     numWeaponOptions = BG_GetWeaponOptionCountForGroup(currentWeaponGroup);
     if ( listPtr->cursorPos[contextIndex] >= numWeaponOptions && numWeaponOptions )
     {
@@ -579,40 +609,40 @@ void __cdecl UI_FeederItemText_CommonListColorHandler(int controllerIndex, bool 
     int codPoints; // [esp+0h] [ebp-4h]
 
     codPoints = LiveStats_GetCurrency(controllerIndex);
-    *(float *)&sharedUiInfo.itemNum = colorWhite[0];
-    sharedUiInfo.itemColor[0] = 1.0;
+    sharedUiInfo.itemColor[0] = colorWhite[0];
     sharedUiInfo.itemColor[1] = 1.0;
     sharedUiInfo.itemColor[2] = 1.0;
-    if ( isSelectedItem )
+    sharedUiInfo.itemColor[3] = 1.0;
+    if (isSelectedItem)
     {
-        *(float *)&sharedUiInfo.itemNum = colorBlack[0];
-        sharedUiInfo.itemColor[0] = 0.0;
+        sharedUiInfo.itemColor[0] = colorBlack[0];
         sharedUiInfo.itemColor[1] = 0.0;
-        sharedUiInfo.itemColor[2] = 1.0;
+        sharedUiInfo.itemColor[2] = 0.0;
+        sharedUiInfo.itemColor[3] = 1.0;
     }
-    if ( cost )
+    if (cost)
     {
-        if ( cost <= codPoints )
+        if (cost <= codPoints)
         {
-            *(float *)&sharedUiInfo.itemNum = newUIGreen[0];
-            LODWORD(sharedUiInfo.itemColor[0]) = dword_E0BD60;
-            LODWORD(sharedUiInfo.itemColor[1]) = dword_E0BD64;
-            LODWORD(sharedUiInfo.itemColor[2]) = dword_E0BD68;
+            sharedUiInfo.itemColor[0] = newUIGreen[0];
+            sharedUiInfo.itemColor[1] = newUIGreen[1];
+            sharedUiInfo.itemColor[2] = newUIGreen[2];
+            sharedUiInfo.itemColor[3] = newUIGreen[3];
         }
         else
         {
-            *(float *)&sharedUiInfo.itemNum = newUIRed[0];
-            LODWORD(sharedUiInfo.itemColor[0]) = dword_E0BD70;
-            LODWORD(sharedUiInfo.itemColor[1]) = dword_E0BD74;
-            LODWORD(sharedUiInfo.itemColor[2]) = dword_E0BD78;
+            sharedUiInfo.itemColor[0] = newUIRed[0];
+            sharedUiInfo.itemColor[1] = newUIRed[1];
+            sharedUiInfo.itemColor[2] = newUIRed[2];
+            sharedUiInfo.itemColor[3] = newUIRed[3];
         }
     }
-    if ( isGrey )
+    if (isGrey)
     {
-        *(float *)&sharedUiInfo.itemNum = newUIGrey[0];
-        LODWORD(sharedUiInfo.itemColor[0]) = dword_E0BD80;
-        LODWORD(sharedUiInfo.itemColor[1]) = dword_E0BD84;
-        LODWORD(sharedUiInfo.itemColor[2]) = dword_E0BD88;
+        sharedUiInfo.itemColor[0] = newUIGrey[0];
+        sharedUiInfo.itemColor[1] = newUIGrey[1];
+        sharedUiInfo.itemColor[2] = newUIGrey[2];
+        sharedUiInfo.itemColor[3] = newUIGrey[3];
     }
 }
 
@@ -1142,7 +1172,7 @@ char *__cdecl UI_FeederItemText_WeaponGroups(
     }
     if ( !I_stricmp(loadoutName, "secondary") )
     {
-        arrayOffset = index + 5;
+        arrayOffset = (itemGroup_t)(index + 5);
         if ( (index + 5 < 5 || arrayOffset > ITEMGROUP_SPECIAL)
             && !Assert_MyHandler(
                         "C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp",
@@ -1394,7 +1424,7 @@ char *__cdecl UI_FeederItemText_CustomPerksInSlot(
         if ( isTweakable )
             Dvar_SetStringByName("ui_hint_desc", (char *)"");
         else
-            Dvar_SetStringByName("ui_hint_desc", "@CUSTOM_PERK_NO_EDIT_DESC");
+            Dvar_SetStringByName("ui_hint_desc", (char*)"@CUSTOM_PERK_NO_EDIT_DESC");
     }
     if ( isSelectedItem && !isTweakable && column == 6 )
         isSelectedItem = 0;
@@ -1402,7 +1432,7 @@ char *__cdecl UI_FeederItemText_CustomPerksInSlot(
         return UI_Feeder_HandleItemList(controllerIndex, itemIndex, column, isSelectedItem, 0, 0, itemName, handle);
     if ( UI_Gametype_HasPerkChangedFromDefault(itemIndex) )
     {
-        Dvar_SetStringByName("ui_custom_perk_has_changed", "1");
+        Dvar_SetStringByName("ui_custom_perk_has_changed", (char *)"1");
         *handle = Material_RegisterHandle("ui_host", 3);
     }
     return (char *)"";
@@ -2137,6 +2167,33 @@ LABEL_24:
     return result;
 }
 
+const int CustomKillstreakNums[22] =
+{
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  20,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50
+};
+
+
 const char *__cdecl UI_FeederItemText_KillstreakNumKills(
                 int contextIndex,
                 int controllerIndex,
@@ -2410,57 +2467,57 @@ char __cdecl UI_FeederItemColor_Contracts(
     bool isRowHighlighted; // [esp+17h] [ebp-5h]
 
     listPtr = Item_GetListBoxDef(item);
-    if ( !listPtr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2517, 0, "%s", "listPtr") )
+    if (!listPtr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2517, 0, "%s", "listPtr"))
     {
         __debugbreak();
     }
     contractIndex = LiveContracts_GetContractIndexFromListIndex(controllerIndex, index);
     LiveContracts_GetActiveContractIndex(controllerIndex, contractIndex);
     isRowHighlighted = listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window);
-    *color = 1.0f;
+    *color =   1.0f;
     color[1] = 1.0f;
     color[2] = 1.0f;
     color[3] = 1.0f;
-    if ( column == -1 )
+    if (column == -1)
         goto LABEL_9;
-    if ( !column && !isRowHighlighted )
+    if (!column && !isRowHighlighted)
     {
         *color = newUIFeederBackgroundColor[0];
-        *((unsigned int *)color + 1) = dword_E0BDA0;
-        *((unsigned int *)color + 2) = dword_E0BDA4;
-        *((unsigned int *)color + 3) = dword_E0BDA8;
+        color[1] = newUIFeederBackgroundColor[1];
+        color[2] = newUIFeederBackgroundColor[2];
+        color[3] = newUIFeederBackgroundColor[3];
         return 1;
     }
-    if ( column == 1 || column == 2 )
+    if (column == 1 || column == 2)
     {
-        if ( LiveContracts_IsContractLocked(controllerIndex, contractIndex)
+        if (LiveContracts_IsContractLocked(controllerIndex, contractIndex)
             || LiveContracts_GetTimeUntilCooledDown(controllerIndex, contractIndex) > 0
             || LiveContracts_GetTimesPurchasable(contractIndex) > 0
             && (TimesPurchasable = LiveContracts_GetTimesPurchasable(contractIndex),
-                    (int)(TimesPurchasable - LiveContracts_GetTimesPurchased(controllerIndex, contractIndex)) <= 0) )
+                (TimesPurchasable - LiveContracts_GetTimesPurchased(controllerIndex, contractIndex)) <= 0))
         {
-LABEL_9:
+        LABEL_9:
             *color = newUIGrey[0];
-            *((unsigned int *)color + 1) = dword_E0BD80;
-            *((unsigned int *)color + 2) = dword_E0BD84;
-            *((unsigned int *)color + 3) = dword_E0BD88;
+            color[1] = newUIGrey[1];
+            color[2] = newUIGrey[2];
+            color[3] = newUIGrey[3];
             return 1;
         }
         codPoints = LiveStats_GetCurrency(controllerIndex);
-        if ( LiveContracts_GetContractCost(contractIndex) <= codPoints )
+        if (LiveContracts_GetContractCost(contractIndex) <= codPoints)
         {
             *color = newUIGreen[0];
-            *((unsigned int *)color + 1) = dword_E0BD60;
-            *((unsigned int *)color + 2) = dword_E0BD64;
-            *((unsigned int *)color + 3) = dword_E0BD68;
+            color[1] = newUIGreen[1];
+            color[2] = newUIGreen[2];
+            color[3] = newUIGreen[3];
         }
         else
         {
             *color = newUIRed[0];
-            *((unsigned int *)color + 1) = dword_E0BD70;
-            *((unsigned int *)color + 2) = dword_E0BD74;
-            *((unsigned int *)color + 3) = dword_E0BD78;
+            color[1] = newUIRed[1];
+            color[2] = newUIRed[2];
+            color[3] = newUIRed[3];
         }
     }
     return 1;
@@ -2482,8 +2539,8 @@ char __cdecl UI_FeederItemColor_ItemList(
     bool isRowHighlighted; // [esp+Bh] [ebp-1h]
 
     listPtr = Item_GetListBoxDef(item);
-    if ( !listPtr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2583, 0, "%s", "listPtr") )
+    if (!listPtr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2583, 0, "%s", "listPtr"))
     {
         __debugbreak();
     }
@@ -2492,20 +2549,20 @@ char __cdecl UI_FeederItemColor_ItemList(
     color[1] = 1.0f;
     color[2] = 1.0f;
     color[3] = 1.0f;
-    if ( column )
+    if (column)
     {
-        if ( column == 1 || column == 3 )
+        if (column == 1 || column == 3)
         {
-            if ( itemLocked || itemClassified )
+            if (itemLocked || itemClassified)
             {
                 *color = newUIGrey[0];
-                *((unsigned int *)color + 1) = dword_E0BD80;
-                *((unsigned int *)color + 2) = dword_E0BD84;
-                *((unsigned int *)color + 3) = dword_E0BD88;
+                color[1] = newUIGrey[1];
+                color[2] = newUIGrey[2];
+                color[3] = newUIGrey[3];
             }
-            else if ( itemPurchased )
+            else if (itemPurchased)
             {
-                if ( isRowHighlighted )
+                if (isRowHighlighted)
                 {
                     *color = 0.0f;
                     color[1] = 0.0f;
@@ -2513,28 +2570,28 @@ char __cdecl UI_FeederItemColor_ItemList(
                     color[3] = 1.0f;
                 }
             }
-            else if ( cost <= LiveStats_GetCurrency(controllerIndex) )
+            else if (cost <= LiveStats_GetCurrency(controllerIndex))
             {
                 *color = newUIGreen[0];
-                *((unsigned int *)color + 1) = dword_E0BD60;
-                *((unsigned int *)color + 2) = dword_E0BD64;
-                *((unsigned int *)color + 3) = dword_E0BD68;
+                color[1] = newUIGreen[1];
+                color[2] = newUIGreen[2];
+                color[3] = newUIGreen[3];
             }
             else
             {
                 *color = newUIRed[0];
-                *((unsigned int *)color + 1) = dword_E0BD70;
-                *((unsigned int *)color + 2) = dword_E0BD74;
-                *((unsigned int *)color + 3) = dword_E0BD78;
+                color[1] = newUIRed[1];
+                color[2] = newUIRed[2];
+                color[3] = newUIRed[3];
             }
         }
     }
-    else if ( !isRowHighlighted )
+    else if (!isRowHighlighted)
     {
         *color = newUIFeederBackgroundColor[0];
-        *((unsigned int *)color + 1) = dword_E0BDA0;
-        *((unsigned int *)color + 2) = dword_E0BDA4;
-        *((unsigned int *)color + 3) = dword_E0BDA8;
+        color[1] = newUIFeederBackgroundColor[1];
+        color[2] = newUIFeederBackgroundColor[2];
+        color[3] = newUIFeederBackgroundColor[3];
     }
     return 1;
 }
@@ -2589,7 +2646,7 @@ char __cdecl UI_FeederItemColor_WeaponOptions(
 
     currentWeaponGroup = WEAPONOPTION_GROUP_FIRST;
     if ( ui_currentWeaponOptionGroup )
-        currentWeaponGroup = ui_currentWeaponOptionGroup->current.integer;
+        currentWeaponGroup = (eWeaponOptionGroup)ui_currentWeaponOptionGroup->current.integer;
     itemIndex = sharedUiInfo.itemIndex;
     weaponOption = BG_GetWeaponOptionNumFromIndexAndGroup(index, currentWeaponGroup);
     cost = BG_GetWeaponOptionCost(weaponOption);
@@ -2632,68 +2689,68 @@ bool __cdecl UI_FeederItemColor_InGamePlayerList(
     __int64 v12; // [esp+0h] [ebp-14h]
     unsigned __int64 currClientXuid; // [esp+Ch] [ebp-8h]
 
-    switch ( column )
+    switch (column)
     {
-        case 0:
-        case 4:
-        case 5:
+    case 0:
+    case 4:
+    case 5:
+        *color = white[0];
+        color[1] = white[1];
+        color[2] = white[2];
+        color[3] = white[3];
+        result = 1;
+        break;
+    case 1:
+        if (team == TEAM_ALLIES)
+        {
+            *color = alliesColor[0];
+            color[1] = alliesColor[1];
+            color[2] = alliesColor[2];
+            color[3] = alliesColor[3];
+        }
+        else if (team == TEAM_AXIS)
+        {
+            *color = axisColor[0];
+            color[1] = axisColor[1];
+            color[2] = axisColor[2];
+            color[3] = axisColor[3];
+        }
+        result = 1;
+        break;
+    case 2:
+    case 3:
+        *color = fadedBlack[0];
+        color[1] = fadedBlack[1];
+        color[2] = fadedBlack[2];
+        color[3] = fadedBlack[3];
+        result = 1;
+        break;
+    case 6:
+    case 7:
+        LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
+        MatchInGamePlayerXuid = CG_GetMatchInGamePlayerXuid(LocalClientNum, index, team);
+        currClientXuid = I_atoi64(MatchInGamePlayerXuid);
+        LODWORD(v12) = Live_GetXuid(controllerIndex);
+        HIDWORD(v12) = v11;
+        if (v12 == currClientXuid)
+        {
+            *color = playerColor[0];
+            color[1] = playerColor[1];
+            color[2] = playerColor[2];
+            color[3] = playerColor[3];
+        }
+        else
+        {
             *color = white[0];
-            *((unsigned int *)color + 1) = dword_E0BF68;
-            *((unsigned int *)color + 2) = dword_E0BF6C;
-            *((unsigned int *)color + 3) = dword_E0BF70;
-            result = 1;
-            break;
-        case 1:
-            if ( team == TEAM_ALLIES )
-            {
-                *color = alliesColor[0];
-                *((unsigned int *)color + 1) = dword_E0BF38;
-                *((unsigned int *)color + 2) = dword_E0BF3C;
-                *((unsigned int *)color + 3) = dword_E0BF40;
-            }
-            else if ( team == TEAM_AXIS )
-            {
-                *color = axisColor[0];
-                *((unsigned int *)color + 1) = dword_E0BF48;
-                *((unsigned int *)color + 2) = dword_E0BF4C;
-                *((unsigned int *)color + 3) = dword_E0BF50;
-            }
-            result = 1;
-            break;
-        case 2:
-        case 3:
-            *color = fadedBlack[0];
-            *((unsigned int *)color + 1) = dword_E0BF58;
-            *((unsigned int *)color + 2) = dword_E0BF5C;
-            *((unsigned int *)color + 3) = dword_E0BF60;
-            result = 1;
-            break;
-        case 6:
-        case 7:
-            LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
-            MatchInGamePlayerXuid = CG_GetMatchInGamePlayerXuid(LocalClientNum, index, team);
-            currClientXuid = I_atoi64(MatchInGamePlayerXuid);
-            LODWORD(v12) = Live_GetXuid(controllerIndex);
-            HIDWORD(v12) = v11;
-            if ( v12 == currClientXuid )
-            {
-                *color = playerColor[0];
-                *((unsigned int *)color + 1) = dword_E0BF28;
-                *((unsigned int *)color + 2) = dword_E0BF2C;
-                *((unsigned int *)color + 3) = dword_E0BF30;
-            }
-            else
-            {
-                *color = white[0];
-                *((unsigned int *)color + 1) = dword_E0BF68;
-                *((unsigned int *)color + 2) = dword_E0BF6C;
-                *((unsigned int *)color + 3) = dword_E0BF70;
-            }
-            result = 1;
-            break;
-        default:
-            result = 1;
-            break;
+            color[1] = white[1];
+            color[2] = white[2];
+            color[3] = white[3];
+        }
+        result = 1;
+        break;
+    default:
+        result = 1;
+        break;
     }
     return result;
 }
@@ -2718,87 +2775,87 @@ bool __cdecl UI_FeederItemColor_InGamePlayers(
     localClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
     CG_GetMatchInGamePlayersXUID(localClientNum, index, feederType, &currClientXUID);
     listPtr = Item_GetListBoxDef(item);
-    if ( !listPtr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2771, 0, "%s", "listPtr") )
+    if (!listPtr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2771, 0, "%s", "listPtr"))
     {
         __debugbreak();
     }
     isRowHighlighted = listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window);
-    switch ( column )
+    switch (column)
     {
-        case 0:
-            if ( isRowHighlighted )
-            {
-                *color = 1.0f;
-                color[1] = 1.0f;
-                color[2] = 1.0f;
-                color[3] = 1.0f;
-            }
-            else if ( feederType == 105 )
-            {
-                *color = alliesColor[0];
-                *((unsigned int *)color + 1) = dword_E0BF38;
-                *((unsigned int *)color + 2) = dword_E0BF3C;
-                *((unsigned int *)color + 3) = dword_E0BF40;
-            }
-            else if ( feederType == 106 )
-            {
-                *color = axisColor[0];
-                *((unsigned int *)color + 1) = dword_E0BF48;
-                *((unsigned int *)color + 2) = dword_E0BF4C;
-                *((unsigned int *)color + 3) = dword_E0BF50;
-            }
-            result = 1;
-            break;
-        case 1:
-        case 2:
-            if ( isRowHighlighted )
-            {
-                *color = 1.0f;
-                color[1] = 1.0f;
-                color[2] = 1.0f;
-                color[3] = 1.0f;
-            }
-            else
-            {
-                *color = fadedBlack[0];
-                *((unsigned int *)color + 1) = dword_E0BF58;
-                *((unsigned int *)color + 2) = dword_E0BF5C;
-                *((unsigned int *)color + 3) = dword_E0BF60;
-            }
-            result = 1;
-            break;
-        case 3:
-        case 4:
-        case 6:
-        case 7:
+    case 0:
+        if (isRowHighlighted)
+        {
+            *color = 1.0f;
+            color[1] = 1.0f;
+            color[2] = 1.0f;
+            color[3] = 1.0f;
+        }
+        else if (feederType == 105)
+        {
+            *color = alliesColor[0];
+            color[1] = alliesColor[1];
+            color[2] = alliesColor[2];
+            color[3] = alliesColor[3];
+        }
+        else if (feederType == 106)
+        {
+            *color = axisColor[0];
+            color[1] = axisColor[1];
+            color[2] = axisColor[2];
+            color[3] = axisColor[3];
+        }
+        result = 1;
+        break;
+    case 1:
+    case 2:
+        if (isRowHighlighted)
+        {
+            *color = 1.0f;
+            color[1] = 1.0f;
+            color[2] = 1.0f;
+            color[3] = 1.0f;
+        }
+        else
+        {
+            *color = fadedBlack[0];
+            color[1] = fadedBlack[1];
+            color[2] = fadedBlack[2];
+            color[3] = fadedBlack[3];
+        }
+        result = 1;
+        break;
+    case 3:
+    case 4:
+    case 6:
+    case 7:
+        *color = white[0];
+        color[1] = white[1];
+        color[2] = white[2];
+        color[3] = white[3];
+        result = 1;
+        break;
+    case 5:
+        LODWORD(v9) = Live_GetXuid(controllerIndex);
+        if (v9 == currClientXUID)
+        {
+            *color = playerColor[0];
+            color[1] = playerColor[1];
+            color[2] = playerColor[2];
+            color[3] = playerColor[3];
+        }
+        else
+        {
             *color = white[0];
-            *((unsigned int *)color + 1) = dword_E0BF68;
-            *((unsigned int *)color + 2) = dword_E0BF6C;
-            *((unsigned int *)color + 3) = dword_E0BF70;
-            result = 1;
-            break;
-        case 5:
-            LODWORD(v9) = Live_GetXuid(controllerIndex);
-            if ( v9 == currClientXUID )
-            {
-                *color = playerColor[0];
-                *((unsigned int *)color + 1) = dword_E0BF28;
-                *((unsigned int *)color + 2) = dword_E0BF2C;
-                *((unsigned int *)color + 3) = dword_E0BF30;
-            }
-            else
-            {
-                *color = white[0];
-                *((unsigned int *)color + 1) = dword_E0BF68;
-                *((unsigned int *)color + 2) = dword_E0BF6C;
-                *((unsigned int *)color + 3) = dword_E0BF70;
-            }
-            result = 1;
-            break;
-        default:
-            result = 1;
-            break;
+            color[1] = white[1];
+            color[2] = white[2];
+            color[3] = white[3];
+        }
+        result = 1;
+        break;
+    default:
+        result = 1;
+        break;
     }
     return result;
 }
@@ -2849,8 +2906,8 @@ char __cdecl UI_FeederItemColor_PerksMilestones(
     bool isItemPurchased; // [esp+Fh] [ebp-1h]
 
     listPtr = Item_GetListBoxDef(item);
-    if ( !listPtr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2884, 0, "%s", "listPtr") )
+    if (!listPtr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2884, 0, "%s", "listPtr"))
     {
         __debugbreak();
     }
@@ -2861,11 +2918,11 @@ char __cdecl UI_FeederItemColor_PerksMilestones(
     color[1] = 1.0f;
     color[2] = 1.0f;
     color[3] = 1.0f;
-    if ( !column )
+    if (!column)
     {
-        if ( isItemPurchased )
+        if (isItemPurchased)
         {
-            if ( isRowHighlighted )
+            if (isRowHighlighted)
             {
                 *color = 0.0f;
                 color[1] = 0.0f;
@@ -2876,9 +2933,9 @@ char __cdecl UI_FeederItemColor_PerksMilestones(
         else
         {
             *color = newUIGrey[0];
-            *((unsigned int *)color + 1) = dword_E0BD80;
-            *((unsigned int *)color + 2) = dword_E0BD84;
-            *((unsigned int *)color + 3) = dword_E0BD88;
+            color[1] = newUIGrey[1];
+            color[2] = newUIGrey[2];
+            color[3] = newUIGrey[3];
         }
     }
     return 1;
@@ -2900,24 +2957,24 @@ char __cdecl UI_FeederItemColor_StatsMilestones(
     bool isItemPurchased; // [esp+Bh] [ebp-1h]
 
     listPtr = Item_GetListBoxDef(item);
-    if ( !listPtr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2917, 0, "%s", "listPtr") )
+    if (!listPtr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 2917, 0, "%s", "listPtr"))
     {
         __debugbreak();
     }
     isRowHighlighted = listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window);
-    if ( !LiveStats_GetChallengeInfo(&challenge, index, milestoneType) )
+    if (!LiveStats_GetChallengeInfo(&challenge, index, milestoneType))
         return 0;
     isItemPurchased = (challenge->flags & 1) == 0;
     *color = 1.0f;
     color[1] = 1.0f;
     color[2] = 1.0f;
     color[3] = 1.0f;
-    if ( !column || column == 2 )
+    if (!column || column == 2)
     {
-        if ( isItemPurchased && (challenge->flags & 4) == 0 )
+        if (isItemPurchased && (challenge->flags & 4) == 0)
         {
-            if ( isRowHighlighted )
+            if (isRowHighlighted)
             {
                 *color = 0.0f;
                 color[1] = 0.0f;
@@ -2928,9 +2985,9 @@ char __cdecl UI_FeederItemColor_StatsMilestones(
         else
         {
             *color = newUIGrey[0];
-            *((unsigned int *)color + 1) = dword_E0BD80;
-            *((unsigned int *)color + 2) = dword_E0BD84;
-            *((unsigned int *)color + 3) = dword_E0BD88;
+            color[1] = newUIGrey[1];
+            color[2] = newUIGrey[2];
+            color[3] = newUIGrey[3];
         }
     }
     return 1;
@@ -2947,11 +3004,11 @@ bool __cdecl UI_FeederItemColor_AARScoreboard(
 {
     bool result; // al
     char *MatchScoreboardInfo; // eax
-    __int64 v9; // rax
-    char *v10; // eax
+    __int64 v10; // rax
     char *v11; // eax
-    int v12; // edx
-    __int64 v13; // [esp+0h] [ebp-54h]
+    char *v12; // eax
+    int v13; // edx
+    __int64 v14; // [esp+0h] [ebp-54h]
     float *focusColor; // [esp+14h] [ebp-40h]
     signed int payout; // [esp+24h] [ebp-30h]
     int localClientNum; // [esp+28h] [ebp-2Ch]
@@ -2964,10 +3021,24 @@ bool __cdecl UI_FeederItemColor_AARScoreboard(
     currClientXuid = 0;
     localClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
     listBox = Item_GetListBoxDef(item);
-    switch ( column )
+    switch (column)
     {
-        case 0:
-            if ( feederID == 83.0 )
+    case 0:
+        if (feederID == 83.0)
+        {
+            *color = item->window.foreColor[0];
+            color[1] = item->window.foreColor[1];
+            color[2] = item->window.foreColor[2];
+            color[3] = item->window.foreColor[3];
+            result = 1;
+        }
+        else
+        {
+            LiveStats_GetNemesisXuid(controllerIndex, &nemesisXuid);
+            MatchScoreboardInfo = CG_GetMatchScoreboardInfo(localClientNum, 0, index, TEAM_NUM_TEAMS);
+            currClientXuid = I_atoi64(MatchScoreboardInfo);
+            if (nemesisXuid && nemesisXuid == currClientXuid
+                || (LODWORD(v10) = Live_GetXuid(controllerIndex), currClientXuid == v10))
             {
                 *color = item->window.foreColor[0];
                 color[1] = item->window.foreColor[1];
@@ -2977,102 +3048,88 @@ bool __cdecl UI_FeederItemColor_AARScoreboard(
             }
             else
             {
-                LiveStats_GetNemesisXuid(controllerIndex, &nemesisXuid);
-                MatchScoreboardInfo = CG_GetMatchScoreboardInfo(localClientNum, 0, index, TEAM_NUM_TEAMS);
-                currClientXuid = I_atoi64(MatchScoreboardInfo);
-                if ( nemesisXuid && nemesisXuid == currClientXuid
-                    || (LODWORD(v9) = Live_GetXuid(controllerIndex), currClientXuid == v9) )
+                if (CG_GetMatchscoreboardTeam(localClientNum, index) == TEAM_ALLIES)
                 {
-                    *color = item->window.foreColor[0];
-                    color[1] = item->window.foreColor[1];
-                    color[2] = item->window.foreColor[2];
-                    color[3] = item->window.foreColor[3];
-                    result = 1;
+                    *color = alliesColor[0];
+                    color[1] = alliesColor[1];
+                    color[2] = alliesColor[2];
+                    color[3] = alliesColor[3];
                 }
                 else
                 {
-                    if ( CG_GetMatchscoreboardTeam(localClientNum, index) == 2 )
-                    {
-                        *color = alliesColor[0];
-                        *((unsigned int *)color + 1) = dword_E0BF8C;
-                        *((unsigned int *)color + 2) = dword_E0BF90;
-                        *((unsigned int *)color + 3) = dword_E0BF94;
-                    }
-                    else
-                    {
-                        *color = axisColor[0];
-                        *((unsigned int *)color + 1) = dword_E0BF7C;
-                        *((unsigned int *)color + 2) = dword_E0BF80;
-                        *((unsigned int *)color + 3) = dword_E0BF84;
-                    }
-                    if ( !(index % 2) )
-                    {
-                        *color = *color * darkRowMultiplier;
-                        color[1] = color[1] * darkRowMultiplier;
-                        color[2] = color[2] * darkRowMultiplier;
-                    }
-                    if ( color[3] > 1.0 )
-                        color[3] = 1.0f;
-                    result = 1;
+                    *color = axisColor[0];
+                    color[1] = axisColor[1];
+                    color[2] = axisColor[2];
+                    color[3] = axisColor[3];
                 }
-            }
-            break;
-        case 1:
-            if ( feederID == 83.0 )
-            {
-                result = 0;
-            }
-            else
-            {
-                *color = 0.0f;
-                color[1] = 0.0f;
-                color[2] = 0.0f;
-                color[3] = 0.1f;
+                if (!(index % 2))
+                {
+                    *color = *color * darkRowMultiplier;
+                    color[1] = color[1] * darkRowMultiplier;
+                    color[2] = color[2] * darkRowMultiplier;
+                }
+                if (color[3] > 1.0)
+                    color[3] = 1.0f;
                 result = 1;
             }
-            break;
-        case 2:
-        case 4:
-        case 5:
-            if ( feederID == 83.0 )
+        }
+        break;
+    case 1:
+        if (feederID == 83.0)
+        {
+            result = 0;
+        }
+        else
+        {
+            *color = 0.0f;
+            color[1] = 0.0f;
+            color[2] = 0.0f;
+            color[3] = 0.1f;
+            result = 1;
+        }
+        break;
+    case 2:
+    case 4:
+    case 5:
+        if (feederID == 83.0)
+        {
+            ddlState = *LiveStats_GetRootDDLState();
+            v11 = va("%d", index);
+            DDL_MoveTo(&ddlState, &ddlState, 3, "AfterActionReportStats", "payouts", v11);
+            payout = LiveStats_GetDIntStat(controllerIndex, &ddlState);
+            v12 = CG_GetMatchScoreboardInfo(localClientNum, 0, index, TEAM_FREE);
+            currClientXuid = I_atoi64(v12);
+            LODWORD(v14) = Live_GetXuid(controllerIndex);
+            HIDWORD(v14) = v13;
+            if (currClientXuid == v14)
             {
-                ddlState = *LiveStats_GetRootDDLState();
-                v10 = va("%d", index);
-                DDL_MoveTo(&ddlState, &ddlState, 3, "AfterActionReportStats", "payouts", v10);
-                payout = LiveStats_GetDIntStat(controllerIndex, &ddlState);
-                v11 = CG_GetMatchScoreboardInfo(localClientNum, 0, index, TEAM_FREE);
-                currClientXuid = I_atoi64(v11);
-                LODWORD(v13) = Live_GetXuid(controllerIndex);
-                HIDWORD(v13) = v12;
-                if ( currClientXuid == v13 )
-                {
-                    focusColor = listBox->focusColor;
-                    *color = listBox->focusColor[0];
-                    color[1] = focusColor[1];
-                    color[2] = focusColor[2];
-                    color[3] = focusColor[3];
-                    result = 1;
-                }
-                else
-                {
-                    if ( payout > 0 )
-                        goto LABEL_25;
-                    *color = newUIGrey[0];
-                    *((unsigned int *)color + 1) = dword_E0BD80;
-                    *((unsigned int *)color + 2) = dword_E0BD84;
-                    *((unsigned int *)color + 3) = dword_E0BD88;
-                    result = 1;
-                }
+                focusColor = listBox->focusColor;
+                *color = listBox->focusColor[0];
+                color[1] = focusColor[1];
+                color[2] = focusColor[2];
+                color[3] = focusColor[3];
+                result = 1;
             }
             else
             {
-                result = 0;
+                if (payout > 0)
+                    goto LABEL_25;
+                *color = newUIGrey[0];
+                color[1] = newUIGrey[1];
+                color[2] = newUIGrey[2];
+                color[3] = newUIGrey[3];
+                result = 1;
             }
-            break;
-        default:
-LABEL_25:
+        }
+        else
+        {
             result = 0;
-            break;
+        }
+        break;
+    default:
+    LABEL_25:
+        result = 0;
+        break;
     }
     return result;
 }
@@ -3088,7 +3145,7 @@ char __cdecl UI_FeederItemColor_KillstreakNumKills(
     listBoxDef_s *listPtr; // [esp+Ch] [ebp-8h]
     int killNum; // [esp+10h] [ebp-4h]
 
-    if ( column != 1 )
+    if (column != 1)
         return UI_FeederItemColor_ItemList(controllerIndex, contextIndex, item, index, column, 0, 1, 0, 0, color);
     *color = colorWhite[0];
     color[1] = 1.0;
@@ -3096,26 +3153,26 @@ char __cdecl UI_FeederItemColor_KillstreakNumKills(
     color[3] = 1.0;
     killNum = CustomKillstreakNums[index];
     listPtr = Item_GetListBoxDef(item);
-    if ( !listPtr
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 3065, 0, "%s", "listPtr") )
+    if (!listPtr
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp", 3065, 0, "%s", "listPtr"))
     {
         __debugbreak();
     }
-    if ( listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window) )
+    if (listPtr->cursorPos[contextIndex] == index && Window_HasFocus(contextIndex, &item->window))
     {
         *color = 0.0f;
         color[1] = 0.0f;
         color[2] = 0.0f;
         color[3] = 1.0f;
     }
-    if ( killNum == Dvar_GetInt("custom_killstreak_1_kills") && Dvar_GetInt("custom_killstreak_1")
+    if (killNum == Dvar_GetInt("custom_killstreak_1_kills") && Dvar_GetInt("custom_killstreak_1")
         || killNum == Dvar_GetInt("custom_killstreak_2_kills") && Dvar_GetInt("custom_killstreak_2")
-        || killNum == Dvar_GetInt("custom_killstreak_3_kills") && Dvar_GetInt("custom_killstreak_3") )
+        || killNum == Dvar_GetInt("custom_killstreak_3_kills") && Dvar_GetInt("custom_killstreak_3"))
     {
         *color = newUIGrey[0];
-        *((unsigned int *)color + 1) = dword_E0BD80;
-        *((unsigned int *)color + 2) = dword_E0BD84;
-        *((unsigned int *)color + 3) = dword_E0BD88;
+        color[1] = newUIGrey[1];
+        color[2] = newUIGrey[2];
+        color[3] = newUIGrey[3];
     }
     return 1;
 }
@@ -3171,7 +3228,7 @@ LABEL_10:
             }
             if ( !I_stricmp(loadoutName, "secondary") )
             {
-                groupIndex = index + 5;
+                groupIndex = (itemGroup_t)(index + 5);
                 if ( (index + 5 < 5 || groupIndex > ITEMGROUP_SPECIAL)
                     && !Assert_MyHandler(
                                 "C:\\projects_pc\\cod\\codsrc\\src\\ui_mp\\ui_feeders_mp.cpp",

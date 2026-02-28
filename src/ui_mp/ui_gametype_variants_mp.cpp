@@ -19,7 +19,6 @@ const dvar_s *custom_class_mode;
 GVValue gvCondOpValues[6];
 GVValue classParamValues[10];
 _CustomClassData g_customGameModeClasses[10];
-_CustomClassDescription g_customGameModeClassDescriptions[10];
 
 GVGlob gvGlob;
 

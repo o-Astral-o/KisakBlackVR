@@ -184,3 +184,10 @@ char __cdecl UI_FeederData(
                 const char *field,
                 char **stringResult,
                 float *numberResult);
+
+
+static const float newUIfeederHighlight[4] = { 1.0, 1.0, 1.0, 0.2 };
+static const float newUIFeederBackgroundColor[4] = { 0.0, 0.0, 0.0, 0.2 };
+static const float newUIGrey[4] = { 0.40000001, 0.40000001, 0.40000001, 1.0 };
+static const float newUIRed[4] = { 0.73000002, 0.19, 0.19, 1.0 };
+static const float newUIGreen[4] = { 0.41999999, 0.68000001, 0.46000001, 1.0 };
