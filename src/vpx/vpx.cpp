@@ -1,42 +1,77 @@
 #include "vpx.h"
+#include <libs/libvpx/vpx_image.h>
+#include <libs/libvpx/vp8cx.h>
 
-void __cdecl vpx_init(const char *filename, int width, int height)
+#include <cstring>
+#include <universal/q_shared.h>
+
+struct //$0A669EED672D0614AB086EF67B48703D // sizeof=0x12C
+{                                       // XREF: .data:_unnamed_type_vpx_globals_ vpx_globals/r
+    bool init;                          // XREF: vpx_init(char const *,int,int)+4/r
+                                        // vpx_init(char const *,int,int):loc_9B3917/w ...
+    // padding byte
+    // padding byte
+    // padding byte
+    FILE *outfile;                    // XREF: vpx_init(char const *,int,int)+75/w
+    vpx_codec_ctx codec;                // XREF: vpx_init(char const *,int,int)+104/o
+    vpx_codec_enc_cfg cfg;              // XREF: vpx_init(char const *,int,int)+8A/o
+    int frame_cnt;                      // XREF: vpx_init(char const *,int,int)+26/w
+    unsigned __int8 file_hdr[32];
+    unsigned __int8 frame_hdr[12];
+    vpx_image raw;                      // XREF: vpx_init(char const *,int,int)+4E/o
+    int width;                          // XREF: vpx_init(char const *,int,int)+17/w
+    int height;                         // XREF: vpx_init(char const *,int,int)+20/w
+    int flags;                          // XREF: vpx_init(char const *,int,int)+30/w
+} vpx_globals;
+
+// aislop used to rework whole file
+
+void vpx_init(const char *filename, int width, int height)
 {
-    if ( !vpx_globals.init )
+    if (vpx_globals.init)
+        return;
+
+    vpx_globals.width = width;
+    vpx_globals.height = height;
+    vpx_globals.frame_cnt = 0;
+
+    // Allocate image (I420)
+    if (!vpx_img_alloc(&vpx_globals.raw, VPX_IMG_FMT_I420, width, height, 1))
+        return;
+
+    vpx_globals.outfile = fopen(filename, "wb");
+    if (!vpx_globals.outfile)
+        return;
+
+    if (vpx_codec_enc_config_default(&vpx_codec_vp8_cx_algo, &vpx_globals.cfg, 0))
+        return;
+
+    vpx_globals.cfg.g_w = width;
+    vpx_globals.cfg.g_h = height;
+    vpx_globals.cfg.g_timebase.num = 1;
+    vpx_globals.cfg.g_timebase.den = 30; // 30 fps
+
+    // Scale bitrate with resolution
+    vpx_globals.cfg.rc_target_bitrate =
+        vpx_globals.cfg.rc_target_bitrate *
+        width * height /
+        (vpx_globals.cfg.g_w * vpx_globals.cfg.g_h);
+
+    if (vpx_codec_enc_init(
+        &vpx_globals.codec,
+        &vpx_codec_vp8_cx_algo,
+        &vpx_globals.cfg,
+        0))
     {
-        vpx_globals.width = width;
-        vpx_globals.height = height;
-        vpx_globals.frame_cnt = 0;
-        vpx_globals.flags = 0;
-        if ( vpx_img_alloc((int *)&vpx_globals.raw, 258, width, height, 1) )
-        {
-            vpx_globals.outfile = fopen(filename, "wb");
-            if ( vpx_globals.outfile )
-            {
-                if ( !vpx_codec_enc_config_default((int)&vpx_codec_vp8_cx_algo, &vpx_globals.cfg.g_usage, 0) )
-                {
-                    vpx_globals.cfg.rc_target_bitrate = vpx_globals.cfg.rc_target_bitrate
-                                                                                        * vpx_globals.height
-                                                                                        * vpx_globals.width
-                                                                                        / vpx_globals.cfg.g_w
-                                                                                        / vpx_globals.cfg.g_h;
-                    vpx_globals.cfg.g_w = width;
-                    vpx_globals.cfg.g_h = height;
-                    write_ivf_file_header(vpx_globals.outfile, &vpx_globals.cfg, 0);
-                    if ( !vpx_codec_enc_init_ver(
-                                    &vpx_globals.codec.name,
-                                    (int)&vpx_codec_vp8_cx_algo,
-                                    (int)&vpx_globals.cfg,
-                                    0,
-                                    5) )
-                        vpx_globals.init = 1;
-                }
-            }
-        }
+        return;
     }
+
+    write_ivf_file_header(vpx_globals.outfile, &vpx_globals.cfg, 0);
+
+    vpx_globals.init = true;
 }
 
-void __cdecl write_ivf_file_header(_iobuf *outfile, const vpx_codec_enc_cfg *cfg, unsigned int frame_cnt)
+void __cdecl write_ivf_file_header(FILE *outfile, const vpx_codec_enc_cfg *cfg, unsigned int frame_cnt)
 {
     char header[32]; // [esp+0h] [ebp-24h] BYREF
 
@@ -66,53 +101,70 @@ void __cdecl mem_put_le32(char *mem, unsigned int val)
     *(unsigned int *)mem = val;
 }
 
-void __cdecl vpx_encode_frame(unsigned __int8 *y, unsigned __int8 *u, unsigned __int8 *v, bool eof)
+void __cdecl vpx_encode_frame(
+    unsigned __int8 *y,
+    unsigned __int8 *u,
+    unsigned __int8 *v,
+    bool eof)
 {
-    const void *iter; // [esp+0h] [ebp-Ch] BYREF
-    const vpx_codec_cx_pkt *pkt; // [esp+4h] [ebp-8h]
-    int got_data; // [esp+8h] [ebp-4h]
+    if (!vpx_globals.init)
+        return;
 
-    do
+    // Copy image planes if this is a real frame
+    if (!eof)
     {
-        iter = 0;
-        if ( !eof )
-        {
-            memcpy(vpx_globals.raw.planes[0], y, vpx_globals.height * vpx_globals.width);
-            memcpy(vpx_globals.raw.planes[1], u, vpx_globals.height * vpx_globals.width / 4);
-            memcpy(vpx_globals.raw.planes[2], v, vpx_globals.height * vpx_globals.width / 4);
-        }
-        if ( vpx_codec_encode(
-                     &vpx_globals.codec.name,
-                     !eof ? (unsigned int)&vpx_globals.raw : 0,
-                     vpx_globals.frame_cnt,
-                     vpx_globals.frame_cnt >> 31,
-                     1,
-                     vpx_globals.flags,
-                     1) )
-        {
-            break;
-        }
-        got_data = 0;
-        while ( 1 )
-        {
-            pkt = (const vpx_codec_cx_pkt *)vpx_codec_get_cx_data(&vpx_globals.codec.name, (int)&iter);
-            if ( !pkt )
-                break;
-            got_data = 1;
-            if ( pkt->kind == VPX_CODEC_CX_FRAME_PKT )
-            {
-                write_ivf_frame_header(vpx_globals.outfile, pkt);
-                fwrite(pkt->data.frame.buf, 1u, pkt->data.frame.sz, vpx_globals.outfile);
-            }
-        }
-        ++vpx_globals.frame_cnt;
-        if ( !got_data )
-            break;
+        memcpy(vpx_globals.raw.planes[0],
+            y,
+            vpx_globals.width * vpx_globals.height);
+
+        memcpy(vpx_globals.raw.planes[1],
+            u,
+            vpx_globals.width * vpx_globals.height / 4);
+
+        memcpy(vpx_globals.raw.planes[2],
+            v,
+            vpx_globals.width * vpx_globals.height / 4);
     }
-    while ( eof );
+
+    // Encode frame (or flush if eof)
+    if (vpx_codec_encode(
+        &vpx_globals.codec,
+        eof ? NULL : &vpx_globals.raw,
+        vpx_globals.frame_cnt,
+        1,                  // duration
+        0,
+        VPX_DL_REALTIME) != VPX_CODEC_OK)
+    {
+        return; // encode error
+    }
+
+    // Retrieve compressed packets
+    vpx_codec_iter_t iter = NULL;
+    const vpx_codec_cx_pkt_t *pkt;
+
+    while ((pkt = vpx_codec_get_cx_data(
+        &vpx_globals.codec,
+        &iter)) != NULL)
+    {
+        if (pkt->kind == VPX_CODEC_CX_FRAME_PKT)
+        {
+            write_ivf_frame_header(
+                vpx_globals.outfile,
+                pkt);
+
+            fwrite(pkt->data.frame.buf,
+                1,
+                pkt->data.frame.sz,
+                vpx_globals.outfile);
+        }
+    }
+
+    // Only increment frame counter for real frames
+    if (!eof)
+        vpx_globals.frame_cnt++;
 }
 
-void __cdecl write_ivf_frame_header(_iobuf *outfile, const vpx_codec_cx_pkt *pkt)
+void __cdecl write_ivf_frame_header(FILE *outfile, const vpx_codec_cx_pkt *pkt)
 {
     char header[12]; // [esp+0h] [ebp-18h] BYREF
     __int64 pts; // [esp+10h] [ebp-8h]
@@ -129,13 +181,28 @@ void __cdecl write_ivf_frame_header(_iobuf *outfile, const vpx_codec_cx_pkt *pkt
 
 void __cdecl vpx_shutdown()
 {
-    vpx_encode_frame(0, 0, 0, 1);
-    if ( !vpx_codec_destroy(&vpx_globals.codec.name) )
+    if (!vpx_globals.init)
+        return;
+
+    // Flush encoder
+    vpx_encode_frame(NULL, NULL, NULL, 1);
+
+    // Destroy codec
+    if (!vpx_codec_destroy(&vpx_globals.codec))
     {
-        if ( !fseek(vpx_globals.outfile, 0, 0) )
-            write_ivf_file_header(vpx_globals.outfile, &vpx_globals.cfg, vpx_globals.frame_cnt - 1);
+        // Rewrite IVF header with correct frame count
+        fseek(vpx_globals.outfile, 0, SEEK_SET);
+
+        write_ivf_file_header(
+            vpx_globals.outfile,
+            &vpx_globals.cfg,
+            vpx_globals.frame_cnt);
+
         fclose(vpx_globals.outfile);
-        vpx_img_free((void **)&vpx_globals.raw);
+
+        // Free image properly (2010 style)
+        vpx_img_free(&vpx_globals.raw);
+
         vpx_globals.init = 0;
     }
 }
