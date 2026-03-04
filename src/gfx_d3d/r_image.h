@@ -1,6 +1,8 @@
 #pragma once
+#include <database/db_registry.h>
 
-#include "r_material.h"
+struct GfxImage;
+union GfxTexture;
 
 struct ImageList // sizeof=0x4004
 {                                       // XREF: ?R_SumOfUsedImages@@YAXPAUImage_MemUsage@@@Z/r

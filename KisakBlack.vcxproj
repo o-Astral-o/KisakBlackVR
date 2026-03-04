@@ -78,9 +78,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -1483,6 +1483,7 @@
     <ClInclude Include="src\CubeMapGenLib\UIRegionManager.h" />
     <ClInclude Include="src\CubeMapGenLib\VectorMacros.h" />
     <ClInclude Include="src\CubeMapGenLib\Version.h" />
+    <ClInclude Include="src\database\database.h" />
     <ClInclude Include="src\database\db_assetnames.h" />
     <ClInclude Include="src\database\db_auth.h" />
     <ClInclude Include="src\database\db_file_load.h" />

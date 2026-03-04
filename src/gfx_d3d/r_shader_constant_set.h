@@ -19,6 +19,8 @@ struct ScopedShaderConstantSetUndo // sizeof=0x7C
     ~ScopedShaderConstantSetUndo();
 };
 
+struct GfxBackEndData;
+
 void __cdecl R_InitShaderConstantSet(ShaderConstantSet *scs);
 bool __cdecl R_ShaderConstantSetIsUsed(const ShaderConstantSet *scs);
 char __cdecl R_MapShaderConstantSet(ShaderConstantSet *scs, unsigned int index, const char *constantName);

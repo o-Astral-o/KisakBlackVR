@@ -1,6 +1,5 @@
 #pragma once
 
-#include "r_buffers.h"
 #include "r_bsp.h"
 
 #include "r_scene.h"
@@ -78,22 +77,6 @@ struct FxCodeMeshData // sizeof=0x10
     unsigned int lightHandle;
 };
 
-struct GfxViewParms // sizeof=0x140
-{                                       // XREF: .data:lockPvsViewParms/r
-                                        // GfxCullViewInfo/r ...
-    GfxMatrix viewMatrix;
-    GfxMatrix projectionMatrix;         // XREF: R_InitGlobalStructs+BD/o
-    GfxMatrix viewProjectionMatrix;     // XREF: R_InitGlobalStructs+CA/o
-    GfxMatrix inverseViewProjectionMatrix;
-                                        // XREF: R_InitGlobalStructs+D7/o
-    float origin[4];                    // XREF: R_UpdateLodParms+16/r
-                                        // R_UpdateLodParms+25/r ...
-    float axis[3][3];                   // XREF: R_PvsLock_GetViewAxis(float (* const)[3])+7/o
-    float depthHackNearClip;
-    float zNear;
-    float zFar;
-};
-
 struct GfxParticleCloud // sizeof=0x40
 {                                       // XREF: GfxBackEndData/r
     GfxScaledPlacement placement;
@@ -157,34 +140,6 @@ struct FxMarkMeshData // sizeof=0x18
     unsigned __int8 pad0;
 };
 
-struct GfxIndexBufferState // sizeof=0x10
-{                                       // XREF: GfxBuffers/r
-                                        // GfxBuffers/r
-    volatile int used;
-    int total;
-    IDirect3DIndexBuffer9 *buffer;      // XREF: R_DestroyDynamicBuffers(void)+28/r
-                                        // R_DestroyDynamicBuffers(void)+5B/r ...
-    unsigned __int16 *indices;          // XREF: R_CreateDynamicBuffers(void)+14E/w
-                                        // R_DestroyDynamicBuffers(void)+A0/r ...
-};
-
-struct GfxFog // sizeof=0x50
-{                                       // XREF: GfxBackEndData/r
-                                        // GfxClientFog/r
-    int startTime;
-    int finishTime;
-    float color[4];
-    float fogStart;
-    float density;
-    float heightDensity;
-    float baseHeight;
-    float sunFogColor[4];
-    float sunFogDir[3];
-    float sunFogStartAng;
-    float sunFogEndAng;
-    float maxDensity;
-};
-
 struct GfxCmdHeader // sizeof=0x4
 {                                       // XREF: GfxCmdSaveScreen/r
                                         // GfxCmdStretchPicRotateXY/r ...
@@ -243,58 +198,6 @@ struct PointLightPartition // sizeof=0x1C0
 {                                       // XREF: GfxViewInfo/r
     GfxLight light;
     GfxDrawSurfListInfo info;
-};
-
-struct GfxQuadMeshData // sizeof=0x34
-{                                       // XREF: GfxMeshGlobals/r
-    float x;
-    float y;
-    float width;
-    float height;
-    GfxMeshData meshData;               // XREF: R_InitRenderBuffers(void)+193/o
-                                        // R_ShutdownRenderBuffers(void)+16A/o
-};
-
-struct GfxCodeImageRenderTargetFields // sizeof=0x8
-{                                       // XREF: GfxCodeImageRenderTarget/r
-    unsigned __int64 renderTargetId : 8;
-    unsigned __int64 enable : 1;
-    unsigned __int64 fbufferTexture : 3;
-    unsigned __int64 filtering : 20;
-};
-
-union GfxCodeImageRenderTarget // sizeof=0x8
-{                                       // XREF: RB_InitCodeImages(void)+55B/w
-                                        // R_SetTextureSamplerCodeImageRenderTarget(GfxCmdBufContext,uint,GfxCodeImageRenderTarget)+16/r ...
-    GfxCodeImageRenderTargetFields fields;
-    unsigned int packed;
-};
-
-struct __declspec(align(16)) GfxCmdBufInput // sizeof=0xE90
-{                                       // XREF: .data:GfxCmdBufInput gfxCmdBufInput/r
-                                        // GfxViewInfo/r ...
-    float consts[197][4];
-    const GfxImage *codeImages[43];     // XREF: R_UpdateFrontEndDvarOptions+249/w
-                                        // R_Cinematic_BlackRendererImages+2E/w ...
-    unsigned __int8 codeImageSamplerStates[43];
-                                        // XREF: RB_SetBspImages(void)+6B/w
-                                        // RB_InitCodeImages(void)+1C/w ...
-    // padding byte
-    GfxCodeImageRenderTarget codeImageRenderTargetControl[43];
-                                        // XREF: RB_InitCodeImages(void)+55B/w
-    const GfxBackEndData *data;
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
 };
 
 struct GfxExposureShaderRemap // sizeof=0x18
@@ -516,6 +419,10 @@ struct GfxDebugPlume // sizeof=0x28
     int duration;
 };
 
+struct trDebugString_t;
+struct trDebugLine_t;
+struct trDebugSphere_t;
+
 struct DebugGlobals // sizeof=0x6C
 {                                       // XREF: .data:debugGlobals/r
                                         // GfxBackEndData/r
@@ -707,7 +614,7 @@ const struct __declspec(align(32)) GfxBackEndData // sizeof=0x186300
     volatile unsigned int markMeshCount;
     FxMarkMeshData markMeshes[1536];
     volatile unsigned int *dynamicBufferCurrentFrame;
-    GfxVertexBufferState *skinnedCacheVb;
+    struct GfxVertexBufferState *skinnedCacheVb;
     IDirect3DQuery9 *endFence;
     unsigned __int8 *tempSkinBuf;
     //volatile int tempSkinPos;

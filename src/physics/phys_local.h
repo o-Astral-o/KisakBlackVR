@@ -1088,8 +1088,8 @@ struct phys_inplace_avl_tree
 {
     struct stack_item
     {
-        T2 **m_node;   // pointer to pointer to node
-        int  m_child;  // -1 = left, +1 = right
+        T2 **m_node;
+        int  m_child; // -1 = left, +1 = right
     };
 
     T2 *m_tree_root = nullptr;
@@ -1100,55 +1100,53 @@ struct phys_inplace_avl_tree
 
     inline void rotate_left(T2 **root)
     {
-        T2 *save_right = (*root)->m_avl_node_info.m_right;
+        T2 *r = (*root)->m_avl_tree_node.m_right;
 
-        (*root)->m_avl_node_info.m_right =
-            save_right->m_avl_node_info.m_left;
-        save_right->m_avl_node_info.m_left = *root;
+        (*root)->m_avl_tree_node.m_right = r->m_avl_tree_node.m_left;
+        r->m_avl_tree_node.m_left = *root;
 
-        int delta = (save_right->m_avl_node_info.m_balance <= 0)
+        int delta = (r->m_avl_tree_node.m_balance <= 0)
             ? 0
-            : save_right->m_avl_node_info.m_balance;
+            : r->m_avl_tree_node.m_balance;
 
-        (*root)->m_avl_node_info.m_balance -= delta + 1;
+        (*root)->m_avl_tree_node.m_balance -= delta + 1;
 
-        int adj = ((*root)->m_avl_node_info.m_balance >= 0)
+        int adj = ((*root)->m_avl_tree_node.m_balance >= 0)
             ? 0
-            : -(*root)->m_avl_node_info.m_balance;
+            : -(*root)->m_avl_tree_node.m_balance;
 
-        save_right->m_avl_node_info.m_balance -= adj + 1;
+        r->m_avl_tree_node.m_balance -= adj + 1;
 
-        *root = save_right;
+        *root = r;
     }
 
     inline void rotate_right(T2 **root)
     {
-        T2 *save_left = (*root)->m_avl_node_info.m_left;
+        T2 *l = (*root)->m_avl_tree_node.m_left;
 
-        (*root)->m_avl_node_info.m_left =
-            save_left->m_avl_node_info.m_right;
-        save_left->m_avl_node_info.m_right = *root;
+        (*root)->m_avl_tree_node.m_left = l->m_avl_tree_node.m_right;
+        l->m_avl_tree_node.m_right = *root;
 
-        int delta = (save_left->m_avl_node_info.m_balance >= 0)
+        int delta = (l->m_avl_tree_node.m_balance >= 0)
             ? 0
-            : -save_left->m_avl_node_info.m_balance;
+            : -l->m_avl_tree_node.m_balance;
 
-        (*root)->m_avl_node_info.m_balance += delta + 1;
+        (*root)->m_avl_tree_node.m_balance += delta + 1;
 
-        int adj = ((*root)->m_avl_node_info.m_balance <= 0)
+        int adj = ((*root)->m_avl_tree_node.m_balance <= 0)
             ? 0
-            : (*root)->m_avl_node_info.m_balance;
+            : (*root)->m_avl_tree_node.m_balance;
 
-        save_left->m_avl_node_info.m_balance += adj + 1;
+        l->m_avl_tree_node.m_balance += adj + 1;
 
-        *root = save_left;
+        *root = l;
     }
 
     /* ------------------------------------------------------------ */
     /* find                                                         */
     /* ------------------------------------------------------------ */
 
-    inline T2 *find(const T1 *key)
+    inline T2 *find(const T1 &key) const
     {
         T2 *node = m_tree_root;
 
@@ -1158,9 +1156,10 @@ struct phys_inplace_avl_tree
                 return node;
 
             node = Accessor::less(key, node)
-                ? node->m_avl_node_info.m_left
-                : node->m_avl_node_info.m_right;
+                ? node->m_avl_tree_node.m_left
+                : node->m_avl_tree_node.m_right;
         }
+
         return nullptr;
     }
 
@@ -1168,7 +1167,7 @@ struct phys_inplace_avl_tree
     /* add                                                          */
     /* ------------------------------------------------------------ */
 
-    inline void add(const T1 *key, T2 *data)
+    inline void add(const T1 &key, T2 *data)
     {
         stack_item stack[32];
         stack_item *cur = stack;
@@ -1183,141 +1182,159 @@ struct phys_inplace_avl_tree
             if (!Accessor::less(key, root))
             {
                 cur->m_child = +1;
-                next->m_node = &root->m_avl_node_info.m_right;
+                next->m_node = &root->m_avl_tree_node.m_right;
             }
             else
             {
                 cur->m_child = -1;
-                next->m_node = &root->m_avl_node_info.m_left;
+                next->m_node = &root->m_avl_tree_node.m_left;
             }
+
             cur = next;
         }
 
         *cur->m_node = data;
-        data->m_avl_node_info.m_left = nullptr;
-        data->m_avl_node_info.m_right = nullptr;
-        data->m_avl_node_info.m_balance = 0;
 
-        do
+        data->m_avl_tree_node.m_left = nullptr;
+        data->m_avl_tree_node.m_right = nullptr;
+        data->m_avl_tree_node.m_balance = 0;
+
+        /* rebalance upward */
+
+        while (cur > stack)
         {
-            if (cur <= stack)
+            --cur;
+
+            T2 **node = cur->m_node;
+            (*node)->m_avl_tree_node.m_balance += cur->m_child;
+
+            if ((*node)->m_avl_tree_node.m_balance == 0)
                 break;
 
-            --cur;
-            T2 **node = cur->m_node;
-            (*node)->m_avl_node_info.m_balance += cur->m_child;
-
-            if ((*node)->m_avl_node_info.m_balance == -2)
+            if ((*node)->m_avl_tree_node.m_balance == -2)
             {
-                if ((*node)->m_avl_node_info.m_left
-                    ->m_avl_node_info.m_balance == 1)
+                if ((*node)->m_avl_tree_node.m_left
+                    ->m_avl_tree_node.m_balance == 1)
                 {
-                    rotate_left(&(*node)->m_avl_node_info.m_left);
+                    rotate_left(&(*node)->m_avl_tree_node.m_left);
                 }
                 rotate_right(node);
+                break;
             }
-            else if ((*node)->m_avl_node_info.m_balance == 2)
+            else if ((*node)->m_avl_tree_node.m_balance == 2)
             {
-                if ((*node)->m_avl_node_info.m_right
-                    ->m_avl_node_info.m_balance == -1)
+                if ((*node)->m_avl_tree_node.m_right
+                    ->m_avl_tree_node.m_balance == -1)
                 {
-                    rotate_right(&(*node)->m_avl_node_info.m_right);
+                    rotate_right(&(*node)->m_avl_tree_node.m_right);
                 }
                 rotate_left(node);
+                break;
             }
-        } while ((*cur->m_node)->m_avl_node_info.m_balance);
+        }
     }
 
     /* ------------------------------------------------------------ */
     /* remove                                                       */
     /* ------------------------------------------------------------ */
 
-    inline void remove(const T1 *key)
+    inline void remove(const T1 &key)
     {
         stack_item stack[32];
         stack_item *cur = stack;
 
         cur->m_node = &m_tree_root;
 
-        while (true)
+        /* find node */
+
+        while (*cur->m_node)
         {
             T2 *root = *cur->m_node;
-            stack_item *next = cur + 1;
 
             if (Accessor::less(key, root))
             {
                 cur->m_child = -1;
-                next->m_node = &root->m_avl_node_info.m_left;
+                (cur + 1)->m_node = &root->m_avl_tree_node.m_left;
             }
             else if (Accessor::less(root, key))
             {
                 cur->m_child = +1;
-                next->m_node = &root->m_avl_node_info.m_right;
+                (cur + 1)->m_node = &root->m_avl_tree_node.m_right;
             }
             else
             {
                 break;
             }
-            cur = next;
+
+            ++cur;
         }
+
+        if (!*cur->m_node)
+            return;
 
         T2 **victim = cur->m_node;
 
-        if ((*victim)->m_avl_node_info.m_right)
-        {
-            cur->m_child = +1;
-            ++cur;
-            cur->m_node = &(*victim)->m_avl_node_info.m_right;
+        /* replace */
 
-            while ((*cur->m_node)->m_avl_node_info.m_left)
+        if ((*victim)->m_avl_tree_node.m_right)
+        {
+            ++cur;
+            cur->m_node = &(*victim)->m_avl_tree_node.m_right;
+            cur->m_child = +1;
+
+            while ((*cur->m_node)->m_avl_tree_node.m_left)
             {
-                cur->m_child = -1;
                 (cur + 1)->m_node =
-                    &(*cur->m_node)->m_avl_node_info.m_left;
+                    &(*cur->m_node)->m_avl_tree_node.m_left;
+                cur->m_child = -1;
                 ++cur;
             }
 
             T2 *replace = *cur->m_node;
-            *cur->m_node = replace->m_avl_node_info.m_right;
+            *cur->m_node = replace->m_avl_tree_node.m_right;
 
-            replace->m_avl_node_info =
-                (*victim)->m_avl_node_info;
+            replace->m_avl_tree_node =
+                (*victim)->m_avl_tree_node;
 
             *victim = replace;
         }
         else
         {
-            *victim = (*victim)->m_avl_node_info.m_left;
+            *victim = (*victim)->m_avl_tree_node.m_left;
         }
 
-        do
+        /* rebalance */
+
+        while (cur > stack)
         {
-            if (cur <= stack)
-                break;
-
             --cur;
-            T2 **node = cur->m_node;
-            (*node)->m_avl_node_info.m_balance -= cur->m_child;
 
-            if ((*node)->m_avl_node_info.m_balance == -2)
+            T2 **node = cur->m_node;
+            (*node)->m_avl_tree_node.m_balance -= cur->m_child;
+
+            if ((*node)->m_avl_tree_node.m_balance == -2)
             {
-                if ((*node)->m_avl_node_info.m_left
-                    ->m_avl_node_info.m_balance == 1)
+                if ((*node)->m_avl_tree_node.m_left
+                    ->m_avl_tree_node.m_balance == 1)
                 {
-                    rotate_left(&(*node)->m_avl_node_info.m_left);
+                    rotate_left(&(*node)->m_avl_tree_node.m_left);
                 }
                 rotate_right(node);
             }
-            else if ((*node)->m_avl_node_info.m_balance == 2)
+            else if ((*node)->m_avl_tree_node.m_balance == 2)
             {
-                if ((*node)->m_avl_node_info.m_right
-                    ->m_avl_node_info.m_balance == -1)
+                if ((*node)->m_avl_tree_node.m_right
+                    ->m_avl_tree_node.m_balance == -1)
                 {
-                    rotate_right(&(*node)->m_avl_node_info.m_right);
+                    rotate_right(&(*node)->m_avl_tree_node.m_right);
                 }
                 rotate_left(node);
             }
-        } while ((*cur->m_node)->m_avl_node_info.m_balance == 0);
+            else if ((*node)->m_avl_tree_node.m_balance != 0)
+            {
+                break;
+            }
+        }
     }
 };
 
@@ -1614,6 +1631,33 @@ inline const phys_vec3 *__cdecl phys_inv_multiply(phys_vec3 *result, const phys_
     return result;
 }
 
+inline phys_vec3 *phys_full_inv_multiply(
+    phys_vec3 *result,
+    const phys_mat44 *mat,
+    const phys_vec3 *v)
+{
+    phys_vec3 v5; // [esp-20h] [ebp-2Ch] BYREF
+    float v6; // [esp-10h] [ebp-1Ch]
+    float v7; // [esp-Ch] [ebp-18h]
+    float v8; // [esp-8h] [ebp-14h]
+    const phys_vec3 *p_w; // [esp-4h] [ebp-10h]
+    //int v10; // [esp+0h] [ebp-Ch]
+    //void *v11; // [esp+4h] [ebp-8h]
+    //void *retaddr; // [esp+Ch] [ebp+0h]
+    //
+    //v10 = a1;
+    //v11 = retaddr;
+    p_w = &mat->w;
+    v8 = v->x - mat->w.x;
+    v7 = v->y - mat->w.y;
+    v6 = v->z - mat->w.z;
+    v5.x = v8;
+    v5.y = v7;
+    v5.z = v6;
+    phys_inv_multiply(result, mat, &v5);
+    return result;
+}
+
 inline void __cdecl phys_calc_local_aabb(
     const phys_vec3 *aabb_min,
     const phys_vec3 *aabb_max,
@@ -1758,10 +1802,5 @@ static const phys_mat44 PHYS_IDENTITY_MATRIX(&PHYS_X_VEC, &PHYS_Y_VEC, &PHYS_Z_V
 static const float PHYS_PI = 3.1415927f;
 static const float PHYS_PI_TIMES_2 = 6.2831855f;
 static const float PHYS_PI_OVER_2 = 1.5707964f;
-
-inline bool _tlAssert(const char *filename, int line, const char *msg, const char *msg2)
-{
-    return true;
-}
 
 #define PHYS_ALIGNOF(type) alignof(type)

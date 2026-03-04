@@ -451,33 +451,6 @@ bool gjk_cylinder_t::is_foot(const phys_vec3 *hit_point)
     return (-(v6->halfHeight)) >= *(float *)&v5[direction];
 }
 
-phys_vec3 * phys_full_inv_multiply(
-                phys_vec3 *result,
-                const phys_mat44 *mat,
-                const phys_vec3 *v)
-{
-    phys_vec3 v5; // [esp-20h] [ebp-2Ch] BYREF
-    float v6; // [esp-10h] [ebp-1Ch]
-    float v7; // [esp-Ch] [ebp-18h]
-    float v8; // [esp-8h] [ebp-14h]
-    const phys_vec3 *p_w; // [esp-4h] [ebp-10h]
-    //int v10; // [esp+0h] [ebp-Ch]
-    //void *v11; // [esp+4h] [ebp-8h]
-    //void *retaddr; // [esp+Ch] [ebp+0h]
-    //
-    //v10 = a1;
-    //v11 = retaddr;
-    p_w = &mat->w;
-    v8 = v->x - mat->w.x;
-    v7 = v->y - mat->w.y;
-    v6 = v->z - mat->w.z;
-    v5.x = v8;
-    v5.y = v7;
-    v5.z = v6;
-    phys_inv_multiply(result, mat, &v5);
-    return result;
-}
-
 bool gjk_brush_t::is_walkable(const phys_vec3 *hit_point, const phys_vec3 *up)
 {
     return ::is_walkable(this->brush, hit_point, up);

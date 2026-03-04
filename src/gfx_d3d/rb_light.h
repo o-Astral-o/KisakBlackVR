@@ -86,6 +86,10 @@ struct __declspec(align(8)) htab // sizeof=0x10
     // padding byte
 };
 
+struct GfxModelLightingPatch;
+struct GfxBackEndData;
+struct ComPrimaryLight;
+
 void __cdecl R_ShowLightVisCachePoints(const float *viewOrigin, const DpvsPlane *clipPlanes, int clipPlaneCount);
 bool __cdecl R_SortedHistoryEntry(
                 unsigned __int16 x,

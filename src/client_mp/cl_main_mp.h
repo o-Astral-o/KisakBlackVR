@@ -12,6 +12,7 @@
 #include <cgame/cg_shellshock.h>
 #include <ui/ui_shared.h>
 #include <server/server.h>
+#include <gfx_d3d/r_init.h>
 
 struct ClientArchiveData // sizeof=0x30
 {                                                                             // XREF: demoInitialStateBuffer_t/r
@@ -375,45 +376,6 @@ struct clientLogo_t // sizeof=0x18
 struct XNADDR // sizeof=0x19
 {                                                                             // XREF: serverInfo_t/r
     unsigned __int8 addrBuff[25];             // XREF: SND_SurfaceTypeToReflectance+19C/o
-};
-
-struct bdSecurityKey // sizeof=0x10
-{                                                                             // XREF: .data:g_secKey/r
-    unsigned __int8 ab[16];                         // XREF: dwCreateSession(overlappedTask * const,MatchMakingInfo * const)+139/r
-
-    bdSecurityKey(const struct bdSecurityKey *src)
-    {
-        memcpy(this->ab, src->ab, sizeof(bdSecurityKey));
-    }
-    bdSecurityKey()
-    {
-        memset(this->ab, 1u, sizeof(bdSecurityKey));
-    }
-};
-
-struct bdSecurityID // sizeof=0x8
-{                                                                             // XREF: bdQoSProbe::bdQoSProbeEntryWrapper/r
-    unsigned __int8 ab[8];                            // XREF: PM_Weapon_FireWeapon+17D/o
-
-    bdSecurityID(const struct bdSecurityID *src)
-    {
-        memcpy(this->ab, src->ab, sizeof(bdSecurityID));
-    }
-
-    bdSecurityID()
-    {
-        memset(this->ab, 1u, sizeof(bdSecurityID));
-    }
-
-    bool operator==(const bdSecurityID &other) const
-    {
-        return memcmp(this->ab, other.ab, sizeof(bdSecurityID)) == 0;
-    }
-
-    bool operator!=(const bdSecurityID &other) const
-    {
-        return !(*this == other);
-    }
 };
 
 struct __declspec(align(4)) serverInfo_t // sizeof=0x178

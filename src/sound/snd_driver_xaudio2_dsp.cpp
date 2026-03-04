@@ -2140,7 +2140,20 @@ SDXA2Effect::~SDXA2Effect()
     //CXAPOBase::~CXAPOBase(this);
 }
 
-HRESULT __stdcall SDXA2Effect::LockForProcess(
+void STDMETHODCALLTYPE SDXA2Effect::Reset()
+{
+    iassert(!locked);
+    locked = 0;
+    started = 0;
+}
+
+void STDMETHODCALLTYPE SDXA2Effect::UnlockForProcess()
+{
+    iassert(locked);
+    locked = 0;
+}
+
+HRESULT STDMETHODCALLTYPE SDXA2Effect::LockForProcess(
                 unsigned int InputLockedParameterCount,
                 const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS *in,
                 unsigned int OutputLockedParameterCount,

@@ -1,13 +1,12 @@
 #pragma once
 #include <qcommon/msg_mp.h>
-#include <client_mp/client_mp.h>
-#include <bgame/bg_local.h>
 #include <ddl/ddl_api.h>
 #include <DemonWare/bdCore/bdMemory/bdMemory.h>
 #include <DemonWare/bdCore/bdReference/bdReferencable.h>
 #include <DemonWare/bdCore/bdContainers/bdByteBuffer.h>
 #include <cstring>
 #include <cgame_mp/cg_scoreboard_mp.h>
+#include <client_mp/client_mp.h>
 
 struct bdDownloadInterceptor // sizeof=0x4
 {                                                                             // XREF: fileShareDownloadInterceptor/r
@@ -28,11 +27,48 @@ struct bdTaskResult // sizeof=0x4
     virtual unsigned int sizeOf();
 };
 
+struct bdSecurityKey // sizeof=0x10
+{                                                                             // XREF: .data:g_secKey/r
+    unsigned __int8 ab[16];                         // XREF: dwCreateSession(overlappedTask * const,MatchMakingInfo * const)+139/r
+
+    bdSecurityKey(const struct bdSecurityKey *src)
+    {
+        memcpy(this->ab, src->ab, sizeof(bdSecurityKey));
+    }
+    bdSecurityKey()
+    {
+        memset(this->ab, 1u, sizeof(bdSecurityKey));
+    }
+};
+
+struct bdSecurityID // sizeof=0x8
+{                                                                             // XREF: bdQoSProbe::bdQoSProbeEntryWrapper/r
+    unsigned __int8 ab[8];                            // XREF: PM_Weapon_FireWeapon+17D/o
+
+    bdSecurityID(const struct bdSecurityID *src)
+    {
+        memcpy(this->ab, src->ab, sizeof(bdSecurityID));
+    }
+
+    bdSecurityID()
+    {
+        memset(this->ab, 1u, sizeof(bdSecurityID));
+    }
+
+    bool operator==(const bdSecurityID &other) const
+    {
+        return memcmp(this->ab, other.ab, sizeof(bdSecurityID)) == 0;
+    }
+
+    bool operator!=(const bdSecurityID &other) const
+    {
+        return !(*this == other);
+    }
+};
+
 struct bdSessionID : bdTaskResult // sizeof=0xC
 {                                       // XREF: .data:bdSessionID g_sessionID/r
-                                        // bdSessionInvite/r ...
     bdSecurityID m_sessionID;           // XREF: CL_Disconnect(int,bool)+271/w
-                                        // CL_Disconnect(int,bool)+274/w ...
 };
 
 struct bdTag : bdTaskResult // sizeof=0x18

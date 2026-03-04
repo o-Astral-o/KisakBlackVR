@@ -1,6 +1,7 @@
 #include "rbc_def_generic.h"
 #include <physics/phys_util.h>
 #include <physics/phys_assert.h>
+#include <physics/phys_constraint_solver_multithreaded.h>
 
 const phys_vec3 *__cdecl construct_orth_ud(phys_vec3 *result, const phys_vec3 *ud)
 {

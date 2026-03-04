@@ -1,6 +1,7 @@
 #pragma once
-#include <database/db_registry.h>
 #include <gfx_d3d/r_font.h>
+#include <universal/com_expressions.h>
+#include <database/db_registry.h>
 
 enum language_t : __int32
 {                                       // XREF: Item_ListBox_PaintTextElem/r

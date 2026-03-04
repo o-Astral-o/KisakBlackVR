@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bg_dog_animations_mp.h"
+
 struct entityState_s;
 struct actorInfo_t;
 struct animInfo_t;

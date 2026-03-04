@@ -4,6 +4,8 @@
 #include "rigid_body.h"
 #include "phys_colgeom.h"
 #include "phys_gjk_collision_detection.h"
+#include "physpreset_load_obj.h"
+#include "phys_broad_phase.h"
 
 enum PhysicsGeomType : __int32
 {                                       // XREF: BoneDef/r
@@ -98,7 +100,7 @@ struct PhysObjUserData // sizeof=0x130
     // padding byte
     phys_mat44 cg2rb;
     phys_mat44 cg2w;
-    broad_phase_base *m_bpb;
+    struct broad_phase_base *m_bpb;
     float savedPos[3];
     float savedRot[3][3];
     float friction;
@@ -248,6 +250,7 @@ struct cLeafBrushNode_s;
 struct gjk_geom_list_t;
 struct chull_t;
 struct rigid_body_constraint_ragdoll;
+struct XModel;
 
 void __cdecl destroy_gjk_geom(struct gjk_aabb_t *geom);
 void __cdecl Phys_Init();

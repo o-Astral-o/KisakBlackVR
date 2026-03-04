@@ -1,6 +1,7 @@
 #include "rbc_def_contact.h"
 #include <physics/physics_system_internal.h>
 #include <physics/phys_assert.h>
+#include <physics/phys_constraint_solver_multithreaded.h>
 
 phys_assert_info pai_create_pulse_sum_contact = { 0, 2, true };
 
@@ -50,7 +51,7 @@ void __thiscall rigid_body_constraint_contact::setup_constraint(pulse_sum_constr
 rigid_body_constraint_contact::~rigid_body_constraint_contact()
 {
   //phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::remove(&g_physics_system->m_search_tree_rbc_contact, (phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::stack_item *)&this->m_avl_key);
-  g_physics_system->m_search_tree_rbc_contact.remove(&this->m_avl_key);
+  g_physics_system->m_search_tree_rbc_contact.remove(this->m_avl_key);
 }
 
 //void __thiscall phys_link_list<pulse_sum_contact>::add(phys_link_list<pulse_sum_contact> *this, pulse_sum_contact *p)

@@ -25,7 +25,7 @@ struct bitarray // sizeof=0x10
         va_copy(argList, va);
         while (1)
         {
-            v2 = va_arg(argList, _DWORD);
+            v2 = va_arg(argList, unsigned int);
             if (v2 == -1)
                 break;
             setBit(v2);

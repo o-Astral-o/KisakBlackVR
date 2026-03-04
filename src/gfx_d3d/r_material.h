@@ -1,8 +1,9 @@
 #pragma once
 
 #include <d3d9.h>
-#include <database/db_registry.h>
+#include <database/database.h>
 #include <universal/fft.h>
+#include "r_gfx.h"
 
 enum surfaceType_t : __int32
 {                                       // XREF: ?R_AddXModelSurfacesCamera@@YAXPIAUXModelDrawInfo@@PIBUXModel@@QAMIIIHHQAPIATGfxDrawSurf@@3III@Z/r
@@ -246,7 +247,6 @@ struct __declspec(align(4)) GfxImageLoadDef // sizeof=0x10
 
 union GfxTexture // sizeof=0x4
 {                                                                             // XREF: GfxImage/r
-                                                                                // GfxTextureLoad/r ...
         IDirect3DBaseTexture9 *basemap;
         IDirect3DTexture9 *map;
         IDirect3DVolumeTexture9 *volmap;

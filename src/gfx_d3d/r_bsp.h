@@ -2,7 +2,7 @@
 #include "r_dpvs_dynmodel.h"
 #include "r_sky.h"
 #include "r_world_lod.h"
-
+#include "r_gfx.h"
 #include "rb_light.h"
 
 struct GfxShadowGeometry // sizeof=0xC
@@ -182,7 +182,7 @@ struct BModelSurface // sizeof=0x14
 {
     GfxScaledPlacement *placement;
     GfxSurface *surf;
-    ShaderConstantSet *shaderConstSet;
+    struct ShaderConstantSet *shaderConstSet;
     float bmodelBurnAmt;
     float bmodelFadeAmt;
 };
@@ -199,18 +199,7 @@ struct GfxAabbTree // sizeof=0x28
     int childrenOffset;
 };
 
-struct GfxPortal // sizeof=0x44
-{
-    GfxPortalWritable writable;
-    DpvsPlane plane;
-    GfxCell *cell;
-    float (*vertices)[3];
-    unsigned __int8 vertexCount;
-    // padding byte
-    // padding byte
-    // padding byte
-    float hullAxis[2][3];
-};
+struct GfxPortal;
 
 struct GfxCell // sizeof=0x38
 {
@@ -241,6 +230,7 @@ struct GfxWorldVertexLayerData // sizeof=0x8
     IDirect3DVertexBuffer9 *layerVb;    // XREF: R_LoadSurfaces+C29/o
 };
 
+union GfxTexture;
 struct GfxWorldDraw // sizeof=0xC0
 {                                       // XREF: GfxWorld/r
     unsigned int reflectionProbeCount;  // XREF: R_GetReflectionProbePosition(uint,float * const)+7/r
@@ -248,7 +238,7 @@ struct GfxWorldDraw // sizeof=0xC0
     struct GfxReflectionProbe *reflectionProbes;
                                         // XREF: R_GetReflectionProbePosition(uint,float * const)+38/r
                                         // R_CreateDefaultProbes+1E/w ...
-    GfxTexture *reflectionProbeTextures;
+    union GfxTexture *reflectionProbeTextures;
                                         // XREF: R_CreateDefaultProbes+34/w
                                         // R_LoadReflectionProbes+6B/w ...
     int lightmapCount;                  // XREF: R_LoadLightmaps+107/w
@@ -294,6 +284,7 @@ struct GfxOutdoorBounds // sizeof=0x18
     float bounds[2][3];
 };
 
+struct GfxLightRegion;
 struct GfxWorld // sizeof=0x43C
 {                                       // XREF: .data:GfxWorld s_world/r
     const char *name;                   // XREF: R_LoadWorldInternal(char const *)+92/w
@@ -377,14 +368,14 @@ struct GfxWorld // sizeof=0x43C
     unsigned int checksum;
     int materialMemoryCount;            // XREF: R_CreateMaterialList(void)+6/w
                                         // R_CreateMaterialList(void):loc_AB943F/r ...
-    MaterialMemory *materialMemory;     // XREF: R_CreateMaterialList(void)+85/w
+    struct MaterialMemory *materialMemory;     // XREF: R_CreateMaterialList(void)+85/w
                                         // R_CreateMaterialList(void)+102/r
     sunflare_t sun;                     // XREF: R_LoadWorldInternal(char const *)+54E/o
     float outdoorLookupMatrix[4][4];
     GfxImage *outdoorImage;
     unsigned int *cellCasterBits;       // XREF: R_LoadWorldRuntime+26D/w
-    GfxSceneDynModel *sceneDynModel;    // XREF: R_LoadWorldRuntime+30F/w
-    GfxSceneDynBrush *sceneDynBrush;    // XREF: R_LoadWorldRuntime+32C/w
+    struct GfxSceneDynModel *sceneDynModel;    // XREF: R_LoadWorldRuntime+30F/w
+    struct GfxSceneDynBrush *sceneDynBrush;    // XREF: R_LoadWorldRuntime+32C/w
     unsigned int *primaryLightEntityShadowVis;
                                         // XREF: R_AllocPrimaryLightBuffers+7A/w
     unsigned int *primaryLightDynEntShadowVis[2];
@@ -394,7 +385,7 @@ struct GfxWorld // sizeof=0x43C
                                         // XREF: R_AllocPrimaryLightBuffers+9C/w
     GfxShadowGeometry *shadowGeom;      // XREF: R_LoadMiscModel+D08/r
                                         // R_LoadMiscModel+D21/r ...
-    GfxLightRegion *lightRegion;        // XREF: R_LoadLightRegions+20/w
+    struct GfxLightRegion *lightRegion;        // XREF: R_LoadLightRegions+20/w
                                         // R_LoadLightRegions+116/r ...
     GfxWorldDpvsStatic dpvs;            // XREF: R_SortSurfaces+AC/w
                                         // R_SortSurfaces+D2/r ...

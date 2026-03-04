@@ -13,13 +13,6 @@ struct badplace_brush_t // sizeof=0x8
     float radius;
 };
 
-union badplace_parms_t // sizeof=0x1C
-{                                       // XREF: badplace_t/r
-                                        // _pendedBadPlace/r
-    badplace_arc_t arc;
-    badplace_brush_t brush;
-};
-
 struct badplace_arc_t // sizeof=0x1C
 {                                       // XREF: badplace_parms_t/r
     float origin[3];
@@ -27,6 +20,13 @@ struct badplace_arc_t // sizeof=0x1C
     float halfheight;
     float angle0;
     float angle1;
+};
+
+union badplace_parms_t // sizeof=0x1C
+{                                       // XREF: badplace_t/r
+                                        // _pendedBadPlace/r
+    badplace_arc_t arc;
+    badplace_brush_t brush;
 };
 
 struct badplace_t // sizeof=0x2C

@@ -68,18 +68,6 @@ struct XModelNameMap // sizeof=0x4
     unsigned __int16 index;
 };
 
-struct XModelLodInfo // sizeof=0x20
-{                                                                             // XREF: XModel/r
-        float dist;
-        unsigned __int16 numsurfs;
-        unsigned __int16 surfIndex;
-        int partBits[5];
-        unsigned __int8 lod;
-        unsigned __int8 smcIndexPlusOne;
-        unsigned __int8 smcAllocBits;
-        unsigned __int8 unused;
-};
-
 struct XModelCollTri_s // sizeof=0x30
 {                                                                             // XREF: XModelCollTri/r
         float plane[4];

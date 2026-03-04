@@ -503,7 +503,8 @@ void rigid_body_constraint_wheel::setup_constraint(pulse_sum_constraint_solver *
         desired_speed.z = fwd.z - hitn.z;
         if ((v14 & 2) != 0)
         {
-            phys_multiply(&fwd, (const phys_mat44 *)LODWORD(pen_depth), &this->m_b2_hitn_loc);
+            //phys_multiply(&fwd, (const phys_mat44 *)LODWORD(pen_depth), &this->m_b2_hitn_loc);
+            phys_multiply(&fwd, &this->b2->m_mat, &this->m_b2_hitn_loc); // unsure if this is 100% right
             v57.x = -fwd.x;
             v57.y = -fwd.y;
             v57.z = -fwd.z;

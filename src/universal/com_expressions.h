@@ -41,7 +41,6 @@ enum expOperationEnum : __int32
 
 union operandInternalDataUnion // sizeof=0x4
 {                                                                             // XREF: Expression_Parse(char const * *,ExpressionStatement *,void *,int)+19/w
-                                                                                // Expression_Parse(char const * *,ExpressionStatement *,void *,int):loc_78A62C/r ...
     int intVal;
     float floatVal;
     const char *string;
@@ -71,10 +70,6 @@ union operandInternalDataUnion // sizeof=0x4
     {
         return floatVal;
     }
-
-    int intVal;
-    float floatVal;
-    const char *string;
 };
 
 struct Operand // sizeof=0x8

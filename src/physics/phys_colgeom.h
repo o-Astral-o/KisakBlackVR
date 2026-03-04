@@ -2,11 +2,11 @@
 
 #include "phys_local.h"
 #include "phys_traverse.h"
-#include <xanim/xanim.h>
 #include <universal/q_shared.h>
 #include <qcommon/cm_trace.h>
 #include <qcommon/statmonitor.h>
 #include "phys_gjk_collision_detection.h"
+#include <tl/tl_system.h>
 
 #define SURF_TYPECOUNT 31
 
@@ -17,215 +17,12 @@ struct DynEntityDef;
 struct gjk_base_t;
 struct cLeafBrushNode_s;
 struct cbrush_t;
-
-struct visitor_base_t // sizeof=0x4
-{                                                                             // XREF: colgeom_visitor_t/r
-        //visitor_base_t_vtbl *__vftable;         // XREF: CG_Vehicle_PreControllers(int,DObj const *,centity_s *)+2AD/w
-                                                                                // CG_Vehicle_PreControllers(int,DObj const *,centity_s *):loc_50E81E/r ...
-        virtual ~visitor_base_t() = default;
-};
-
-struct col_prim_t // sizeof=0x8
-{                                       // XREF: colgeom_visitor_inlined_t<200>/r
-                                        // colgeom_visitor_inlined_t<500>/r
-    int type;
-    //$9DB6BB71550D5B679E9F92FB2EA07EBE ___u1;
-    union //$9DB6BB71550D5B679E9F92FB2EA07EBE // sizeof=0x4
-    {                                       // XREF: col_prim_t/r
-        const struct CollisionAabbTree *tree;
-        const struct cbrush_t *brush;
-    };
-};
-
-template <int NUM_PRIMS>
-struct colgeom_visitor_inlined_t : colgeom_visitor_t // sizeof=0x6B8
-{                                                                             // XREF: .data:dummy/r
-    int nprims;                                                 // XREF: debug_loop(void)+385/r
-    // Rope_CollideWorld(int)+28A/r
-    bool overflow;
-    // padding byte
-    // padding byte
-    // padding byte
-    col_prim_t prims[NUM_PRIMS];                            // XREF: debug_loop(void)+38C/o
-    // Rope_CollideWorld(int)+27E/o
-
-    colgeom_visitor_inlined_t() : colgeom_visitor_t()
-    {
-        reset();
-    }
-
-    colgeom_visitor_inlined_t &operator=(const colgeom_visitor_inlined_t *that)
-    {
-        colgeom_visitor_t::operator=((colgeom_visitor_t*)that);
-        this->nprims = that->nprims;
-        this->overflow = that->overflow;
-
-        for (int i = 0; i < NUM_PRIMS; i++)
-        {
-            this->prims[i].type = that->prims[i].type;
-            this->prims[i].tree = that->prims[i].tree;
-        }
-    }
-
-    void visit(const cbrush_t *brush)
-    {
-        col_prim_t *prim;
-
-        if (this->nprims < NUM_PRIMS)
-        {
-            prim = &this->prims[this->nprims++];
-            prim->type = 1;
-            prim->tree = (const CollisionAabbTree *)brush;
-        }
-    }
-
-    void visit(const CollisionAabbTree *tree)
-    {
-        col_prim_t *prim; // [esp+4h] [ebp-4h]
-
-        if (this->nprims < NUM_PRIMS)
-        {
-            prim = &this->prims[this->nprims++];
-            prim->type = 0;
-            prim->tree = tree;
-        }
-    }
-
-    void reset()
-    {
-        this->nprims = 0;
-        this->overflow = 0;
-
-        this->m_mn.vec.v[0] = 9.9999997e37; // cool float constant, man
-        this->m_mn.vec.v[1] = 9.9999997e37;
-        this->m_mn.vec.v[2] = 9.9999997e37;
-
-        this->m_mx.vec.v[0] = -9.9999997e37;
-        this->m_mx.vec.v[1] = -9.9999997e37;
-        this->m_mx.vec.v[2] = -9.9999997e37;
-    }
-
-    void intersect_box(float *mn, float *mx, int mask);
-    void intersect_box_brushes(cLeaf_s *leaf);
-    void intersect_box_brushnode(cLeafBrushNode_s *node);
-    void intersect_box_partitions(cLeaf_s *leaf);
-    void intersect_box_partitions_r(CollisionAabbTree *aabbTree);
-
-    void update(
-        const float *_mn,
-        const float *_mx,
-        int mask,
-        const float *expand_vec)
-    {
-        bool v5; // [esp+0h] [ebp-58h]
-        float result[3]; // [esp+18h] [ebp-40h] BYREF
-        float b[3]; // [esp+24h] [ebp-34h] BYREF
-        float a[3]; // [esp+30h] [ebp-28h] BYREF
-        bool inside; // [esp+3Fh] [ebp-19h]
-        float mx[3]; // [esp+40h] [ebp-18h] BYREF
-        float mn[3]; // [esp+4Ch] [ebp-Ch] BYREF
-
-        a[0] = this->m_mn.vec.v[0] - *_mn;
-        a[1] = this->m_mn.vec.v[1] - _mn[1];
-        a[2] = this->m_mn.vec.v[2] - _mn[2];
-        b[0] = *_mx - this->m_mx.vec.v[0];
-        b[1] = _mx[1] - this->m_mx.vec.v[1];
-        b[2] = _mx[2] - this->m_mx.vec.v[2];
-        Vec3Max(a, b, result);
-        v5 = result[0] < 0.0 && result[1] < 0.0 && result[2] < 0.0;
-        inside = v5;
-        if (this->m_mask != mask || !inside)
-        {
-            mn[0] = *_mn - *expand_vec;
-            mn[1] = _mn[1] - expand_vec[1];
-            mn[2] = _mn[2] - expand_vec[2];
-            mx[0] = *_mx + *expand_vec;
-            mx[1] = _mx[1] + expand_vec[1];
-            mx[2] = _mx[2] + expand_vec[2];
-            //colgeom_visitor_inlined_t<500>::reset(this);
-            reset();
-            //colgeom_visitor_t::intersect_box(this, mn, mx, mask);
-            intersect_box(mn, mx, mask);
-            if (this->nprims == NUM_PRIMS)
-            {
-                StatMon_Warning(8, 3000, (char*)"code_warning_collision");
-                this->nprims = 0;
-                this->overflow = 1;
-            }
-        }
-    }
-
-    void update(
-        const float *start,
-        const float *end,
-        const float *mins,
-        const float *maxs,
-        int mask)
-    {
-        float _mn[3]; // [esp+14h] [ebp-60h] BYREF
-        float extents_start[3]; // [esp+20h] [ebp-54h] BYREF
-        float extents_end[3]; // [esp+2Ch] [ebp-48h] BYREF
-        float _mx[3]; // [esp+38h] [ebp-3Ch] BYREF
-        float offset[3]; // [esp+44h] [ebp-30h]
-        float size[3]; // [esp+50h] [ebp-24h]
-        float expand_vec[3]; // [esp+5Ch] [ebp-18h] BYREF
-        float fudge[3]; // [esp+68h] [ebp-Ch]
-
-        fudge[0] = 1.0f;//`colgeom_visitor_inlined_t<200 > ::update'::`2'::fFudge;
-        fudge[1] = 1.0f;//`colgeom_visitor_inlined_t<200 > ::update'::`2'::fFudge;
-        fudge[2] = 1.0f;//`colgeom_visitor_inlined_t<200 > ::update'::`2'::fFudge;
-        offset[0] = (float)(0.5 * *mins) + (float)(0.5 * *maxs);
-        offset[1] = (float)(0.5 * mins[1]) + (float)(0.5 * maxs[1]);
-        offset[2] = (float)(0.5 * mins[2]) + (float)(0.5 * maxs[2]);
-        size[0] = *maxs - offset[0];
-        size[1] = maxs[1] - offset[1];
-        size[2] = maxs[2] - offset[2];
-        extents_start[0] = *start + offset[0];
-        extents_start[1] = start[1] + offset[1];
-        extents_start[2] = start[2] + offset[2];
-        extents_end[0] = *end + offset[0];
-        extents_end[1] = end[1] + offset[1];
-        extents_end[2] = end[2] + offset[2];
-        Vec3Min(extents_start, extents_end, _mn);
-        Vec3Max(extents_start, extents_end, _mx);
-        _mn[0] = _mn[0] - size[0];
-        _mn[1] = _mn[1] - size[1];
-        _mn[2] = _mn[2] - size[2];
-        _mx[0] = _mx[0] + size[0];
-        _mx[1] = _mx[1] + size[1];
-        _mx[2] = _mx[2] + size[2];
-        _mn[0] = _mn[0] - fudge[0];
-        _mn[1] = _mn[1] - fudge[1];
-        _mn[2] = _mn[2] - fudge[2];
-        _mx[0] = _mx[0] + fudge[0];
-        _mx[1] = _mx[1] + fudge[1];
-        _mx[2] = _mx[2] + fudge[2];
-        expand_vec[0] = 70.0f;
-        expand_vec[1] = 70.0f;
-        expand_vec[2] = 20.0f;
-        this->update(_mn, _mx, mask, expand_vec);
-    }
-};
-
-struct query_brush_model_gjk_geom_visitor : colgeom_visitor_t // sizeof=0x74
-{                                                                             // XREF: ?query_brush_model_gjk_geom@@YAXGHPAVgjk_collision_visitor@@@Z/r
-        struct gjk_collision_visitor *m_allocator; // XREF: query_brush_model_gjk_geom(ushort,int,gjk_collision_visitor *)+A9/w
-
-        void visit(const cbrush_t *brush);
-        void update(
-                const float *_mn,
-                const float *_mx,
-                int _mask,
-                const float *expand_vec);
-};
-
-const struct cached_simplex_info // sizeof=0x30
-{                                                                             // XREF: phys_gjk_cache_info/r
-    phys_vec3 m_indices[3];
-
-    //cached_simplex_info& operator=(const cached_simplex_info *__that);
-    cached_simplex_info &operator=(const cached_simplex_info &) = default; // using default compiler operator
-};
+struct XModel;
+struct centity_s;
+struct DObj;
+struct gjk_collision_visitor;
+struct cbrushside_t;
+struct gjk_geom_list_t;
 
 struct __declspec(align(16)) contact_manifold_mesh_point // sizeof=0x20
 {
@@ -242,6 +39,25 @@ struct __declspec(align(16)) contact_manifold_mesh_point // sizeof=0x20
 };
 
 struct phys_contact_manifold;
+
+struct phys_gjk_geom // sizeof=0x4
+{                                       // XREF: gjk_base_t/r
+    //phys_gjk_geom_vtbl *__vftable;
+    virtual void support(const phys_vec3 *, phys_vec3 *, phys_vec3 *) const = 0;
+    virtual void get_simplex(const struct cached_simplex_info *, const int, phys_vec3 *, phys_vec3 *);
+    virtual void set_simplex(const phys_vec3 *, const int, const phys_vec3 *, cached_simplex_info *);
+    virtual const phys_vec3 *get_center(phys_vec3 *result) const;
+    virtual void get_feature(struct phys_contact_manifold *) const;
+    virtual float get_geom_radius() const
+    {
+        return 0.0f;
+    }
+    virtual void calc_aabb(const phys_mat44 *, phys_vec3 *, phys_vec3 *) const;
+    virtual bool ray_cast(const phys_vec3 *, const phys_vec3 *, const float, float *, phys_vec3 *);
+    virtual bool is_polyhedron();
+
+    const phys_vec3 *support_only(const phys_vec3 *result, const phys_mat44 *xform, const phys_vec3 *v) const;
+};
 
 struct gjk_base_t : public phys_gjk_geom // sizeof=0x50
 {                                                                             // XREF: gjk_brush_t/r
@@ -292,9 +108,6 @@ public:
             this->m_flags = 0;
         }
 
-        ~gjk_base_t();
-
-
         unsigned int get_geom_id();
         const phys_mat44 *get_xform();
 
@@ -311,26 +124,6 @@ public:
         virtual const cbrush_t *get_brush() const;
 };
 
-struct gjk_geom_list_t // sizeof=0x8
-{                                                                             // XREF: PhysObjUserData/r
-                                                                                // ?InitPhysicsObj@GlassShard@@QAE_N_N@Z/r ...
-        gjk_base_t *m_first_geom;                     // XREF: DynEntCl_CreatePhysObj(DynEntityDef const *,DynEntityClient *,GfxPlacement const *):loc_5B18F9/w
-                                                                                // DynEntPieces_SpawnPhysObj:loc_5BCF29/w ...
-        int m_geom_count;                                     // XREF: DynEntCl_CreatePhysObj(DynEntityDef const *,DynEntityClient *,GfxPlacement const *)+D0/w
-                                                                                // DynEntPieces_SpawnPhysObj+50/w ...
-public:
-        int get_geom_count();
-        void add_geom(gjk_base_t *geom)
-        {
-            iassert(geom);
-            geom->m_next_geom = this->m_first_geom;
-            this->m_first_geom = geom;
-            ++this->m_geom_count;
-        }
-        void comp_aabb_loc(
-            phys_vec3 *aabb_mn_loc,
-            phys_vec3 *aabb_mx_loc);
-};
 
 struct __declspec(align(16)) gjk_aabb_t : gjk_base_t // sizeof=0x80
 {
@@ -654,14 +447,6 @@ struct gjk_cylinder_t : gjk_base_t // sizeof=0xA0
         static void __cdecl destroy(gjk_cylinder_t *geom);
 };
 
-struct gjk_unique_id_database_t // sizeof=0x4
-{                                                                             // XREF: .data:gjk_unique_id_database_t g_gjk_unique_id_database/r
-        volatile unsigned int m_counter;
-
-
-        unsigned int get_unique_id();
-};
-
 struct __declspec(align(8)) gjk_polygon_cylinder_t : gjk_base_t // sizeof=0x80
 {                                                                             // XREF: ?render_gjkcc_collision@@YAXAAY02$$CBM00@Z/r
         phys_vec3 m_center;
@@ -767,311 +552,16 @@ struct __declspec(align(8)) gjk_polygon_cylinder_t : gjk_base_t // sizeof=0x80
         static void __cdecl destroy(gjk_polygon_cylinder_t *geom);
 
         
-        inline void support(
+        void support(
             const phys_vec3 *v,
             phys_vec3 *support_vert,
-            phys_vec3 *support_ind) const
-        {
-            float v5; // [esp-Ch] [ebp-11Ch]
-            float v6; // [esp-8h] [ebp-118h]
-            float v7; // [esp-4h] [ebp-114h]
-            float v8; // [esp+14h] [ebp-FCh]
-            float v9; // [esp+18h] [ebp-F8h]
-            float v10; // [esp+1Ch] [ebp-F4h]
-            float v11; // [esp+3Ch] [ebp-D4h]
-            float v12; // [esp+74h] [ebp-9Ch]
-            float v13; // [esp+78h] [ebp-98h]
-            float v14; // [esp+7Ch] [ebp-94h]
-            float v15; // [esp+A4h] [ebp-6Ch]
-            float v16; // [esp+A8h] [ebp-68h]
-            float v17; // [esp+ACh] [ebp-64h]
-            float v18; // [esp+E4h] [ebp-2Ch] BYREF
-            float v19; // [esp+E8h] [ebp-28h] BYREF
-            int v20; // [esp+ECh] [ebp-24h]
-            float co_; // [esp+F0h] [ebp-20h]
-            float si_; // [esp+F4h] [ebp-1Ch]
-            int foot_or_head_ind; // [esp+F8h] [ebp-18h]
-            float foot_or_head_z; // [esp+FCh] [ebp-14h]
-            gjk_polygon_cylinder_t *thisptr; // [esp+100h] [ebp-10h]
-            int v26; // [esp+104h] [ebp-Ch]
-            //int best_i; // [esp+108h] [ebp-8h]
-            //const gjk_polygon_cylinder_t *thisa; // [esp+10Ch] [ebp-4h] BYREF
-            //int retaddr; // [esp+110h] [ebp+0h]
-            //
-            //v26 = a2;
-            //best_i = retaddr;
-            thisptr = this;
-            if (this->m_mode)
-            {
-                if (thisptr->m_half_height < thisptr->m_capsule_radius
-                    && !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                        859,
-                        0,
-                        "%s",
-                        "m_half_height >= m_capsule_radius"))
-                {
-                    __debugbreak();
-                }
-                v11 = thisptr->m_half_height - thisptr->m_capsule_radius;
-                v8 = thisptr->m_center.x + 0.0;
-                v9 = thisptr->m_center.y + 0.0;
-                v10 = thisptr->m_center.z + v11;
-                v5 = thisptr->m_center.x - 0.0;
-                v6 = thisptr->m_center.y - 0.0;
-                v7 = thisptr->m_center.z - v11;
-                if ((float)((float)((float)((float)(v8 - v5) * v->x) + (float)((float)(v9 - v6) * v->y))
-                    + (float)((float)(v10 - v7) * v->z)) < 0.0)
-                {
-                    LODWORD(support_ind->x) = 1;
-                    support_vert->x = v5;
-                    support_vert->y = v6;
-                    support_vert->z = v7;
-                }
-                else
-                {
-                    support_ind->x = 0.0;
-                    support_vert->x = v8;
-                    support_vert->y = v9;
-                    support_vert->z = v10;
-                }
-            }
-            else
-            {
-                //foot_or_head_z = COERCE_FLOAT(gjk_polygon_cylinder_t::poly_verts::support(&gjk_polygon_cylinder_t::s_poly_verts,(VDCArgs *)&thisa, v));
-                foot_or_head_z = (float)gjk_polygon_cylinder_t::s_poly_verts.support(v);
-                foot_or_head_ind = SLODWORD(v->z);
-                if (*(float *)&foot_or_head_ind < 0.0)
-                {
-                    LODWORD(support_ind->x) = LODWORD(foot_or_head_z) + 12;
-                    si_ = (-(thisptr->m_half_height)) + thisptr->m_foot_offset;
-                    co_ = -thisptr->m_half_height;
-                    v20 = 25;
-                }
-                else
-                {
-                    support_ind->x = foot_or_head_z;
-                    si_ = thisptr->m_half_height - thisptr->m_head_offset;
-                    co_ = thisptr->m_half_height;
-                    v20 = 24;
-                }
+            phys_vec3 *support_ind) const;
 
-                //gjk_polygon_cylinder_t::poly_verts::get_co_si(
-                //    &gjk_polygon_cylinder_t::s_poly_verts,
-                //    SLODWORD(foot_or_head_z),
-                //    &v18,
-                //    &v19);
-
-                gjk_polygon_cylinder_t::s_poly_verts.get_co_si(SLODWORD(foot_or_head_z), &v18, &v19);
-
-                v15 = (float)(thisptr->m_polygon_cylinder_radius * v18) + thisptr->m_center.x;
-                v16 = (float)(thisptr->m_polygon_cylinder_radius * v19) + thisptr->m_center.y;
-                v17 = si_ + thisptr->m_center.z;
-                v12 = thisptr->m_center.x + 0.0;
-                v13 = thisptr->m_center.y + 0.0;
-                v14 = co_ + thisptr->m_center.z;
-                if ((float)((float)((float)((float)(v15 - v12) * v->x) + (float)((float)(v16 - v13) * v->y))
-                    + (float)((float)(v17 - v14) * v->z)) < 0.0)
-                {
-                    LODWORD(support_ind->x) = v20;
-                    support_vert->x = v12;
-                    support_vert->y = v13;
-                    support_vert->z = v14;
-                }
-                else
-                {
-                    support_vert->x = v15;
-                    support_vert->y = v16;
-                    support_vert->z = v17;
-                }
-            }
-        }
-
-        inline void get_simplex(
+        void get_simplex(
             const cached_simplex_info *cache_info,
             int index_count,
             phys_vec3 *simplex_verts,
-            phys_vec3 *simplex_inds)
-        {
-            phys_vec3 *v6; // eax
-            phys_vec3 *v7; // eax
-            phys_vec3 *v8; // edx
-            float v9; // [esp-60h] [ebp-1A8h]
-            float v10; // [esp-5Ch] [ebp-1A4h]
-            float v11; // [esp-30h] [ebp-178h]
-            float v12; // [esp-2Ch] [ebp-174h]
-            float x; // [esp-Ch] [ebp-154h]
-            int j; // [esp-8h] [ebp-150h]
-            float v15; // [esp+4h] [ebp-144h]
-            float v16; // [esp+20h] [ebp-128h]
-            float v17; // [esp+24h] [ebp-124h]
-            phys_vec3 *v18; // [esp+58h] [ebp-F0h]
-            float v19; // [esp+60h] [ebp-E8h]
-            float v20; // [esp+64h] [ebp-E4h]
-            float v21; // [esp+A0h] [ebp-A8h]
-            float v22; // [esp+A4h] [ebp-A4h]
-            float v23; // [esp+DCh] [ebp-6Ch] BYREF
-            float v24[2]; // [esp+E0h] [ebp-68h] BYREF
-            phys_vec3 *v25; // [esp+E8h] [ebp-60h]
-            float v26; // [esp+ECh] [ebp-5Ch]
-            int ind1; // [esp+F0h] [ebp-58h]
-            float v28; // [esp+F4h] [ebp-54h]
-            float v29; // [esp+FCh] [ebp-4Ch]
-            int v30; // [esp+100h] [ebp-48h]
-            float v31; // [esp+104h] [ebp-44h]
-            int p_m_center; // [esp+108h] [ebp-40h]
-            float v33; // [esp+10Ch] [ebp-3Ch]
-            float v34; // [esp+110h] [ebp-38h]
-            float v35; // [esp+114h] [ebp-34h]
-            float v36; // [esp+11Ch] [ebp-2Ch]
-            float v37; // [esp+120h] [ebp-28h]
-            float v38; // [esp+124h] [ebp-24h]
-            float v39; // [esp+128h] [ebp-20h] BYREF
-            float v40; // [esp+12Ch] [ebp-1Ch] BYREF
-            float v41; // [esp+130h] [ebp-18h]
-            int co_; // [esp+134h] [ebp-14h]
-            gjk_polygon_cylinder_t *si_; // [esp+138h] [ebp-10h]
-            int ind; // [esp+13Ch] [ebp-Ch]
-            //int i; // [esp+140h] [ebp-8h]
-            //int retaddr; // [esp+148h] [ebp+0h]
-            //
-            //ind = a2;
-            //i = retaddr;
-            si_ = this;
-            if (this->m_mode)
-            {
-                if (si_->m_half_height < si_->m_capsule_radius
-                    && !Assert_MyHandler(
-                        "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                        911,
-                        0,
-                        "%s",
-                        "m_half_height >= m_capsule_radius"))
-                {
-                    __debugbreak();
-                }
-                v15 = si_->m_half_height - si_->m_capsule_radius;
-                for (j = 0; j < index_count; ++j)
-                {
-                    x = cache_info->m_indices[j].x;
-                    if (LODWORD(x) >= 2
-                        && _tlAssert(
-                            "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                            916,
-                            "ind == 0 || ind == 1",
-                            ""))
-                    {
-                        __debugbreak();
-                    }
-                    simplex_inds[j].x = x;
-                    if (x == 0.0)
-                    {
-                        v11 = si_->m_center.y + 0.0;
-                        v12 = si_->m_center.z + v15;
-                        v8 = &simplex_verts[j];
-                        v8->x = si_->m_center.x + 0.0;
-                        v8->y = v11;
-                        v8->z = v12;
-                    }
-                    else
-                    {
-                        v9 = si_->m_center.y - 0.0;
-                        v10 = si_->m_center.z - v15;
-                        simplex_verts[j].x = si_->m_center.x - 0.0;
-                        simplex_verts[j].y = v9;
-                        simplex_verts[j].z = v10;
-                    }
-                }
-            }
-            else
-            {
-                for (co_ = 0; co_ < index_count; ++co_)
-                {
-                    v41 = cache_info->m_indices[co_].x;
-                    if (v41 < 0.0
-                        && _tlAssert("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 883, "ind >= 0", ""))
-                    {
-                        __debugbreak();
-                    }
-                    simplex_inds[co_].x = v41;
-                    if (SLODWORD(v41) >= 12)
-                    {
-                        if (SLODWORD(v41) >= 24)
-                        {
-                            if (LODWORD(v41) == 24)
-                            {
-                                v19 = si_->m_center.y + 0.0;
-                                v20 = si_->m_half_height + si_->m_center.z;
-                                v18 = &simplex_verts[co_];
-                                v18->x = si_->m_center.x + 0.0;
-                                v18->y = v19;
-                                v18->z = v20;
-                            }
-                            else
-                            {
-                                if (LODWORD(v41) != 25)
-                                {
-                                    if (_tlAssert(
-                                        "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                                        904,
-                                        "ind == 2 * s_poly_verts.get_num_verts() + 1",
-                                        ""))
-                                    {
-                                        __debugbreak();
-                                    }
-                                }
-                                v16 = si_->m_center.y + 0.0;
-                                v17 = (-(si_->m_half_height)) + si_->m_center.z;
-                                v7 = &simplex_verts[co_];
-                                v7->x = si_->m_center.x + 0.0;
-                                v7->y = v16;
-                                v7->z = v17;
-                            }
-                        }
-                        else
-                        {
-                            LODWORD(v24[1]) = LODWORD(v41) - 12;
-
-                            //gjk_polygon_cylinder_t::poly_verts::get_co_si(
-                            //    &gjk_polygon_cylinder_t::s_poly_verts,
-                            //    LODWORD(v41) - 12,
-                            //    &v23,
-                            //    v24);
-                            gjk_polygon_cylinder_t::s_poly_verts.get_co_si(LODWORD(v41) - 12, &v23, v24);
-
-                            v21 = (float)(si_->m_polygon_cylinder_radius * v24[0]) + si_->m_center.y;
-                            v22 = (float)((-(si_->m_half_height)) + si_->m_foot_offset) + si_->m_center.z;
-                            v6 = &simplex_verts[co_];
-                            v6->x = (float)(si_->m_polygon_cylinder_radius * v23) + si_->m_center.x;
-                            v6->y = v21;
-                            v6->z = v22;
-                        }
-                    }
-                    else
-                    {
-                        //gjk_polygon_cylinder_t::poly_verts::get_co_si(&gjk_polygon_cylinder_t::s_poly_verts, SLODWORD(v41), &v39, &v40);
-                        gjk_polygon_cylinder_t::s_poly_verts.get_co_si(SLODWORD(v41), &v39, &v40);
-                        v38 = si_->m_polygon_cylinder_radius * v39;
-                        v37 = si_->m_polygon_cylinder_radius * v40;
-                        v36 = si_->m_half_height - si_->m_head_offset;
-                        v33 = v38;
-                        v34 = v37;
-                        v35 = v36;
-                        p_m_center = (int)&si_->m_center;
-                        v31 = v38 + si_->m_center.x;
-                        *(float *)&v30 = v37 + si_->m_center.y;
-                        v29 = v36 + si_->m_center.z;
-                        v26 = v31;
-                        ind1 = v30;
-                        v28 = v29;
-                        v25 = &simplex_verts[co_];
-                        v25->x = v31;
-                        LODWORD(v25->y) = ind1;
-                        v25->z = v28;
-                    }
-                }
-            }
-        }
+            phys_vec3 *simplex_inds);
 
         static inline void calc_disc_aabb(
             const phys_vec3 *axis,
@@ -1098,137 +588,10 @@ struct __declspec(align(8)) gjk_polygon_cylinder_t : gjk_base_t // sizeof=0x80
             aabb_min->z = v5;
         }
 
-        inline void calc_aabb(
+        void calc_aabb(
             const phys_mat44 *xform,
             phys_vec3 *aabb_min,
-            phys_vec3 *aabb_max)
-        {
-            const phys_vec3 *v5; // eax
-            float v6; // [esp+10h] [ebp-188h]
-            float v7; // [esp+14h] [ebp-184h]
-            float v8; // [esp+50h] [ebp-148h]
-            float v9; // [esp+54h] [ebp-144h]
-            float m_geom_radius; // [esp+8Ch] [ebp-10Ch]
-            phys_vec3 v11; // [esp+ACh] [ebp-ECh] OVERLAPPED BYREF
-            phys_vec3 center; // [esp+BCh] [ebp-DCh] BYREF
-            float v13; // [esp+CCh] [ebp-CCh]
-            float v14; // [esp+D0h] [ebp-C8h]
-            float v15; // [esp+D4h] [ebp-C4h]
-            float v16; // [esp+DCh] [ebp-BCh]
-            float v17; // [esp+E0h] [ebp-B8h]
-            float v18; // [esp+E4h] [ebp-B4h]
-            const phys_vec3 *v19; // [esp+E8h] [ebp-B0h]
-            phys_vec3 v20; // [esp+ECh] [ebp-ACh] BYREF
-            float v21; // [esp+FCh] [ebp-9Ch]
-            float v22; // [esp+100h] [ebp-98h]
-            float v23; // [esp+104h] [ebp-94h]
-            float v24; // [esp+10Ch] [ebp-8Ch]
-            float v25; // [esp+110h] [ebp-88h]
-            float v26; // [esp+114h] [ebp-84h]
-            const phys_vec3 *v27; // [esp+118h] [ebp-80h]
-            phys_vec3 v28; // [esp+11Ch] [ebp-7Ch] BYREF
-            phys_vec3 bot; // [esp+12Ch] [ebp-6Ch] BYREF
-            float v30; // [esp+148h] [ebp-50h]
-            float v31; // [esp+14Ch] [ebp-4Ch]
-            float v32; // [esp+150h] [ebp-48h]
-            float negaHalfHeight; // [esp+154h] [ebp-44h]
-            const phys_vec3 *v34; // [esp+158h] [ebp-40h]
-            phys_vec3 v35; // [esp+15Ch] [ebp-3Ch] BYREF
-            float top_12; // [esp+174h] [ebp-24h]
-            float v37; // [esp+178h] [ebp-20h]
-            float v38; // [esp+17Ch] [ebp-1Ch]
-            float m_half_height; // [esp+180h] [ebp-18h]
-            const phys_vec3 *p_z; // [esp+184h] [ebp-14h]
-            gjk_polygon_cylinder_t *thisa; // [esp+188h] [ebp-10h]
-            //int v42; // [esp+18Ch] [ebp-Ch]
-            //void *xforma; // [esp+190h] [ebp-8h]
-            //void *aabb_maxa; // [esp+198h] [ebp+0h]
-            //
-            //v42 = a2;
-            //xforma = aabb_maxa;
-            thisa = this;
-            gjk_polygon_cylinder_t::calc_disc_aabb(&xform->z, this->m_polygon_cylinder_radius, aabb_min, aabb_max);
-            p_z = &xform->z;
-            m_half_height = thisa->m_half_height;
-            v38 = m_half_height * xform->z.x;
-            v37 = m_half_height * xform->z.y;
-            top_12 = m_half_height * xform->z.z;
-            v35.x = v38;
-            v35.y = v37;
-            v35.z = top_12;
-            v34 = &xform->z;
-            negaHalfHeight = -thisa->m_half_height;
-            v32 = negaHalfHeight * xform->z.x;
-            v31 = negaHalfHeight * xform->z.y;
-            v30 = negaHalfHeight * xform->z.z;
-            bot.x = v32;
-            bot.y = v31;
-            bot.z = v30;
-            v27 = phys_min(&v28, &v35, &bot);
-            v26 = aabb_min->x + v27->x;
-            v25 = aabb_min->y + v27->y;
-            v24 = aabb_min->z + v27->z;
-            v21 = v26;
-            v22 = v25;
-            v23 = v24;
-            aabb_min->x = v26;
-            aabb_min->y = v22;
-            aabb_min->z = v23;
-            v19 = phys_max(&v20, &v35, &bot);
-            v18 = aabb_max->x + v19->x;
-            v17 = aabb_max->y + v19->y;
-            v16 = aabb_max->z + v19->z;
-            v13 = v18;
-            v14 = v17;
-            v15 = v16;
-            aabb_max->x = v18;
-            aabb_max->y = v14;
-            aabb_max->z = v15;
-            if (thisa->m_half_height < thisa->m_head_offset
-                && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                    961,
-                    0,
-                    "%s",
-                    "m_head_offset <= m_half_height"))
-            {
-                __debugbreak();
-            }
-            if (thisa->m_half_height < thisa->m_foot_offset
-                && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                    962,
-                    0,
-                    "%s",
-                    "m_foot_offset <= m_half_height"))
-            {
-                __debugbreak();
-            }
-            if (thisa->m_polygon_cylinder_radius < thisa->m_capsule_radius
-                && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                    972,
-                    0,
-                    "%s",
-                    "m_capsule_radius <= m_polygon_cylinder_radius"))
-            {
-                __debugbreak();
-            }
-            v5 = phys_multiply(&center, xform, &thisa->m_center);
-            //operator+(&v11, v5, &xform->w);
-            v11 = xform->w + *v5;
-            m_geom_radius = thisa->m_geom_radius;
-            v8 = (float)(aabb_min->y + v11.y) - m_geom_radius;
-            v9 = (float)(aabb_min->z + v11.z) - m_geom_radius;
-            aabb_min->x = (float)(aabb_min->x + v11.x) - m_geom_radius;
-            aabb_min->y = v8;
-            aabb_min->z = v9;
-            v6 = (float)(aabb_max->y + v11.y) + m_geom_radius;
-            v7 = (float)(aabb_max->z + v11.z) + m_geom_radius;
-            aabb_max->x = (float)(aabb_max->x + v11.x) + m_geom_radius;
-            aabb_max->y = v6;
-            aabb_max->z = v7;
-        }
+            phys_vec3 *aabb_max);
 
         inline bool is_foot(const phys_vec3 *hit_point) const
         {
@@ -1260,6 +623,7 @@ struct __declspec(align(8)) gjk_polygon_cylinder_t : gjk_base_t // sizeof=0x80
 
             return hit_point->z <= (bottom_z + m_foot_offset - bevel_offset);
         }
+
         inline unsigned int get_type() const
         {
             return 7;
@@ -1382,6 +746,5 @@ void __cdecl create_gjk_geom(const DynEntityDef *dynEntDef, gjk_collision_visito
 void __cdecl destroy_gjk_geom(gjk_geom_list_t *gjk_geom_list);
 
 
-extern create_gjk_geom_collision_visitor g_empty_collision_visitor;
-
-extern gjk_unique_id_database_t g_gjk_unique_id_database;
+//extern create_gjk_geom_collision_visitor g_empty_collision_visitor;
+//extern gjk_unique_id_database_t g_gjk_unique_id_database;

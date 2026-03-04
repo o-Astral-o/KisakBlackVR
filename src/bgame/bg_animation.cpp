@@ -228,33 +228,6 @@ animStringItem_t animVehicleSeatStr[12] =
 animStringItem_t animVehicleEntryPosStr[4] = { { "SIDE_LEFT", -1 }, { "SIDE_RIGHT", -1 }, { "REAR", -1 }, { NULL, -1 } };
 
 
-animConditionTable_t animConditionsTable[23] =
-{
-  { ANIM_CONDTYPE_BITFLAGS, weaponStrings, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, animWeaponClassStr, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, weaponStrings, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, animWeaponClassStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animConditionMountedStr, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, animMoveStatusStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animDirectionStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animDmgDirectionStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animDmgTypeStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animStanceStr, 0, 0 },
-  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 },
-  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animWeaponPositionStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animSlopeStateStr, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, animPerkStateStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animAttachmentStateStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, animVehicleNameStr, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, animVehicleSeatStr, 0, 0 },
-  { ANIM_CONDTYPE_BITFLAGS, animVehicleSeatStr, 0, 0 },
-  { ANIM_CONDTYPE_VALUE, NULL, 1, 7 },
-  { ANIM_CONDTYPE_VALUE, animVehicleEntryPosStr, 0, 0 },
-  { ANIM_CONDTYPE_STRINGHASH, NULL, 0, 0 },
-  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 }
-};
-
 animStringItem_t animVehicleNameStr[16] =
 {
   { NULL, -1 },
@@ -385,7 +358,32 @@ void(__cdecl * clientConditionUpdateFunc[23])(const entityState_s *, const clien
   BG_NULLSUB2
 };
 
-
+animConditionTable_t animConditionsTable[23] =
+{
+  { ANIM_CONDTYPE_BITFLAGS, weaponStrings, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animWeaponClassStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, weaponStrings, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animWeaponClassStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animConditionMountedStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animMoveStatusStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animDirectionStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animDmgDirectionStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animDmgTypeStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animStanceStr, 0, 0 },
+  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 },
+  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animWeaponPositionStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animSlopeStateStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animPerkStateStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animAttachmentStateStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, animVehicleNameStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animVehicleSeatStr, 0, 0 },
+  { ANIM_CONDTYPE_BITFLAGS, animVehicleSeatStr, 0, 0 },
+  { ANIM_CONDTYPE_VALUE, NULL, 1, 7 },
+  { ANIM_CONDTYPE_VALUE, animVehicleEntryPosStr, 0, 0 },
+  { ANIM_CONDTYPE_STRINGHASH, NULL, 0, 0 },
+  { ANIM_CONDTYPE_ENABLED, NULL, 0, 0 }
+};
 
 
 
@@ -3474,7 +3472,6 @@ void __cdecl BG_AnimParseAnimScript(
     int v12; // eax
     int v13; // eax
     int v14; // eax
-    const char *v15; // [esp+0h] [ebp-1F8h]
     bool inBrace; // [esp+9Eh] [ebp-15Ah]
     bool conditionSeatsPresent; // [esp+9Fh] [ebp-159h]
     signed int seat; // [esp+A0h] [ebp-158h]
@@ -4016,7 +4013,7 @@ LABEL_171:
         }
     }
     if ( indentLevel )
-        BG_AnimParseError("BG_AnimParseAnimScript: unexpected end of file: %s", v15);
+        BG_AnimParseError("BG_AnimParseAnimScript: unexpected end of file: %s", token);
     Com_EndParseSession();
     Com_UnloadRawTextFile((char *)input);
 }

@@ -9,7 +9,6 @@
 #include "sentient_fields.h"
 
 #include <type_traits>
-#include "g_bsp.h"
 
 enum nearestNodeHeightCheck : __int32
 {                                       // XREF: ?Path_NearestNode@@YAPAUpathnode_t@@QBMPAUpathsort_t@@HMPAHHW4nearestNodeHeightCheck@@@Z/r
@@ -187,7 +186,7 @@ struct pathnode_tree_nodes_t // sizeof=0x8
 
 union pathnode_tree_info_t // sizeof=0x8
 {                                       // XREF: pathnode_tree_t/r
-    pathnode_tree_t *child[2];
+    struct pathnode_tree_t *child[2];
     pathnode_tree_nodes_t s;
 };
 
@@ -527,7 +526,6 @@ void __cdecl G_ClearSelectedPathNode();
 
 extern pathlocal_t g_path;
 extern pathstatic_t pathstatic;
-extern GameWorldMp *gameWorldCurrent;
 extern const char *g_pathsError;
 extern pathlink_s g_tempPathNodeLinks[2048];
 extern int g_tempPathNodeLinksCount;

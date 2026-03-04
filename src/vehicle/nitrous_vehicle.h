@@ -39,6 +39,59 @@ struct view_limits_t // sizeof=0x10
     float vertSpanDown;
 };
 
+const struct VehicleParameter // sizeof=0x124
+{                                       // XREF: .data:VehicleParameter g_default_params/r
+                                        // vehicle_info_t/r ...
+    VehicleParameter();
+
+    float m_speed_max;
+    float m_accel_max;
+    float m_reverse_scale;
+    float m_steer_angle_max;
+    float m_steer_speed;
+    float m_wheel_radius;
+    float m_susp_spring_k;
+    float m_susp_damp_k;
+    float m_susp_adj;
+    float m_susp_hard_limit;
+    float m_susp_min_height;
+    float m_tire_fric_fwd;
+    float m_tire_fric_side;
+    float m_tire_fric_brake;
+    float m_tire_fric_hand_brake;
+    float m_body_mass;
+    float m_roll_stability;
+    float m_pitch_roll_resistance;
+    float m_yaw_resistance;
+    float m_upright_strength;
+    float m_tilt_fakey;
+    float m_peel_out_max_speed;
+    float m_tire_damp_coast;
+    float m_tire_damp_brake;
+    float m_tire_damp_hand;
+    float m_auto_hand_brake_min_speed;
+    TractionType m_traction_type;
+    char m_name[64];
+    float m_bbox_min[3];
+    float m_bbox_max[3];
+    float m_mass_center_offset[3];
+    float m_buoyancybox_min[3];
+    float m_buoyancybox_max[3];
+    float m_water_speed_max;
+    float m_water_accel_max;
+    float m_water_turn_accel;
+    float m_water_turn_speed_max;
+    float m_water_ebrake_power;
+    float m_boat_motor_offset[3];
+    float m_boat_speed_rise;
+    float m_boat_speed_tilt;
+    float m_boat_side_fric_scale;
+    float m_boat_forward_fric_scale;
+    float m_boat_vertical_fric_scale;
+    float m_jump_force;
+    float m_tire_fric_side_max;
+};
+
 const struct vehicle_info_t // sizeof=0x1DD8
 {                                       // XREF: .data:vehicle_info_t * bg_vehicleInfos/r
     char name[64];
@@ -232,58 +285,10 @@ const struct vehicle_info_t // sizeof=0x1DD8
     VehicleParameter nitrousVehParams;
 };
 
-const struct VehicleParameter // sizeof=0x124
-{                                       // XREF: .data:VehicleParameter g_default_params/r
-                                        // vehicle_info_t/r ...
-    VehicleParameter();
-
-    float m_speed_max;
-    float m_accel_max;
-    float m_reverse_scale;
-    float m_steer_angle_max;
-    float m_steer_speed;
-    float m_wheel_radius;
-    float m_susp_spring_k;
-    float m_susp_damp_k;
-    float m_susp_adj;
-    float m_susp_hard_limit;
-    float m_susp_min_height;
-    float m_tire_fric_fwd;
-    float m_tire_fric_side;
-    float m_tire_fric_brake;
-    float m_tire_fric_hand_brake;
-    float m_body_mass;
-    float m_roll_stability;
-    float m_pitch_roll_resistance;
-    float m_yaw_resistance;
-    float m_upright_strength;
-    float m_tilt_fakey;
-    float m_peel_out_max_speed;
-    float m_tire_damp_coast;
-    float m_tire_damp_brake;
-    float m_tire_damp_hand;
-    float m_auto_hand_brake_min_speed;
-    TractionType m_traction_type;
-    char m_name[64];
-    float m_bbox_min[3];
-    float m_bbox_max[3];
-    float m_mass_center_offset[3];
-    float m_buoyancybox_min[3];
-    float m_buoyancybox_max[3];
-    float m_water_speed_max;
-    float m_water_accel_max;
-    float m_water_turn_accel;
-    float m_water_turn_speed_max;
-    float m_water_ebrake_power;
-    float m_boat_motor_offset[3];
-    float m_boat_speed_rise;
-    float m_boat_speed_tilt;
-    float m_boat_side_fric_scale;
-    float m_boat_forward_fric_scale;
-    float m_boat_vertical_fric_scale;
-    float m_jump_force;
-    float m_tire_fric_side_max;
-};
+struct rigid_body_constraint_wheel;
+struct XModel;
+struct rigid_body_constraint_custom_orientation;
+struct rigid_body_constraint_custom_path;
 
 struct NitrousVehicle // sizeof=0x440
 {                                       // XREF: phys_free_list<NitrousVehicle>::T_internal/r
@@ -398,7 +403,7 @@ struct NitrousVehicle // sizeof=0x440
     XModel *m_xmodel;
     float m_origin[3];
     float m_angles[3];
-    rigid_body_constraint_custom_orientation *m_orientation_constraint;
+    struct rigid_body_constraint_custom_orientation *m_orientation_constraint;
     rigid_body_constraint_custom_path *m_vpc;
     int m_flags;
     int m_notify_flags;

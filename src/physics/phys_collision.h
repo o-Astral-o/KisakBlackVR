@@ -5,88 +5,20 @@
 
 #include "phys_local.h"
 #include "phys_gjk_collision_detection.h"
-#include "phys_broad_phase.h"
 
 void __cdecl phys_aabb_add_hace(phys_vec3 *aabb_min, phys_vec3 *aabb_max);
 void __cdecl set_bp_standard_query();
 void __cdecl set_debug_callback();
 
-struct pulse_sum_cache // sizeof=0x4
-{                                                                             // XREF: rigid_body_constraint_point/r
-                                                                                // rigid_body_constraint_hinge/r ...
-        float m_pulse_sum;
-};
-
-struct pulse_sum_node : phys_link_list_base<pulse_sum_node> // sizeof=0x80
-{
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        phys_mat44 m_world_inv_inertia;
-        phys_vec3 t_vel;
-        phys_vec3 a_vel;
-        float m_inv_mass;
-        rigid_body *m_rb;
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-        // padding byte
-};
+struct pulse_sum_cache;
+struct pulse_sum_node;
+struct phys_auto_activate_callback;
+struct gjk_physics_collision_visitor;
 
 struct entity_bpi_header // sizeof=0x8
 {
     phys_mat44 *m_mat;
     phys_auto_activate_callback *m_aac;
-};
-
-struct __declspec(align(8)) broad_phase_info : broad_phase_base // sizeof=0x70
-{                                                                             // XREF: phys_free_list<broad_phase_info>::T_internal/r
-    rigid_body *m_rb;
-    const phys_mat44 *m_rb_to_world_xform;
-    const phys_mat44 *m_cg_to_world_xform;
-    const phys_mat44 *m_cg_to_rb_xform;
-    const struct phys_gjk_geom *m_gjk_geom;
-    unsigned int m_gjk_geom_id;
-    int m_surface_type;
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-
-    void set_bpi_env(phys_auto_activate_callback *auto_activate_callback);
-
-    void set(
-        rigid_body *rb,
-        const phys_mat44 *rb_to_world_xform,
-        const phys_mat44 *cg_to_world_xform,
-        const phys_mat44 *cg_to_rb_xform,
-        const phys_gjk_geom *gjk_geom,
-        unsigned int gjk_geom_id,
-        bool calc_cg_to_world_xform,
-        int surface_type,
-        void *user_data,
-        unsigned int env_collision_flags);
-
-    void collision_prolog();
-};
-
-struct standard_query : broad_phase_terrain_query_callback // sizeof=0x4
-{                                       // XREF: .data:standard_query g_standard_query/r
-
-    void query(const broad_phase_environment_query_input *bpeqi, broad_phase_environement_query_results *bpeqr);
 };
 
 //void __thiscall contact_point_info::get_closest_psc(
@@ -148,4 +80,4 @@ void *__cdecl generic_avl_map_destroy(
     phys_inplace_avl_tree<unsigned int, generic_avl_map_node_t, generic_avl_map_node_t> *gam,
     unsigned int avl_key);
 
-PhysObjUserData *__cdecl Phys_GetUserData(int id);
+struct PhysObjUserData *__cdecl Phys_GetUserData(int id);

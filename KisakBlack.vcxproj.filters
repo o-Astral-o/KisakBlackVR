@@ -6080,6 +6080,9 @@
     <ClInclude Include="src\libs\libvpx\vpx_integer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\database\database.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\CubeMapGenLib\resource.rc">

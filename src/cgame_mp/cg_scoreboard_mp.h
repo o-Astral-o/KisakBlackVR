@@ -1,6 +1,5 @@
 #pragma once
 #include <game/teams.h>
-#include <client_mp/client_mp.h>
 
 enum listColumnTypes_t : __int32
 {                                       // XREF: listColumnInfo_t/r

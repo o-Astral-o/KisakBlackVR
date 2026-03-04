@@ -3,6 +3,7 @@
 #include <qcommon/msg_mp.h>
 #include <game/enthandle.h>
 #include <physics/phys_colgeom.h>
+#include <game/teams.h>
 
 enum pmoveVehAnimState_t : __int32
 {                                                                             // XREF: pmove_t/r
@@ -165,6 +166,8 @@ struct tagInfo_s // sizeof=0x70
     float parentInvAxis[4][3];
 };
 
+struct Destructible;
+struct XAnimTree_s;
 struct gentity_s // sizeof=0x2F8
 {                                       // XREF: Svcmd_EntityList_f(void)+6/o
                                         // .data:gentity_s * g_entities/r ...

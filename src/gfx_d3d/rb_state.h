@@ -148,6 +148,48 @@ struct GfxCodeMatrices // sizeof=0x800
     GfxMatrix matrix[32];
 };
 
+struct GfxCodeImageRenderTargetFields // sizeof=0x8
+{                                       // XREF: GfxCodeImageRenderTarget/r
+    unsigned __int64 renderTargetId : 8;
+    unsigned __int64 enable : 1;
+    unsigned __int64 fbufferTexture : 3;
+    unsigned __int64 filtering : 20;
+};
+
+union GfxCodeImageRenderTarget // sizeof=0x8
+{                                       // XREF: RB_InitCodeImages(void)+55B/w
+                                        // R_SetTextureSamplerCodeImageRenderTarget(GfxCmdBufContext,uint,GfxCodeImageRenderTarget)+16/r ...
+    GfxCodeImageRenderTargetFields fields;
+    unsigned int packed;
+};
+
+struct GfxBackEndData;
+struct __declspec(align(16)) GfxCmdBufInput // sizeof=0xE90
+{                                       // XREF: .data:GfxCmdBufInput gfxCmdBufInput/r
+    float consts[197][4];
+    const GfxImage *codeImages[43];     // XREF: R_UpdateFrontEndDvarOptions+249/w
+    // R_Cinematic_BlackRendererImages+2E/w ...
+    unsigned __int8 codeImageSamplerStates[43];
+    // XREF: RB_SetBspImages(void)+6B/w
+    // RB_InitCodeImages(void)+1C/w ...
+// padding byte
+    GfxCodeImageRenderTarget codeImageRenderTargetControl[43];
+    // XREF: RB_InitCodeImages(void)+55B/w
+    const GfxBackEndData *data;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+};
+
 struct GfxCmdBufSourceState // sizeof=0x1A90
 {                                       // XREF: .data:GfxCmdBufSourceState gfxCmdBufSourceState/r
     GfxCodeMatrices matrices;

@@ -220,7 +220,7 @@ char    BG_CheckProne(
                 float prone_feet_dist);
 void __cdecl BG_GetPlayerViewOrigin(const playerState_s *ps, float *origin, int time);
 void __cdecl BG_GetPlayerViewDirection(const playerState_s *ps, float *forward, float *right, float *up);
-void __cdecl BG_LerpHudColors(const hudelem_s *elem, int time, hudelem_color_t *toColor);
+void __cdecl BG_LerpHudColors(const hudelem_s *elem, int time, union hudelem_color_t *toColor);
 int __cdecl BG_LoadShellShockDvars(const char *name);
 void __cdecl BG_SetShellShockParmsFromDvars(shellshock_parms_t *parms);
 int __cdecl BG_SaveShellShockDvars(const char *name);
@@ -235,7 +235,7 @@ void __cdecl BG_CheckThread();
 int __cdecl BG_GetMaxSprintTime(const playerState_s *ps);
 bool __cdecl BG_ClipMoveToDobj(const entityState_s *es);
 int __cdecl BG_GetFriendlyFireStatus();
-const char *__cdecl BG_DisplayName(const clientInfo_t *ci, int type);
+const char *__cdecl BG_DisplayName(const struct clientInfo_t *ci, int type);
 void __cdecl BG_ClipCameraToHeliPatch(float *origin, float *oldpos, float *velocity, float (*breachPos)[3]);
 
 

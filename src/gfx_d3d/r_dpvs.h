@@ -1,6 +1,7 @@
 #pragma once
 
 #include <xanim/xmodel.h>
+#include "r_gfx.h"
 
 static const float cull_thresh = -100.0f;
 static const float dist_thresh2 = 6.4e7f;
@@ -107,7 +108,7 @@ struct DpvsGlob // sizeof=0xC320
                                         // R_VisitPortalsNoFrustum:loc_A43756/r ...
     PortalHeapNode *portalQueue;        // XREF: R_VisitPortalsNoFrustum+D0/w
                                         // R_NextQueuedPortal:loc_A43FBC/r ...
-    GfxHullPointsPool *nextFreeHullPoints;
+    union GfxHullPointsPool *nextFreeHullPoints;
                                         // XREF: R_VisitPortalsNoFrustum+C5/w
                                         // R_FreeHullPoints+3B/r ...
     float cullDist;                     // XREF: R_GetFarPlaneDist(void):loc_A4AF45/r
@@ -188,11 +189,13 @@ struct mnode_t // sizeof=0x4
 };
 struct GfxAabbTree;
 struct GfxPortal;
+
 union GfxHullPointsPool // sizeof=0x200
 {                                       // XREF: GfxHullPointsPoolArray/r
     GfxHullPointsPool *nextFree;
     float points[64][2];
 };
+
 struct GfxWorld;
 
 struct DpvsDynamicCellCmd // sizeof=0xC

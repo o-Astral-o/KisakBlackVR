@@ -1,7 +1,8 @@
 #pragma once
 
-#include "r_image.h"
 #include <universal/dvar.h>
+
+struct Material;
 
 struct sunflare_t // sizeof=0x60
 {                                       // XREF: GfxWorld/r

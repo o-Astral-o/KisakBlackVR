@@ -1,8 +1,7 @@
 #pragma once
-#include "r_rendercmds.h"
-#include "rb_state.h"
 
-struct GfxQuadMeshData;
+#include "r_buffers.h"
+#include "rb_state.h"
 
 struct GfxMeshData // sizeof=0x24
 {                                       // XREF: .data:GfxMeshData * g_codeMesh/r
@@ -14,6 +13,16 @@ struct GfxMeshData // sizeof=0x24
     GfxVertexBufferState vb;            // XREF: R_InitRenderBuffers(void)+5D/w
     // R_InitGlassRenderBuffers(int,int,int)+64/w ...
     unsigned int vertSize;
+};
+
+struct GfxQuadMeshData // sizeof=0x34
+{                                       // XREF: GfxMeshGlobals/r
+    float x;
+    float y;
+    float width;
+    float height;
+    GfxMeshData meshData;               // XREF: R_InitRenderBuffers(void)+193/o
+    // R_ShutdownRenderBuffers(void)+16A/o
 };
 
 struct GfxMeshGlobals // sizeof=0x1A8

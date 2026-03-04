@@ -152,36 +152,6 @@ struct broad_phase_base_list // sizeof=0x8
     void add(broad_phase_base *bpb);
 };
 
-// "environement". for an authentic decompilation experience. (fixed in blops2!!).
-struct broad_phase_environement_query_results // sizeof=0x14
-{                                       // XREF: ?bp_env_jq_batch_function2@@YAHPAUjqBatch@@@Z/r
-    broad_phase_base_list m_list_bpi_env;
-    int m_list_bpi_env_count;
-    int m_thread_id;                    // XREF: bp_env_jq_batch_function2(jqBatch *)+10/w
-    unsigned int m_env_collision_flags;
-
-    inline void add(broad_phase_base *bpb)
-    {
-        broad_phase_info *bpi_env; // [esp+4h] [ebp-34h]
-
-        if ((bpb->m_flags & 4) == 0
-            && _tlAssert(
-                "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase.h",
-                389,
-                "bpb->is_bpi_env()",
-                ""))
-        {
-            __debugbreak();
-        }
-        //bpi_env = broad_phase_base::get_bpi_env(bpb);
-        bpb->get_bpi_env();
-        //broad_phase_base_list::add(&this->m_list_bpi_env, bpi_env);
-        this->m_list_bpi_env.add(bpi_env);
-        ++this->m_list_bpi_env_count;
-        this->m_env_collision_flags |= bpi_env->m_env_collision_flags;
-    }
-};
-
 struct broad_phase_terrain_query_callback // sizeof=0x4
 {                                       // XREF: standard_query/r
     //broad_phase_terrain_query_callback_vtbl *__vftable;
@@ -221,7 +191,7 @@ struct broad_phase_memory // sizeof=0xCD8
     int m_memory_high_water;
     phys_link_list<phys_collision_pair> g_list_phys_collide_data;
     phys_transient_allocator g_collision_memory_buffer;
-    phys_surface_type_info *g_surface_type_info_database;
+    struct phys_surface_type_info *g_surface_type_info_database;
     int m_max_num_surface_types;
     int m_max_num_surface_type_infos;
 
@@ -265,7 +235,6 @@ struct __declspec(align(16)) phys_wheel_collide_info // sizeof=0x40
     void collision_epilog(struct rigid_body_constraint_wheel *rbc_wheel);
 };
 
-void create_broad_phase_info(rigid_body *body);
 struct broad_phase_info *create_broad_phase_info(void);
 
 void    comp_trace_volume(
@@ -333,6 +302,73 @@ struct axis_aligned_sweep_and_prune // sizeof=0x28
     void destroy_sap_node(broad_phase_base *bpb);
     void process_active_pair_list();
     void process();
+};
+
+struct __declspec(align(8)) broad_phase_info : broad_phase_base // sizeof=0x70
+{                                                                             // XREF: phys_free_list<broad_phase_info>::T_internal/r
+    rigid_body *m_rb;
+    const phys_mat44 *m_rb_to_world_xform;
+    const phys_mat44 *m_cg_to_world_xform;
+    const phys_mat44 *m_cg_to_rb_xform;
+    const struct phys_gjk_geom *m_gjk_geom;
+    unsigned int m_gjk_geom_id;
+    int m_surface_type;
+    // padding byte
+    // padding byte
+    // padding byte
+    // padding byte
+
+    void set_bpi_env(phys_auto_activate_callback *auto_activate_callback);
+
+    void set(
+        rigid_body *rb,
+        const phys_mat44 *rb_to_world_xform,
+        const phys_mat44 *cg_to_world_xform,
+        const phys_mat44 *cg_to_rb_xform,
+        const phys_gjk_geom *gjk_geom,
+        unsigned int gjk_geom_id,
+        bool calc_cg_to_world_xform,
+        int surface_type,
+        void *user_data,
+        unsigned int env_collision_flags);
+
+    void collision_prolog();
+};
+
+// "environement". for an authentic decompilation experience. (fixed in blops2!!).
+struct broad_phase_environement_query_results // sizeof=0x14
+{                                       // XREF: ?bp_env_jq_batch_function2@@YAHPAUjqBatch@@@Z/r
+    broad_phase_base_list m_list_bpi_env;
+    int m_list_bpi_env_count;
+    int m_thread_id;                    // XREF: bp_env_jq_batch_function2(jqBatch *)+10/w
+    unsigned int m_env_collision_flags;
+
+    inline void add(broad_phase_base *bpb)
+    {
+        broad_phase_info *bpi_env; // [esp+4h] [ebp-34h]
+
+        if ((bpb->m_flags & 4) == 0
+            && _tlAssert(
+                "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase.h",
+                389,
+                "bpb->is_bpi_env()",
+                ""))
+        {
+            __debugbreak();
+        }
+        //bpi_env = broad_phase_base::get_bpi_env(bpb);
+        bpi_env = bpb->get_bpi_env();
+        //broad_phase_base_list::add(&this->m_list_bpi_env, bpi_env);
+        this->m_list_bpi_env.add((broad_phase_base *)bpi_env);
+        ++this->m_list_bpi_env_count;
+        this->m_env_collision_flags |= bpi_env->m_env_collision_flags;
+    }
+};
+
+struct standard_query : broad_phase_terrain_query_callback // sizeof=0x4
+{                                       // XREF: .data:standard_query g_standard_query/r
+
+    void query(const broad_phase_environment_query_input *bpeqi, broad_phase_environement_query_results *bpeqr);
 };
 
 void init_bpeqi(broad_phase_environment_query_input *bpeqi, broad_phase_base *bpb);

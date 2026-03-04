@@ -3,6 +3,7 @@
 #include <XAPOBase.h>
 #include <XAudio2.h>
 #include <universal/assertive.h>
+#include "snd_radverb.h"
 
 struct SDXA2Effect : CXAPOBase // sizeof=0x3C80
 {                                       // XREF: SDXA2MasterNoVoiceBusEffect/r
@@ -16,26 +17,17 @@ struct SDXA2Effect : CXAPOBase // sizeof=0x3C80
     SDXA2Effect(XAPO_REGISTRATION_PROPERTIES *props);
     ~SDXA2Effect();
 
-    HRESULT LockForProcess(
+    HRESULT STDMETHODCALLTYPE LockForProcess(
         unsigned int InputLockedParameterCount,
         const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS *in,
         unsigned int OutputLockedParameterCount,
         const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS *out);;
 
     //int __stdcall SDXA2Effect::Release(); CXAPOBase
-    void Reset()
-    {
-        iassert(!locked);
-        locked = 0;
-        started = 0;
-    }
-    void UnlockForProcess()
-    {
-        iassert(locked);
-        locked = 0;
-    }
+    void STDMETHODCALLTYPE Reset();
+    void STDMETHODCALLTYPE UnlockForProcess();
 
-    virtual void Process(
+    virtual void __stdcall Process(
         unsigned int InputProcessParameterCount,
         const XAPO_PROCESS_BUFFER_PARAMETERS *pInputProcessParameters,
         unsigned int OutputProcessParameterCount,
@@ -157,51 +149,6 @@ struct SDXA2MasterBusEffect : SDXA2Effect // sizeof=0xBD00
     void SetParameters(
         const void *pParams,
         unsigned int cbParams);
-};
-
-struct snd_rv_params // sizeof=0x64
-{                                       // XREF: snd_rv_state/r
-                                        // SDXA2RadverbEffect/r ...
-    float frameRate;                    // XREF: SD_PreUpdate(int)+2C/w
-                                        // SD_PreUpdate(int):loc_940486/r ...
-    float smoothing;                    // XREF: SD_PreUpdate(int)+46/w
-    float earlyTime;                    // XREF: SD_PreUpdate(int)+56/w
-    float lateTime;                     // XREF: SD_PreUpdate(int)+66/w
-    float earlyGain;                    // XREF: SD_PreUpdate(int)+76/w
-    float lateGain;                     // XREF: SD_PreUpdate(int)+86/w
-    float lateGainProx[4];              // XREF: SD_PreUpdate(int)+96/w
-                                        // SD_PreUpdate(int)+A6/w ...
-    float returnGain;                   // XREF: SD_PreUpdate(int)+D6/w
-    float earlyLpf;                     // XREF: SD_PreUpdate(int)+E6/w
-    float lateLpf;                      // XREF: SD_PreUpdate(int)+F6/w
-    float inputLpf;                     // XREF: SD_PreUpdate(int)+106/w
-    float dampLpf;                      // XREF: SD_PreUpdate(int)+116/w
-    float wallReflect[4];               // XREF: SD_PreUpdate(int)+13F/w
-    float dryGain;                      // XREF: SD_PreUpdate(int)+150/w
-    float earlySize;                    // XREF: SD_PreUpdate(int)+160/w
-    float lateSize;                     // XREF: SD_PreUpdate(int)+170/w
-    float diffusion;                    // XREF: SD_PreUpdate(int)+180/w
-    float angle;                        // XREF: SD_PreUpdate(int)+24C/w
-                                        // SD_PreUpdate(int)+25E/w
-    unsigned int delayMatrix;           // XREF: SD_PreUpdate(int)+192/w
-};
-
-struct __declspec(align(128)) snd_rv_state // sizeof=0x80280
-{                                       // XREF: SDXA2RadverbEffect/r
-    float delayLine[131072];            // XREF: .data:00E1F218/o
-                                        // .data:00E1F42C/o ...
-    float earlyReflectionCoefs[4][4];
-    unsigned int earlyReflectionDelays[4][4];
-    float lateReflectionCoefs[4][4];
-    unsigned int lateReflectionDelays[4][4];
-    float inputLpfState[4];
-    float earlyLpfState[4];
-    float lateLpfState[4];
-    float dampLpfState[4];
-    snd_rv_params params;
-    unsigned int earlyReflectionDelayBase[4][4];
-    unsigned int lateReflectionDelayBase[4][4];
-    unsigned int delayIndex;
 };
 
 struct SDXA2RadverbEffect : SDXA2Effect // sizeof=0x87B80

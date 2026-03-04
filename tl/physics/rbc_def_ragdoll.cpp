@@ -1,6 +1,7 @@
 #include "rbc_def_ragdoll.h"
 #include "rbc_def_generic.h"
 #include <physics/phys_assert.h>
+#include <physics/phys_constraint_solver_multithreaded.h>
 
 void ragdoll_joint_limit_info::set_b1_ud_loc(const phys_vec3 *b1_ud_loc)
 {

@@ -41,3 +41,5 @@ extern GameWorldSp gameWorldSp;
 #else
 extern GameWorldMp gameWorldMp;
 #endif
+
+extern GameWorldMp *gameWorldCurrent;

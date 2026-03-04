@@ -10,17 +10,6 @@
 struct GfxCmdBufInput;
 struct GfxViewParms;
 
-struct GfxSceneDef // sizeof=0x14
-{                                       // XREF: GfxViewInfo/r
-                                        // GfxCmdBufSourceState/r ...
-    int time;                           // XREF: R_SetLodOrigin(refdef_s const *)+80/w
-    // R_SetLodOrigin(refdef_s const *)+86/r ...
-    float floatTime;                    // XREF: R_SetLodOrigin(refdef_s const *)+96/w
-    // R_RenderScene(refdef_s const *,int)+264/r ...
-    float viewOffset[3];                // XREF: R_SetLodOrigin(refdef_s const *)+52/w
-    // R_SetLodOrigin(refdef_s const *)+62/w ...
-};
-
 struct BModelDrawInfo // sizeof=0x2
 {                                       // XREF: GfxSceneDynBrush/r
     unsigned __int16 surfId;
@@ -397,6 +386,11 @@ struct SceneEntCmd // sizeof=0x4
 {                                       // XREF: R_GenerateSortedDrawSurfs/r
     const GfxViewInfo *viewInfo;        // XREF: R_GenerateSortedDrawSurfs+14BE/w
 };
+
+struct GfxLodParms;
+struct GfxCmdBufInput;
+struct GfxSunShadowProjection;
+struct GfxBackEndData;
 
 GfxScene *__cdecl R_GetScene();
 unsigned int __cdecl R_AllocSceneModel();

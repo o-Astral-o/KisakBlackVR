@@ -190,4 +190,4 @@ void __cdecl PM_UpdatePush(pmove_t *pm, pml_t *pml);
 void __cdecl set_stance(pmove_t *pm);
 void __cdecl Pmove(pmove_t *pm);
 
-void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in);
+void __cdecl setup_gjkcc_input(struct actor_physics_t *pPhys, struct gjkcc_input_t *gjkcc_in);

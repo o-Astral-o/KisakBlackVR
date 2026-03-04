@@ -17,6 +17,28 @@ struct GfxPackedVertexNormal // sizeof=0x8
     PackedUnitVec tangent;              // XREF: .rdata:00DC09F4/o
 };
 
+struct GfxIndexBufferState // sizeof=0x10
+{                                       // XREF: GfxBuffers/r
+                                        // GfxBuffers/r
+    volatile int used;
+    int total;
+    IDirect3DIndexBuffer9 *buffer;      // XREF: R_DestroyDynamicBuffers(void)+28/r
+    // R_DestroyDynamicBuffers(void)+5B/r ...
+    unsigned __int16 *indices;          // XREF: R_CreateDynamicBuffers(void)+14E/w
+    // R_DestroyDynamicBuffers(void)+A0/r ...
+};
+
+struct GfxVertexBufferState // sizeof=0x10
+{                                       // XREF: GfxMeshData/r
+                                        // GfxBuffers/r ...
+    volatile unsigned int used;
+    int total;                          // XREF: R_CreateDynamicBuffers(void)+91/r
+    IDirect3DVertexBuffer9 *buffer;     // XREF: R_DestroyDynamicBuffers(void)+17D/r
+    // R_DestroyDynamicBuffers(void)+1B0/r ...
+    unsigned __int8 *verts;             // XREF: R_InitRenderBuffers(void)+5D/w
+    // R_InitGlassRenderBuffers(int,int,int)+64/w ...
+};
+
 struct __declspec(align(4)) GfxBuffers // sizeof=0x2400A8
 {                                       // XREF: .data:GfxBuffers gfxBuf/r
     GfxDynamicIndices smodelCache;      // XREF: R_CacheStaticModelIndices+117/r
@@ -70,17 +92,6 @@ struct __declspec(align(4)) GfxBuffers // sizeof=0x2400A8
     bool skinCache;
     // padding byte
     // padding byte
-};
-
-struct GfxVertexBufferState // sizeof=0x10
-{                                       // XREF: GfxMeshData/r
-                                        // GfxBuffers/r ...
-    volatile unsigned int used;
-    int total;                          // XREF: R_CreateDynamicBuffers(void)+91/r
-    IDirect3DVertexBuffer9 *buffer;     // XREF: R_DestroyDynamicBuffers(void)+17D/r
-                                        // R_DestroyDynamicBuffers(void)+1B0/r ...
-    unsigned __int8 *verts;             // XREF: R_InitRenderBuffers(void)+5D/w
-                                        // R_InitGlassRenderBuffers(int,int,int)+64/w ...
 };
 
 struct GfxParticleCloudVertex // sizeof=0x8

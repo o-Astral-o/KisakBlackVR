@@ -299,7 +299,7 @@ struct clipMap_t // sizeof=0x14C
                                         // CM_LoadStaticModels(void)+159/w ...
     unsigned int numMaterials;          // XREF: CMod_LoadMaterials+63/w
                                         // CMod_LoadMaterials+98/r ...
-    dmaterial_t *materials;             // XREF: CMod_LoadMaterials+5B/w
+    struct dmaterial_t *materials;             // XREF: CMod_LoadMaterials+5B/w
                                         // CMod_LoadMaterials+74/r ...
     unsigned int numBrushSides;         // XREF: CMod_LoadBrushes+BA/w
     struct cbrushside_t *brushsides;           // XREF: CMod_LoadBrushes+B1/w
@@ -479,6 +479,21 @@ struct traceWork_t // sizeof=0xE0
 
         ////TraceExtents::TraceExtents(&this->extents);
     }
+};
+
+struct BulletTraceResults // sizeof=0x50
+{                                                                             // XREF: Bullet_FireExtended/r
+    trace_t trace;                                            // XREF: BulletTrace_Start(int,BulletFireParams *,uint,centity_s const *,float * const,bool,bool)+1C/w
+    // BulletTrace_Start(int,BulletFireParams *,uint,centity_s const *,float * const,bool,bool)+29/w ...
+    struct gentity_s *hitEnt;                                    // XREF: Bullet_FireExtended:loc_5F3D1A/r
+    // Bullet_FireExtended+174/r ...
+    float hitPos[3];                                        // XREF: FireBulletPenetrate+DE5/o
+    // FireBulletPenetrate+10E4/o ...
+    bool ignoreHitEnt;                                    // XREF: Bullet_FireExtended+186/r
+    // padding byte
+    // padding byte
+    // padding byte
+    int depthSurfaceType;                             // XREF: FireBulletPenetrate:loc_52B4A6/r
 };
 
 void __cdecl RotatePoint(const float *v, const float *q, float *out);

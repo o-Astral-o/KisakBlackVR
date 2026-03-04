@@ -56,6 +56,12 @@ struct hybrid_vector // sizeof=0x10
         float4 vec;                                                 // XREF: AimTarget_IsTargetVisible+1B/w
 };
 
+struct orientation_t // sizeof=0x30
+{                                                                             // XREF: .rdata:orientation_t const orIdentity/r
+    float origin[3];                                        // XREF: Weapon_DrawAxisOrigin(orientation_t,float)+EB/r
+    float axis[3][3];                                     // XREF: CG_Laser_Add(centity_s *,DObj *,cpose_t *,float const * const,LaserOwnerEnum)+50/o
+};
+
 // TODO change if we ever actually use classes
 #define vec2r float*
 #define vec3r float*
@@ -434,8 +440,8 @@ constexpr float c_fadeRate = 1.0;
 
 const float SQRT2_0 = sqrtf(2.0);
 
-constexpr orientation_t orIdentity =
+constexpr orientation_t orIdentity
 {
-  { 0.0, 0.0, 0.0 },
-  { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } }
+    .origin = {0.0f, 0.0f, 0.0f},
+    .axis = {{1.0f,0.0f,0.0f},{0.0f,1.0f,0.0f},{0.0f,0.0f,1.0f}}
 };

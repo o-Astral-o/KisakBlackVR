@@ -2,7 +2,11 @@
 
 #include "phys_local.h"
 #include "phys_collision.h"
-#include "phys_constraint_solver_multithreaded.h"
+
+struct pulse_sum_cache // sizeof=0x4
+{                                       // XREF: rigid_body_constraint_point/r
+    float m_pulse_sum;
+};
 
 struct rigid_body_constraint // sizeof=0xC
 {                                                                             // XREF: rigid_body_constraint_point/r
@@ -340,6 +344,24 @@ struct    rigid_body_constraint_custom_orientation : rigid_body_constraint // si
         void setup_constraint(pulse_sum_constraint_solver *psys, float delta_t);
 };
 
+struct rb_inplace_partition_node // sizeof=0x38
+{                                                                             // XREF: rigid_body/r
+    struct rigid_body_constraint_point *m_rbc_point_first;
+    struct rigid_body_constraint_hinge *m_rbc_hinge_first;
+    struct rigid_body_constraint_distance *m_rbc_dist_first;
+    struct rigid_body_constraint_ragdoll *m_rbc_ragdoll_first;
+    struct rigid_body_constraint_wheel *m_rbc_wheel_first;
+    struct rigid_body_constraint_angular_actuator *m_rbc_angular_actuator_first;
+    struct rigid_body_constraint_upright *m_rbc_upright_first;
+    struct rigid_body_constraint_custom_orientation *m_rbc_custom_orientation_first;
+    struct rigid_body_constraint_custom_path *m_rbc_custom_path_first;
+    struct rigid_body_constraint_contact *m_rbc_contact_first;
+    struct rigid_body *m_partition_head;
+    struct rigid_body *m_partition_tail;
+    struct rigid_body *m_next_node;
+    int m_partition_size;
+};
+
 class rigid_body
 {
 public:
@@ -481,13 +503,26 @@ struct rigid_body_pair_key // sizeof=0x8
 {                                                                             // XREF: rigid_body_constraint_contact/r
     rigid_body_pair_key(rigid_body *const b1,rigid_body *const b2);
 
+    bool operator<(const rigid_body_pair_key &other) const
+    {
+        if (m_b1 < other.m_b1) return true;
+        if (other.m_b1 < m_b1) return false;
+        return m_b2 < other.m_b2;
+    }
+
+    bool operator==(const rigid_body_pair_key &other) const
+    {
+        return m_b1 == other.m_b1 &&
+            m_b2 == other.m_b2;
+    }
+
     struct rigid_body *m_b1;
     struct rigid_body *m_b2;
 };
 
+struct broad_phase_info;
 struct phys_collision_pair : phys_link_list_base<phys_collision_pair> // sizeof=0x14
 {                                                                             // XREF: ?do_initial_tunnel_test@@YAXPAVbroad_phase_group@@ABVbroad_phase_environement_query_results@@@Z/r
-                                                                                // ?bpi_do_gjk_intersect@@YA?B_NPAVbroad_phase_info@@0M@Z/r
     broad_phase_info *m_bpi1;
     broad_phase_info *m_bpi2;
     float m_hit_time;
@@ -538,16 +573,38 @@ public:
     void __thiscall check_surface_properties();
 };
 
+struct environment_rigid_body;
 struct rigid_body_constraint_contact : rigid_body_constraint // sizeof=0x2C
 {                                                                             // XREF: phys_free_list<rigid_body_constraint_contact>::T_internal/r
-    struct avl_tree_accessor // sizeof=0x0
+struct avl_tree_accessor
+{
+    using key_type  = rigid_body_pair_key;
+    using node_type = rigid_body_constraint_contact;
+
+    static bool less(const key_type& key, const node_type* node)
     {
-    };
+        return key < node->m_avl_key;
+    }
+
+    static bool less(const node_type* node, const key_type& key)
+    {
+        return node->m_avl_key < key;
+    }
+
+    static bool equals(const node_type* node, const key_type& key)
+    {
+        return node->m_avl_key == key;
+    }
+};
+
     phys_simple_link_list<contact_point_info> m_list_contact_point_info_buffer_1;
     phys_simple_link_list<contact_point_info> m_list_contact_point_info_buffer_2;
+
     unsigned int m_solver_priority;
     phys_inplace_avl_tree_node<rigid_body_constraint_contact> m_avl_tree_node;
     rigid_body_pair_key m_avl_key;
+
+    ~rigid_body_constraint_contact();
 
     void add_cpi_simple(
         contact_point_info *cpi,
@@ -555,26 +612,8 @@ struct rigid_body_constraint_contact : rigid_body_constraint // sizeof=0x2C
         environment_rigid_body *b2_);
 
     void update_smallest_lambda();
-    void setup_constraint(pulse_sum_constraint_solver *phys, float delta_t);
+    void setup_constraint(struct pulse_sum_constraint_solver *phys, float delta_t);
     void verify_constraint(environment_rigid_body *b1_, environment_rigid_body *b2_);
-};
-
-struct rb_inplace_partition_node // sizeof=0x38
-{                                                                             // XREF: rigid_body/r
-        rigid_body_constraint_point *m_rbc_point_first;
-        rigid_body_constraint_hinge *m_rbc_hinge_first;
-        rigid_body_constraint_distance *m_rbc_dist_first;
-        rigid_body_constraint_ragdoll *m_rbc_ragdoll_first;
-        rigid_body_constraint_wheel *m_rbc_wheel_first;
-        rigid_body_constraint_angular_actuator *m_rbc_angular_actuator_first;
-        rigid_body_constraint_upright *m_rbc_upright_first;
-        rigid_body_constraint_custom_orientation *m_rbc_custom_orientation_first;
-        rigid_body_constraint_custom_path *m_rbc_custom_path_first;
-        struct rigid_body_constraint_contact *m_rbc_contact_first;
-        struct rigid_body *m_partition_head;
-        struct rigid_body *m_partition_tail;
-        struct rigid_body *m_next_node;
-        int m_partition_size;
 };
 
 struct environment_rigid_body : rigid_body // sizeof=0x160

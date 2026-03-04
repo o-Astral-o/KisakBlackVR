@@ -54,6 +54,21 @@ struct GfxMatrix // sizeof=0x40
     }
 };
 
+struct GfxViewParms // sizeof=0x140
+{                                       // XREF: .data:lockPvsViewParms/r
+    GfxMatrix viewMatrix;
+    GfxMatrix projectionMatrix;         // XREF: R_InitGlobalStructs+BD/o
+    GfxMatrix viewProjectionMatrix;     // XREF: R_InitGlobalStructs+CA/o
+    GfxMatrix inverseViewProjectionMatrix;
+    // XREF: R_InitGlobalStructs+D7/o
+    float origin[4];                    // XREF: R_UpdateLodParms+16/r
+    // R_UpdateLodParms+25/r ...
+    float axis[3][3];                   // XREF: R_PvsLock_GetViewAxis(float (* const)[3])+7/o
+    float depthHackNearClip;
+    float zNear;
+    float zFar;
+};
+
 struct GfxDrawSurfFields // sizeof=0x8
 {                                                                             // XREF: GfxDrawSurf/r
         unsigned __int64 objectId : 16;
@@ -69,6 +84,22 @@ struct GfxDrawSurfFields // sizeof=0x8
         unsigned __int64 prepass : 2;
         unsigned __int64 noDynamicShadow : 1;
         unsigned __int64 primarySortKey : 6;
+};
+
+struct GfxFog // sizeof=0x50
+{                                       // XREF: GfxBackEndData/r
+    int startTime;
+    int finishTime;
+    float color[4];
+    float fogStart;
+    float density;
+    float heightDensity;
+    float baseHeight;
+    float sunFogColor[4];
+    float sunFogDir[3];
+    float sunFogStartAng;
+    float sunFogEndAng;
+    float maxDensity;
 };
 
 union GfxDrawSurf // sizeof=0x8
@@ -423,4 +454,14 @@ struct GfxLightmapArray // sizeof=0xC
     GfxImage *primary;
     GfxImage *secondary;
     GfxImage *secondaryB;
+};
+
+struct GfxSceneDef // sizeof=0x14
+{                                       // XREF: GfxViewInfo/r
+    int time;                           // XREF: R_SetLodOrigin(refdef_s const *)+80/w
+    // R_SetLodOrigin(refdef_s const *)+86/r ...
+    float floatTime;                    // XREF: R_SetLodOrigin(refdef_s const *)+96/w
+    // R_RenderScene(refdef_s const *,int)+264/r ...
+    float viewOffset[3];                // XREF: R_SetLodOrigin(refdef_s const *)+52/w
+    // R_SetLodOrigin(refdef_s const *)+62/w ...
 };

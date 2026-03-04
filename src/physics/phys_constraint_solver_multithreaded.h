@@ -4,6 +4,8 @@
 #include "rigid_body.h"
 #include "physics_system_internal.h"
 
+class contact_point_info;
+
 struct pulse_sum_node : phys_link_list_base<pulse_sum_node> // sizeof=0x80
 {
     // padding byte
@@ -31,12 +33,6 @@ struct pulse_sum_node : phys_link_list_base<pulse_sum_node> // sizeof=0x80
     // padding byte
     // padding byte
     // padding byte
-};
-
-struct pulse_sum_cache // sizeof=0x4
-{                                       // XREF: rigid_body_constraint_point/r
-                                        // rigid_body_constraint_hinge/r ...
-    float m_pulse_sum;
 };
 
 struct pulse_sum_normal : phys_link_list_base<pulse_sum_normal> // sizeof=0xA0
@@ -268,41 +264,6 @@ struct pulse_sum_point : phys_link_list_base<pulse_sum_point> // sizeof=0x110
 
 };
 
-struct __declspec(align(16)) pulse_sum_contact_point // sizeof=0xD0
-{
-    phys_vec3 m_b1_r;
-    phys_vec3 m_b2_r;
-    phys_vec3 m_b1_ap_n;
-    phys_vec3 m_b2_ap_n;
-    phys_vec3 m_b1_ap_f1;
-    phys_vec3 m_b2_ap_f1;
-    phys_vec3 m_b1_ap_f2;
-    phys_vec3 m_b2_ap_f2;
-    phys_vec3 m_pulse_sum;
-    phys_vec3 m_right_side;
-    float m_big_dirt;
-    float m_denom_xx;
-    float m_denom_yy;
-    float m_denom_zz;
-    float m_denom_xy;
-    float m_denom_xz;
-    float m_inv_yy;
-    float m_inv_yz;
-    float m_inv_zz;
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-    // padding byte
-};
-
 struct pulse_sum_contact : phys_link_list_base<pulse_sum_contact> // sizeof=0x60
 {
     // padding byte
@@ -323,7 +284,7 @@ struct pulse_sum_contact : phys_link_list_base<pulse_sum_contact> // sizeof=0x60
     float m_fric_coef;
     pulse_sum_node *m_b1;
     pulse_sum_node *m_b2;
-    pulse_sum_contact_point *m_list_pscp;
+    struct pulse_sum_contact_point *m_list_pscp;
     void *m_pulse_sum_cache_list;
     int m_list_pscp_count;
     // padding byte
@@ -412,7 +373,23 @@ struct pulse_sum_constraint_solver // sizeof=0x84
     {
         struct avl_tree_accessor
         {
+            using key_type = user_rigid_body *;
+            using node_type = pulse_sum_constraint_solver::temp_user_rigid_body;
 
+            static bool less(const key_type &key, const node_type *node)
+            {
+                return key < node->m_avl_key;
+            }
+
+            static bool less(const node_type *node, const key_type &key)
+            {
+                return node->m_avl_key < key;
+            }
+
+            static bool equals(const node_type *node, const key_type &key)
+            {
+                return node->m_avl_key == key;
+            }
         };
         user_rigid_body *m_avl_key;
         phys_inplace_avl_tree_node<pulse_sum_constraint_solver::temp_user_rigid_body> m_avl_tree_node;

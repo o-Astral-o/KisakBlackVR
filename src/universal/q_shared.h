@@ -367,14 +367,7 @@ struct cspField_t // sizeof=0xC
                                                                                 // G_ParseHitLocDmgTable(void)+7D/w
 };
 
-struct orientation_t // sizeof=0x30
-{                                                                             // XREF: .rdata:orientation_t const orIdentity/r
-                                                                                // snd_listener/r ...
-        float origin[3];                                        // XREF: Weapon_DrawAxisOrigin(orientation_t,float)+EB/r
-                                                                                // Weapon_DrawAxisOrigin(orientation_t,float)+102/r ...
-        float axis[3][3];                                     // XREF: CG_Laser_Add(centity_s *,DObj *,cpose_t *,float const * const,LaserOwnerEnum)+50/o
-                                                                                // CG_UpdateHelicopterKillCam+152/o ...
-};
+struct orientation_t;
 
 struct trajectory_t // sizeof=0x24
 {                                                                             // XREF: LerpEntityState/r

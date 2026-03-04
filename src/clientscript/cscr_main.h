@@ -119,6 +119,7 @@ enum ExpressionParseTypes : __int32
     NUM_EXPR_TYPES = 0xE,
 };
 
+struct ParseValue;
 struct ExpressionOperatorData // sizeof=0x14
 {                                       // XREF: .rdata:g_ExprOperatorList/r
     int iArity;

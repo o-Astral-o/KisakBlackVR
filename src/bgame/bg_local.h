@@ -6,6 +6,7 @@
 #include "bg_animation.h"
 #include <game/g_scr_vehicle.h>
 #include "bg_mantle.h"
+#include <gfx_d3d/r_shader_constant_set.h>
 
 struct GfxSkinCacheEntry // sizeof=0xC
 {                                                                             // XREF: cpose_t/r
@@ -740,6 +741,18 @@ struct lerpFrame_t // sizeof=0x34
         int oldFrameSnapshotTime;
 };
 
+struct score_s // sizeof=0x2C
+{                                                                             // XREF: clientState_s/r
+    int ping;
+    int status_icon;
+    int place;
+    int score;
+    int kills;
+    int assists;
+    int deaths;
+    int scoreboardColumns[4];
+};
+
 struct __declspec(align(4)) clientInfo_t // sizeof=0x5C8
 {                                                                             // XREF: bgs_t/r corpseInfo_t/r
         int infoValid;                                            // XREF: G_RunFrame(int)+906/r
@@ -895,6 +908,7 @@ struct pml_t // sizeof=0x8C
                                         // PmoveSingle+CBE/w ...
 };
 
+struct bgsAnim_s;
 struct bgs_t // sizeof=0xBF00
 {                                       // XREF: .data:bgs_t level_bgs/r
                                         // cg_s/r ...

@@ -4,6 +4,7 @@
 #include <bgame/bg_public.h>
 #include "g_vehicle_path.h"
 #include <physics/destructible.h>
+#include <physics/phys_colgeom.h>
 
 enum VehicleMoveState : __int32
 {                                       // XREF: scr_vehicle_s/r

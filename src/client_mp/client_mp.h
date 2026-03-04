@@ -1,7 +1,6 @@
 #pragma once
 
 #include <game/teams.h>
-#include <client_mp/cl_main_mp.h>
 
 union $4EE974FEE7F16CD9507A14B5D3A2E3FF // sizeof=0x8
 {                                                                             // XREF: clientState_s/r
@@ -16,18 +15,6 @@ enum VehicleAnimState : __int32
         VEHICLEANIMSTATE_CHANGEPOS = 0x2,
         VEHICLEANIMSTATE_EXIT            = 0x3,
         VEHICLEANIMSTATECOUNT            = 0x4,
-};
-
-struct score_s // sizeof=0x2C
-{                                                                             // XREF: clientState_s/r
-        int ping;
-        int status_icon;
-        int place;
-        int score;
-        int kills;
-        int assists;
-        int deaths;
-        int scoreboardColumns[4];
 };
 
 struct clientState_s // sizeof=0xD0

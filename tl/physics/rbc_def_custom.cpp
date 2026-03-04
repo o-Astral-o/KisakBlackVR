@@ -1,5 +1,7 @@
 #include "rbc_def_custom.h"
 #include "rbc_def_generic.h"
+#include <physics/physics_system_internal.h>
+#include <physics/phys_constraint_solver_multithreaded.h>
 
 float psa_spring_d = 5.0;
 float psa_spring_k = 100.0;
