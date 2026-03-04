@@ -1,4 +1,5 @@
 #pragma once
+#include <tl/tl_system.h>
 
 enum jqProcessor : __int32
 {                                       // XREF: ?jqFindWorkerForProcessor@@YAPAUjqWorker@@W4jqProcessor@@@Z/r
@@ -97,6 +98,7 @@ struct tlSharedAtomicMutex // sizeof=0x10
     tlSharedAtomicMutex *ThisPtr;       // XREF: jqInit(void)+27/w
 
     void Lock();
+    void Unlock();
 };
 
 
@@ -118,8 +120,8 @@ struct jqBatchGroup // sizeof=0x8
         //$2BD02F38FBEBD854EF9A531D8B9F9671 __s0;
         struct //$2BD02F38FBEBD854EF9A531D8B9F9671 // sizeof=0x8
         {                                       // XREF: $F761E618955D9ED935731AE37AFEF266/r
-            int QueuedBatchCount;
-            int ExecutingBatchCount;
+            volatile unsigned int QueuedBatchCount;
+            volatile unsigned int ExecutingBatchCount;
         };
         unsigned __int64 BatchCount;
     };
@@ -202,27 +204,109 @@ struct __declspec(align(8)) jqAtomicQueue//<jqBatch,32> // sizeof=0x50
 
     void Init(jqAtomicQueue<T, SIZE> *SharedFreeList)
     {
+        NodeType **p_FreeList = &_FreeList;
+        ThisPtr = this;
+        *p_FreeList = nullptr;
 
-    }
+        if (!SharedFreeList)
+        {
+            FreeListPtr = p_FreeList;
+            FreeLock.ThisPtr = &FreeLock;
+        }
+        else
+        {
+            FreeListPtr = SharedFreeList->FreeListPtr;
+            FreeLock.ThisPtr = &SharedFreeList->FreeLock;
+        }
 
-    void AllocateNodeBlock(int Count)
-    {
+        FreeLock.ThreadId = 0;
+        FreeLock.LockCount = 0;
 
-    }
+        NodeBlockListHead = nullptr;
 
-    bool Pop(jqBatch *p)
-    {
+        HeadLock.ThisPtr = &HeadLock;
+        HeadLock.ThreadId = 0;
+        HeadLock.LockCount = 0;
 
-    }
+        TailLock.ThisPtr = &TailLock;
+        TailLock.ThreadId = 0;
+        TailLock.LockCount = 0;
 
-    void Push(jqBatch *Data)
-    {
-
+        NodeType *Node = AllocateNode();
+        Node->Next = nullptr;
+        Tail = Node;
+        Head = Node;
     }
 
     NodeType *AllocateNode()
     {
+        FreeLock.Lock();
+        NodeType *Node = *FreeListPtr;
+        if (!Node)
+        {
+            AllocateNodeBlock(SIZE);
+            Node = *FreeListPtr;
+        }
+        *FreeListPtr = Node->Next;
+        FreeLock.Unlock();
+        return Node;
+    }
 
+    void AllocateNodeBlock(int Count)
+    {
+        int blockSize = Count * sizeof(NodeType);
+        NodeType *block = (NodeType *)tlMemAlloc(blockSize + sizeof(NodeBlockEntry), 4u, 0);
+
+        // Chain the nodes
+        for (int i = 0; i < Count - 1; ++i)
+            block[i].Next = &block[i + 1];
+        block[Count - 1].Next = nullptr;
+
+        // Store NodeBlockEntry at end of allocation
+        NodeBlockEntry *entry = reinterpret_cast<NodeBlockEntry *>(reinterpret_cast<char *>(block) + blockSize);
+        entry->Addr = block;
+        entry->Next = NodeBlockListHead;
+        NodeBlockListHead = entry;
+
+        *FreeListPtr = block;
+    }
+
+    bool Pop(jqBatch *p)
+    {
+        HeadLock.Lock();
+        NodeType *Next = ThisPtr->Head->Next;
+        NodeType *OldHead = ThisPtr->Head;
+
+        if (Next)
+        {
+            memcpy(p, &Next->Data, sizeof(jqBatch));
+            ThisPtr->Head = Next;
+            HeadLock.Unlock();
+
+            FreeLock.Lock();
+            OldHead->Next = *FreeListPtr;
+            *FreeListPtr = OldHead;
+            FreeLock.Unlock();
+
+            return true;
+        }
+        else
+        {
+            HeadLock.Unlock();
+            return false;
+        }
+    }
+
+    void Push(jqBatch *Data)
+    {
+        NodeType *Node = AllocateNode();
+        memcpy(&Node->Data, Data, sizeof(jqBatch));
+        Node->Next = nullptr;
+
+        TailLock.Lock();
+        ThisPtr->Tail->Next = Node;
+        ThisPtr->Tail = Node;
+        TailLock.Unlock();
     }
 };
 
@@ -239,7 +323,7 @@ struct jqQueue // sizeof=0x60
     // padding byte
     jqAtomicQueue<jqBatch,32> Queue;    // XREF: jqInit(void)+D/w
                                         // jqInit(void)+17/w ...
-    int QueuedBatchCount;               // XREF: jqInit(void)+A1/w
+    volatile unsigned int QueuedBatchCount;               // XREF: jqInit(void)+A1/w
                                         // jqStart(void)+2D0/w ...
     unsigned int ProcessorsMask;        // XREF: jqStart(void)+2E5/w
                                         // jqStart(void)+31C/w
@@ -297,25 +381,14 @@ struct jqBatchPool // sizeof=0x180
     // padding byte
     jqQueue BaseQueue;                  // XREF: jqInit(void)+D/w
                                         // jqInit(void)+17/w ...
-    //$F761E618955D9ED935731AE37AFEF266 ___u2;
-    union// $F761E618955D9ED935731AE37AFEF266 // sizeof=0x8
-    {                                       // XREF: jqGetQueuedBatchCount(jqBatchGroup *)+A/r
-                                            // jqGetExecutingBatchCount(jqBatchGroup *)+A/r ...
-        //$2BD02F38FBEBD854EF9A531D8B9F9671 __s0;
-        struct //$2BD02F38FBEBD854EF9A531D8B9F9671 // sizeof=0x8
-        {                                       // XREF: $F761E618955D9ED935731AE37AFEF266/r
-            int QueuedBatchCount;
-            int ExecutingBatchCount;
-        };
-        unsigned __int64 BatchCount;
-    };
-                                        // XREF: jqGetQueuedBatchCount(jqBatchGroup *)+A/r
+    jqBatchGroup group;                 // XREF: jqGetQueuedBatchCount(jqBatchGroup *)+A/r
                                         // jqGetExecutingBatchCount(jqBatchGroup *)+A/r ...
     jqAtomicHeap BatchDataHeap;         // XREF: jqAllocBatchData(uint)+9/o
                                         // jqFreeBatchData(void *)+7/o ...
 
     ~jqBatchPool();
 };
+
 
 unsigned int __cdecl tlAtomicAdd(volatile unsigned __int32 *var, unsigned int value);
 unsigned __int64 __cdecl tlAtomicAnd(volatile unsigned __int64 *var, unsigned __int64 value);
@@ -367,10 +440,10 @@ void __cdecl _jqShutdown();
 void __cdecl _jqStop();
 void __cdecl _jqAddBatch();
 void __cdecl jqAlertWorkers();
-void jqLockBatchPoolInternal(void *thisp);
+void jqLockBatchPoolInternal();
 void __cdecl jqUnlockBatchPoolInternal();
 void __cdecl jqKeepWorkersAwake();
-void jqLockBatchPool(void *thisp);
+void jqLockBatchPool();
 void __cdecl jqUnlockBatchPool();
 void __cdecl jqSetBatchDataHeapSize(unsigned int Size, unsigned int BlockSize);
 void __cdecl jqInit();

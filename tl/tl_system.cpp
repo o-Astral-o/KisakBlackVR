@@ -1,6 +1,10 @@
 #include "tl_system.h"
 #include <stdio.h>
 
+
+#include <cstring>
+#include <corecrt_malloc.h>
+#include <Windows.h>
 #include <Psapi.h>
 
 tlSystemCallbacks tlCurSystemCallbacks;

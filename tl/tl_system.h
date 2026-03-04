@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Windows.h>
+union _LARGE_INTEGER;
 
 struct tlFileBuf // sizeof=0xC
 {

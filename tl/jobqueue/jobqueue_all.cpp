@@ -3,26 +3,31 @@
 #include <Windows.h>
 #include "../tl_system.h"
 #include <universal/q_shared.h>
+#include <qcommon/threads.h>
 
 thread_local jqBatch *jqCurBatch;
 thread_local jqWorker *jqCurWorker;
+thread_local jqQueue *jqCurQueue;
 
 unsigned __int64 jqMainThreadID;
+
+jqQueue jqHighPriorityQueue;
 
 jqBatchPool jqPool;
 
 void(__cdecl *jqWorkerInitFn)(int);
 HANDLE jqNewJobAdded;
 bool jqStopSignal;
-int jqPoolLock;
+volatile unsigned int jqPoolLock;
 jqQueue jqGlobalQueue;
 jqWorker jqMainThreadWorker;
+jqWorker *jqTempWorkers;
 
-int jqKeepWorkersAwakeCount;
-int jqSleepingWorkersCount;
-int jqNextAvailTempWorker;
-int jqBatchPoolExternallyLockedCount;
-int jqNWorkers;
+volatile unsigned int jqKeepWorkersAwakeCount;
+volatile unsigned int jqSleepingWorkersCount;
+volatile unsigned int jqNextAvailTempWorker;
+volatile unsigned int jqBatchPoolExternallyLockedCount;
+volatile unsigned int jqNWorkers;
 jqWorker *jqWorkers;
 
 const char *jqCheckContext;
@@ -38,6 +43,7 @@ unsigned int __cdecl tlAtomicAdd(volatile unsigned __int32 *var, unsigned int va
 
 unsigned __int64 __cdecl tlAtomicAnd(volatile unsigned __int64 *var, unsigned __int64 value)
 {
+#if 0
   volatile signed __int64 *v2; // edi
   unsigned int v3; // esi
   signed __int64 v4; // rax
@@ -56,10 +62,26 @@ unsigned __int64 __cdecl tlAtomicAnd(volatile unsigned __int64 *var, unsigned __
     v2 = (volatile signed __int64 *)var;
   }
   return value & v;
+#else // aislop
+    uint64_t oldValue;
+    uint64_t newValue;
+
+    do
+    {
+        oldValue = *var;
+        newValue = oldValue & value;
+    } while (_InterlockedCompareExchange64(
+        (volatile LONG64 *)var,
+        newValue,
+        oldValue) != oldValue);
+
+    return newValue;
+#endif
 }
 
 unsigned __int64 __cdecl tlAtomicOr(volatile unsigned __int64 *var, unsigned __int64 value)
 {
+#if 0
   volatile signed __int64 *v2; // edi
   unsigned int v3; // esi
   signed __int64 v4; // rax
@@ -78,24 +100,40 @@ unsigned __int64 __cdecl tlAtomicOr(volatile unsigned __int64 *var, unsigned __i
     v2 = (volatile signed __int64 *)var;
   }
   return value | v;
+#else // aislop
+    uint64_t oldValue;
+    uint64_t newValue;
+
+    do
+    {
+        oldValue = *var;
+        newValue = oldValue | value;
+    } while (_InterlockedCompareExchange64(
+        (volatile LONG64 *)var,
+        newValue,
+        oldValue) != oldValue);
+
+    return newValue;
+#endif
 }
 
 void tlAtomicMutex::Unlock()
 {
-  int Target; // [esp+4h] [ebp-4h] BYREF
+  volatile unsigned int Target; // [esp+4h] [ebp-4h] BYREF
 
   if ( this->LockCount-- == 1 )
   {
     Target = 0;
     InterlockedExchange(&Target, 0);
-    LODWORD(this->ThreadId) = 0;
-    HIDWORD(this->ThreadId) = 0;
+    //LODWORD(this->ThreadId) = 0;
+    //HIDWORD(this->ThreadId) = 0;
+    this->ThreadId = (unsigned __int64)0;
   }
 }
 
-char __thiscall tlAtomicMutex::TryLock(tlAtomicMutex *this)
+bool __thiscall tlAtomicMutex::TryLock()
 {
-    int Target; // [esp+1Ch] [ebp-10h] BYREF
+    volatile unsigned int Target; // [esp+1Ch] [ebp-10h] BYREF
     tlAtomicMutex *ThisPtr; // [esp+20h] [ebp-Ch]
     unsigned __int64 CurThread; // [esp+24h] [ebp-8h]
 
@@ -122,8 +160,28 @@ char __thiscall tlAtomicMutex::TryLock(tlAtomicMutex *this)
     }
 }
 
+// this was added later as aislop, seems inlined 
+void tlSharedAtomicMutex::Unlock()
+{
+    unsigned __int64 CurrentThreadId = GetCurrentThreadId();
+
+    // Only the owning thread can unlock
+    if (ThreadId != CurrentThreadId)
+        return; // or assert if you want strict checking
+
+    // Decrement recursive lock count
+    int NewCount = InterlockedDecrement((volatile long *)&LockCount);
+
+    if (NewCount == 0)
+    {
+        // Release ownership
+        InterlockedExchange64((volatile long long *)&ThreadId, 0);
+    }
+}
+
 void tlSharedAtomicMutex::Lock()
 {
+#if 0
   unsigned int CurrentThreadId; // ebx
   tlSharedAtomicMutex *ThisPtr; // eax
   int ThreadId; // ecx
@@ -151,10 +209,40 @@ void tlSharedAtomicMutex::Lock()
   {
     ++this->ThisPtr->LockCount;
   }
+#else // aislop
+    DWORD currentThreadId = GetCurrentThreadId();
+
+    volatile LONG64 *owner =
+        (volatile LONG64 *)&this->ThisPtr->ThreadId;
+
+    LONG64 currentOwner = *owner;
+
+    DWORD ownerLow = (DWORD)currentOwner;
+    DWORD ownerHigh = (DWORD)(currentOwner >> 32);
+
+    // Recursive fast path
+    if (ownerLow == currentThreadId && ownerHigh == 0)
+    {
+        ++this->ThisPtr->LockCount;
+        return;
+    }
+
+    // Acquire loop
+    while (_InterlockedCompareExchange64(
+        owner,
+        (LONG64)currentThreadId,
+        0) != 0)
+    {
+        SwitchToThread();
+    }
+
+    this->ThisPtr->LockCount = 1;
+#endif
 }
 
 bool jqAtomicHeap::GetAvailableBlock(jqAtomicHeap::LevelInfo *FitLevel, int *FitSlot)
 {
+#if 0
   int NCells; // edx
   int v4; // eax
   signed __int64 v5; // rdi
@@ -192,6 +280,42 @@ bool jqAtomicHeap::GetAvailableBlock(jqAtomicHeap::LevelInfo *FitLevel, int *Fit
            (volatile signed __int64 *)&FitLevel->CellAvailable[v4],
            v5 & ~(1LL << ((63 - v9) & 0x3F)),
            v5) == v5;
+#else // aislop
+    uint64_t *cells = FitLevel->CellAvailable;
+    int nCells = FitLevel->NCells;
+
+    for (int cellIndex = 0; cellIndex < nCells; ++cellIndex)
+    {
+        uint64_t cell = cells[cellIndex];
+
+        if (cell == 0)
+            continue;
+
+        // Find highest set bit (MSB first like the ASM)
+        int bitIndex = 63;
+        while (((cell >> bitIndex) & 1ULL) == 0)
+            --bitIndex;
+
+        int slot = (cellIndex << 6) + bitIndex;
+
+        uint64_t mask = 1ULL << bitIndex;
+        uint64_t newCell = cell & ~mask;
+
+        // cmpxchg8b equivalent
+        if (_InterlockedCompareExchange64(
+            (volatile LONG64 *)&cells[cellIndex],
+            newCell,
+            cell) == (LONG64)cell)
+        {
+            *FitSlot = slot;
+            return true;
+        }
+
+        return false;
+    }
+
+    return false;
+#endif
 }
 
 char jqAtomicHeap::AllocBlock(jqAtomicHeap::LevelInfo **FitLevel, int *FitSlot)
@@ -283,9 +407,10 @@ unsigned __int8 *jqAtomicHeap::Alloc(unsigned int Size, unsigned int Align)
     if ( v9 )
     {
       Size = 0;
-      InterlockedExchange((volatile int *)&Size, 0);
-      LODWORD(p_Mutex->ThreadId) = 0;
-      HIDWORD(p_Mutex->ThreadId) = 0;
+      InterlockedExchange((volatile unsigned int *)&Size, 0);
+      //LODWORD(p_Mutex->ThreadId) = 0;
+      //HIDWORD(p_Mutex->ThreadId) = 0;
+      p_Mutex->ThreadId = (unsigned long long)0;
     }
     return v10;
   }
@@ -336,6 +461,7 @@ void jqAtomicHeap::FindAllocatedBlock(
 
 void jqAtomicHeap::MergeBlocks(jqAtomicHeap::LevelInfo **FitLevel, int *FitSlot)
 {
+#if 0
   jqAtomicHeap::LevelInfo **v3; // edi
   int *v4; // ecx
   int v5; // ecx
@@ -379,10 +505,56 @@ LABEL_3:
       v6 = 8 * (v5 / 64);
     }
   }
+#else // aislop
+    // Compute highest level pointer:
+    LevelInfo *topLevel = &this->Levels[this->NLevels - 1];
+
+    // Stop if already at top
+    while (*FitLevel < topLevel)
+    {
+        LevelInfo *level = *FitLevel;
+
+        int slot = *FitSlot;
+        int buddy = slot ^ 1;
+
+        int cellIndex = buddy >> 6;      // / 64
+        int bitIndex = buddy & 63;      // % 64
+
+        uint64_t mask = 1ULL << bitIndex;
+
+        volatile uint64_t *cell =
+            &level->CellAvailable[cellIndex];
+
+        while (true)
+        {
+            uint64_t oldValue = *cell;
+
+            if ((oldValue & mask) == 0)
+                return;
+
+            uint64_t newValue = oldValue & ~mask;
+
+            // cmpxchg8b equivalent
+            if (_InterlockedCompareExchange64(
+                (volatile LONG64 *)cell,
+                newValue,
+                oldValue) == (LONG64)oldValue)
+            {
+                // Successful merge
+
+                ++(*FitLevel);   // move to parent level
+                *FitSlot >>= 1;  // parent slot
+                break;           // continue outer loop
+            }
+
+        }
+    }
+#endif
 }
 
 void jqAtomicHeap::Free(jqAtomicHeap::LevelInfo *Ptr)
 {
+#if 0
   tlAtomicMutex *p_Mutex; // edi
   jqAtomicHeap::LevelInfo *v4; // ebx
   int v5; // esi
@@ -423,7 +595,60 @@ void jqAtomicHeap::Free(jqAtomicHeap::LevelInfo *Ptr)
     LODWORD(p_Mutex->ThreadId) = 0;
     HIDWORD(p_Mutex->ThreadId) = 0;
   }
+#else // aislop
+    //tlAtomicMutex::Lock(&this->Mutex);
+    this->Mutex.Lock();
+
+    // Compute offset into heap
+    unsigned int offset = (unsigned int)((unsigned char *)Ptr - this->HeapBase);
+
+    LevelInfo *level = nullptr;
+    int slot = 0;
+
+    // Find which level + slot this allocation belongs to
+    this->FindAllocatedBlock(offset, &level, &slot);
+
+    // Clear allocated bit
+    unsigned int cellIndex = slot >> 6;          // /64
+    unsigned int bitIndex = slot & 63;
+
+    unsigned long long bitMask = 1ULL << bitIndex;
+
+    tlAtomicAnd(&level->CellAllocated[cellIndex], ~bitMask);
+
+    // Update heap stats
+    tlAtomicAdd((volatile unsigned int *)&this->TotalBlocks, -1);
+    tlAtomicAdd((volatile unsigned int *)&this->TotalUsed, -(int)level->BlockSize);
+
+    // Try to merge upward (buddy merge)
+    this->MergeBlocks(&level, &slot);
+
+    // Recompute cell index after merge
+    cellIndex = slot >> 6;
+    bitIndex = slot & 63;
+    bitMask = 1ULL << bitIndex;
+
+    // Validate: block must not already be marked available
+    if (level->CellAvailable[cellIndex] & bitMask)
+    {
+        _tlAssert(
+            "jobqueue_atomic_heap.h",
+            402,
+            "(jqGet(&FitLevel->CellAvailable[BlockCell(FitSlot)]) & BlockBit(FitSlot)) == 0",
+            "jqAtomicHeap error detected, invalid tree state."
+        );
+    }
+
+    // Mark block available
+    tlAtomicOr(&level->CellAvailable[cellIndex], bitMask);
+
+    //tlAtomicMutex::Unlock(&this->Mutex);
+    this->Mutex.Unlock();
+#endif
 }
+
+unsigned int jqProcessorsMask = 255;
+
 
 void __cdecl jqAttachQueueToWorkers(jqQueue *Queue, unsigned int ProcessorMask)
 {
@@ -431,7 +656,7 @@ void __cdecl jqAttachQueueToWorkers(jqQueue *Queue, unsigned int ProcessorMask)
   int v3; // ecx
   int v4; // edi
   char *v5; // edi
-  volatile signed __int32 *v6; // ebx
+  volatile unsigned __int32 *v6; // ebx
   int v7; // esi
   int v8; // [esp+0h] [ebp-Ch]
   unsigned int BaseProcessorsMask; // [esp+4h] [ebp-8h]
@@ -459,7 +684,7 @@ void __cdecl jqAttachQueueToWorkers(jqQueue *Queue, unsigned int ProcessorMask)
       if ( (v3 & ProcessorMask) != 0 )
       {
         v5 = (char *)jqWorkers + v4;
-        v6 = (volatile signed __int32 *)(v5 + 28);
+        v6 = (volatile unsigned __int32 *)(v5 + 28);
         do
         {
           v7 = *v6;
@@ -476,7 +701,7 @@ void __cdecl jqAttachQueueToWorkers(jqQueue *Queue, unsigned int ProcessorMask)
             v3 = Processor;
           }
         }
-        while ( _InterlockedCompareExchange((volatile signed __int32 *)&v5[4 * v7 + 128], (signed __int32)Queue, 0) );
+        while ( _InterlockedCompareExchange((volatile unsigned __int32 *)&v5[4 * v7 + 128], (signed __int32)Queue, 0) );
         _InterlockedExchangeAdd(v6, 1u);
         Queue->ProcessorsMask |= *((unsigned int *)v5 + 5);
         v2 = BaseProcessorsMask;
@@ -545,7 +770,7 @@ int __cdecl jqGetQueuedBatchCount(jqBatchGroup *GroupID)
   if ( GroupID )
     return GroupID->QueuedBatchCount;
   else
-    return jqPool.QueuedBatchCount;
+    return jqPool.group.QueuedBatchCount;
 }
 
 int __cdecl jqGetExecutingBatchCount(jqBatchGroup *GroupID)
@@ -553,7 +778,7 @@ int __cdecl jqGetExecutingBatchCount(jqBatchGroup *GroupID)
   if ( GroupID )
     return GroupID->ExecutingBatchCount;
   else
-    return jqPool.ExecutingBatchCount;
+    return jqPool.group.ExecutingBatchCount;
 }
 
 jqWorker *__cdecl jqFindWorkerForProcessor(jqProcessor Processor)
@@ -574,31 +799,31 @@ jqWorker *__cdecl jqFindWorkerForProcessor(jqProcessor Processor)
 
 bool __cdecl jqPoll(jqBatchGroup *GroupID)
 {
-  jqBatchGroup *v1; // ebx
+    jqBatchGroup *p_group; // ebx
 
-  v1 = GroupID;
-  if ( !GroupID )
-    v1 = (jqBatchGroup *)&jqPool.104;
-  if ( ((unsigned __int8)v1 & 7) != 0
-    && _tlAssert(
-         "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
-         390,
-         "((u32)BatchCount & 0x7)==0",
-         "Data not aligned correctly, read won't be atomic!\n") )
-  {
-    __debugbreak();
-  }
-  return v1->BatchCount != 0;
+    p_group = GroupID;
+    if (!GroupID)
+        p_group = &jqPool.group;
+    if (((unsigned __int8)p_group & 7) != 0
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
+            390,
+            "((u32)BatchCount & 0x7)==0",
+            "Data not aligned correctly, read won't be atomic!\n"))
+    {
+        __debugbreak();
+    }
+    return p_group->BatchCount != 0;
 }
 
 bool __cdecl jqAreJobsQueued(jqBatchGroup *GroupID)
 {
-  jqBatchGroup *v1; // eax
+    jqBatchGroup *p_group; // eax
 
-  v1 = GroupID;
-  if ( !GroupID )
-    v1 = (jqBatchGroup *)&jqPool.104;
-  return v1->QueuedBatchCount != 0;
+    p_group = GroupID;
+    if (!GroupID)
+        p_group = &jqPool.group;
+    return p_group->QueuedBatchCount != 0;
 }
 
 void __cdecl jqSetWorkerInitFunction(void (__cdecl *fn)(int))
@@ -649,9 +874,9 @@ char __cdecl jqCanBatchExecute()
 
 bool __cdecl jqWorkerSleep()
 {
-  int Target; // [esp+0h] [ebp-4h] BYREF
+  volatile unsigned int Target; // [esp+0h] [ebp-4h] BYREF
 
-  while ( !jqPool.QueuedBatchCount )
+  while ( !jqPool.group.QueuedBatchCount )
   {
     if ( jqStopSignal )
       break;
@@ -846,20 +1071,21 @@ void __cdecl jqAlertWorkers()
   PulseEvent(jqNewJobAdded);
 }
 
-void jqLockBatchPoolInternal(void *this)
+void jqLockBatchPoolInternal()
 {
-  int Target; // [esp+0h] [ebp-4h] BYREF
-
-  Target = (int)this;
+    // some bogus?
+  //int Target; // [esp+0h] [ebp-4h] BYREF
+  //
+  //Target = (int)this;
   while ( _InterlockedCompareExchange(&jqPoolLock, 1, 0) )
     SwitchToThread();
-  Target = 0;
-  InterlockedExchange(&Target, 0);
+  //Target = 0;
+  //InterlockedExchange(&Target, 0);
 }
 
 void __cdecl jqUnlockBatchPoolInternal()
 {
-  int Target; // [esp+0h] [ebp-4h] BYREF
+  volatile unsigned int Target; // [esp+0h] [ebp-4h] BYREF
 
   Target = 0;
   InterlockedExchange(&Target, 0);
@@ -874,9 +1100,9 @@ void __cdecl jqKeepWorkersAwake()
     PulseEvent(jqNewJobAdded);
 }
 
-void jqLockBatchPool(void *this)
+void jqLockBatchPool()
 {
-  jqLockBatchPoolInternal(this);
+  jqLockBatchPoolInternal();
   _InterlockedExchangeAdd(&jqBatchPoolExternallyLockedCount, 1u);
 }
 
@@ -922,13 +1148,14 @@ void __cdecl jqSetBatchDataHeapSize(unsigned int Size, unsigned int BlockSize)
   if ( jqPool.BatchDataHeap.LevelData )
     tlMemFree(jqPool.BatchDataHeap.LevelData);
   v2 = (unsigned __int8 *)tlMemAlloc(Size, 0x80u, 0);
-  jqAtomicHeap::Init(&jqPool.BatchDataHeap, v2, Size, BlockSize);
+  //jqAtomicHeap::Init(&jqPool.BatchDataHeap, v2, Size, BlockSize);
+  jqPool.BatchDataHeap.Init(v2, Size, BlockSize);
 }
 
 void __cdecl jqInit()
 {
-  jqAtomicQueue<jqBatch,32>::NodeType *Node; // eax
-  unsigned intCurrentThreadId; // eax
+  //jqAtomicQueue<jqBatch,32>::NodeType *Node; // eax
+  unsigned int CurrentThreadId; // eax
 
   jqPool.ThisPtr = &jqPool;
   jqPool.BaseQueue.Queue.ThisPtr = &jqPool.BaseQueue.Queue;
@@ -944,12 +1171,14 @@ void __cdecl jqInit()
   jqPool.BaseQueue.Queue.TailLock.ThisPtr = &jqPool.BaseQueue.Queue.TailLock;
   jqPool.BaseQueue.Queue.TailLock.ThreadId = 0;
   jqPool.BaseQueue.Queue.TailLock.LockCount = 0;
-  Node = jqAtomicQueue<jqBatch,32>::AllocateNode(&jqPool.BaseQueue.Queue);
+  //Node = jqAtomicQueue<jqBatch,32>::AllocateNode(&jqPool.BaseQueue.Queue);
+  auto Node = jqPool.BaseQueue.Queue.AllocateNode(); // another shitty use of auto 
   Node->Next = 0;
   jqPool.BaseQueue.Queue.Tail = Node;
   jqPool.BaseQueue.Queue.Head = Node;
   jqPool.BaseQueue.QueuedBatchCount = 0;
-  jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(&jqPool.BaseQueue.Queue, 128);
+  //jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(&jqPool.BaseQueue.Queue, 128);
+  jqPool.BaseQueue.Queue.AllocateNodeBlock(128);
   CurrentThreadId = GetCurrentThreadId();
   jqSleepingWorkersCount = 0;
   jqMainThreadID = CurrentThreadId;
@@ -960,7 +1189,8 @@ void __cdecl jqInitQueue(jqQueue *Queue)
 {
   Queue->ThisPtr = Queue;
   Queue->QueuedBatchCount = 0;
-  jqAtomicQueue<jqBatch,32>::Init(&Queue->Queue, &jqPool.BaseQueue.Queue);
+  //jqAtomicQueue<jqBatch,32>::Init(&Queue->Queue, &jqPool.BaseQueue.Queue);
+  Queue->Queue.Init(&jqPool.BaseQueue.Queue);
   Queue->ProcessorsMask = 0;
 }
 
@@ -969,7 +1199,8 @@ void __cdecl jqInitWorker(jqWorker *Worker)
   Worker->ThisPtr = Worker;
   Worker->WorkerSpecific.ThisPtr = &Worker->WorkerSpecific;
   Worker->WorkerSpecific.QueuedBatchCount = 0;
-  jqAtomicQueue<jqBatch,32>::Init(&Worker->WorkerSpecific.Queue, &jqPool.BaseQueue.Queue);
+  //jqAtomicQueue<jqBatch,32>::Init(&Worker->WorkerSpecific.Queue, &jqPool.BaseQueue.Queue);
+  Worker->WorkerSpecific.Queue.Init(&jqPool.BaseQueue.Queue);
   Worker->WorkerSpecific.ProcessorsMask = 0;
   Worker->NumQueues = 0;
   Worker->Queues[0] = 0;
@@ -999,9 +1230,10 @@ void __cdecl jqAddBatchToQueue(jqBatch *Batch, jqQueue *Queue)
   if ( GroupID )
     _InterlockedExchangeAdd(&GroupID->QueuedBatchCount, 1u);
   _InterlockedExchangeAdd(&Batch->Module->Group.QueuedBatchCount, 1u);
-  _InterlockedExchangeAdd(&jqPool.QueuedBatchCount, 1u);
+  _InterlockedExchangeAdd(&jqPool.group.QueuedBatchCount, 1u);
   _InterlockedExchangeAdd(&Queue->QueuedBatchCount, 1u);
-  jqAtomicQueue<jqBatch,32>::Push(&Queue->Queue, Batch);
+  //jqAtomicQueue<jqBatch,32>::Push(&Queue->Queue, Batch);
+  Queue->Queue.Push(Batch);
   PulseEvent(jqNewJobAdded);
 }
 
@@ -1026,9 +1258,10 @@ void __cdecl jqAddBatch(jqBatch *Data, jqQueue *Queue)
   if ( GroupID )
     _InterlockedExchangeAdd(&GroupID->QueuedBatchCount, 1u);
   _InterlockedExchangeAdd(&Data->Module->Group.QueuedBatchCount, 1u);
-  _InterlockedExchangeAdd(&jqPool.QueuedBatchCount, 1u);
+  _InterlockedExchangeAdd(&jqPool.group.QueuedBatchCount, 1u);
   _InterlockedExchangeAdd(&v2->QueuedBatchCount, 1u);
-  jqAtomicQueue<jqBatch,32>::Push(&v2->Queue, Data);
+  //jqAtomicQueue<jqBatch,32>::Push(&v2->Queue, Data);
+  v2->Queue.Push(Data);
   PulseEvent(jqNewJobAdded);
 }
 
@@ -1067,134 +1300,145 @@ void __cdecl jqAddBatch(
 
 void __cdecl jqSkipBatch()
 {
-  int v0; // eax
-
-  v0 = *((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index);
-  jqAddBatch(*(jqBatch **)(v0 + 8316), *(jqQueue **)(v0 + 8308));
+  ///int v0; // eax
+  ///
+  ///v0 = *((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index);
+  ///jqAddBatch(*(jqBatch **)(v0 + 8316), *(jqQueue **)(v0 + 8308));
+  /// 
+  //  TLS_HACK *v0; // eax
+  //
+  //  v0 = NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index];
+    jqAddBatch(jqCurBatch, jqCurQueue);
 }
 
 char __cdecl jqPopNextBatchFromQueue(jqQueue *Worker, jqBatchGroup *Queue, jqBatch *GroupID)
 {
-  jqWorker *v3; // esi
-  int QueuedBatchCount; // eax
-  int v5; // ecx
-  jqAtomicQueue<jqBatch,32> *p_ThreadId; // edi
-  jqQueue *p_Group; // eax
-  jqAtomicQueue<jqBatch,32>::NodeType **FreeListPtr; // eax
-  jqAtomicQueue<jqBatch,32>::NodeType *v9; // esi
-  Ptr; // eax
-  bool v11; // zf
-  tlSharedAtomicMutex *v12; // eax
-  int v13; // eax
-  int CheckedBatches; // [esp+Ch] [ebp-Ch]
-  int v16; // [esp+10h] [ebp-8h] BYREF
-  int Target; // [esp+14h] [ebp-4h] BYREF
+    jqQueue *v3; // esi
+    int QueuedBatchCount; // eax
+    int v5; // ecx
+    jqAtomicQueue<jqBatch, 32> *p_Queue; // edi
+    jqBatchGroup *p_Group; // eax
+    jqAtomicQueue<jqBatch, 32>::NodeType **FreeListPtr; // eax
+    jqAtomicQueue<jqBatch, 32>::NodeType *v9; // esi
+    tlSharedAtomicMutex *ThisPtr; // eax
+    bool v11; // zf
+    tlSharedAtomicMutex *v12; // eax
+    jqBatchGroup *v13; // eax
+    int CheckedBatches; // [esp+Ch] [ebp-Ch]
+    LONG v16; // [esp+10h] [ebp-8h] BYREF
+    LONG Target; // [esp+14h] [ebp-4h] BYREF
 
-  v3 = (jqWorker *)Worker;
-  QueuedBatchCount = Worker->ThisPtr->QueuedBatchCount;
-  v5 = 0;
-  if ( QueuedBatchCount )
-  {
-    while ( v5 <= QueuedBatchCount )
+    v3 = Worker;
+    QueuedBatchCount = Worker->ThisPtr->QueuedBatchCount;
+    v5 = 0;
+    if (QueuedBatchCount)
     {
-      CheckedBatches = v5 + 1;
-      p_ThreadId = (jqAtomicQueue<jqBatch,32> *)&v3->ThreadId;
-      if ( !jqAtomicQueue<jqBatch,32>::Pop((jqAtomicQueue<jqBatch,32> *)&v3->ThreadId, GroupID) )
-        break;
-      p_Group = (jqQueue *)GroupID->GroupID;
-      if ( !p_Group )
-        p_Group = (jqQueue *)&GroupID->Module->Group;
-      *(unsigned int *)(*((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index) + 8308) = v3;
-      if ( !Queue || Queue == (jqBatchGroup *)p_Group )
-      {
-        v13 = (int)GroupID->GroupID;
-        if ( v13 )
+        while (v5 <= QueuedBatchCount)
         {
-          _InterlockedExchangeAdd((volatile signed __int32 *)(v13 + 4), 1u);
-          _InterlockedExchangeAdd(&GroupID->GroupID->QueuedBatchCount, 0xFFFFFFFF);
-          if ( GroupID->GroupID->QueuedBatchCount < 0 )
-          {
-            if ( _tlAssert(
-                   "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue_kernel.cpp",
-                   79,
-                   "PoppedBatch->GroupID->QueuedBatchCount >= 0",
-                   "JobQueue group queued count went below zero!") )
+            CheckedBatches = v5 + 1;
+            p_Queue = &v3->Queue;
+            //if (!jqAtomicQueue<jqBatch, 32>::Pop(&v3->Queue, GroupID))
+            if (!v3->Queue.Pop(GroupID))
+                break;
+            p_Group = GroupID->GroupID;
+            if (!p_Group)
+                p_Group = &GroupID->Module->Group;
+            jqCurQueue = v3;
+            if (!Queue || Queue == p_Group)
             {
-              __debugbreak();
+                v13 = GroupID->GroupID;
+                if (v13)
+                {
+                    _InterlockedExchangeAdd(&v13->ExecutingBatchCount, 1u);
+                    _InterlockedExchangeAdd(&GroupID->GroupID->QueuedBatchCount, 0xFFFFFFFF);
+                    if (GroupID->GroupID->QueuedBatchCount < 0)
+                    {
+                        if (_tlAssert(
+                            "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue_kernel.cpp",
+                            79,
+                            "PoppedBatch->GroupID->QueuedBatchCount >= 0",
+                            "JobQueue group queued count went below zero!"))
+                        {
+                            __debugbreak();
+                        }
+                    }
+                }
+                _InterlockedExchangeAdd(&GroupID->Module->Group.ExecutingBatchCount, 1u);
+                _InterlockedExchangeAdd(&GroupID->Module->Group.QueuedBatchCount, 0xFFFFFFFF);
+                _InterlockedExchangeAdd(&jqPool.ThisPtr->group.ExecutingBatchCount, 1u);
+                _InterlockedExchangeAdd(&jqPool.ThisPtr->group.QueuedBatchCount, 0xFFFFFFFF);
+                _InterlockedExchangeAdd(&v3->ThisPtr->QueuedBatchCount, 0xFFFFFFFF);
+                if (jqPool.group.QueuedBatchCount < 0
+                    && _tlAssert(
+                        "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue_kernel.cpp",
+                        88,
+                        "jqGetPool()->QueuedBatchCount >= 0",
+                        "JobQueue global queued count went below zero!"))
+                {
+                    __debugbreak();
+                }
+                if (v3->QueuedBatchCount < 0
+                    && _tlAssert(
+                        "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue_kernel.cpp",
+                        89,
+                        "Queue->QueuedBatchCount >= 0",
+                        "JobQueue queue count went below zero!"))
+                {
+                    __debugbreak();
+                }
+                return 1;
             }
-          }
+            //tlSharedAtomicMutex::Lock(&v3->Queue.FreeLock);
+            v3->Queue.FreeLock.Lock();
+            FreeListPtr = p_Queue->FreeListPtr;
+            v9 = *p_Queue->FreeListPtr;
+            if (!v9)
+            {
+                //jqAtomicQueue<jqBatch, 32>::AllocateNodeBlock(p_Queue, 32);
+                p_Queue->AllocateNodeBlock(32);
+                FreeListPtr = p_Queue->FreeListPtr;
+                v9 = *p_Queue->FreeListPtr;
+            }
+            *FreeListPtr = v9->Next;
+            ThisPtr = p_Queue->FreeLock.ThisPtr;
+            v11 = ThisPtr->LockCount-- == 1;
+            if (v11)
+            {
+                Target = 0;
+                InterlockedExchange(&Target, 0);
+                v12 = p_Queue->FreeLock.ThisPtr;
+                //LODWORD(v12->ThreadId) = 0;
+                //HIDWORD(v12->ThreadId) = 0;
+                v12->ThreadId = (unsigned long long)0;
+            }
+            memcpy((unsigned __int8 *)&v9->Data, (unsigned __int8 *)GroupID, sizeof(v9->Data));
+            v9->Next = 0;
+            //tlAtomicMutex::Lock(&p_Queue->TailLock);
+            p_Queue->TailLock.Lock();
+            p_Queue->ThisPtr->Tail->Next = v9;
+            p_Queue->ThisPtr->Tail = v9;
+            v11 = p_Queue->TailLock.LockCount-- == 1;
+            if (v11)
+            {
+                v16 = 0;
+                InterlockedExchange(&v16, 0);
+                //LODWORD(p_Queue->TailLock.ThreadId) = 0;
+                //HIDWORD(p_Queue->TailLock.ThreadId) = 0;
+                p_Queue->TailLock.ThreadId = (unsigned long long)0;
+            }
+            QueuedBatchCount = Worker->ThisPtr->QueuedBatchCount;
+            if (!QueuedBatchCount)
+                return 0;
+            v3 = Worker;
+            v5 = CheckedBatches;
         }
-        _InterlockedExchangeAdd(&GroupID->Module->Group.ExecutingBatchCount, 1u);
-        _InterlockedExchangeAdd(&GroupID->Module->Group.QueuedBatchCount, 0xFFFFFFFF);
-        _InterlockedExchangeAdd(&jqPool.ThisPtr->ExecutingBatchCount, 1u);
-        _InterlockedExchangeAdd(&jqPool.ThisPtr->QueuedBatchCount, 0xFFFFFFFF);
-        _InterlockedExchangeAdd((volatile signed __int32 *)(v3->Type + 88), 0xFFFFFFFF);
-        if ( jqPool.QueuedBatchCount < 0
-          && _tlAssert(
-               "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue_kernel.cpp",
-               88,
-               "jqGetPool()->QueuedBatchCount >= 0",
-               "JobQueue global queued count went below zero!") )
-        {
-          __debugbreak();
-        }
-        if ( v3->WorkerSpecific.Queue.HeadLock.LockCount < 0
-          && _tlAssert(
-               "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue_kernel.cpp",
-               89,
-               "Queue->QueuedBatchCount >= 0",
-               "JobQueue queue count went below zero!") )
-        {
-          __debugbreak();
-        }
-        return 1;
-      }
-      tlSharedAtomicMutex::Lock((tlSharedAtomicMutex *)&v3->WorkerSpecific);
-      FreeListPtr = p_ThreadId->FreeListPtr;
-      v9 = *p_ThreadId->FreeListPtr;
-      if ( !v9 )
-      {
-        jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(p_ThreadId, 32);
-        FreeListPtr = p_ThreadId->FreeListPtr;
-        v9 = *p_ThreadId->FreeListPtr;
-      }
-      *FreeListPtr = v9->Next;
-      ThisPtr = p_ThreadId->FreeLock.ThisPtr;
-      v11 = ThisPtr->LockCount-- == 1;
-      if ( v11 )
-      {
-        Target = 0;
-        InterlockedExchange(&Target, 0);
-        v12 = p_ThreadId->FreeLock.ThisPtr;
-        LODWORD(v12->ThreadId) = 0;
-        HIDWORD(v12->ThreadId) = 0;
-      }
-      memcpy((unsigned __int8 *)&v9->Data, (unsigned __int8 *)GroupID, sizeof(v9->Data));
-      v9->Next = 0;
-      tlAtomicMutex::Lock(&p_ThreadId->TailLock);
-      p_ThreadId->ThisPtr->Tail->Next = v9;
-      p_ThreadId->ThisPtr->Tail = v9;
-      v11 = p_ThreadId->TailLock.LockCount-- == 1;
-      if ( v11 )
-      {
-        v16 = 0;
-        InterlockedExchange(&v16, 0);
-        LODWORD(p_ThreadId->TailLock.ThreadId) = 0;
-        HIDWORD(p_ThreadId->TailLock.ThreadId) = 0;
-      }
-      QueuedBatchCount = Worker->ThisPtr->QueuedBatchCount;
-      if ( !QueuedBatchCount )
-        return 0;
-      v3 = (jqWorker *)Worker;
-      v5 = CheckedBatches;
     }
-  }
-  return 0;
+    return 0;
 }
 
-char  jqPopNextBatch@<al>(
-        jqWorker *Worker@<ecx>,
-        bool *doHighPriority@<eax>,
+char  jqPopNextBatch(
+        jqWorker *Worker,
+        bool *doHighPriority,
         jqBatchGroup *GroupID,
         jqBatch *PoppedBatch)
 {
@@ -1224,184 +1468,292 @@ char  jqPopNextBatch@<al>(
 
 void __cdecl jqWorkerLoop(jqWorker *Worker, jqBatchGroup *GroupID, bool BreakWhenEmpty, unsigned __int64 *batchCount)
 {
-  jqWorker *v4; // ebx
-  int v5; // eax
-  _LARGE_INTEGER Tick; // rax
-  int HighPart; // edi
-  unsigned int LowPart; // esi
-  unsigned __int64 v9; // rax
-  bool v10; // cf
-  bool v11; // zf
-  int v12; // ecx
-  int v13; // esi
-  int *v14; // eax
-  int v15; // edi
-  unsigned int *v16; // eax
-  unsigned int *v17; // ecx
-  int v18; // edi
-  int v19; // eax
-  unsigned int *v20; // ebx
-  jqBatch CurBatch; // [esp+Ch] [ebp-A4h] BYREF
-  int Target; // [esp+8Ch] [ebp-24h] BYREF
-  int v23; // [esp+90h] [ebp-20h] BYREF
-  void *CachedConditionalAddress; // [esp+94h] [ebp-1Ch]
-  unsigned __int64 lastConditionalCheckTime; // [esp+98h] [ebp-18h]
-  unsigned int CachedConditionalValue; // [esp+A0h] [ebp-10h]
-  int v27; // [esp+A4h] [ebp-Ch]
-  int ret; // [esp+A8h] [ebp-8h]
-  bool doHighPriority; // [esp+AFh] [ebp-1h] BYREF
+#if 0
+    jqWorker *v4; // ebx
+    TLS_HACK *v5; // eax
+    _LARGE_INTEGER Tick; // rax
+    int HighPart; // edi
+    unsigned int LowPart; // esi
+    unsigned __int64 v9; // rax
+    bool v10; // cf
+    bool v11; // zf
+    TLS_HACK *v12; // ecx
+    int p_Queue; // esi
+    int *v14; // eax
+    int v15; // edi
+    _DWORD *v16; // eax
+    _DWORD *v17; // ecx
+    int v18; // edi
+    int v19; // eax
+    _DWORD *v20; // ebx
+    jqBatch CurBatch; // [esp+Ch] [ebp-A4h] BYREF
+    LONG Target; // [esp+8Ch] [ebp-24h] BYREF
+    LONG v23; // [esp+90h] [ebp-20h] BYREF
+    void *CachedConditionalAddress; // [esp+94h] [ebp-1Ch]
+    unsigned __int64 lastConditionalCheckTime; // [esp+98h] [ebp-18h]
+    unsigned int CachedConditionalValue; // [esp+A0h] [ebp-10h]
+    TLS_HACK *v27; // [esp+A4h] [ebp-Ch]
+    int ret; // [esp+A8h] [ebp-8h]
+    bool doHighPriority; // [esp+AFh] [ebp-1h] BYREF
 
-  v4 = Worker;
-  if ( jqWorkerInitFn && Worker->WorkerID > 0 )
-    jqWorkerInitFn(Worker->WorkerID);
-  v5 = *((unsigned int *)NtCurrentTeb()->ThreadLocalStoragePointer + _tls_index);
-  lastConditionalCheckTime = 0;
-  CachedConditionalAddress = 0;
-  CachedConditionalValue = 0;
-  v27 = v5;
-  *(unsigned int *)(v5 + 8312) = Worker;
-  doHighPriority = 1;
-  memset(&CurBatch, 0, 28);
-  while ( 1 )
-  {
-    if ( jqPopNextBatch(v4, &doHighPriority, GroupID, &CurBatch) )
-    {
-      while ( 1 )
-      {
-        *(unsigned int *)(v27 + 8316) = &CurBatch;
-        ret = 1;
-        Tick = tlPcGetTick();
-        HighPart = Tick.HighPart;
-        LowPart = Tick.LowPart;
-        if ( CachedConditionalAddress == CurBatch.ConditionalAddress
-          && CachedConditionalValue == CurBatch.ConditionalValue )
-        {
-          break;
-        }
-        if ( !CurBatch.ConditionalAddress )
-          goto LABEL_9;
-        Tick.LowPart -= lastConditionalCheckTime;
-        Target = (__PAIR64__(Tick.HighPart, LowPart) - lastConditionalCheckTime) >> 32;
-        if ( Target || Tick.LowPart > 0xC350 )
-        {
-          if ( *(unsigned int *)CurBatch.ConditionalAddress >= CurBatch.ConditionalValue )
-          {
-            CachedConditionalAddress = CurBatch.ConditionalAddress;
-            CachedConditionalValue = CurBatch.ConditionalValue;
-            CurBatch.ConditionalAddress = 0;
-            ret = CurBatch.Module->Code(&CurBatch);
-          }
-          v4 = Worker;
-          lastConditionalCheckTime = __PAIR64__(HighPart, LowPart);
-          goto LABEL_10;
-        }
-        v4 = Worker;
-LABEL_21:
-        v11 = ret == 0;
-        v12 = v27;
-        *(unsigned int *)(v27 + 8316) = 0;
-        if ( !v11 )
-        {
-          _InterlockedExchangeAdd(&jqPool.ThisPtr->QueuedBatchCount, 1u);
-          _InterlockedExchangeAdd(&CurBatch.Module->Group.QueuedBatchCount, 1u);
-          _InterlockedExchangeAdd((volatile signed __int32 *)(**(unsigned int **)(v12 + 8308) + 88), 1u);
-          if ( CurBatch.GroupID )
-            _InterlockedExchangeAdd(&CurBatch.GroupID->QueuedBatchCount, 1u);
-          v13 = *(unsigned int *)(v12 + 8308) + 8;
-          tlSharedAtomicMutex::Lock((tlSharedAtomicMutex *)(*(unsigned int *)(v12 + 8308) + 32));
-          v14 = *(int **)v13;
-          v15 = **(unsigned int **)v13;
-          if ( !v15 )
-          {
-            v16 = tlMemAlloc(0x1008u, 4u, 0);
-            v17 = v16;
-            v18 = 31;
-            do
-            {
-              --v18;
-              *v17 = v17 + 32;
-              v17 += 32;
-            }
-            while ( v18 );
-            v16[992] = 0;
-            v16[1024] = v16;
-            v16[1025] = *(unsigned int *)(v13 + 8);
-            *(unsigned int *)(v13 + 8) = v16 + 1024;
-            **(unsigned int **)v13 = v16;
-            v14 = *(int **)v13;
-            v15 = **(unsigned int **)v13;
-          }
-          *v14 = *(unsigned int *)v15;
-          v19 = *(unsigned int *)(v13 + 36);
-          v11 = (*(unsigned int *)(v19 + 8))-- == 1;
-          if ( v11 )
-          {
-            Target = 0;
-            InterlockedExchange(&Target, 0);
-            v20 = *(unsigned int **)(v13 + 36);
-            *v20 = 0;
-            v20[1] = 0;
-          }
-          memcpy((unsigned __int8 *)(v15 + 4), (unsigned __int8 *)&CurBatch, 0x7Cu);
-          *(unsigned int *)v15 = 0;
-          tlAtomicMutex::Lock((tlAtomicMutex *)(v13 + 56));
-          **(unsigned int **)(*(unsigned int *)(v13 + 72) + 16) = v15;
-          *(unsigned int *)(*(unsigned int *)(v13 + 72) + 16) = v15;
-          v11 = (*(unsigned int *)(v13 + 64))-- == 1;
-          if ( v11 )
-          {
-            v23 = 0;
-            InterlockedExchange(&v23, 0);
-            *(unsigned int *)(v13 + 56) = 0;
-            *(unsigned int *)(v13 + 60) = 0;
-          }
-          v4 = Worker;
-        }
-        _InterlockedExchangeAdd(&jqPool.ThisPtr->ExecutingBatchCount, 0xFFFFFFFF);
-        _InterlockedExchangeAdd(&CurBatch.Module->Group.ExecutingBatchCount, 0xFFFFFFFF);
-        if ( CurBatch.GroupID )
-          _InterlockedExchangeAdd(&CurBatch.GroupID->ExecutingBatchCount, 0xFFFFFFFF);
-        if ( BreakWhenEmpty && ret
-          || batchCount && !*batchCount
-          || !jqPopNextBatch(v4, &doHighPriority, GroupID, &CurBatch) )
-        {
-          goto LABEL_40;
-        }
-      }
-      CurBatch.ConditionalAddress = 0;
-LABEL_9:
-      ret = CurBatch.Module->Code(&CurBatch);
-LABEL_10:
-      if ( ret )
-      {
-        if ( ret == 2 )
-          doHighPriority = 1;
-      }
-      else
-      {
-        v9 = *(_QWORD *)&tlPcGetTick() - __PAIR64__(HighPart, LowPart);
-        v10 = __CFADD__((unsigned int)v9, v4->WorkTime);
-        LODWORD(v4->WorkTime) += v9;
-        doHighPriority = 1;
-        HIDWORD(v4->WorkTime) += HIDWORD(v9) + v10;
-      }
-      goto LABEL_21;
-    }
-LABEL_40:
+    v4 = Worker;
+    if (jqWorkerInitFn && Worker->WorkerID > 0)
+        jqWorkerInitFn(Worker->WorkerID);
+    v5 = NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index];
+    lastConditionalCheckTime = 0;
+    CachedConditionalAddress = 0;
+    CachedConditionalValue = 0;
+    v27 = v5;
+    v5->jqCurWorker = Worker;
     doHighPriority = 1;
-    if ( BreakWhenEmpty )
-      break;
-    if ( !jqWorkerSleep() )
+    memset(&CurBatch, 0, 28);
+    while (1)
     {
-      *(unsigned int *)(v27 + 8312) = 0;
-      return;
+        if (jqPopNextBatch(v4, &doHighPriority, GroupID, &CurBatch))
+        {
+            while (1)
+            {
+                v27->jqCurBatch = &CurBatch;
+                ret = 1;
+                Tick = tlPcGetTick();
+                HighPart = Tick.HighPart;
+                LowPart = Tick.LowPart;
+                if (CachedConditionalAddress == CurBatch.ConditionalAddress
+                    && CachedConditionalValue == CurBatch.ConditionalValue)
+                {
+                    break;
+                }
+                if (!CurBatch.ConditionalAddress)
+                    goto LABEL_9;
+                Tick.LowPart -= lastConditionalCheckTime;
+                Target = (__PAIR64__(Tick.HighPart, LowPart) - lastConditionalCheckTime) >> 32;
+                if (Target || Tick.LowPart > 0xC350)
+                {
+                    if (*(_DWORD *)CurBatch.ConditionalAddress >= CurBatch.ConditionalValue)
+                    {
+                        CachedConditionalAddress = CurBatch.ConditionalAddress;
+                        CachedConditionalValue = CurBatch.ConditionalValue;
+                        CurBatch.ConditionalAddress = 0;
+                        ret = CurBatch.Module->Code(&CurBatch);
+                    }
+                    v4 = Worker;
+                    lastConditionalCheckTime = __PAIR64__(HighPart, LowPart);
+                    goto LABEL_10;
+                }
+                v4 = Worker;
+            LABEL_21:
+                v11 = ret == 0;
+                v12 = v27;
+                v27->jqCurBatch = 0;
+                if (!v11)
+                {
+                    _InterlockedExchangeAdd(&jqPool.ThisPtr->QueuedBatchCount, 1u);
+                    _InterlockedExchangeAdd(&CurBatch.Module->Group.QueuedBatchCount, 1u);
+                    _InterlockedExchangeAdd(&v12->jqCurQueue->ThisPtr->QueuedBatchCount, 1u);
+                    if (CurBatch.GroupID)
+                        _InterlockedExchangeAdd(&CurBatch.GroupID->QueuedBatchCount, 1u);
+                    p_Queue = (int)&v12->jqCurQueue->Queue;
+                    tlSharedAtomicMutex::Lock(&v12->jqCurQueue->Queue.FreeLock);
+                    v14 = *(int **)p_Queue;
+                    v15 = **(_DWORD **)p_Queue;
+                    if (!v15)
+                    {
+                        v16 = tlMemAlloc(0x1008u, 4u, 0);
+                        v17 = v16;
+                        v18 = 31;
+                        do
+                        {
+                            --v18;
+                            *v17 = v17 + 32;
+                            v17 += 32;
+                        } while (v18);
+                        v16[992] = 0;
+                        v16[1024] = v16;
+                        v16[1025] = *(_DWORD *)(p_Queue + 8);
+                        *(_DWORD *)(p_Queue + 8) = v16 + 1024;
+                        **(_DWORD **)p_Queue = v16;
+                        v14 = *(int **)p_Queue;
+                        v15 = **(_DWORD **)p_Queue;
+                    }
+                    *v14 = *(_DWORD *)v15;
+                    v19 = *(_DWORD *)(p_Queue + 36);
+                    v11 = (*(_DWORD *)(v19 + 8))-- == 1;
+                    if (v11)
+                    {
+                        Target = 0;
+                        InterlockedExchange(&Target, 0);
+                        v20 = *(_DWORD **)(p_Queue + 36);
+                        *v20 = 0;
+                        v20[1] = 0;
+                    }
+                    memcpy((unsigned __int8 *)(v15 + 4), (unsigned __int8 *)&CurBatch, 0x7Cu);
+                    *(_DWORD *)v15 = 0;
+                    tlAtomicMutex::Lock((tlAtomicMutex *)(p_Queue + 56));
+                    **(_DWORD **)(*(_DWORD *)(p_Queue + 72) + 16) = v15;
+                    *(_DWORD *)(*(_DWORD *)(p_Queue + 72) + 16) = v15;
+                    v11 = (*(_DWORD *)(p_Queue + 64))-- == 1;
+                    if (v11)
+                    {
+                        v23 = 0;
+                        InterlockedExchange(&v23, 0);
+                        *(_DWORD *)(p_Queue + 56) = 0;
+                        *(_DWORD *)(p_Queue + 60) = 0;
+                    }
+                    v4 = Worker;
+                }
+                _InterlockedExchangeAdd(&jqPool.ThisPtr->ExecutingBatchCount, 0xFFFFFFFF);
+                _InterlockedExchangeAdd(&CurBatch.Module->Group.ExecutingBatchCount, 0xFFFFFFFF);
+                if (CurBatch.GroupID)
+                    _InterlockedExchangeAdd(&CurBatch.GroupID->ExecutingBatchCount, 0xFFFFFFFF);
+                if (BreakWhenEmpty && ret
+                    || batchCount && !*batchCount
+                    || !jqPopNextBatch(v4, &doHighPriority, GroupID, &CurBatch))
+                {
+                    goto LABEL_40;
+                }
+            }
+            CurBatch.ConditionalAddress = 0;
+        LABEL_9:
+            ret = CurBatch.Module->Code(&CurBatch);
+        LABEL_10:
+            if (ret)
+            {
+                if (ret == 2)
+                    doHighPriority = 1;
+            }
+            else
+            {
+                v9 = *(_QWORD *)&tlPcGetTick() - __PAIR64__(HighPart, LowPart);
+                v10 = __CFADD__((_DWORD)v9, v4->WorkTime);
+                LODWORD(v4->WorkTime) += v9;
+                doHighPriority = 1;
+                HIDWORD(v4->WorkTime) += HIDWORD(v9) + v10;
+            }
+            goto LABEL_21;
+        }
+    LABEL_40:
+        doHighPriority = 1;
+        if (BreakWhenEmpty)
+            break;
+        if (!jqWorkerSleep())
+        {
+            v27->jqCurWorker = 0;
+            return;
+        }
     }
-  }
-  *(unsigned int *)(v27 + 8312) = 0;
+    v27->jqCurWorker = 0;
+#else // aislop
+    //TLS_HACK* tls = (TLS_HACK*)NtCurrentTeb()->ThreadLocalStoragePointer[_tls_index];
+
+    // Initialize worker
+    if (jqWorkerInitFn && Worker->WorkerID > 0)
+        jqWorkerInitFn(Worker->WorkerID);
+
+    // TLS bookkeeping
+    jqCurWorker = Worker;
+
+    // Conditional batch caching
+    void* cachedCondAddr = nullptr;
+    unsigned int cachedCondValue = 0;
+    uint64_t lastConditionalCheckTime = 0;
+
+    bool doHighPriority = true;
+
+    jqBatch curBatch{};
+    memset(&curBatch, 0, sizeof(jqBatch));
+
+    while (true)
+    {
+        // Pop next batch
+        if (!jqPopNextBatch(Worker, &doHighPriority, GroupID, &curBatch))
+        {
+            if (BreakWhenEmpty)
+                break;
+
+            if (!jqWorkerSleep())
+            {
+                jqCurWorker = nullptr;
+                return;
+            }
+            continue;
+        }
+
+        jqCurBatch = &curBatch;
+
+        int ret = 1;
+
+        // Tick calculation
+        _LARGE_INTEGER tick = tlPcGetTick();
+        uint32_t tickHigh = tick.HighPart;
+        uint32_t tickLow = tick.LowPart;
+
+        // Conditional check
+        if (cachedCondAddr != curBatch.ConditionalAddress ||
+            cachedCondValue != curBatch.ConditionalValue)
+        {
+            if (curBatch.ConditionalAddress)
+            {
+                // Check time elapsed
+                uint64_t elapsed = ((__int64)tickHigh << 32 | tickLow) - lastConditionalCheckTime;
+                if (elapsed > 0xC350 || (elapsed >> 32))
+                {
+                    if (*(uint32_t*)curBatch.ConditionalAddress >= curBatch.ConditionalValue)
+                    {
+                        cachedCondAddr = curBatch.ConditionalAddress;
+                        cachedCondValue = curBatch.ConditionalValue;
+
+                        curBatch.ConditionalAddress = nullptr;
+                        ret = curBatch.Module->Code(&curBatch);
+                    }
+
+                    lastConditionalCheckTime = ((__int64)tickHigh << 32) | tickLow;
+                }
+            }
+            else
+            {
+                ret = curBatch.Module->Code(&curBatch);
+            }
+        }
+
+        jqCurBatch = nullptr;
+
+        // Update queued counts atomically
+        if (ret != 0)
+        {
+            _InterlockedExchangeAdd(&jqPool.ThisPtr->group.QueuedBatchCount, 1);
+            _InterlockedExchangeAdd(&curBatch.Module->Group.QueuedBatchCount, 1);
+
+            if (jqCurQueue)
+                _InterlockedExchangeAdd(&jqCurQueue->ThisPtr->QueuedBatchCount, 1);
+
+            if (curBatch.GroupID)
+                _InterlockedExchangeAdd(&curBatch.GroupID->QueuedBatchCount, 1);
+        }
+
+        // Decrement executing batch counts
+        _InterlockedExchangeAdd(&jqPool.ThisPtr->group.ExecutingBatchCount, -1);
+        _InterlockedExchangeAdd(&curBatch.Module->Group.ExecutingBatchCount, -1);
+
+        if (curBatch.GroupID)
+            _InterlockedExchangeAdd(&curBatch.GroupID->ExecutingBatchCount, -1);
+
+        // Exit conditions
+        if ((BreakWhenEmpty && ret) ||
+            (batchCount && *batchCount == 0))
+        {
+            break;
+        }
+
+        doHighPriority = (ret == 2);
+    }
+
+    jqCurWorker = nullptr;
+#endif
 }
 
 void __cdecl jqTempWorkerLoop(jqWorker *Worker, jqBatchGroup *GroupID, bool (__cdecl *callback)(void *), void *context)
 {
+#if 0
   jqWorker *v4; // ebx
   int v5; // esi
   jqModule *Module; // ecx
@@ -1517,6 +1869,127 @@ LABEL_15:
   }
 LABEL_24:
   *(unsigned int *)(v5 + 8312) = 0;
+#else // aislop
+jqBatch CurBatch;
+bool DoHighPriority;
+int Ret;
+int NumJobs;
+
+jqCurWorker = Worker;
+
+while (!callback(context))
+{
+    NumJobs = jqGetQueuedBatchCount(GroupID);
+    DoHighPriority = true;
+
+    while (jqPopNextBatch(Worker, &DoHighPriority, GroupID, &CurBatch))
+    {
+        jqCurBatch = &CurBatch;
+
+        Ret = CurBatch.Module->Code(&CurBatch);
+
+        jqCurBatch = nullptr;
+
+        if (!Ret)
+        {
+            DoHighPriority = true;
+        }
+        else
+        {
+            _InterlockedExchangeAdd(
+                (volatile long *)&jqPool.ThisPtr->group.QueuedBatchCount, 1);
+
+            _InterlockedExchangeAdd(
+                (volatile long *)&CurBatch.Module->Group.QueuedBatchCount, 1);
+
+            _InterlockedExchangeAdd(
+                (volatile long *)&jqCurQueue->QueuedBatchCount, 1);
+
+            if (CurBatch.GroupID)
+            {
+                _InterlockedExchangeAdd(
+                    (volatile long *)&CurBatch.GroupID->QueuedBatchCount, 1);
+            }
+        }
+
+        //
+        // Return batch to atomic queue free list
+        //
+
+        jqAtomicQueue<jqBatch, 32> *Queue = &jqCurQueue->Queue;
+
+        //tlSharedAtomicMutex::Lock(&Queue->FreeLock);
+        Queue->FreeLock.Lock();
+
+        jqAtomicQueue<jqBatch, 32>::NodeType *Node = Queue->_FreeList;
+
+        if (!Node)
+        {
+            // Allocate block of SIZE nodes
+            jqAtomicQueue<jqBatch, 32>::NodeType *Block =
+                (jqAtomicQueue<jqBatch, 32>::NodeType *)
+                tlMemAlloc(sizeof(jqAtomicQueue<jqBatch, 32>::NodeType) * 32, 8, 0);
+
+            for (int i = 0; i < 31; ++i)
+                Block[i].Next = &Block[i + 1];
+
+            Block[31].Next = nullptr;
+
+            Node = Block;
+
+            jqAtomicQueue<jqBatch, 32>::NodeBlockEntry *Entry =
+                (jqAtomicQueue<jqBatch, 32>::NodeBlockEntry *)
+                tlMemAlloc(sizeof(jqAtomicQueue<jqBatch, 32>::NodeBlockEntry), 8, 0);
+
+            Entry->Addr = Block;
+            Entry->Next = Queue->NodeBlockListHead;
+            Queue->NodeBlockListHead = Entry;
+        }
+
+        Queue->_FreeList = Node->Next;
+
+        //tlSharedAtomicMutex::Unlock(&Queue->FreeLock);
+        Queue->FreeLock.Unlock();
+
+        Node->Data = CurBatch;
+        Node->Next = nullptr;
+
+        //
+        // Enqueue at tail
+        //
+
+        //tlAtomicMutex::Lock(&Queue->TailLock);
+        Queue->TailLock.Lock();
+
+        Queue->Tail->Next = Node;
+        Queue->Tail = Node;
+
+        //tlAtomicMutex::Unlock(&Queue->TailLock);
+        Queue->TailLock.Unlock();
+
+        //
+        // Update executing counters
+        //
+
+        _InterlockedExchangeAdd(
+            (volatile long *)&jqPool.ThisPtr->group.ExecutingBatchCount, -1);
+
+        _InterlockedExchangeAdd(
+            (volatile long *)&CurBatch.Module->Group.ExecutingBatchCount, -1);
+
+        if (CurBatch.GroupID)
+        {
+            _InterlockedExchangeAdd(
+                (volatile long *)&CurBatch.GroupID->ExecutingBatchCount, -1);
+        }
+
+        if (!Ret || --NumJobs <= 0)
+            break;
+    }
+}
+
+jqCurWorker = nullptr;
+#endif
 }
 
 unsigned int __stdcall jqWorkerThread(jqWorker *_this)
@@ -1536,7 +2009,7 @@ void __cdecl _jqStart()
   bool v1; // zf
   jqWorker *v2; // esi
   HANDLE v3; // edi
-  unsigned int ThreadId; // [esp+4h] [ebp-8h] BYREF
+  DWORD ThreadId; // [esp+4h] [ebp-8h] BYREF
   int i; // [esp+8h] [ebp-4h]
 
   v0 = 0;
@@ -1568,49 +2041,49 @@ void __cdecl _jqStart()
 
 void __cdecl jqFlush(jqBatchGroup *GroupID, unsigned __int64 batchCount)
 {
-  jqBatchGroup *v2; // edi
-  jqBatchGroup *v3; // ebx
-  int QueuedBatchCount; // esi
-  unsigned __int64 zero; // [esp+Ch] [ebp-14h] BYREF
-  int Target; // [esp+14h] [ebp-Ch] BYREF
-  unsigned __int64 *workerBatchCount; // [esp+18h] [ebp-8h]
-  volatile int *ExecutingBatchCount; // [esp+1Ch] [ebp-4h]
+    jqBatchGroup *v2; // edi
+    jqBatchGroup *p_group; // ebx
+    int QueuedBatchCount; // esi
+    unsigned __int64 zero; // [esp+Ch] [ebp-14h] BYREF
+    LONG Target; // [esp+14h] [ebp-Ch] BYREF
+    unsigned __int64 *workerBatchCount; // [esp+18h] [ebp-8h]
+    volatile unsigned int *ExecutingBatchCount; // [esp+1Ch] [ebp-4h]
 
-  PulseEvent(jqNewJobAdded);
-  v2 = GroupID;
-  if ( GroupID )
-  {
-    v3 = GroupID;
-    ExecutingBatchCount = &GroupID->ExecutingBatchCount;
-  }
-  else
-  {
-    v3 = (jqBatchGroup *)&jqPool.104;
-    v2 = (jqBatchGroup *)&jqPool.104;
-    ExecutingBatchCount = &jqPool.ExecutingBatchCount;
-  }
-  if ( ((unsigned __int8)v3 & 7) != 0
-    && _tlAssert(
-         "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\xenon/jobqueue_xenon.cpp",
-         140,
-         "((u32)BatchCount & 0x7)==0",
-         "Data not aligned correctly, read won't be atomic!\n") )
-  {
-    __debugbreak();
-  }
-  zero = 0;
-  workerBatchCount = (unsigned __int64 *)v3;
-  if ( batchCount )
-    workerBatchCount = &zero;
-  while ( 1 )
-  {
-    QueuedBatchCount = v2->QueuedBatchCount;
-    Target = 0;
-    InterlockedExchange(&Target, 0);
-    if ( !(QueuedBatchCount + *ExecutingBatchCount) && v3->BatchCount <= batchCount )
-      break;
-    jqWorkerLoop(jqWorkers, GroupID, 1, workerBatchCount);
-  }
+    PulseEvent(jqNewJobAdded);
+    v2 = GroupID;
+    if (GroupID)
+    {
+        p_group = GroupID;
+        ExecutingBatchCount = &GroupID->ExecutingBatchCount;
+    }
+    else
+    {
+        p_group = &jqPool.group;
+        v2 = &jqPool.group;
+        ExecutingBatchCount = &jqPool.group.ExecutingBatchCount;
+    }
+    if (((unsigned __int8)p_group & 7) != 0
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\xenon/jobqueue_xenon.cpp",
+            140,
+            "((u32)BatchCount & 0x7)==0",
+            "Data not aligned correctly, read won't be atomic!\n"))
+    {
+        __debugbreak();
+    }
+    zero = 0;
+    workerBatchCount = (unsigned __int64 *)p_group;
+    if (batchCount)
+        workerBatchCount = &zero;
+    while (1)
+    {
+        QueuedBatchCount = v2->QueuedBatchCount;
+        Target = 0;
+        InterlockedExchange(&Target, 0);
+        if (!(QueuedBatchCount + *ExecutingBatchCount) && p_group->BatchCount <= batchCount)
+            break;
+        jqWorkerLoop(jqWorkers, GroupID, 1, workerBatchCount);
+    }
 }
 
 void __cdecl jqStop()
@@ -1627,7 +2100,7 @@ void __cdecl jqStop()
   if ( jqWorkers )
   {
     jqFlush(0, 0);
-    if ( jqPool.QueuedBatchCount )
+    if ( jqPool.group.QueuedBatchCount )
     {
       if ( _tlAssert(
              "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
@@ -1685,7 +2158,7 @@ void __cdecl jqAssistWithBatches(bool (__cdecl *callback)(void *), void *context
 
 void __cdecl jqShutdown()
 {
-  jqAtomicQueue<jqBatch,32>::NodeBlockEntry *NodeBlockListHead; // esi
+  //jqAtomicQueue<jqBatch,32>::NodeBlockEntry *NodeBlockListHead; // esi
   void *Addr; // eax
 
   if ( jqMainThreadID != GetCurrentThreadId()
@@ -1698,7 +2171,7 @@ void __cdecl jqShutdown()
     __debugbreak();
   }
   jqStop();
-  NodeBlockListHead = jqPool.BaseQueue.Queue.NodeBlockListHead;
+  auto NodeBlockListHead = jqPool.BaseQueue.Queue.NodeBlockListHead; // shitty use of auto lol
   while ( NodeBlockListHead )
   {
     Addr = NodeBlockListHead->Addr;
@@ -1711,250 +2184,253 @@ void __cdecl jqShutdown()
 
 void __cdecl jqStart()
 {
-  unsigned int v0; // ecx
-  int v1; // eax
-  unsigned int v2; // eax
-  unsigned int v3; // ecx
-  char *v4; // edi
-  unsigned int **v5; // esi
-  unsigned int **v6; // ecx
-  unsigned int *v7; // eax
-  int v8; // ecx
-  unsigned int *v10; // ebx
-  unsigned int v11; // esi
-  int v12; // eax
-  int v13; // ecx
-  int i; // ebx
-  jqWorker *v15; // esi
-  jqQueue *p_WorkerSpecific; // edi
-  int Target; // [esp+Ch] [ebp-18h] BYREF
-  unsigned int ProcessorsMask; // [esp+10h] [ebp-14h]
-  int id; // [esp+14h] [ebp-10h]
-  int v20; // [esp+18h] [ebp-Ch]
-  unsigned int Processor; // [esp+1Ch] [ebp-8h]
-  unsigned int *v22; // [esp+20h] [ebp-4h]
+    unsigned int v0; // ecx
+    int v1; // eax
+    unsigned int v2; // eax
+    int v3; // ecx
+    char *v4; // edi
+    int **v5; // esi
+    int *v6; // ecx
+    int *v7; // eax
+    int v8; // ecx
+    _DWORD *v10; // ebx
+    int v11; // esi
+    int v12; // eax
+    int v13; // ecx
+    int i; // ebx
+    jqWorker *v15; // esi
+    jqQueue *p_WorkerSpecific; // edi
+    LONG v17; // [esp+Ch] [ebp-18h] BYREF
+    unsigned int Processor; // [esp+10h] [ebp-14h]
+    int v19; // [esp+14h] [ebp-10h]
+    int v20; // [esp+18h] [ebp-Ch]
+    int v21; // [esp+1Ch] [ebp-8h]
+    int v22; // [esp+20h] [ebp-4h]
 
-  if ( jqMainThreadID != GetCurrentThreadId()
-    && _tlAssert(
-         "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
-         191,
-         "jqGetCurrentThreadID() == jqGetMainThreadID()",
-         "jqStart can only be called from the main thread.") )
-  {
-    __debugbreak();
-  }
-  jqStop();
-  v0 = jqProcessorsMask | 1;
-  jqProcessorsMask |= 1u;
-  v1 = 0;
-  do
-  {
-    v0 &= v0 - 1;
-    ++v1;
-  }
-  while ( v0 );
-  jqNWorkers = v1;
-  jqWorkers = (jqWorker *)tlMemAlloc(168 * v1, 8u, 0);
-  memset((unsigned __int8 *)jqWorkers, 0, 168 * jqNWorkers);
-  v2 = jqProcessorsMask;
-  v3 = 1;
-  id = 0;
-  Processor = 1;
-  if ( jqProcessorsMask )
-  {
-    v20 = 0;
-    while ( 1 )
+    if (jqMainThreadID != GetCurrentThreadId()
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
+            191,
+            "jqGetCurrentThreadID() == jqGetMainThreadID()",
+            "jqStart can only be called from the main thread."))
     {
-      if ( (v3 & v2) == 0 )
-      {
-        do
-          v3 *= 2;
-        while ( (v3 & v2) == 0 );
-        Processor = v3;
-      }
-      ProcessorsMask = v3 ^ v2;
-      v4 = (char *)jqWorkers + v20;
-      *((unsigned int *)v4 + 4) = v4;
-      *((unsigned int *)v4 + 30) = 0;
-      *((unsigned int *)v4 + 8) = v4 + 32;
-      *((unsigned int *)v4 + 11) = 0;
-      v5 = (unsigned int **)(v4 + 40);
-      *((unsigned int *)v4 + 28) = v4 + 40;
-      *((unsigned int *)v4 + 10) = jqPool.BaseQueue.Queue.FreeListPtr;
-      *((unsigned int *)v4 + 19) = &jqPool.BaseQueue.Queue.FreeLock;
-      *((unsigned int *)v4 + 16) = 0;
-      *((unsigned int *)v4 + 17) = 0;
-      *((unsigned int *)v4 + 18) = 0;
-      *((unsigned int *)v4 + 12) = 0;
-      *((unsigned int *)v4 + 20) = 0;
-      *((unsigned int *)v4 + 21) = 0;
-      *((unsigned int *)v4 + 22) = 0;
-      *((unsigned int *)v4 + 23) = v4 + 80;
-      *((unsigned int *)v4 + 24) = 0;
-      *((unsigned int *)v4 + 25) = 0;
-      *((unsigned int *)v4 + 26) = 0;
-      *((unsigned int *)v4 + 27) = v4 + 96;
-      tlSharedAtomicMutex::Lock((tlSharedAtomicMutex *)v4 + 4);
-      v6 = (unsigned int **)*((unsigned int *)v4 + 10);
-      v7 = *v6;
-      v22 = v7;
-      if ( !v7 )
-      {
-        jqAtomicQueue<jqBatch,32>::AllocateNodeBlock((jqAtomicQueue<jqBatch,32> *)(v4 + 40), 32);
-        v6 = (unsigned int **)*v5;
-        v22 = (unsigned int *)**v5;
-        v7 = v22;
-      }
-      *v6 = (unsigned int *)*v7;
-      v8 = *((unsigned int *)v4 + 19);
-      if ( (*(unsigned int *)(v8 + 8))-- == 1 )
-      {
-        Target = 0;
-        InterlockedExchange(&Target, 0);
-        v10 = (unsigned int *)*((unsigned int *)v4 + 19);
-        v7 = v22;
-        *v10 = 0;
-        v10[1] = 0;
-      }
-      *v7 = 0;
-      *((unsigned int *)v4 + 14) = v7;
-      *((unsigned int *)v4 + 13) = v7;
-      v11 = Processor;
-      *((unsigned int *)v4 + 31) = 0;
-      *((unsigned int *)v4 + 7) = 0;
-      *((unsigned int *)v4 + 32) = 0;
-      *((unsigned int *)v4 + 33) = 0;
-      *((unsigned int *)v4 + 34) = 0;
-      *((unsigned int *)v4 + 35) = 0;
-      *((unsigned int *)v4 + 36) = 0;
-      *((unsigned int *)v4 + 37) = 0;
-      *((unsigned int *)v4 + 38) = 0;
-      *((unsigned int *)v4 + 39) = 0;
-      v12 = v20;
-      *(int *)((char *)&jqWorkers->Processor + v20) = v11;
-      v13 = id;
-      *(int *)((char *)&jqWorkers->WorkerID + v12) = id;
-      id = v13 + 1;
-      v20 = v12 + 168;
-      if ( !ProcessorsMask )
-        break;
-      v2 = ProcessorsMask;
-      v3 = Processor;
+        __debugbreak();
     }
-  }
-  if ( id != jqNWorkers
-    && _tlAssert(
-         "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
-         220,
-         "id == jqNWorkers",
-         "Worker count mismatch.") )
-  {
-    __debugbreak();
-  }
-  jqTempWorkers = (jqWorker *)tlMemAlloc(0xA80u, 8u, 0);
-  memset((unsigned __int8 *)jqTempWorkers, 0, 0xA80u);
-  for ( i = 0; i < 16; ++i )
-  {
-    v15 = &jqTempWorkers[i];
-    p_WorkerSpecific = &jqTempWorkers[i].WorkerSpecific;
-    jqTempWorkers[i].ThisPtr = &jqTempWorkers[i];
-    p_WorkerSpecific->ThisPtr = p_WorkerSpecific;
-    p_WorkerSpecific->QueuedBatchCount = 0;
-    jqAtomicQueue<jqBatch,32>::Init(&p_WorkerSpecific->Queue, &jqPool.BaseQueue.Queue);
-    p_WorkerSpecific->ProcessorsMask = 0;
-    v15->NumQueues = 0;
-    v15->Queues[0] = 0;
-    v15->Queues[1] = 0;
-    v15->Queues[2] = 0;
-    v15->Queues[3] = 0;
-    v15->Queues[4] = 0;
-    v15->Queues[5] = 0;
-    v15->Queues[6] = 0;
-    v15->Queues[7] = 0;
-  }
-  jqGlobalQueue.ThisPtr = &jqGlobalQueue;
-  jqGlobalQueue.QueuedBatchCount = 0;
-  jqAtomicQueue<jqBatch,32>::Init(&jqGlobalQueue.Queue, &jqPool.BaseQueue.Queue);
-  jqGlobalQueue.ProcessorsMask = 0;
-  jqAttachQueueToWorkers(&jqGlobalQueue, 0xFFu);
-  jqHighPriorityQueue.ThisPtr = &jqHighPriorityQueue;
-  jqHighPriorityQueue.QueuedBatchCount = 0;
-  jqAtomicQueue<jqBatch,32>::Init(&jqHighPriorityQueue.Queue, &jqPool.BaseQueue.Queue);
-  jqHighPriorityQueue.ProcessorsMask = 0;
-  jqAttachQueueToWorkers(&jqHighPriorityQueue, 0xFFu);
-  _jqStart();
-}
-
-void jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(jqAtomicQueue<jqBatch,32> *this, int Count)
-{
-  int v2; // esi
-  jqAtomicQueue<jqBatch,32>::NodeType *v4; // eax
-  jqAtomicQueue<jqBatch,32>::NodeType *v5; // ecx
-  int v6; // ebx
-  jqAtomicQueue<jqBatch,32>::NodeType **v7; // ecx
-
-  v2 = Count << 7;
-  v4 = (jqAtomicQueue<jqBatch,32>::NodeType *)tlMemAlloc((Count << 7) + 8, 4u, 0);
-  if ( Count - 1 > 0 )
-  {
-    v5 = v4;
-    v6 = Count - 1;
+    jqStop();
+    v0 = jqProcessorsMask | 1;
+    jqProcessorsMask |= 1u;
+    v1 = 0;
     do
     {
-      --v6;
-      v5->Next = v5 + 1;
-      ++v5;
+        v0 &= v0 - 1;
+        ++v1;
+    } while (v0);
+    jqNWorkers = v1;
+    jqWorkers = (jqWorker *)tlMemAlloc(168 * v1, 8u, 0);
+    memset((unsigned __int8 *)jqWorkers, 0, 168 * jqNWorkers);
+    v2 = jqProcessorsMask;
+    v3 = 1;
+    v19 = 0;
+    v21 = 1;
+    if (jqProcessorsMask)
+    {
+        v20 = 0;
+        while (1)
+        {
+            if ((v3 & v2) == 0)
+            {
+                do
+                    v3 *= 2;
+                while ((v3 & v2) == 0);
+                v21 = v3;
+            }
+            Processor = v3 ^ v2;
+            v4 = (char *)jqWorkers + v20;
+            *((_DWORD *)v4 + 4) = (DWORD)v4;
+            *((_DWORD *)v4 + 30) = 0;
+            *((_DWORD *)v4 + 8) = (DWORD)(v4 + 32);
+            *((_DWORD *)v4 + 11) = 0;
+            v5 = (int **)(v4 + 40);
+            *((_DWORD *)v4 + 28) = (DWORD)(v4 + 40);
+            *((_DWORD *)v4 + 10) = (DWORD)jqPool.BaseQueue.Queue.FreeListPtr;
+            *((_DWORD *)v4 + 19) = (DWORD)&jqPool.BaseQueue.Queue.FreeLock;
+            *((_DWORD *)v4 + 16) = 0;
+            *((_DWORD *)v4 + 17) = 0;
+            *((_DWORD *)v4 + 18) = 0;
+            *((_DWORD *)v4 + 12) = 0;
+            *((_DWORD *)v4 + 20) = 0;
+            *((_DWORD *)v4 + 21) = 0;
+            *((_DWORD *)v4 + 22) = 0;
+            *((_DWORD *)v4 + 23) = (DWORD)(v4 + 80);
+            *((_DWORD *)v4 + 24) = 0;
+            *((_DWORD *)v4 + 25) = 0;
+            *((_DWORD *)v4 + 26) = 0;
+            *((_DWORD *)v4 + 27) = (DWORD)(v4 + 96);
+            //tlSharedAtomicMutex::Lock((tlSharedAtomicMutex *)v4 + 4);
+            ((tlSharedAtomicMutex *)v4 + 4)->Lock();
+            v6 = (int *)*((_DWORD *)v4 + 10);
+            v7 = (int *)*v6;
+            v22 = (int)v7;
+            if (!v7)
+            {
+                //jqAtomicQueue<jqBatch, 32>::AllocateNodeBlock((jqAtomicQueue<jqBatch, 32> *)(v4 + 40), 32);
+                ((jqAtomicQueue<jqBatch, 32> *)(v4 + 40))->AllocateNodeBlock(32);
+                v6 = *v5;
+                v22 = **v5;
+                v7 = (int *)v22;
+            }
+            *v6 = *v7;
+            v8 = *((_DWORD *)v4 + 19);
+            if ((*(_DWORD *)(v8 + 8))-- == 1)
+            {
+                v17 = 0;
+                InterlockedExchange(&v17, 0);
+                v10 = (_DWORD *)*((_DWORD *)v4 + 19);
+                v7 = (int *)v22;
+                *v10 = 0;
+                v10[1] = 0;
+            }
+            *v7 = 0;
+            *((_DWORD *)v4 + 14) = (DWORD)v7;
+            *((_DWORD *)v4 + 13) = (DWORD)v7;
+            v11 = v21;
+            *((_DWORD *)v4 + 31) = 0;
+            *((_DWORD *)v4 + 7) = 0;
+            *((_DWORD *)v4 + 32) = 0;
+            *((_DWORD *)v4 + 33) = 0;
+            *((_DWORD *)v4 + 34) = 0;
+            *((_DWORD *)v4 + 35) = 0;
+            *((_DWORD *)v4 + 36) = 0;
+            *((_DWORD *)v4 + 37) = 0;
+            *((_DWORD *)v4 + 38) = 0;
+            *((_DWORD *)v4 + 39) = 0;
+            v12 = v20;
+            *(int *)((char *)&jqWorkers->Processor + v20) = v11;
+            v13 = v19;
+            *(int *)((char *)&jqWorkers->WorkerID + v12) = v19;
+            v19 = v13 + 1;
+            v20 = v12 + 168;
+            if (!Processor)
+                break;
+            v2 = Processor;
+            v3 = v21;
+        }
     }
-    while ( v6 );
-  }
-  v7 = (jqAtomicQueue<jqBatch,32>::NodeType **)((char *)&v4->Next + v2);
-  *(v7 - 32) = 0;
-  *v7 = v4;
-  v7[1] = (jqAtomicQueue<jqBatch,32>::NodeType *)this->NodeBlockListHead;
-  this->NodeBlockListHead = (jqAtomicQueue<jqBatch,32>::NodeBlockEntry *)((char *)v4 + v2);
-  *this->FreeListPtr = v4;
+    if (v19 != jqNWorkers
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\jobqueue\\jobqueue.cpp",
+            220,
+            "id == jqNWorkers",
+            "Worker count mismatch."))
+    {
+        __debugbreak();
+    }
+    jqTempWorkers = (jqWorker *)tlMemAlloc(0xA80u, 8u, 0);
+    memset((unsigned __int8 *)jqTempWorkers, 0, 0xA80u);
+    for (i = 0; i < 16; ++i)
+    {
+        v15 = &jqTempWorkers[i];
+        p_WorkerSpecific = &jqTempWorkers[i].WorkerSpecific;
+        jqTempWorkers[i].ThisPtr = &jqTempWorkers[i];
+        p_WorkerSpecific->ThisPtr = p_WorkerSpecific;
+        p_WorkerSpecific->QueuedBatchCount = 0;
+        //jqAtomicQueue<jqBatch, 32>::Init(&p_WorkerSpecific->Queue, &jqPool.BaseQueue.Queue);
+        p_WorkerSpecific->Queue.Init(&jqPool.BaseQueue.Queue);
+        p_WorkerSpecific->ProcessorsMask = 0;
+        v15->NumQueues = 0;
+        v15->Queues[0] = 0;
+        v15->Queues[1] = 0;
+        v15->Queues[2] = 0;
+        v15->Queues[3] = 0;
+        v15->Queues[4] = 0;
+        v15->Queues[5] = 0;
+        v15->Queues[6] = 0;
+        v15->Queues[7] = 0;
+    }
+    jqGlobalQueue.ThisPtr = &jqGlobalQueue;
+    jqGlobalQueue.QueuedBatchCount = 0;
+    //jqAtomicQueue<jqBatch, 32>::Init(&jqGlobalQueue.Queue, &jqPool.BaseQueue.Queue);
+    jqGlobalQueue.Queue.Init(&jqPool.BaseQueue.Queue);
+    jqGlobalQueue.ProcessorsMask = 0;
+    jqAttachQueueToWorkers(&jqGlobalQueue, 0xFFu);
+    jqHighPriorityQueue.ThisPtr = &jqHighPriorityQueue;
+    jqHighPriorityQueue.QueuedBatchCount = 0;
+    //jqAtomicQueue<jqBatch, 32>::Init(&jqHighPriorityQueue.Queue, &jqPool.BaseQueue.Queue);
+    jqHighPriorityQueue.Queue.Init(&jqPool.BaseQueue.Queue);
+    jqHighPriorityQueue.ProcessorsMask = 0;
+    jqAttachQueueToWorkers(&jqHighPriorityQueue, 0xFFu);
+    _jqStart();
 }
 
-jqAtomicQueue<jqBatch,32>::NodeType *jqAtomicQueue<jqBatch,32>::AllocateNode(
-        jqAtomicQueue<jqBatch,32> *this)
-{
-  tlSharedAtomicMutex *p_FreeLock; // ebx
-  jqAtomicQueue<jqBatch,32>::NodeType **FreeListPtr; // eax
-  jqAtomicQueue<jqBatch,32>::NodeType *v4; // esi
-  Ptr; // eax
-  tlSharedAtomicMutex *v7; // ebx
-  int Target; // [esp+Ch] [ebp-4h] BYREF
+//void jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(jqAtomicQueue<jqBatch,32> *this, int Count)
+//{
+//  int v2; // esi
+//  jqAtomicQueue<jqBatch,32>::NodeType *v4; // eax
+//  jqAtomicQueue<jqBatch,32>::NodeType *v5; // ecx
+//  int v6; // ebx
+//  jqAtomicQueue<jqBatch,32>::NodeType **v7; // ecx
+//
+//  v2 = Count << 7;
+//  v4 = (jqAtomicQueue<jqBatch,32>::NodeType *)tlMemAlloc((Count << 7) + 8, 4u, 0);
+//  if ( Count - 1 > 0 )
+//  {
+//    v5 = v4;
+//    v6 = Count - 1;
+//    do
+//    {
+//      --v6;
+//      v5->Next = v5 + 1;
+//      ++v5;
+//    }
+//    while ( v6 );
+//  }
+//  v7 = (jqAtomicQueue<jqBatch,32>::NodeType **)((char *)&v4->Next + v2);
+//  *(v7 - 32) = 0;
+//  *v7 = v4;
+//  v7[1] = (jqAtomicQueue<jqBatch,32>::NodeType *)this->NodeBlockListHead;
+//  this->NodeBlockListHead = (jqAtomicQueue<jqBatch,32>::NodeBlockEntry *)((char *)v4 + v2);
+//  *this->FreeListPtr = v4;
+//}
 
-  p_FreeLock = &this->FreeLock;
-  tlSharedAtomicMutex::Lock(&this->FreeLock);
-  FreeListPtr = this->FreeListPtr;
-  v4 = *this->FreeListPtr;
-  if ( !v4 )
-  {
-    jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(this, 32);
-    FreeListPtr = this->FreeListPtr;
-    v4 = *this->FreeListPtr;
-  }
-  *FreeListPtr = v4->Next;
-  ThisPtr = p_FreeLock->ThisPtr;
-  if ( ThisPtr->LockCount-- == 1 )
-  {
-    Target = 0;
-    InterlockedExchange(&Target, 0);
-    v7 = p_FreeLock->ThisPtr;
-    LODWORD(v7->ThreadId) = 0;
-    HIDWORD(v7->ThreadId) = 0;
-  }
-  return v4;
-}
+//jqAtomicQueue<jqBatch,32>::NodeType *jqAtomicQueue<jqBatch,32>::AllocateNode()
+//{
+//  tlSharedAtomicMutex *p_FreeLock; // ebx
+//  jqAtomicQueue<jqBatch,32>::NodeType **FreeListPtr; // eax
+//  jqAtomicQueue<jqBatch,32>::NodeType *v4; // esi
+//  Ptr; // eax
+//  tlSharedAtomicMutex *v7; // ebx
+//  int Target; // [esp+Ch] [ebp-4h] BYREF
+//
+//  p_FreeLock = &this->FreeLock;
+//  tlSharedAtomicMutex::Lock(&this->FreeLock);
+//  FreeListPtr = this->FreeListPtr;
+//  v4 = *this->FreeListPtr;
+//  if ( !v4 )
+//  {
+//    jqAtomicQueue<jqBatch,32>::AllocateNodeBlock(this, 32);
+//    FreeListPtr = this->FreeListPtr;
+//    v4 = *this->FreeListPtr;
+//  }
+//  *FreeListPtr = v4->Next;
+//  ThisPtr = p_FreeLock->ThisPtr;
+//  if ( ThisPtr->LockCount-- == 1 )
+//  {
+//    Target = 0;
+//    InterlockedExchange(&Target, 0);
+//    v7 = p_FreeLock->ThisPtr;
+//    LODWORD(v7->ThreadId) = 0;
+//    HIDWORD(v7->ThreadId) = 0;
+//  }
+//  return v4;
+//}
 
-void tlAtomicMutex::~tlAtomicMutex(tlAtomicMutex *this)
+tlAtomicMutex::~tlAtomicMutex()
 {
   this->ThreadId = 0;
   this->ThisPtr = 0;
 }
 
-void jqAtomicHeap::~jqAtomicHeap(jqAtomicHeap *this)
+jqAtomicHeap::~jqAtomicHeap()
 {
   unsigned __int8 *LevelData; // eax
 
@@ -1967,7 +2443,6 @@ void jqAtomicHeap::~jqAtomicHeap(jqAtomicHeap *this)
 }
 
 void jqAtomicHeap::Init(
-        jqAtomicHeap *this,
         unsigned __int8 *_HeapBase,
         unsigned int _HeapSize,
         unsigned int _BlockSize)
@@ -2058,128 +2533,126 @@ void jqAtomicHeap::Init(
   v16[1] = 0;
 }
 
-void jqAtomicQueue<jqBatch,32>::Init(
-        jqAtomicQueue<jqBatch,32> *this,
-        jqAtomicQueue<jqBatch,32> *SharedFreeList)
-{
-  jqAtomicQueue<jqBatch,32>::NodeType **p_FreeList; // ecx
-  tlSharedAtomicMutex *p_FreeLock; // eax
-  jqAtomicQueue<jqBatch,32>::NodeType *Node; // eax
+//void jqAtomicQueue<jqBatch,32>::Init(jqAtomicQueue<jqBatch,32> *SharedFreeList)
+//{
+//  jqAtomicQueue<jqBatch,32>::NodeType **p_FreeList; // ecx
+//  tlSharedAtomicMutex *p_FreeLock; // eax
+//  jqAtomicQueue<jqBatch,32>::NodeType *Node; // eax
+//
+//  p_FreeList = &this->_FreeList;
+//  this->ThisPtr = this;
+//  *p_FreeList = 0;
+//  if ( !SharedFreeList )
+//  {
+//    this->FreeListPtr = p_FreeList;
+//    p_FreeLock = &this->FreeLock;
+//    goto LABEL_5;
+//  }
+//  this->FreeListPtr = SharedFreeList->FreeListPtr;
+//  p_FreeLock = &this->FreeLock;
+//  if ( SharedFreeList == (jqAtomicQueue<jqBatch,32> *)-24 )
+//  {
+//LABEL_5:
+//    p_FreeLock->ThisPtr = p_FreeLock;
+//    goto LABEL_6;
+//  }
+//  this->FreeLock.ThisPtr = &SharedFreeList->FreeLock;
+//LABEL_6:
+//  LODWORD(p_FreeLock->ThreadId) = 0;
+//  HIDWORD(p_FreeLock->ThreadId) = 0;
+//  p_FreeLock->LockCount = 0;
+//  this->NodeBlockListHead = 0;
+//  this->HeadLock.ThisPtr = &this->HeadLock;
+//  LODWORD(this->HeadLock.ThreadId) = 0;
+//  HIDWORD(this->HeadLock.ThreadId) = 0;
+//  this->HeadLock.LockCount = 0;
+//  this->TailLock.ThisPtr = &this->TailLock;
+//  LODWORD(this->TailLock.ThreadId) = 0;
+//  HIDWORD(this->TailLock.ThreadId) = 0;
+//  this->TailLock.LockCount = 0;
+//  Node = jqAtomicQueue<jqBatch,32>::AllocateNode(this);
+//  Node->Next = 0;
+//  this->Tail = Node;
+//  this->Head = Node;
+//}
 
-  p_FreeList = &this->_FreeList;
-  this->ThisPtr = this;
-  *p_FreeList = 0;
-  if ( !SharedFreeList )
-  {
-    this->FreeListPtr = p_FreeList;
-    p_FreeLock = &this->FreeLock;
-    goto LABEL_5;
-  }
-  this->FreeListPtr = SharedFreeList->FreeListPtr;
-  p_FreeLock = &this->FreeLock;
-  if ( SharedFreeList == (jqAtomicQueue<jqBatch,32> *)-24 )
-  {
-LABEL_5:
-    p_FreeLock->ThisPtr = p_FreeLock;
-    goto LABEL_6;
-  }
-  this->FreeLock.ThisPtr = &SharedFreeList->FreeLock;
-LABEL_6:
-  LODWORD(p_FreeLock->ThreadId) = 0;
-  HIDWORD(p_FreeLock->ThreadId) = 0;
-  p_FreeLock->LockCount = 0;
-  this->NodeBlockListHead = 0;
-  this->HeadLock.ThisPtr = &this->HeadLock;
-  LODWORD(this->HeadLock.ThreadId) = 0;
-  HIDWORD(this->HeadLock.ThreadId) = 0;
-  this->HeadLock.LockCount = 0;
-  this->TailLock.ThisPtr = &this->TailLock;
-  LODWORD(this->TailLock.ThreadId) = 0;
-  HIDWORD(this->TailLock.ThreadId) = 0;
-  this->TailLock.LockCount = 0;
-  Node = jqAtomicQueue<jqBatch,32>::AllocateNode(this);
-  Node->Next = 0;
-  this->Tail = Node;
-  this->Head = Node;
-}
+//void jqAtomicQueue<jqBatch,32>::Push(jqAtomicQueue<jqBatch,32> *this, jqBatch *Data)
+//{
+//  jqAtomicQueue<jqBatch,32>::NodeType *Node; // edi
+//
+//  Node = jqAtomicQueue<jqBatch,32>::AllocateNode(this);
+//  memcpy((unsigned __int8 *)&Node->Data, (unsigned __int8 *)Data, sizeof(Node->Data));
+//  Node->Next = 0;
+//  tlAtomicMutex::Lock(&this->TailLock);
+//  this->ThisPtr->Tail->Next = Node;
+//  this->ThisPtr->Tail = Node;
+//  if ( this->TailLock.LockCount-- == 1 )
+//  {
+//    Data = 0;
+//    InterlockedExchange((volatile int *)&Data, 0);
+//    LODWORD(this->TailLock.ThreadId) = 0;
+//    HIDWORD(this->TailLock.ThreadId) = 0;
+//  }
+//}
+//
+//char jqAtomicQueue<jqBatch,32>::Pop(jqAtomicQueue<jqBatch,32> *this, jqBatch *p)
+//{
+//  tlAtomicMutex *p_HeadLock; // edi
+//  jqAtomicQueue<jqBatch,32>::NodeType *Next; // ebx
+//  bool v5; // zf
+//  jqAtomicQueue<jqBatch,32>::NodeType *v7; // eax
+//  Ptr; // eax
+//  tlSharedAtomicMutex *v9; // edi
+//  jqAtomicQueue<jqBatch,32>::NodeType *Node; // [esp+Ch] [ebp-8h] BYREF
+//  int Target; // [esp+10h] [ebp-4h] BYREF
+//
+//  p_HeadLock = &this->HeadLock;
+//  tlAtomicMutex::Lock(&this->HeadLock);
+//  Next = this->ThisPtr->Head->Next;
+//  Node = this->ThisPtr->Head;
+//  if ( Next )
+//  {
+//    memcpy((unsigned __int8 *)p, (unsigned __int8 *)&Next->Data, sizeof(jqBatch));
+//    this->ThisPtr->Head = Next;
+//    v5 = p_HeadLock->LockCount-- == 1;
+//    if ( v5 )
+//    {
+//      Target = 0;
+//      InterlockedExchange(&Target, 0);
+//      LODWORD(p_HeadLock->ThreadId) = 0;
+//      HIDWORD(p_HeadLock->ThreadId) = 0;
+//    }
+//    tlSharedAtomicMutex::Lock(&this->FreeLock);
+//    v7 = Node;
+//    Node->Next = *this->FreeListPtr;
+//    *this->FreeListPtr = v7;
+//    ThisPtr = this->FreeLock.ThisPtr;
+//    v5 = ThisPtr->LockCount-- == 1;
+//    if ( v5 )
+//    {
+//      Node = 0;
+//      InterlockedExchange((volatile int *)&Node, 0);
+//      v9 = this->FreeLock.ThisPtr;
+//      LODWORD(v9->ThreadId) = 0;
+//      HIDWORD(v9->ThreadId) = 0;
+//    }
+//    return 1;
+//  }
+//  else
+//  {
+//    v5 = p_HeadLock->LockCount-- == 1;
+//    if ( v5 )
+//    {
+//      p = 0;
+//      InterlockedExchange((volatile int *)&p, 0);
+//      LODWORD(p_HeadLock->ThreadId) = 0;
+//      HIDWORD(p_HeadLock->ThreadId) = 0;
+//    }
+//    return 0;
+//  }
+//}
 
-void jqAtomicQueue<jqBatch,32>::Push(jqAtomicQueue<jqBatch,32> *this, jqBatch *Data)
-{
-  jqAtomicQueue<jqBatch,32>::NodeType *Node; // edi
-
-  Node = jqAtomicQueue<jqBatch,32>::AllocateNode(this);
-  memcpy((unsigned __int8 *)&Node->Data, (unsigned __int8 *)Data, sizeof(Node->Data));
-  Node->Next = 0;
-  tlAtomicMutex::Lock(&this->TailLock);
-  this->ThisPtr->Tail->Next = Node;
-  this->ThisPtr->Tail = Node;
-  if ( this->TailLock.LockCount-- == 1 )
-  {
-    Data = 0;
-    InterlockedExchange((volatile int *)&Data, 0);
-    LODWORD(this->TailLock.ThreadId) = 0;
-    HIDWORD(this->TailLock.ThreadId) = 0;
-  }
-}
-
-char jqAtomicQueue<jqBatch,32>::Pop(jqAtomicQueue<jqBatch,32> *this, jqBatch *p)
-{
-  tlAtomicMutex *p_HeadLock; // edi
-  jqAtomicQueue<jqBatch,32>::NodeType *Next; // ebx
-  bool v5; // zf
-  jqAtomicQueue<jqBatch,32>::NodeType *v7; // eax
-  Ptr; // eax
-  tlSharedAtomicMutex *v9; // edi
-  jqAtomicQueue<jqBatch,32>::NodeType *Node; // [esp+Ch] [ebp-8h] BYREF
-  int Target; // [esp+10h] [ebp-4h] BYREF
-
-  p_HeadLock = &this->HeadLock;
-  tlAtomicMutex::Lock(&this->HeadLock);
-  Next = this->ThisPtr->Head->Next;
-  Node = this->ThisPtr->Head;
-  if ( Next )
-  {
-    memcpy((unsigned __int8 *)p, (unsigned __int8 *)&Next->Data, sizeof(jqBatch));
-    this->ThisPtr->Head = Next;
-    v5 = p_HeadLock->LockCount-- == 1;
-    if ( v5 )
-    {
-      Target = 0;
-      InterlockedExchange(&Target, 0);
-      LODWORD(p_HeadLock->ThreadId) = 0;
-      HIDWORD(p_HeadLock->ThreadId) = 0;
-    }
-    tlSharedAtomicMutex::Lock(&this->FreeLock);
-    v7 = Node;
-    Node->Next = *this->FreeListPtr;
-    *this->FreeListPtr = v7;
-    ThisPtr = this->FreeLock.ThisPtr;
-    v5 = ThisPtr->LockCount-- == 1;
-    if ( v5 )
-    {
-      Node = 0;
-      InterlockedExchange((volatile int *)&Node, 0);
-      v9 = this->FreeLock.ThisPtr;
-      LODWORD(v9->ThreadId) = 0;
-      HIDWORD(v9->ThreadId) = 0;
-    }
-    return 1;
-  }
-  else
-  {
-    v5 = p_HeadLock->LockCount-- == 1;
-    if ( v5 )
-    {
-      p = 0;
-      InterlockedExchange((volatile int *)&p, 0);
-      LODWORD(p_HeadLock->ThreadId) = 0;
-      HIDWORD(p_HeadLock->ThreadId) = 0;
-    }
-    return 0;
-  }
-}
-
-void jqQueue::~jqQueue(jqQueue *this)
+jqQueue::~jqQueue()
 {
   this->Queue.TailLock.ThreadId = 0;
   this->Queue.TailLock.ThisPtr = 0;
@@ -2187,9 +2660,10 @@ void jqQueue::~jqQueue(jqQueue *this)
   this->Queue.HeadLock.ThisPtr = 0;
 }
 
-void jqBatchPool::~jqBatchPool(jqBatchPool *this)
+jqBatchPool::~jqBatchPool()
 {
-  jqAtomicHeap::~jqAtomicHeap(&this->BatchDataHeap);
+  //jqAtomicHeap::~jqAtomicHeap(&this->BatchDataHeap);
+  this->BatchDataHeap.~jqAtomicHeap();
   this->BaseQueue.Queue.TailLock.ThreadId = 0;
   this->BaseQueue.Queue.TailLock.ThisPtr = 0;
   this->BaseQueue.Queue.HeadLock.ThreadId = 0;
