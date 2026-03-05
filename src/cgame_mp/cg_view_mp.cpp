@@ -49,6 +49,8 @@
 #include <gfx_d3d/r_extracam.h>
 #include <client/client.h>
 #include <gfx_d3d/r_scene.h>
+#include <gfx_d3d/r_workercmds_common.h>
+#include <gfx_d3d/r_rendercmds.h>
 
 ClientViewParams clientViewParamsArray[1][1][1] = { { { { 0.0, 0.0, 1.0, 1.0, VIEWPORT_LARGE } } } };
 

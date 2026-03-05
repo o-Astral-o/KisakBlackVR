@@ -125,21 +125,21 @@ void __cdecl CG_UpdateActorDObj(int localClientNum, centity_s *cent, actorInfo_t
     }
 }
 
-cgs_t *__cdecl CG_GetLocalClientStaticGlobals(int localClientNum)
-{
-    if ( localClientNum
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\cgame\\../cgame_mp/cg_local_mp.h",
-                    1843,
-                    0,
-                    "%s\n\t(localClientNum) = %i",
-                    "(localClientNum == 0)",
-                    localClientNum) )
-    {
-        __debugbreak();
-    }
-    return cgsArray;
-}
+//cgs_t *__cdecl CG_GetLocalClientStaticGlobals(int localClientNum)
+//{
+//    if ( localClientNum
+//        && !Assert_MyHandler(
+//                    "c:\\projects_pc\\cod\\codsrc\\src\\cgame\\../cgame_mp/cg_local_mp.h",
+//                    1843,
+//                    0,
+//                    "%s\n\t(localClientNum) = %i",
+//                    "(localClientNum == 0)",
+//                    localClientNum) )
+//    {
+//        __debugbreak();
+//    }
+//    return cgsArray;
+//}
 
 void __cdecl CG_ResetActorEntity(int localClientNum, cg_s *cgameGlob, centity_s *cent)
 {

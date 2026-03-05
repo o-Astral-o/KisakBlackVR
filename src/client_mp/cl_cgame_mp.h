@@ -1,11 +1,13 @@
 #pragma once
 #include <client/cl_main.h>
+#include <qcommon/bitarray.h>
 
 struct Material;
 struct usercmd_s;
 struct DObj;
 struct DObjAnimMat;
 struct refdef_s;
+struct snapshot_s;
 
 
 void __cdecl CL_GetScreenDimensions(int *width, int *height, float *aspect);

@@ -566,7 +566,7 @@ void __cdecl CG_SetupMilestoneEndGame(int localClientNum)
     char nameLocalized; // [esp+32h] [ebp-442h]
     char descLocalized; // [esp+33h] [ebp-441h]
     char localVarDescString[260]; // [esp+34h] [ebp-440h] BYREF
-    const UILocalVar *var; // [esp+138h] [ebp-33Ch]
+    UILocalVar *var; // [esp+138h] [ebp-33Ch]
     const char *milestoneIndex; // [esp+13Ch] [ebp-338h]
     statsMilestoneTypes_t milestoneType; // [esp+140h] [ebp-334h]
     uiInfo_s *uiInfo; // [esp+144h] [ebp-330h]
@@ -728,7 +728,7 @@ void __cdecl CG_SetupMilestoneEndGame(int localClientNum)
                                 }
                                 if ( nameLocalized && descLocalized )
                                 {
-                                    var = (const UILocalVar *)UILocalVar_FindOrCreate(&uiInfo->uiDC.localVars, localVarNameString);
+                                    var = (UILocalVar *)UILocalVar_FindOrCreate(&uiInfo->uiDC.localVars, localVarNameString);
                                     if ( !var
                                         && !Assert_MyHandler(
                                                     "C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_ui_animate_mp.cpp",
@@ -742,7 +742,7 @@ void __cdecl CG_SetupMilestoneEndGame(int localClientNum)
                                     if ( var )
                                     {
                                         UILocalVar_SetString(var, milestoneLocalizedName);
-                                        var = (const UILocalVar *)UILocalVar_FindOrCreate(&uiInfo->uiDC.localVars, localVarDescString);
+                                        var = (UILocalVar *)UILocalVar_FindOrCreate(&uiInfo->uiDC.localVars, localVarDescString);
                                         if ( !var
                                             && !Assert_MyHandler(
                                                         "C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_ui_animate_mp.cpp",

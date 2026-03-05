@@ -130,15 +130,6 @@ struct LbPlayerStat // sizeof=0x58
                                         // LB_UploadPlayerStats(int)+2EB/r ...
 };
 
-struct LbStructure // sizeof=0x50
-{                                       // XREF: LbLookup/r
-    int type;                           // XREF: LB_MakeRow(int,LbPlayerStat const * const,int,int,LeaderBoardRow<10> * const,bool)+B7/r
-                                        // SV_MakeClientLBRow(int,LbPlayerStat const * const,int,int,LeaderBoardRow<10> * const,bool)+10E/r
-    LbStatEnum columns[17];
-    unsigned int numColums;
-    unsigned int ratingCol;
-};
-
 struct LbGlobalStructure // sizeof=0x58
 {                                       // XREF: LbLookup/r
                                         // ?LB_RegisterGlobalStructure@@YAXQAULbLookup@@ULbGlobalStructure@@H@Z/r ...

@@ -22,6 +22,7 @@ struct trajectory_t;
 struct XModel;
 struct DObjModel_s;
 struct WeaponDef;
+struct GfxLight;
 
 struct DelayListInfo // sizeof=0xC
 {                                       // XREF: ?CG_AddPacketEntities@@YAHH@Z/r

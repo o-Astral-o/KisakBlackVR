@@ -22,7 +22,6 @@ CompassArtillery s_compassArtillery[1][6];
 CompassTurrets s_compassTurrets[1][32];
 CompassVehicle s_compassVehicles[1][16];
 CompassDogs s_compassDogs[1][8];
-CompassActor s_compassActors[1][32];
 CompassHelicopter s_compassHelicopter[1][8];
 CompassFakeFire s_compassFakeFire[1][32][8];
 CompassGuidedMissile s_compassGuidedMissiles[1][32];

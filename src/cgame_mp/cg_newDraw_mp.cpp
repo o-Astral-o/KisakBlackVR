@@ -1986,7 +1986,9 @@ void __cdecl draw_tank_turret_component(
                             ScrPlace_ApplyRect(&scrPlaceView[localClientNum], &x, &y, &w, &h, rect->horzAlign, rect->vertAlign);
                             xy[0][0] = w * 0.5;
                             (xy[0][1]) = -(h * 0.75);
-                            *(_QWORD *)&xy[1][0] = __PAIR64__(LODWORD(xy[0][1]), w * 0.5) ^ (unsigned int)_mask__NegFloat_;
+                            //*(_QWORD *)&xy[1][0] = __PAIR64__(LODWORD(xy[0][1]), w * 0.5) ^ (unsigned int)_mask__NegFloat_;
+                            xy[1][0] = -(w * 0.5);
+                            xy[1][1] = -xy[0][1];
                             xy[2][0] = xy[1][0];
                             xy[2][1] = h * 0.25;
                             xy[3][0] = w * 0.5;

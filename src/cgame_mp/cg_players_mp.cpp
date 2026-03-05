@@ -899,9 +899,6 @@ void __cdecl CG_Player(int localClientNum, centity_s *cent)
     }
 }
 
-float handOfs = -5.0f;
-float handOfs_0 = -6.0f;
-
 void __cdecl CG_PlayerTurretPositionAndBlend(int localClientNum, centity_s *cent)
 {
     const char *v2; // eax

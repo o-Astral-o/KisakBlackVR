@@ -148,21 +148,6 @@ struct DiskBurnableBlock // sizeof=0x20
     DiskBurnableSample data[32];
 };
 
-struct DiskPrimaryLight_Version16 // sizeof=0x60
-{
-    unsigned __int16 falloffStart;
-    unsigned __int8 falloffSizeLessOne;
-    unsigned __int8 type;
-    float color[3];
-    float dir[3];
-    float origin[3];
-    float radius;
-    float cosHalfFovOuter;
-    float cosHalfFovInner;
-    int exponent;
-    char defName[40];
-};
-
 struct DiskPrimaryLight // sizeof=0x10C
 {
     unsigned __int8 type;

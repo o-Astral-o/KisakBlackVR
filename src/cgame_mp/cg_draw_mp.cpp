@@ -1538,21 +1538,21 @@ void __cdecl DrawViewmodelInfo(int localClientNum)
     }
 }
 
-weaponInfo_s *__cdecl CG_GetLocalClientWeaponInfo(int localClientNum, int weaponIndex)
-{
-    if ( localClientNum
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\cgame\\../cgame/cg_local.h",
-                    224,
-                    0,
-                    "%s\n\t(localClientNum) = %i",
-                    "(localClientNum == 0)",
-                    localClientNum) )
-    {
-        __debugbreak();
-    }
-    return &cg_weaponsArray[0][weaponIndex];
-}
+//weaponInfo_s *__cdecl CG_GetLocalClientWeaponInfo(int localClientNum, int weaponIndex)
+//{
+//    if ( localClientNum
+//        && !Assert_MyHandler(
+//                    "c:\\projects_pc\\cod\\codsrc\\src\\cgame\\../cgame/cg_local.h",
+//                    224,
+//                    0,
+//                    "%s\n\t(localClientNum) = %i",
+//                    "(localClientNum == 0)",
+//                    localClientNum) )
+//    {
+//        __debugbreak();
+//    }
+//    return &cg_weaponsArray[0][weaponIndex];
+//}
 
 void __cdecl CG_DrawActive(int localClientNum)
 {

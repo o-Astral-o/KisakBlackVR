@@ -1182,7 +1182,7 @@ void __cdecl CG_ProcessClientNote(
         NotetrackCLName = note->GetNotetrackCLName();
         Scr_AddConstString(NotetrackCLName, SCRIPTINSTANCE_CLIENT);
         //NotifyName = XAnimClientNotify::GetNotifyName(note);
-        note->GetNotifyName();
+        NotifyName = note->GetNotifyName();
         CScr_NotifyNum(localClientNum, entityNum, 0, NotifyName, 1u);
     }
     else
@@ -1488,7 +1488,8 @@ void __cdecl CG_AddPacketEntity(int localClientNum, unsigned int entnum)
         if ( cgEntCollNodes[localClientNum][entnum].sector )
             CG_UnlinkEntity(localClientNum, entnum);
         //if ( g_DXDeviceThread == GetCurrentThreadId() )
-LABEL_90:
+    LABEL_90:
+        ;
             //D3DPERF_EndEvent();
     }
     else
@@ -4490,7 +4491,8 @@ void __cdecl CG_Vehicle(int localClientNum, centity_s *cent)
         }
         else //if ( GetCurrentThreadId() == g_DXDeviceThread )
         {
-LABEL_13:
+        LABEL_13:
+            ;
             //D3DPERF_EndEvent();
         }
     }
@@ -4586,6 +4588,7 @@ void __cdecl CG_ProcessFxEntity(int localClientNum, centity_s *cent)
     CG_Fx(localClientNum, cent);
     //if ( g_DXDeviceThread == GetCurrentThreadId() )
 LABEL_11:
+    ;
         //D3DPERF_EndEvent();
 }
 

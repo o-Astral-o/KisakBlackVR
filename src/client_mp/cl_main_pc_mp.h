@@ -44,7 +44,7 @@ int __cdecl CL_RawPingSetupBuffer(
                 unsigned __int8 opcode,
                 const bdSecurityID *secID);
 void __cdecl CL_RawPingServer(serverInfo_t *server, unsigned __int8 opcode);
-void __cdecl CL_ServersResponsePacket(MatchMakingInfo *mminfo, int numResults, bool geo);
+void __cdecl CL_ServersResponsePacket(struct MatchMakingInfo *mminfo, int numResults, bool geo);
 void __cdecl CL_FindServers_f();
 void __cdecl CL_RconInit();
 void __cdecl CL_Rcon_f();
@@ -96,7 +96,7 @@ void __cdecl CL_QuickMatch_f();
 void __cdecl CL_QuickWager_f();
 void __cdecl CL_QuickMatch_InitDvars();
 void __cdecl CL_QuickMatch_Init();
-bool __cdecl CL_QuickMatch_ServerMatches(MatchMakingInfo *server);
+bool __cdecl CL_QuickMatch_ServerMatches(struct MatchMakingInfo *server);
 void __cdecl CL_QuickMatch_PingServers();
 bool __cdecl CL_QuickMatch_GoodSessionFound();
 void __cdecl CL_QuickMatch_PingResponse(bdSecurityID *secID, msg_t *msg);

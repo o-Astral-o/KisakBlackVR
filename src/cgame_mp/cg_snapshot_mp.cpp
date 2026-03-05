@@ -38,6 +38,7 @@
 #include "cg_vehicles_mp.h"
 #include <client/cl_rank.h>
 #include "cg_draw_net_mp.h"
+#include <gfx_d3d/r_scene.h>
 
 void __cdecl CG_ShutdownEntity(int localClientNum, centity_s *cent, bool shutdown_script_for_local_client)
 {

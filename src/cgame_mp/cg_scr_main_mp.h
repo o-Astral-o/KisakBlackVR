@@ -12,6 +12,8 @@ struct cscr_mp_data_t // sizeof=0x10
 };
 
 struct cached_tag_mat_t;
+struct cent_field_s;
+struct centity_s;
 
 void __cdecl CScrCmd_Earthquake(scr_entref_t entref);
 unsigned int __cdecl CScr_SpawnFXInternal(int localClientNum, int fxId, float (*axis)[3], float *pos, int time);

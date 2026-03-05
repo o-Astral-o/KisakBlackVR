@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cgame/cg_camera.h>
+
 #define POF_FOLLOW 2
 
 enum ClientViewViewportSize : __int32

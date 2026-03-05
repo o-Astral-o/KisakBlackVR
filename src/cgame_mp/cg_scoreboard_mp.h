@@ -1,5 +1,6 @@
 #pragma once
 #include <game/teams.h>
+#include <universal/dvar.h>
 
 enum listColumnTypes_t : __int32
 {                                       // XREF: listColumnInfo_t/r
@@ -35,6 +36,18 @@ enum scoreboardColumnType_t : __int32
     SB_TYPE_X2SCORE = 0x10,
     SB_TYPE_HEADSHOTS = 0x11,
     NUM_SB_TYPES = 0x12,
+};
+
+struct score_s // sizeof=0x2C
+{                                                                             // XREF: clientState_s/r
+    int ping;
+    int status_icon;
+    int place;
+    int score;
+    int kills;
+    int assists;
+    int deaths;
+    int scoreboardColumns[4];
 };
 
 struct listColumnInfo_t // sizeof=0x14
@@ -94,6 +107,7 @@ struct __declspec(align(8)) matchScoreBoardData_t // sizeof=0xF10
 };
 
 struct cg_s;
+struct Font_s;
 
 const char *__cdecl CG_GetNameForScoreboardColumn(int localClientNum, unsigned int columnNumber);
 void __cdecl CG_UpdateMatchScoreboard(int localClientNum);
