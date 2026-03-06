@@ -53,6 +53,7 @@
 #include <live/live_counter.h>
 #include <sound/snd_public_async.h>
 #include <win32/win_gamepad.h>
+#include <game/g_scr_helicopter.h>
 
 unsigned __int8 *g_JpegBuf;
 char gamerTag_1[32];
@@ -506,7 +507,9 @@ void __cdecl Demo_SaveScreenshotSuccessful(int controllerIndex, unsigned __int64
         v6 = va("userPublishNews TICKER_SCREENSHOTUPLOADED\n");
         v5 = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
         Cmd_ExecuteSingleCommand(v5, controllerIndex, v6);
+#ifdef KISAK_DW_TELEMETRY
         dwRecordEventFormat(0, 2u, "JPG{id:%lld location:%d}", fileID, 2);
+#endif
         //v7 = 40;
         //for ( k = (bdTaskResult *)&savedregs; --v7 >= 0; bdTag::~bdTag(k) )
         //    k -= 6;

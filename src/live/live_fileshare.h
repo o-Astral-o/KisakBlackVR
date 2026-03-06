@@ -119,6 +119,10 @@ struct fileShareFilter // sizeof=0x1C
     int sortBy;                         // XREF: Live_FileShare_FilterBackup_f+53/w
 };
 
+struct listBoxDef_s;
+struct itemDef_s;
+struct rectDef_s;
+
 fileShareLastPlayedGame_t *__cdecl Live_FileShare_GetLastPlayedGame();
 void __cdecl Live_FileShare_SetLiveBlurb(const char *blurb);
 char __cdecl Live_FileShare_GetTag(
