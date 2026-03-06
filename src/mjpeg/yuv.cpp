@@ -1,5 +1,721 @@
 #include "yuv.h"
 
+#include <d3d9.h>
+#include <gfx_d3d/r_singlethreaded_device_pc.h>
+#include <gfx_d3d/r_dvars.h>
+#include <gfx_d3d/r_init.h>
+#include <gfx_d3d/rb_logfile.h>
+#include <qcommon/common.h>
+#include <qcommon/threads.h>
+#include <gfx_d3d/rb_resource.h>
+#include <gfx_d3d/rb_backend.h>
+#include <gfx_d3d/r_state_utils.h>
+
+const unsigned __int8 g_vs30_mjpeg_shader_vtx[172] =
+{
+  0u,
+  3u,
+  254u,
+  255u,
+  254u,
+  255u,
+  22u,
+  0u,
+  67u,
+  84u,
+  65u,
+  66u,
+  28u,
+  0u,
+  0u,
+  0u,
+  35u,
+  0u,
+  0u,
+  0u,
+  0u,
+  3u,
+  254u,
+  255u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  1u,
+  0u,
+  0u,
+  28u,
+  0u,
+  0u,
+  0u,
+  118u,
+  115u,
+  95u,
+  51u,
+  95u,
+  48u,
+  0u,
+  77u,
+  105u,
+  99u,
+  114u,
+  111u,
+  115u,
+  111u,
+  102u,
+  116u,
+  32u,
+  40u,
+  82u,
+  41u,
+  32u,
+  72u,
+  76u,
+  83u,
+  76u,
+  32u,
+  83u,
+  104u,
+  97u,
+  100u,
+  101u,
+  114u,
+  32u,
+  67u,
+  111u,
+  109u,
+  112u,
+  105u,
+  108u,
+  101u,
+  114u,
+  32u,
+  57u,
+  46u,
+  50u,
+  57u,
+  46u,
+  57u,
+  53u,
+  50u,
+  46u,
+  51u,
+  49u,
+  49u,
+  49u,
+  0u,
+  31u,
+  0u,
+  0u,
+  2u,
+  0u,
+  0u,
+  0u,
+  128u,
+  0u,
+  0u,
+  15u,
+  144u,
+  31u,
+  0u,
+  0u,
+  2u,
+  5u,
+  0u,
+  0u,
+  128u,
+  1u,
+  0u,
+  15u,
+  144u,
+  31u,
+  0u,
+  0u,
+  2u,
+  0u,
+  0u,
+  0u,
+  128u,
+  0u,
+  0u,
+  15u,
+  224u,
+  31u,
+  0u,
+  0u,
+  2u,
+  5u,
+  0u,
+  0u,
+  128u,
+  1u,
+  0u,
+  3u,
+  224u,
+  1u,
+  0u,
+  0u,
+  2u,
+  0u,
+  0u,
+  15u,
+  224u,
+  0u,
+  0u,
+  228u,
+  144u,
+  1u,
+  0u,
+  0u,
+  2u,
+  1u,
+  0u,
+  3u,
+  224u,
+  1u,
+  0u,
+  228u,
+  144u,
+  255u,
+  255u,
+  0u,
+  0u
+};
+
+const unsigned __int8 g_ps30_mjpeg_shader_yuv[496] =
+{
+  0u,
+  3u,
+  255u,
+  255u,
+  254u,
+  255u,
+  33u,
+  0u,
+  67u,
+  84u,
+  65u,
+  66u,
+  28u,
+  0u,
+  0u,
+  0u,
+  79u,
+  0u,
+  0u,
+  0u,
+  0u,
+  3u,
+  255u,
+  255u,
+  1u,
+  0u,
+  0u,
+  0u,
+  28u,
+  0u,
+  0u,
+  0u,
+  0u,
+  1u,
+  0u,
+  0u,
+  72u,
+  0u,
+  0u,
+  0u,
+  48u,
+  0u,
+  0u,
+  0u,
+  3u,
+  0u,
+  0u,
+  0u,
+  1u,
+  0u,
+  2u,
+  0u,
+  56u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  116u,
+  101u,
+  120u,
+  73u,
+  110u,
+  0u,
+  171u,
+  171u,
+  4u,
+  0u,
+  12u,
+  0u,
+  1u,
+  0u,
+  1u,
+  0u,
+  1u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  112u,
+  115u,
+  95u,
+  51u,
+  95u,
+  48u,
+  0u,
+  77u,
+  105u,
+  99u,
+  114u,
+  111u,
+  115u,
+  111u,
+  102u,
+  116u,
+  32u,
+  40u,
+  82u,
+  41u,
+  32u,
+  72u,
+  76u,
+  83u,
+  76u,
+  32u,
+  83u,
+  104u,
+  97u,
+  100u,
+  101u,
+  114u,
+  32u,
+  67u,
+  111u,
+  109u,
+  112u,
+  105u,
+  108u,
+  101u,
+  114u,
+  32u,
+  57u,
+  46u,
+  50u,
+  57u,
+  46u,
+  57u,
+  53u,
+  50u,
+  46u,
+  51u,
+  49u,
+  49u,
+  49u,
+  0u,
+  81u,
+  0u,
+  0u,
+  5u,
+  0u,
+  0u,
+  15u,
+  160u,
+  70u,
+  246u,
+  130u,
+  66u,
+  0u,
+  0u,
+  128u,
+  65u,
+  145u,
+  141u,
+  0u,
+  67u,
+  94u,
+  186u,
+  199u,
+  65u,
+  81u,
+  0u,
+  0u,
+  5u,
+  1u,
+  0u,
+  15u,
+  160u,
+  129u,
+  128u,
+  128u,
+  59u,
+  240u,
+  103u,
+  148u,
+  66u,
+  111u,
+  146u,
+  187u,
+  66u,
+  33u,
+  48u,
+  23u,
+  194u,
+  81u,
+  0u,
+  0u,
+  5u,
+  2u,
+  0u,
+  15u,
+  160u,
+  0u,
+  0u,
+  224u,
+  66u,
+  0u,
+  0u,
+  0u,
+  67u,
+  70u,
+  182u,
+  145u,
+  65u,
+  129u,
+  128u,
+  128u,
+  58u,
+  81u,
+  0u,
+  0u,
+  5u,
+  3u,
+  0u,
+  15u,
+  160u,
+  0u,
+  0u,
+  128u,
+  63u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  0u,
+  31u,
+  0u,
+  0u,
+  2u,
+  5u,
+  0u,
+  0u,
+  128u,
+  0u,
+  0u,
+  3u,
+  144u,
+  31u,
+  0u,
+  0u,
+  2u,
+  0u,
+  0u,
+  0u,
+  144u,
+  0u,
+  8u,
+  15u,
+  160u,
+  66u,
+  0u,
+  0u,
+  3u,
+  0u,
+  0u,
+  15u,
+  128u,
+  0u,
+  0u,
+  228u,
+  144u,
+  0u,
+  8u,
+  228u,
+  160u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  8u,
+  128u,
+  0u,
+  0u,
+  0u,
+  128u,
+  0u,
+  0u,
+  0u,
+  160u,
+  0u,
+  0u,
+  85u,
+  160u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  8u,
+  128u,
+  0u,
+  0u,
+  85u,
+  128u,
+  0u,
+  0u,
+  170u,
+  160u,
+  0u,
+  0u,
+  255u,
+  128u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  8u,
+  128u,
+  0u,
+  0u,
+  170u,
+  128u,
+  0u,
+  0u,
+  255u,
+  160u,
+  0u,
+  0u,
+  255u,
+  128u,
+  5u,
+  0u,
+  0u,
+  3u,
+  0u,
+  8u,
+  1u,
+  128u,
+  0u,
+  0u,
+  255u,
+  128u,
+  1u,
+  0u,
+  0u,
+  160u,
+  5u,
+  0u,
+  0u,
+  3u,
+  0u,
+  0u,
+  10u,
+  128u,
+  0u,
+  0u,
+  85u,
+  128u,
+  1u,
+  0u,
+  164u,
+  160u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  2u,
+  128u,
+  0u,
+  0u,
+  0u,
+  128u,
+  1u,
+  0u,
+  255u,
+  160u,
+  0u,
+  0u,
+  85u,
+  129u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  1u,
+  128u,
+  0u,
+  0u,
+  0u,
+  128u,
+  2u,
+  0u,
+  0u,
+  160u,
+  0u,
+  0u,
+  255u,
+  129u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  1u,
+  128u,
+  0u,
+  0u,
+  170u,
+  128u,
+  2u,
+  0u,
+  170u,
+  161u,
+  0u,
+  0u,
+  0u,
+  128u,
+  4u,
+  0u,
+  0u,
+  4u,
+  0u,
+  0u,
+  2u,
+  128u,
+  0u,
+  0u,
+  170u,
+  128u,
+  2u,
+  0u,
+  0u,
+  160u,
+  0u,
+  0u,
+  85u,
+  128u,
+  2u,
+  0u,
+  0u,
+  3u,
+  0u,
+  0u,
+  3u,
+  128u,
+  0u,
+  0u,
+  228u,
+  128u,
+  2u,
+  0u,
+  85u,
+  160u,
+  5u,
+  0u,
+  0u,
+  3u,
+  0u,
+  8u,
+  6u,
+  128u,
+  0u,
+  0u,
+  196u,
+  128u,
+  2u,
+  0u,
+  255u,
+  160u,
+  1u,
+  0u,
+  0u,
+  2u,
+  0u,
+  8u,
+  8u,
+  128u,
+  3u,
+  0u,
+  0u,
+  160u,
+  255u,
+  255u,
+  0u,
+  0u
+};
+
+
+// *WARNING* One or more selections were skipped as they could not be interpreted as c data
+
+
+struct //$9B0FD635EC932744DEFCA28AAEF2899C // sizeof=0x3C
+{                                       // XREF: .data:_unnamed_type_yuv_globals_ yuv_globals/r
+    bool init;                          // XREF: yuv_init_internal(void):loc_9B46DF/w
+    bool lost_device;                   // XREF: yuv_lost_device(void)+15/w
+    bool double_buffer;                 // XREF: yuv_init_internal(void)+1BC/r
+    // padding byte
+
+    int frame;                          // XREF: yuv_init(int,int,bool)+2A/w
+    int width;                          // XREF: yuv_init_internal(void)+9/r
+    int height;                         // XREF: yuv_init_internal(void)+11/r
+                                        // yuv_init(int,int,bool)+1C/w ...
+    unsigned __int8 *outY;              // XREF: yuv_init_internal(void)+40/w
+    unsigned __int8 *outU;              // XREF: yuv_init_internal(void)+83/w
+    unsigned __int8 *outV;              // XREF: yuv_init_internal(void)+D9/w
+                                        // yuv_init_internal(void)+F5/r ...
+    IDirect3DTexture9 *renderTarget1;   // XREF: yuv_init_internal(void)+13F/o
+    IDirect3DTexture9 *renderTarget2;   // XREF: yuv_init_internal(void)+207/o
+    IDirect3DTexture9 *srcTexture;      // XREF: yuv_init_internal(void)+2BE/o
+    IDirect3DTexture9 *dstTexture;      // XREF: yuv_init_internal(void)+377/o
+    IDirect3DPixelShader9 *pixelShader; // XREF: yuv_init_internal(void)+95F/o
+    IDirect3DVertexShader9 *vertexShader;
+    IDirect3DVertexBuffer9 *vertexBuffer;
+    IDirect3DVertexDeclaration9 *vertexDeclaration;
+} yuv_globals;
+
 void __cdecl yuv_init_internal()
 {
     const char *v0; // eax
@@ -53,7 +769,6 @@ void __cdecl yuv_init_internal()
             "dx.device->CreateTexture(width, height, 1, (0x00000001L), D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &yuv_globals.renderTarget1, 0)\n");
     v28 = R_AcquireDXDeviceOwnership(0);
     hr = dx.device->CreateTexture(
-                 dx.device,
                  width,
                  height,
                  1u,
@@ -82,17 +797,18 @@ void __cdecl yuv_init_internal()
             RB_LogPrint(
                 "dx.device->CreateTexture(width, height, 1, (0x00000001L), D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &yuv_globals.renderTarget2, 0)\n");
         v26 = R_AcquireDXDeviceOwnership(0);
-        v27 = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, int, int, int, int, unsigned int, IDirect3DTexture9 **, unsigned int))dx.device->CreateTexture)(
-                        dx.device,
-                        dx.device,
-                        width,
-                        height,
-                        1,
-                        1,
-                        21,
-                        0,
-                        &yuv_globals.renderTarget2,
-                        0);
+        //v27 = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, int, int, int, int, unsigned int, IDirect3DTexture9 **, unsigned int))dx.device->CreateTexture)(
+        //                dx.device,
+        //                dx.device,
+        //                width,
+        //                height,
+        //                1,
+        //                1,
+        //                21,
+        //                0,
+        //                &yuv_globals.renderTarget2,
+        //                0);
+        v27 = dx.device->CreateTexture(width, height, 1, 1, (D3DFORMAT)21, D3DPOOL_DEFAULT, &yuv_globals.renderTarget2, NULL);
         if ( v26 )
             R_ReleaseDXDeviceOwnership();
         if ( v27 < 0 )
@@ -113,7 +829,6 @@ void __cdecl yuv_init_internal()
             "dx.device->CreateTexture(width, height, 1, (0x00000001L), D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &yuv_globals.srcTexture, 0)\n");
     v24 = R_AcquireDXDeviceOwnership(0);
     v25 = dx.device->CreateTexture(
-                    dx.device,
                     width,
                     height,
                     1u,
@@ -140,7 +855,6 @@ void __cdecl yuv_init_internal()
         RB_LogPrint("dx.device->CreateTexture(width, height, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &yuv_globals.dstTexture, 0)\n");
     v22 = R_AcquireDXDeviceOwnership(0);
     v23 = dx.device->CreateTexture(
-                    dx.device,
                     width,
                     height,
                     1u,
@@ -166,7 +880,7 @@ void __cdecl yuv_init_internal()
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("dx.device->CreateVertexBuffer(24 * 4, 0, 0, D3DPOOL_MANAGED, &yuv_globals.vertexBuffer, 0)\n");
     v20 = R_AcquireDXDeviceOwnership(0);
-    v21 = dx.device->CreateVertexBuffer(dx.device, 96u, 0, 0, D3DPOOL_MANAGED, &yuv_globals.vertexBuffer, 0);
+    v21 = dx.device->CreateVertexBuffer(96u, 0, 0, D3DPOOL_MANAGED, &yuv_globals.vertexBuffer, 0);
     if ( v20 )
         R_ReleaseDXDeviceOwnership();
     if ( v21 < 0 )
@@ -184,7 +898,7 @@ void __cdecl yuv_init_internal()
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("yuv_globals.vertexBuffer->Lock(0, 0, (void**)&vtx, 0)\n");
     v18 = R_AcquireDXDeviceOwnership(0);
-    v19 = yuv_globals.vertexBuffer->Lock(yuv_globals.vertexBuffer, 0, 0, (void **)&vtx, 0);
+    v19 = yuv_globals.vertexBuffer->Lock(0, 0, (void **)&vtx, 0);
     if ( v18 )
         R_ReleaseDXDeviceOwnership();
     if ( v19 < 0 )
@@ -225,9 +939,10 @@ void __cdecl yuv_init_internal()
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("yuv_globals.vertexBuffer->Unlock()\n");
     v16 = R_AcquireDXDeviceOwnership(0);
-    v17 = ((int (__thiscall *)(IDirect3DVertexBuffer9 *, IDirect3DVertexBuffer9 *))yuv_globals.vertexBuffer->Unlock)(
-                    yuv_globals.vertexBuffer,
-                    yuv_globals.vertexBuffer);
+    //v17 = ((int (__thiscall *)(IDirect3DVertexBuffer9 *, IDirect3DVertexBuffer9 *))yuv_globals.vertexBuffer->Unlock)(
+    //                yuv_globals.vertexBuffer,
+    //                yuv_globals.vertexBuffer);
+    v17 = yuv_globals.vertexBuffer->Unlock();
     if ( v16 )
         R_ReleaseDXDeviceOwnership();
     if ( v17 < 0 )
@@ -262,11 +977,12 @@ void __cdecl yuv_init_internal()
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("dx.device->CreateVertexDeclaration(VertexElements, &yuv_globals.vertexDeclaration)\n");
     v14 = R_AcquireDXDeviceOwnership(0);
-    v15 = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, _D3DVERTEXELEMENT9 *, IDirect3DVertexDeclaration9 **))dx.device->CreateVertexDeclaration)(
-                    dx.device,
-                    dx.device,
-                    VertexElements,
-                    &yuv_globals.vertexDeclaration);
+    //v15 = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, _D3DVERTEXELEMENT9 *, IDirect3DVertexDeclaration9 **))dx.device->CreateVertexDeclaration)(
+    //                dx.device,
+    //                dx.device,
+    //                VertexElements,
+    //                &yuv_globals.vertexDeclaration);
+    v15 = dx.device->CreateVertexDeclaration(VertexElements, &yuv_globals.vertexDeclaration);
     if ( v14 )
         R_ReleaseDXDeviceOwnership();
     if ( v15 < 0 )
@@ -284,10 +1000,7 @@ void __cdecl yuv_init_internal()
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("dx.device->CreateVertexShader((DWORD*)g_vs30_mjpeg_shader_vtx, &yuv_globals.vertexShader)\n");
     v12 = R_AcquireDXDeviceOwnership(0);
-    v13 = dx.device->CreateVertexShader(
-                    dx.device,
-                    (const unsigned int *)g_vs30_mjpeg_shader_vtx,
-                    &yuv_globals.vertexShader);
+    v13 = dx.device->CreateVertexShader((const DWORD*)g_vs30_mjpeg_shader_vtx, &yuv_globals.vertexShader);
     if ( v12 )
         R_ReleaseDXDeviceOwnership();
     if ( v13 < 0 )
@@ -305,7 +1018,7 @@ void __cdecl yuv_init_internal()
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("dx.device->CreatePixelShader((DWORD*)g_ps30_mjpeg_shader_yuv, &yuv_globals.pixelShader)\n");
     v10 = R_AcquireDXDeviceOwnership(0);
-    v11 = dx.device->CreatePixelShader(dx.device, (const unsigned int *)g_ps30_mjpeg_shader_yuv, &yuv_globals.pixelShader);
+    v11 = dx.device->CreatePixelShader((const DWORD*)g_ps30_mjpeg_shader_yuv, &yuv_globals.pixelShader);
     if ( v10 )
         R_ReleaseDXDeviceOwnership();
     if ( v11 < 0 )
@@ -371,24 +1084,26 @@ char __cdecl yuv_encode_frame()
     if ( !yuv_globals.init )
         return 0;
     semaphore = R_AcquireDXDeviceOwnership(0);
-    ((void (__thiscall *)(IDirect3DTexture9 *, IDirect3DTexture9 *, unsigned int, IDirect3DSurface9 **))yuv_globals.srcTexture->GetSurfaceLevel)(
-        yuv_globals.srcTexture,
-        yuv_globals.srcTexture,
-        0,
-        &dstSurface);
-    srcSurface = stru_B50E858.surface.color;
+    //((void (__thiscall *)(IDirect3DTexture9 *, IDirect3DTexture9 *, unsigned int, IDirect3DSurface9 **))yuv_globals.srcTexture->GetSurfaceLevel)(
+    //    yuv_globals.srcTexture,
+    //    yuv_globals.srcTexture,
+    //    0,
+    //    &dstSurface);
+    yuv_globals.srcTexture->GetSurfaceLevel(0, &dstSurface);
+    srcSurface = gfxRenderTargets[2].surface.color;
     R_AssertDXDeviceOwnership();
     if ( r_logFile && r_logFile->current.integer )
         RB_LogPrint("dx.device->StretchRect(srcSurface, 0, dstSurface, 0, D3DTEXF_NONE)\n");
     v14 = R_AcquireDXDeviceOwnership(0);
-    hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, IDirect3DSurface9 *, unsigned int, IDirect3DSurface9 *, unsigned int, unsigned int))dx.device->StretchRect)(
-                 dx.device,
-                 dx.device,
-                 srcSurface,
-                 0,
-                 dstSurface,
-                 0,
-                 0);
+    //hr = ((int (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, IDirect3DSurface9 *, unsigned int, IDirect3DSurface9 *, unsigned int, unsigned int))dx.device->StretchRect)(
+    //             dx.device,
+    //             dx.device,
+    //             srcSurface,
+    //             0,
+    //             dstSurface,
+    //             0,
+    //             0);
+    hr = dx.device->StretchRect(srcSurface, 0, dstSurface, 0, D3DTEXF_NONE);
     if ( v14 )
         R_ReleaseDXDeviceOwnership();
     if ( hr < 0 )
@@ -402,33 +1117,37 @@ char __cdecl yuv_encode_frame()
             112,
             v1);
     }
-    ((void (__thiscall *)(IDirect3DSurface9 *, IDirect3DSurface9 *))dstSurface->Release)(dstSurface, dstSurface);
-    dx.device->SetTexture(dx.device, 0, yuv_globals.srcTexture);
-    dx.device->SetVertexShader(dx.device, yuv_globals.vertexShader);
-    ((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, unsigned int, IDirect3DVertexBuffer9 *, unsigned int, int))dx.device->SetStreamSource)(
-        dx.device,
-        dx.device,
-        0,
-        yuv_globals.vertexBuffer,
-        0,
-        24);
-    dx.device->SetRenderState(dx.device, D3DRS_ALPHABLENDENABLE, 0);
-    dx.device->SetRenderState(dx.device, D3DRS_SEPARATEALPHABLENDENABLE, 0);
-    ((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int))dx.device->SetRenderState)(
-        dx.device,
-        dx.device,
-        15,
-        0);
-    dx.device->SetRenderState(dx.device, D3DRS_ZENABLE, 0);
-    dx.device->SetRenderState(dx.device, D3DRS_CULLMODE, 1u);
-    ((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int))dx.device->SetRenderState)(
-        dx.device,
-        dx.device,
-        52,
-        0);
-    dx.device->SetSamplerState(dx.device, 0, D3DSAMP_ADDRESSU, 3u);
-    dx.device->SetSamplerState(dx.device, 0, D3DSAMP_ADDRESSV, 3u);
-    dx.device->SetVertexDeclaration(dx.device, yuv_globals.vertexDeclaration);
+    //((void (__thiscall *)(IDirect3DSurface9 *, IDirect3DSurface9 *))dstSurface->Release)(dstSurface, dstSurface);
+    dstSurface->Release();
+    dx.device->SetTexture(0, yuv_globals.srcTexture);
+    dx.device->SetVertexShader(yuv_globals.vertexShader);
+    //((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, unsigned int, IDirect3DVertexBuffer9 *, unsigned int, int))dx.device->SetStreamSource)(
+    //    dx.device,
+    //    dx.device,
+    //    0,
+    //    yuv_globals.vertexBuffer,
+    //    0,
+    //    24);
+    dx.device->SetStreamSource(0, yuv_globals.vertexBuffer, 0, 24);
+    dx.device->SetRenderState(D3DRS_ALPHABLENDENABLE, 0);
+    dx.device->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, 0);
+    //((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int))dx.device->SetRenderState)(
+    //    dx.device,
+    //    dx.device,
+    //    15,
+    //    0);
+    dx.device->SetRenderState(D3DRS_ALPHATESTENABLE, 0);
+    dx.device->SetRenderState(D3DRS_ZENABLE, 0);
+    dx.device->SetRenderState(D3DRS_CULLMODE, 1u);
+    //((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int))dx.device->SetRenderState)(
+    //    dx.device,
+    //    dx.device,
+    //    52,
+    //    0);
+    dx.device->SetRenderState(D3DRS_STENCILENABLE, 0);
+    dx.device->SetSamplerState(0, D3DSAMP_ADDRESSU, 3u);
+    dx.device->SetSamplerState(0, D3DSAMP_ADDRESSV, 3u);
+    dx.device->SetVertexDeclaration(yuv_globals.vertexDeclaration);
     if ( yuv_globals.double_buffer )
     {
         if ( (yuv_globals.frame & 1) != 0 )
@@ -441,26 +1160,29 @@ char __cdecl yuv_encode_frame()
     {
         renderTarget = yuv_globals.renderTarget1;
     }
-    ((void (__thiscall *)(IDirect3DTexture9 *, IDirect3DTexture9 *, unsigned int, IDirect3DSurface9 **))renderTarget->GetSurfaceLevel)(
-        renderTarget,
-        renderTarget,
-        0,
-        &imageSurface);
-    dx.device->BeginScene(dx.device);
-    ((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, unsigned int, IDirect3DSurface9 *))dx.device->SetRenderTarget)(
-        dx.device,
-        dx.device,
-        0,
-        imageSurface);
-    dx.device->SetPixelShader(dx.device, yuv_globals.pixelShader);
-    ((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int, int))dx.device->DrawPrimitive)(
-        dx.device,
-        dx.device,
-        6,
-        0,
-        2);
-    dx.device->EndScene(dx.device);
-    imageSurface->Release(imageSurface);
+    //((void (__thiscall *)(IDirect3DTexture9 *, IDirect3DTexture9 *, unsigned int, IDirect3DSurface9 **))renderTarget->GetSurfaceLevel)(
+    //    renderTarget,
+    //    renderTarget,
+    //    0,
+    //    &imageSurface);
+    renderTarget->GetSurfaceLevel(0, &imageSurface);
+    dx.device->BeginScene();
+    //((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, unsigned int, IDirect3DSurface9 *))dx.device->SetRenderTarget)(
+    //    dx.device,
+    //    dx.device,
+    //    0,
+    //    imageSurface);
+    dx.device->SetRenderTarget(0, imageSurface);
+    dx.device->SetPixelShader(yuv_globals.pixelShader);
+    //((void (__thiscall *)(IDirect3DDevice9 *, IDirect3DDevice9 *, int, unsigned int, int))dx.device->DrawPrimitive)(
+    //    dx.device,
+    //    dx.device,
+    //    6,
+    //    0,
+    //    2);
+    dx.device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
+    dx.device->EndScene();
+    imageSurface->Release();
     if ( yuv_globals.double_buffer && !yuv_globals.frame )
     {
         memset(yuv_globals.outY, 0, yuv_globals.height * yuv_globals.width);
@@ -481,11 +1203,11 @@ char __cdecl yuv_encode_frame()
         {
             renderTarget = yuv_globals.renderTarget1;
         }
-        renderTarget->GetSurfaceLevel(renderTarget, 0, &imageSurface);
-        yuv_globals.dstTexture->GetSurfaceLevel(yuv_globals.dstTexture, 0, &dstSurface);
-        dx.device->GetRenderTargetData(dx.device, imageSurface, dstSurface);
-        imageSurface->Release(imageSurface);
-        dstSurface->LockRect(dstSurface, &lockedRect, 0, 16u);
+        renderTarget->GetSurfaceLevel(0, &imageSurface);
+        yuv_globals.dstTexture->GetSurfaceLevel(0, &dstSurface);
+        dx.device->GetRenderTargetData(imageSurface, dstSurface);
+        imageSurface->Release();
+        dstSurface->LockRect(&lockedRect, 0, 16u);
         pixels = (unsigned __int8 *)lockedRect.pBits;
         outY = yuv_globals.outY;
         outU = yuv_globals.outU;
@@ -506,8 +1228,9 @@ char __cdecl yuv_encode_frame()
                 *outV++ = pixel3[4] + *pixel3 + pixel1[4] + *pixel1;
             }
         }
-        dstSurface->UnlockRect(dstSurface);
-        ((void (__thiscall *)(IDirect3DSurface9 *, IDirect3DSurface9 *))dstSurface->Release)(dstSurface, dstSurface);
+        dstSurface->UnlockRect();
+        //((void (__thiscall *)(IDirect3DSurface9 *, IDirect3DSurface9 *))dstSurface->Release)(dstSurface, dstSurface);
+        dstSurface->Release();
     }
     R_InitCmdBufState(&gfxCmdBufState);
     if ( semaphore )

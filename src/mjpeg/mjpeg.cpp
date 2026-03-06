@@ -1,10 +1,30 @@
 #include "mjpeg.h"
 
-void __thiscall mjpeg_initonce(void *this)
-{
-    unsigned int threadId; // [esp+0h] [ebp-4h] BYREF
+#include <Windows.h>
+#include <qcommon/threads.h>
+#include "avi.h"
+#include "yuv.h"
+#include <qcommon/common.h>
+#include <tl/tl_system.h>
+#include <gfx_d3d/r_dvars.h>
 
-    threadId = (unsigned int)this;
+struct mjpeg_render // sizeof=0x0
+{
+};
+
+mjpeg_render *mjpeg;
+void(__cdecl *mjpeg_current_callback)(unsigned __int8 *, unsigned __int8 *, unsigned __int8 *);
+HANDLE mjpeg_hEvent;
+bool mjpeg_run_encoder;
+bool mjpeg_quit_encoder;
+bool mjpeg_inited;
+
+
+
+void mjpeg_initonce()
+{
+    DWORD threadId; // [esp+0h] [ebp-4h] BYREF
+
     mjpeg_hEvent = CreateEventA(0, 0, 0, 0);
     CreateThread(0, 0x10000u, (LPTHREAD_START_ROUTINE)mjpeg_thread, 0, 0, &threadId);
     SetThreadName(threadId, "MJPEG Thread");
@@ -46,7 +66,8 @@ void __stdcall    mjpeg_thread(void *context)
         fpsms = 1000.0 / (float)mjpeg_fps;
         for ( frames = 0; frames < 0x2000 && !mjpeg_quit_encoder; ++frames )
         {
-            diff = (double)(*(_QWORD *)&tlPcGetTick() - tick) / tlPcTicksPerMS;
+            //diff = (double)(*(_QWORD *)&tlPcGetTick() - tick) / tlPcTicksPerMS;
+            diff = (double)(tlPcGetTick().QuadPart - tick) / tlPcTicksPerMS;
             if ( fpsms <= diff )
                 Com_PrintWarning(16, "WARNING: Movie encoding took to %g ms limit is %g ms\n", diff, fpsms);
             else

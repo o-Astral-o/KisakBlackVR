@@ -1839,7 +1839,7 @@ void __cdecl Com_Init_Try_Block_Function(char *commandLine)
     BG_EmblemsInit();
     SV_InitServerThread();
     Demo_InitFileHandlerSystem();
-    mjpeg_initonce(v5);
+    mjpeg_initonce();
     COM_PlayIntroMovies();
     if ( useFastFile->current.enabled )
     {

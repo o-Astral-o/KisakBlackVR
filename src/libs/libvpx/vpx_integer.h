@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VPX_INTEGER_H
 #define VPX_INTEGER_H
 
 /* get ptrdiff_t, size_t, wchar_t, NULL */
 #include <stddef.h>
+#include <cstdint> // LWSS add - prevent clashing with the below types
 
 #if defined(_MSC_VER) || defined(VPX_EMULATE_INTTYPES)
 typedef signed char  int8_t;
@@ -33,7 +33,6 @@ typedef unsigned __int64 uint64_t;
 #ifdef HAVE_ARMV6
 typedef unsigned int int_fast16_t;
 #else
-typedef signed short int_fast16_t;
 #endif
 typedef signed char int_fast8_t;
 typedef unsigned char uint_fast8_t;
