@@ -2,6 +2,8 @@
 
 struct uiInfo_s;
 struct listBoxDef_s;
+struct rectDef_s;
+struct Font_s;
 
 void __cdecl UI_ClearDisplayedServers();
 void __cdecl UI_BuildServerDisplayList(int localClientNum, uiInfo_s *uiInfo, int force);

@@ -6,6 +6,7 @@
 #include <universal/q_shared.h>
 #include <database/db_file_load.h>
 #include "ui_shared.h"
+#include <qcommon/common.h>
 
 void __cdecl UI_DrawHandlePic(
                 const ScreenPlacement *scrPlace,

@@ -10,6 +10,7 @@
 #include <live/live_win.h>
 #include <live/live_pcache_profile.h>
 #include <live/live_counter.h>
+#include <gfx_d3d/r_rendercmds.h>
 
 CompositeEmblemLayer s_emblem[12];
 CompositeEmblemLayer *s_selected;

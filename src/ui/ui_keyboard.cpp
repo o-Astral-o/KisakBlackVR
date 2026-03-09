@@ -5,6 +5,7 @@
 #include "ui_utils.h"
 #include <qcommon/com_clients.h>
 #include <qcommon/profanityfilter.h>
+#include <stringed/stringed_hooks.h>
 
 keyBoardUtitlity uiKeyboard;
 

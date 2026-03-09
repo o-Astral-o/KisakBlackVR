@@ -50,6 +50,7 @@
 #include <sound/snd_driver_xaudio2.h>
 #include <game_mp/g_main_mp.h>
 #include <live/live_win.h>
+#include <stringed/stringed_hooks.h>
 
 const dvar_t *ui_netGameType;
 const dvar_t *uiscript_debug;
@@ -1560,7 +1561,7 @@ void __cdecl UI_RunMenuScript(int localClientNum, int contextIndex, __int64 args
         }
         else
         {
-            Com_PrintError(13, "openurl invalid argument %s\n ", v25);
+            Com_PrintError(13, "openurl invalid argument %s\n ", out);
         }
     }
 }
@@ -3741,7 +3742,7 @@ void __cdecl UI_UIContext_OpenToastPopup(
 
     uiInfo = UI_UIContext_GetInfo(contextIndex);
     I_strncpyz(uiInfo->toastPopupIconName, toastPopupIconName, 256);
-    I_strncpyz(uiInfo->GLOBAL_EMPTY_STRING, GLOBAL_EMPTY_STRING, 256);
+    I_strncpyz(uiInfo->toastPopupTitle, GLOBAL_EMPTY_STRING, 256);
     I_strncpyz(uiInfo->toastPopupDesc, toastPopupDesc, 256);
     uiInfo->toastPopupDuration = toastPopupDuration;
     uiInfo->toastPopupOpened = 1;

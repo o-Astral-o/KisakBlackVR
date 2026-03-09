@@ -17,6 +17,7 @@
 #include "ui_main_mp.h"
 #include <ui/ui_playlists.h>
 #include <ui/ui_main_pc.h>
+#include <cgame_mp/cg_local_mp.h>
 
 float playerColor[4] = { 0.94999999, 0.72000003, 0.20999999, 1.0 };
 float alliesColor[4] = { 0.80000001, 0.80000001, 0.89999998, 0.5 };
@@ -24,8 +25,6 @@ float axisColor[4] = { 0.89999998, 0.80000001, 0.80000001, 0.5 };
 float fadedBlack[4] = { 0.0, 0.0, 0.0, 0.15000001 };
 float white[4] = { 1.0, 1.0, 1.0, 1.0 };
 float darkRowMultiplier = 0.75;
-float axisColor[4] = { 0.5, 0.55000001, 0.60000002, 0.5 };
-float alliesColor[4] = { 0.60000002, 0.5, 0.5, 0.5 };
 
 FriendInfo friendInfo_0;
 FriendInfo info_5;
@@ -371,7 +370,7 @@ const char *__cdecl UI_FeederItemText_GametypesBase(
                 listBoxDef_s *listPtr,
                 Material **handle)
 {
-    const char *result; // eax
+    const char *result = NULL; // eax
     int LocalClientNum; // eax
     float feederID; // [esp+0h] [ebp-14h]
     int realIndex; // [esp+10h] [ebp-4h]
@@ -568,7 +567,7 @@ char *__cdecl UI_Feeder_HandleItemList(
                 const char *itemName,
                 Material **handle)
 {
-    char *result; // eax
+    char *result = NULL; // eax
     char *v9; // eax
 
     if ( itemIndex == -1 )
@@ -1907,7 +1906,7 @@ char *__cdecl UI_FeederItemText_Contracts(
                 listBoxDef_s *listPtr,
                 Material **handle)
 {
-    char *result; // eax
+    char *result = NULL; // eax
     char *v8; // eax
     int ContractCost; // [esp-4h] [ebp-Ch]
     int contractIndex; // [esp+4h] [ebp-4h]
@@ -2204,7 +2203,7 @@ const char *__cdecl UI_FeederItemText_KillstreakNumKills(
 {
     int Int; // eax
     const char *v7; // eax
-    const char *result; // eax
+    const char *result = NULL; // eax
     char *v9; // eax
     char *v10; // eax
     int killNum; // [esp+4h] [ebp-8h]
@@ -2685,8 +2684,8 @@ bool __cdecl UI_FeederItemColor_InGamePlayerList(
     bool result; // al
     int LocalClientNum; // eax
     const char *MatchInGamePlayerXuid; // eax
-    int v11; // edx
-    __int64 v12; // [esp+0h] [ebp-14h]
+    //int v11; // edx
+    //__int64 v12; // [esp+0h] [ebp-14h]
     unsigned __int64 currClientXuid; // [esp+Ch] [ebp-8h]
 
     switch (column)
@@ -2730,9 +2729,10 @@ bool __cdecl UI_FeederItemColor_InGamePlayerList(
         LocalClientNum = Com_ControllerIndex_GetLocalClientNum(controllerIndex);
         MatchInGamePlayerXuid = CG_GetMatchInGamePlayerXuid(LocalClientNum, index, team);
         currClientXuid = I_atoi64(MatchInGamePlayerXuid);
-        LODWORD(v12) = Live_GetXuid(controllerIndex);
-        HIDWORD(v12) = v11;
-        if (v12 == currClientXuid)
+        //LODWORD(v12) = Live_GetXuid(controllerIndex);
+        //HIDWORD(v12) = v11;
+        //if (v12 == currClientXuid)
+        if (Live_GetXuid(controllerIndex) == currClientXuid)
         {
             *color = playerColor[0];
             color[1] = playerColor[1];
@@ -3007,8 +3007,8 @@ bool __cdecl UI_FeederItemColor_AARScoreboard(
     __int64 v10; // rax
     char *v11; // eax
     char *v12; // eax
-    int v13; // edx
-    __int64 v14; // [esp+0h] [ebp-54h]
+    //int v13; // edx
+    //__int64 v14; // [esp+0h] [ebp-54h]
     float *focusColor; // [esp+14h] [ebp-40h]
     signed int payout; // [esp+24h] [ebp-30h]
     int localClientNum; // [esp+28h] [ebp-2Ch]
@@ -3099,9 +3099,10 @@ bool __cdecl UI_FeederItemColor_AARScoreboard(
             payout = LiveStats_GetDIntStat(controllerIndex, &ddlState);
             v12 = CG_GetMatchScoreboardInfo(localClientNum, 0, index, TEAM_FREE);
             currClientXuid = I_atoi64(v12);
-            LODWORD(v14) = Live_GetXuid(controllerIndex);
-            HIDWORD(v14) = v13;
-            if (currClientXuid == v14)
+            //LODWORD(v14) = Live_GetXuid(controllerIndex);
+            //HIDWORD(v14) = v13;
+            //if (currClientXuid == v14)
+            if (currClientXuid == Live_GetXuid(controllerIndex))
             {
                 focusColor = listBox->focusColor;
                 *color = listBox->focusColor[0];

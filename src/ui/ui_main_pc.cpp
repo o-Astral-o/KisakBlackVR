@@ -10,6 +10,8 @@
 #include <universal/com_files.h>
 #include "ui_utils.h"
 #include <live/live_win.h>
+#include <stringed/stringed_hooks.h>
+#include <database/db_registry.h>
 
 const dvar_t *ui_joinGameType;
 const dvar_t *ui_netGameTypeName;
@@ -580,32 +582,32 @@ int __cdecl UI_GetServerStatusInfoScoreBoard(char *serverAddress, serverStatusIn
                         break;
                     *v3 = 0;
                     rank = v3 + 1;
-                    strchr(v3 + 1, 0x20u);
+                    v4 = strchr(v3 + 1, 0x20u);
                     if ( !v4 )
                         break;
                     *v4 = 0;
                     score = v4 + 1;
-                    strchr(v4 + 1, 0x20u);
+                    v5 = strchr(v4 + 1, 0x20u);
                     if ( !v5 )
                         break;
                     *v5 = 0;
                     kills = v5 + 1;
-                    strchr(v5 + 1, 0x20u);
+                    v6 = strchr(v5 + 1, 0x20u);
                     if ( !v6 )
                         break;
                     *v6 = 0;
                     assists = v6 + 1;
-                    strchr(v6 + 1, 0x20u);
+                    v7 = strchr(v6 + 1, 0x20u);
                     if ( !v7 )
                         break;
                     *v7 = 0;
                     deaths = v7 + 1;
-                    strchr(v7 + 1, 0x20u);
+                    v8 = strchr(v7 + 1, 0x20u);
                     if ( !v8 )
                         break;
                     *v8 = 0;
                     ping = v8 + 1;
-                    strchr(v8 + 1, 0x20u);
+                    v9 = strchr(v8 + 1, 0x20u);
                     if ( !v9 )
                         break;
                     *(_BYTE *)v9 = 0;

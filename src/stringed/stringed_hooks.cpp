@@ -5,6 +5,8 @@
 #include "stringed_ingame.h"
 #include "stringed_remote.h"
 #include <ui/ui_shared.h>
+#include <ui/ui_main.h>
+#include <database/db_registry.h>
 
 const dvar_t *loc_language;
 const dvar_t *loc_forceEnglish;
@@ -320,7 +322,7 @@ char __cdecl SEH_ReplaceDirective(
     startTokenPos = (const char *)v5;
     if ( !v5 )
         return 0;
-    strstr(v5, "}]");
+    v7 = strstr(v5, "}]");
     endTokenPos = v7;
     if ( v7 )
     {

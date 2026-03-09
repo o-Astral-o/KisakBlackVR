@@ -874,7 +874,7 @@ bool __cdecl Live_IsSignedInToLive()
     return dw_active && dw_active->current.enabled;
 }
 
-int __cdecl Live_GetXuid(int controllerIndex)
+unsigned long long __cdecl Live_GetXuid(int controllerIndex)
 {
     if ( !Live_IsSignedIn(controllerIndex)
         && !Assert_MyHandler(

@@ -1,5 +1,6 @@
 #pragma once
 #include <universal/q_parse.h>
+#include <universal/dvar.h>
 #include "ui_shared.h"
 
 enum sscType_t : __int32

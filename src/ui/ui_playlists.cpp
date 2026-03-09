@@ -43,7 +43,6 @@ playlistEntry playlistEntries[8192];
 int prevPlaylist[32];
 playlistInfo playlists[64];
 bool categoryFilter[32];
-categoryInfo categories[32];
 char s_playlistRuleBuffer[32768];
 int numGametypes;
 playlistGametype gametypes[64];

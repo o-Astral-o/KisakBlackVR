@@ -1028,7 +1028,7 @@ char *__cdecl UI_FeederItemText_DynamicMenu(
                 listBoxDef_s *listPtr,
                 Material **handle)
 {
-    char *result; // eax
+    char *result =  NULL; // eax
 
     if ( column )
     {

@@ -35,7 +35,7 @@ public:
 
     ~EXT_List()
     {
-        Empty();
+        Empty(0);
     }
 
     EXT_List()

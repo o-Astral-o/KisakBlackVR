@@ -3,6 +3,7 @@
 #include <universal/dvar.h>
 #include <ui/ui_shared.h>
 #include <game_mp/g_save_mp.h>
+#include <qcommon/msg_mp.h>
 
 enum GVConditionalLhsTypeMask : __int32
 {                                       // XREF: GVConditionalLhs/r
@@ -93,6 +94,8 @@ struct GVAction // sizeof=0x14
         unsigned __int8 parameterType,
         GVValue *parameters,
         int parametersSize);
+
+    GVAction() {};
 };
 
 struct GVConditionalRhs // sizeof=0xC

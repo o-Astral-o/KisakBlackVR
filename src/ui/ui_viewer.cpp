@@ -27,6 +27,7 @@
 #include <bgame/bg_misc.h>
 #include <qcommon/threads.h>
 #include <universal/com_memory.h>
+#include <qcommon/com_bsp.h>
 
 const char *modeNames[22] =
 {
@@ -315,8 +316,9 @@ void __thiscall UIViewer::Show()
                 BG_ShutdownWeaponDefFiles();
                 BG_ClearWeaponDef();
                 cgameGlob = CG_GetLocalClientGlobals(0);
-                LODWORD(cgameGlob->bgs.clientinfo[0].xuid) = Live_GetXuid(this->controllerIndex);
-                HIDWORD(cgameGlob->bgs.clientinfo[0].xuid) = v1;
+                //LODWORD(cgameGlob->bgs.clientinfo[0].xuid) = Live_GetXuid(this->controllerIndex);
+                //HIDWORD(cgameGlob->bgs.clientinfo[0].xuid) = v1;
+                cgameGlob->bgs.clientinfo[0].xuid = Live_GetXuid(this->controllerIndex);
                 I_strncpyz(cgameGlob->visionNameNaked, "ui_viewer", 64);
                 CG_VisionSetStartLerp_To(0, VISIONSETMODE_NAKED, VISIONSETLERP_TO_SMOOTH, cgameGlob->visionNameNaked, 0);
             }

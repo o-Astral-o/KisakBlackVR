@@ -17,6 +17,7 @@
 #include <live/live_counter.h>
 #include <qcommon/com_clients.h>
 #include <ctime>
+#include <client_mp/cl_main_mp.h>
 
 const int CustomKillstreakNums_0[22] =
 {

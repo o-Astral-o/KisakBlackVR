@@ -9,6 +9,7 @@
 #include <universal/com_files.h>
 #include <win32/win_shared.h>
 #include <game_mp/g_main_mp.h>
+#include <cgame_mp/cg_main_mp.h>
 
 stringDef_s *g_strHandle[2048];
 

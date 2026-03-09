@@ -96,7 +96,7 @@ void __cdecl Live_UserSignedIn(int controllerIndex);
 bool __cdecl Live_UserSignedInToLive(int controllerIndex, char **disconnectMessage);
 bool __cdecl Live_IsSignedIn(int controllerIndex);
 bool __cdecl Live_IsSignedInToLive();
-int __cdecl Live_GetXuid(int controllerIndex);
+unsigned long long __cdecl Live_GetXuid(int controllerIndex);
 int __cdecl Live_GetTier(int controllerIndex);
 char __cdecl Live_ShowMarketplaceUI();
 int __cdecl Live_GetUploadSpeed();

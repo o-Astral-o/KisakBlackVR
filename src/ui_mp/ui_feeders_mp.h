@@ -1,6 +1,8 @@
 #pragma once
 #include <ui/ui_utils.h>
 #include <client/cl_milestone.h>
+#include <game/teams.h>
+#include <qcommon/msg_mp.h>
 
 int __cdecl UI_GetMilestoneType(float feederID);
 int __cdecl UI_Project_FeederCount(int localClientNum, int contextIndex, float feederID, listBoxDef_s *listPtr);

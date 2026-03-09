@@ -1943,7 +1943,7 @@ const char *__cdecl Script_TableLookupParse(UiContext *dc, const char **args)
                     }
                     String_Parse(args, arg, 1024);
                     Script_OpParse(&seachValueTemp, args);
-                    itoa(seachValueTemp, searchValue, 0xAu);
+                    _itoa(seachValueTemp, searchValue, 0xAu);
                 }
             }
             else
@@ -1951,7 +1951,7 @@ const char *__cdecl Script_TableLookupParse(UiContext *dc, const char **args)
                 v4 = Script_TableLookupParse(dc, args);
                 I_strncpyz(searchValue, v4, 1024);
                 Script_OpParse(&seachValueTemp, args);
-                itoa(seachValueTemp, searchValue, 0xAu);
+                _itoa(seachValueTemp, searchValue, 0xAu);
             }
         }
         else
@@ -1972,7 +1972,7 @@ const char *__cdecl Script_TableLookupParse(UiContext *dc, const char **args)
         seachValueTemp = Dvar_GetInt(arg);
         String_Parse(args, arg, 1024);
         Script_OpParse(&seachValueTemp, args);
-        itoa(seachValueTemp, searchValue, 0xAu);
+        _itoa(seachValueTemp, searchValue, 0xAu);
     }
     do
         String_Parse(args, arg, 1024);
@@ -3453,7 +3453,7 @@ void __cdecl UI_OpenToastPopup_f()
     v0 = Cmd_Argv(1);
     I_strncpyz(uiInfo->toastPopupIconName, v0, 256);
     v1 = Cmd_Argv(2);
-    I_strncpyz(uiInfo->GLOBAL_EMPTY_STRING, v1, 256);
+    I_strncpyz(uiInfo->toastPopupTitle, v1, 256);
     v2 = Cmd_Argv(3);
     I_strncpyz(uiInfo->toastPopupDesc, v2, 256);
     v3 = Cmd_Argv(4);

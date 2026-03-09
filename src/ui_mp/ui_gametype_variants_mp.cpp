@@ -11,6 +11,7 @@
 #include <universal/com_memory.h>
 #include <clientscript/cscr_vm.h>
 #include <clientscript/scr_const.h>
+#include <ui/ui_main.h>
 
 const dvar_t *ui_gv_rulecount;
 const dvar_t *ui_gv_reloadSpeedModifier;

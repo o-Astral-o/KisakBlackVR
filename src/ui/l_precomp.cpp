@@ -1301,7 +1301,7 @@ LABEL_24:
                 v = &value_heap[numvalues++];
                 if ( negativevalue )
                 {
-                    v->intvalue = -tokens->intvalue;
+                    v->intvalue = -(int)tokens->intvalue;
                     v->floatvalue = -tokens->floatvalue;
                 }
                 else

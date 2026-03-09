@@ -1,6 +1,8 @@
 #pragma once
 #include <client/screen_placement.h>
 
+struct Material;
+
 void __cdecl UI_DrawHandlePic(
                 const ScreenPlacement *scrPlace,
                 float x,
