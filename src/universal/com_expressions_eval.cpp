@@ -40,6 +40,7 @@
 #include <live/live_storage_pub.h>
 #include <ui/ui_feeders.h>
 #include <cgame/cg_drawtools.h>
+#include <stringed/stringed_hooks.h>
 
 void __cdecl GetToastPopupTitle(int localClientNum, itemDef_s *item, OperandStack *dataStack)
 {
@@ -7309,16 +7310,19 @@ void __cdecl IsPlayerJoinable(int localClientNum, itemDef_s *item, OperandStack 
     controllerIndex = Com_LocalClient_GetControllerIndex(localClientNum);
     if ( Live_IsSignedIn(controllerIndex) )
     {
-        LODWORD(v6) = Live_GetXuid(controllerIndex);
-        HIDWORD(v6) = v3;
+        //LODWORD(v6) = Live_GetXuid(controllerIndex);
+        //HIDWORD(v6) = v3;
+        myXuid = Live_GetXuid(controllerIndex);
     }
     else
     {
-        v6 = 0;
+        //v6 = 0;
+        myXuid = (unsigned long long)0;
     }
-    myXuid = v6;
+    //myXuid = v6;
     SourceString = GetSourceString(source);
     selectedPlayerXuid = I_atoi64(SourceString);
+#ifdef KISAK_LIVE
     if ( selectedPlayerXuid && selectedPlayerXuid != myXuid )
     {
         if ( Dvar_GetBool("ui_friendsListOpen") )
@@ -7331,6 +7335,7 @@ void __cdecl IsPlayerJoinable(int localClientNum, itemDef_s *item, OperandStack 
             result.internals.intVal = 1;
         }
     }
+#endif
     AddOperandToStack(dataStack, &result);
 }
 
@@ -7351,14 +7356,16 @@ void __cdecl IsPlayerInvitable(int localClientNum, itemDef_s *item, OperandStack
     controllerIndex = Com_LocalClient_GetControllerIndex(localClientNum);
     if ( Live_IsSignedIn(controllerIndex) )
     {
-        LODWORD(v5) = Live_GetXuid(controllerIndex);
-        HIDWORD(v5) = v3;
+        //LODWORD(v5) = Live_GetXuid(controllerIndex);
+        //HIDWORD(v5) = v3;
+        myXuid = Live_GetXuid(controllerIndex);
     }
     else
     {
-        v5 = 0;
+        //v5 = 0;
+        myXuid = (unsigned long long)0;
     }
-    myXuid = v5;
+    //myXuid = v5;
     SourceString = GetSourceString(source);
     selectedPlayerXuid = I_atoi64(SourceString);
     if ( selectedPlayerXuid && selectedPlayerXuid != myXuid )
@@ -8814,19 +8821,6 @@ void __cdecl GetToastPopupIcon(int localClientNum, itemDef_s *item, OperandStack
     result.internals.intVal = (int)uiInfo->toastPopupIconName;
     if ( uiscript_debug && uiscript_debug->current.integer )
         Expression_TraceInternal("GetToastPopupIcon() = %s\n", result.internals.string);
-    AddOperandToStack(dataStack, &result);
-}
-
-void __cdecl GetToastPopupTitle(int localClientNum, itemDef_s *item, OperandStack *dataStack)
-{
-    Operand result; // [esp+0h] [ebp-Ch] BYREF
-    uiInfo_s *uiInfo; // [esp+8h] [ebp-4h]
-
-    uiInfo = UI_GetInfo(localClientNum);
-    result.dataType = VAL_STRING;
-    result.internals.string = uiInfo->toastPopupTitle;
-    if (uiscript_debug && uiscript_debug->current.integer)
-        Expression_TraceInternal("GetToastPopupTitle() = %s\n", result.internals.string);
     AddOperandToStack(dataStack, &result);
 }
 
@@ -10388,7 +10382,7 @@ char __cdecl GetCurrentIndex(
     OperandList list; // [esp+4h] [ebp-68h] BYREF
     float currIndex; // [esp+60h] [ebp-Ch] BYREF
     itemDef_s *actualItem; // [esp+64h] [ebp-8h]
-    const char *feederName; // [esp+68h] [ebp-4h]
+    const char *feederName = NULL; // [esp+68h] [ebp-4h]
 
     currIndex = 0.0f;
     GetOperandList(dataStack, &list);
@@ -11080,7 +11074,7 @@ void __cdecl GetWeaponName(int localClientNum, itemDef_s *item, OperandStack *da
     challengeInfo_t *challenge; // [esp+14h] [ebp-6Ch] BYREF
     OperandList list; // [esp+18h] [ebp-68h] BYREF
     float currIndex; // [esp+74h] [ebp-Ch] BYREF
-    itemDef_s *actualItem; // [esp+78h] [ebp-8h]
+    itemDef_s *actualItem = NULL; // [esp+78h] [ebp-8h]
     const char *feederName; // [esp+7Ch] [ebp-4h]
 
     result.dataType = VAL_STRING;
@@ -11798,7 +11792,7 @@ void __cdecl GetFeederData(int localClientNum, itemDef_s *item, OperandStack *da
     const char *stringResult; // [esp+14h] [ebp-68h] BYREF
     float floatResult; // [esp+18h] [ebp-64h] BYREF
     OperandList list; // [esp+1Ch] [ebp-60h] BYREF
-    itemDef_s *actualItem; // [esp+78h] [ebp-4h]
+    itemDef_s *actualItem = NULL; // [esp+78h] [ebp-4h]
 
     field = "";
     GetOperandList(dataStack, &list);

@@ -79,6 +79,12 @@ struct Operand // sizeof=0x8
     // Expression_Parse(char const * *,ExpressionStatement *,void *,int)+1A0/r ...
     operandInternalDataUnion internals; // XREF: Expression_Parse(char const * *,ExpressionStatement *,void *,int)+19/w
     // Expression_Parse(char const * *,ExpressionStatement *,void *,int):loc_78A62C/r ...
+
+    Operand()
+    {
+        dataType = VAL_INT;
+        internals.intVal = 0;
+    }
 };
 
 union expressionRpnDataUnion // sizeof=0x8
@@ -86,6 +92,9 @@ union expressionRpnDataUnion // sizeof=0x8
     Operand constant;
     void *cmd;
     int cmdIdx;
+
+    expressionRpnDataUnion() : constant() {};
+    ~expressionRpnDataUnion() {}
 };
 
 struct expressionRpn // sizeof=0xC

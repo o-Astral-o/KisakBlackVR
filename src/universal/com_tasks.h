@@ -1,4 +1,5 @@
 #pragma once
+#include "q_shared.h"
 
 struct TaskRecord;
 struct bdRemoteTask;

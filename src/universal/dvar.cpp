@@ -47,6 +47,11 @@ dvar_s *__cdecl Dvar_FindMalleableVar_0(int dvarHash)
     return 0;
 }
 
+bool Material_CachedDvarNameLess(const dvar_s *dvar0, const dvar_s *dvar1)
+{
+    return I_stricmp(dvar0->name, dvar1->name) < 0;
+}
+
 void __cdecl Dvar_Sort()
 {
     Sys_LockWrite(&g_dvarCritSect);
@@ -61,7 +66,8 @@ void __cdecl Dvar_Sort()
         std::sort(
             sortedDvars,
             sortedDvars + dvarCount,
-            Material_CachedShaderTextLess
+            Material_CachedDvarNameLess
+            //Material_CachedShaderTextLess
         );
 
         areDvarsSorted = 1;
@@ -1238,45 +1244,45 @@ void __cdecl Dvar_StringToColor(const char *string, unsigned __int8 *color)
     float v4; // [esp+8h] [ebp-78h]
     float v5; // [esp+Ch] [ebp-74h]
     float v6; // [esp+24h] [ebp-5Ch]
-    float dvarValue; // [esp+3Ch] [ebp-44h]
-    float dvarValue; // [esp+54h] [ebp-2Ch]
-    float dvarDomain; // [esp+6Ch] [ebp-14h]
+    float v7; // [esp+3Ch] [ebp-44h]
+    float v8; // [esp+54h] [ebp-2Ch]
+    float v9; // [esp+6Ch] [ebp-14h]
     float colorVec[4]; // [esp+70h] [ebp-10h] BYREF
 
     memset(colorVec, 0, sizeof(colorVec));
     sscanf(string, "%g %g %g %g", colorVec, &colorVec[1], &colorVec[2], &colorVec[3]);
-    if ( (float)(colorVec[0] - 1.0) < 0.0 )
-        dvarDomain = colorVec[0];
+    if ((float)(colorVec[0] - 1.0) < 0.0)
+        v9 = colorVec[0];
     else
-        dvarDomain = 1.0f;
-    if ( (float)(0.0 - dvarDomain) < 0.0 )
-        v5 = dvarDomain;
+        v9 = 1.0f;
+    if ((float)(0.0 - v9) < 0.0)
+        v5 = v9;
     else
         v5 = 0.0f;
     *color = (int)((float)(255.0 * v5) + 9.313225746154785e-10);
-    if ( (float)(colorVec[1] - 1.0) < 0.0 )
-        dvarValue = colorVec[1];
+    if ((float)(colorVec[1] - 1.0) < 0.0)
+        v8 = colorVec[1];
     else
-        dvarValue = 1.0f;
-    if ( (float)(0.0 - dvarValue) < 0.0 )
-        v4 = dvarValue;
+        v8 = 1.0f;
+    if ((float)(0.0 - v8) < 0.0)
+        v4 = v8;
     else
         v4 = 0.0f;
     color[1] = (int)((float)(255.0 * v4) + 9.313225746154785e-10);
-    if ( (float)(colorVec[2] - 1.0) < 0.0 )
-        dvarValue = colorVec[2];
+    if ((float)(colorVec[2] - 1.0) < 0.0)
+        v7 = colorVec[2];
     else
-        dvarValue = 1.0f;
-    if ( (float)(0.0 - dvarValue) < 0.0 )
-        v3 = dvarValue;
+        v7 = 1.0f;
+    if ((float)(0.0 - v7) < 0.0)
+        v3 = v7;
     else
         v3 = 0.0f;
     color[2] = (int)((float)(255.0 * v3) + 9.313225746154785e-10);
-    if ( (float)(colorVec[3] - 1.0) < 0.0 )
+    if ((float)(colorVec[3] - 1.0) < 0.0)
         v6 = colorVec[3];
     else
         v6 = 1.0f;
-    if ( (float)(0.0 - v6) < 0.0 )
+    if ((float)(0.0 - v6) < 0.0)
         v2 = v6;
     else
         v2 = 0.0f;
@@ -1838,83 +1844,83 @@ void __cdecl Dvar_Reregister(
                 DvarLimits domain,
                 const char *description)
 {
-    const char *dvarValue; // eax
-    const char *dvarValue; // eax
-    const char *dvarDomain; // eax
+    char *v8; // eax
+    char *v9; // eax
     const char *v10; // eax
-    const char *v11; // [esp-4h] [ebp-8h]
+    char *v11; // eax
+    char *v12; // [esp-4h] [ebp-8h]
 
-    if ( !dvar && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 1817, 0, "%s", "dvar") )
+    if (!dvar && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 1817, 0, "%s", "dvar"))
         __debugbreak();
-    if ( !dvarName
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 1818, 0, "%s", "dvarName") )
+    if (!dvarName
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 1818, 0, "%s", "dvarName"))
     {
         __debugbreak();
     }
-    if ( dvar->type != type && (dvar->flags & 0x4000) == 0 )
+    if (dvar->type != type && (dvar->flags & 0x4000) == 0)
     {
-        dvarValue = va("%s: %i != %i", dvarName, dvar->type, type);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
-                        1819,
-                        0,
-                        "%s\n\t%s",
-                        "dvar->type == type || (dvar->flags & DVAR_EXTERNAL)",
-                        dvarValue) )
+        v8 = va("%s: %i != %i", dvarName, dvar->type, type);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
+            1819,
+            0,
+            "%s\n\t%s",
+            "dvar->type == type || (dvar->flags & DVAR_EXTERNAL)",
+            v8))
             __debugbreak();
     }
-    if ( ((dvar->flags ^ flags) & 0x4000) != 0 )
+    if (((dvar->flags ^ flags) & 0x4000) != 0)
         Dvar_ReinterpretDvar(dvar, dvarName, type, flags, resetValue, domain);
-    if ( (dvar->flags & 0x4000) != 0 && dvar->type != type )
+    if ((dvar->flags & 0x4000) != 0 && dvar->type != type)
     {
-        if ( dvar->type != DVAR_TYPE_STRING )
+        if (dvar->type != DVAR_TYPE_STRING)
         {
-            dvarValue = va("dvar %s, type %i", dvar->name, dvar->type);
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
-                            1826,
-                            0,
-                            "%s\n\t%s",
-                            "dvar->type == DVAR_TYPE_STRING",
-                            dvarValue) )
+            v9 = va("dvar %s, type %i", dvar->name, dvar->type);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
+                1826,
+                0,
+                "%s\n\t%s",
+                "dvar->type == DVAR_TYPE_STRING",
+                v9))
                 __debugbreak();
         }
         Dvar_MakeExplicitType(dvar, dvarName, type, flags, resetValue, domain);
     }
-    if ( dvar->type != type
+    if (dvar->type != type
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
-                    1830,
-                    0,
-                    "%s\n\t(dvarName) = %s",
-                    "(dvar->type == type)",
-                    dvarName) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
+            1830,
+            0,
+            "%s\n\t(dvarName) = %s",
+            "(dvar->type == type)",
+            dvarName))
     {
         __debugbreak();
     }
-    if ( (dvar->flags & 0x9200) == 0 && !Dvar_ValuesEqual(type, dvar->reset, resetValue) )
+    if ((dvar->flags & 0x9200) == 0 && !Dvar_ValuesEqual(type, dvar->reset, resetValue))
     {
-        v11 = Dvar_ValueToString(dvar, resetValue);
-        dvarDomain = Dvar_DisplayableResetValue(dvar);
-        v10 = va("dvar %s, %s != %s", dvarName, dvarDomain, v11);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
-                        1831,
-                        0,
-                        "%s\n\t%s",
-                        "(dvar->flags & (DVAR_CHANGEABLE_RESET|DVAR_SAVED|DVAR_AUTOEXEC)) || Dvar_ValuesEqual( type, dvar->reset, resetValue )",
-                        v10) )
+        v12 = (char*)Dvar_ValueToString(dvar, resetValue);
+        v10 = Dvar_DisplayableResetValue(dvar);
+        v11 = va("dvar %s, %s != %s", dvarName, v10, v12);
+        if (!Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
+            1831,
+            0,
+            "%s\n\t%s",
+            "(dvar->flags & (DVAR_CHANGEABLE_RESET|DVAR_SAVED|DVAR_AUTOEXEC)) || Dvar_ValuesEqual( type, dvar->reset, resetValue )",
+            v11))
             __debugbreak();
     }
     dvar->flags |= flags;
-    if ( description )
+    if (description)
         dvar->description = description;
-    if ( (dvar->flags & 0x80) != 0 && dvar_cheats && !dvar_cheats->current.enabled )
+    if ((dvar->flags & 0x80) != 0 && dvar_cheats && !dvar_cheats->current.enabled)
     {
         Dvar_SetVariant(dvar, dvar->reset, DVAR_SOURCE_INTERNAL);
         Dvar_SetLatchedValue(dvar, dvar->reset);
     }
-    if ( (dvar->flags & 0x20) != 0 )
+    if ((dvar->flags & 0x20) != 0)
         Dvar_MakeLatchedValueCurrent(dvar);
 }
 
@@ -1927,54 +1933,54 @@ void __cdecl Dvar_MakeExplicitType(
                 DvarLimits domain)
 {
     bool v6; // [esp+0h] [ebp-64h]
-    DvarValue dvarValue; // [esp+4h] [ebp-60h] BYREF
-    DvarValue dvarValue; // [esp+14h] [ebp-50h]
+    DvarValue v7; // [esp+4h] [ebp-60h] BYREF
+    DvarValue v8; // [esp+14h] [ebp-50h]
     DvarValue result; // [esp+24h] [ebp-40h] BYREF
     DvarValue v10; // [esp+34h] [ebp-30h]
     bool wasString; // [esp+4Bh] [ebp-19h]
     DvarValue castValue; // [esp+4Ch] [ebp-18h]
 
-    if ( dvar->type != DVAR_TYPE_STRING
+    if (dvar->type != DVAR_TYPE_STRING
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
-                    1715,
-                    0,
-                    "%s\n\t(dvar->type) = %i",
-                    "(dvar->type == DVAR_TYPE_STRING)",
-                    dvar->type) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
+            1715,
+            0,
+            "%s\n\t(dvar->type) = %i",
+            "(dvar->type == DVAR_TYPE_STRING)",
+            dvar->type))
     {
         __debugbreak();
     }
     dvar->type = type;
     dvar->domain = domain;
-    if ( (flags & 0x40) != 0 || (flags & 0x80) != 0 && dvar_cheats && !dvar_cheats->current.enabled )
+    if ((flags & 0x40) != 0 || (flags & 0x80) != 0 && dvar_cheats && !dvar_cheats->current.enabled)
     {
         castValue = resetValue;
     }
     else
     {
-        v10 = *Dvar_StringToValue(&result, dvar->type, dvar->domain, dvar->current.string);
+        v10 = *Dvar_StringToValue(&result, (const dvarType_t)dvar->type, dvar->domain, dvar->current.string);
         castValue = v10;
-        dvarValue = *Dvar_ClampValueToDomain(&dvarValue, type, v10, resetValue, domain);
-        castValue = dvarValue;
+        v8 = *Dvar_ClampValueToDomain(&v7, type, v10, resetValue, domain);
+        castValue = v8;
     }
     v6 = dvar->type == DVAR_TYPE_STRING && castValue.integer;
     wasString = v6;
-    if ( v6 )
+    if (v6)
         castValue.integer = (int)CopyString((char *)castValue.integer, "Dvar_MakeExplicitType", 11, SCRIPTINSTANCE_SERVER);
-    if ( dvar->type != DVAR_TYPE_STRING && Dvar_ShouldFreeCurrentString(dvar) )
+    if (dvar->type != DVAR_TYPE_STRING && Dvar_ShouldFreeCurrentString(dvar))
         Dvar_FreeString(&dvar->current);
     dvar->current.integer = 0;
-    if ( Dvar_ShouldFreeLatchedString(dvar) )
+    if (Dvar_ShouldFreeLatchedString(dvar))
         Dvar_FreeString(&dvar->latched);
     dvar->latched.integer = 0;
-    if ( Dvar_ShouldFreeResetString(dvar) )
+    if (Dvar_ShouldFreeResetString(dvar))
         Dvar_FreeString(&dvar->reset);
     dvar->reset.integer = 0;
     Dvar_UpdateResetValue(dvar, resetValue);
     Dvar_UpdateValue(dvar, castValue);
     dvar_modifiedFlags |= flags;
-    if ( wasString )
+    if (wasString)
         FreeString(castValue.string, 11, SCRIPTINSTANCE_SERVER);
 }
 
@@ -2495,59 +2501,55 @@ const dvar_s *__cdecl _Dvar_RegisterColor(
                 unsigned __int16 flags,
                 const char *description)
 {
-    DvarLimits dvarDomain; // [esp-14h] [ebp-ACh] BYREF
-    float v17; // [esp+0h] [ebp-98h]
-    float v10; // [esp+4h] [ebp-94h]
-    float v11; // [esp+8h] [ebp-90h]
-    float v12; // [esp+Ch] [ebp-8Ch]
-    float v13; // [esp+24h] [ebp-74h]
-    float v14; // [esp+3Ch] [ebp-5Ch]
-    float v15; // [esp+54h] [ebp-44h]
-    float v16; // [esp+6Ch] [ebp-2Ch]
+    DvarLimits v9; // [esp-14h] [ebp-ACh] BYREF
+    float v10; // [esp+0h] [ebp-98h]
+    float v11; // [esp+4h] [ebp-94h]
+    float v12; // [esp+8h] [ebp-90h]
+    float v13; // [esp+Ch] [ebp-8Ch]
+    float v14; // [esp+24h] [ebp-74h]
+    float v15; // [esp+3Ch] [ebp-5Ch]
+    float v16; // [esp+54h] [ebp-44h]
+    float v17; // [esp+6Ch] [ebp-2Ch]
     DvarValue dvarValue; // [esp+80h] [ebp-18h]
 
-    if ( (float)(r - 1.0) < 0.0 )
-        v16 = r;
+    if ((float)(r - 1.0) < 0.0)
+        v17 = r;
+    else
+        v17 = 1.0f;
+    if ((float)(0.0 - v17) < 0.0)
+        v13 = v17;
+    else
+        v13 = 0.0f;
+    if ((float)(g - 1.0) < 0.0)
+        v16 = g;
     else
         v16 = 1.0f;
-    if ( (float)(0.0 - v16) < 0.0 )
+    if ((float)(0.0 - v16) < 0.0)
         v12 = v16;
     else
         v12 = 0.0f;
-    if ( (float)(g - 1.0) < 0.0 )
-        v15 = g;
+    if ((float)(b - 1.0) < 0.0)
+        v15 = b;
     else
         v15 = 1.0f;
-    if ( (float)(0.0 - v15) < 0.0 )
+    if ((float)(0.0 - v15) < 0.0)
         v11 = v15;
     else
         v11 = 0.0f;
-    if ( (float)(b - 1.0) < 0.0 )
-        v14 = b;
+    if ((float)(a - 1.0) < 0.0)
+        v14 = a;
     else
         v14 = 1.0f;
-    if ( (float)(0.0 - v14) < 0.0 )
+    if ((float)(0.0 - v14) < 0.0)
         v10 = v14;
     else
         v10 = 0.0f;
-    if ( (float)(a - 1.0) < 0.0 )
-        v13 = a;
-    else
-        v13 = 1.0f;
-    if ( (float)(0.0 - v13) < 0.0 )
-        v17 = v13;
-    else
-        v17 = 0.0f;
-
-    memset(&dvarValue, 0, sizeof(dvarValue));
-
-    dvarValue.color[0] = (int)((float)((float)(255.0 * v11) + 0.001) + 9.313225746154785e-10);
-    dvarValue.color[1] = (int)((float)((float)(255.0 * v10) + 0.001) + 9.313225746154785e-10);
-    dvarValue.color[2] = (int)((float)((float)(255.0 * v17) + 0.001) + 9.313225746154785e-10);
-    dvarValue.color[3]  = (int)((float)((float)(255.0 * v12) + 0.001) + 9.313225746154785e-10);
-
-
-    return Dvar_RegisterVariant((char*)dvarName, DVAR_TYPE_COLOR, flags, dvarValue, dvarDomain, description);
+    dvarValue.color[3] = (int)((float)((float)(255.0 * v10) + 0.001) + 9.313225746154785e-10);
+    memset(&v9, 0, sizeof(v9));
+    dvarValue.enabled = (int)((float)((float)(255.0 * v13) + 0.001) + 9.313225746154785e-10);
+    dvarValue.color[1] = (int)((float)((float)(255.0 * v12) + 0.001) + 9.313225746154785e-10);
+    dvarValue.color[2] = (int)((float)((float)(255.0 * v11) + 0.001) + 9.313225746154785e-10);
+    return Dvar_RegisterVariant((char*)dvarName, DVAR_TYPE_COLOR, flags, dvarValue, v9, description);
 }
 
 const dvar_s *__cdecl _Dvar_RegisterLinearRGB(
@@ -2906,9 +2908,9 @@ void __cdecl Dvar_SetVec4FromSource(
 void __cdecl Dvar_SetColorFromSource(dvar_s *dvar, float r, float g, float b, float a, DvarSetSource source)
 {
     float v6; // [esp+20h] [ebp-108h]
-    float dvarValue; // [esp+24h] [ebp-104h]
-    float dvarValue; // [esp+28h] [ebp-100h]
-    float dvarDomain; // [esp+2Ch] [ebp-FCh]
+    float v7; // [esp+24h] [ebp-104h]
+    float v8; // [esp+28h] [ebp-100h]
+    float v9; // [esp+2Ch] [ebp-FCh]
     float v10; // [esp+44h] [ebp-E4h]
     float v11; // [esp+5Ch] [ebp-CCh]
     float v12; // [esp+74h] [ebp-B4h]
@@ -2916,61 +2918,61 @@ void __cdecl Dvar_SetColorFromSource(dvar_s *dvar, float r, float g, float b, fl
     char string[128]; // [esp+90h] [ebp-98h] BYREF
     DvarValue newValue; // [esp+110h] [ebp-18h]
 
-    if ( !dvar && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 2347, 0, "%s", "dvar") )
+    if (!dvar && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 2347, 0, "%s", "dvar"))
         __debugbreak();
-    if ( !dvar->name
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 2348, 0, "%s", "dvar->name") )
+    if (!dvar->name
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp", 2348, 0, "%s", "dvar->name"))
     {
         __debugbreak();
     }
-    if ( dvar->type != DVAR_TYPE_COLOR
+    if (dvar->type != DVAR_TYPE_COLOR
         && (dvar->type != DVAR_TYPE_STRING || (dvar->flags & 0x4000) == 0)
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
-                    2349,
-                    0,
-                    "%s\n\t(dvar->name) = %s",
-                    "(dvar->type == DVAR_TYPE_COLOR || (dvar->type == DVAR_TYPE_STRING && (dvar->flags & (1 << 14))))",
-                    dvar->name) )
+            "C:\\projects_pc\\cod\\codsrc\\src\\universal\\dvar.cpp",
+            2349,
+            0,
+            "%s\n\t(dvar->name) = %s",
+            "(dvar->type == DVAR_TYPE_COLOR || (dvar->type == DVAR_TYPE_STRING && (dvar->flags & (1 << 14))))",
+            dvar->name))
     {
         __debugbreak();
     }
-    if ( dvar && dvar->name )
+    if (dvar && dvar->name)
     {
-        if ( dvar->type == DVAR_TYPE_COLOR )
+        if (dvar->type == DVAR_TYPE_COLOR)
         {
-            if ( (float)(r - 1.0) < 0.0 )
+            if ((float)(r - 1.0) < 0.0)
                 v13 = r;
             else
                 v13 = 1.0f;
-            if ( (float)(0.0 - v13) < 0.0 )
-                dvarDomain = v13;
+            if ((float)(0.0 - v13) < 0.0)
+                v9 = v13;
             else
-                dvarDomain = 0.0f;
-            newValue.enabled = (int)((float)(255.0 * dvarDomain) + 9.313225746154785e-10);
-            if ( (float)(g - 1.0) < 0.0 )
+                v9 = 0.0f;
+            newValue.enabled = (int)((float)(255.0 * v9) + 9.313225746154785e-10);
+            if ((float)(g - 1.0) < 0.0)
                 v12 = g;
             else
                 v12 = 1.0f;
-            if ( (float)(0.0 - v12) < 0.0 )
-                dvarValue = v12;
+            if ((float)(0.0 - v12) < 0.0)
+                v8 = v12;
             else
-                dvarValue = 0.0f;
-            newValue.color[1] = (int)((float)(255.0 * dvarValue) + 9.313225746154785e-10);
-            if ( (float)(b - 1.0) < 0.0 )
+                v8 = 0.0f;
+            newValue.color[1] = (int)((float)(255.0 * v8) + 9.313225746154785e-10);
+            if ((float)(b - 1.0) < 0.0)
                 v11 = b;
             else
                 v11 = 1.0f;
-            if ( (float)(0.0 - v11) < 0.0 )
-                dvarValue = v11;
+            if ((float)(0.0 - v11) < 0.0)
+                v7 = v11;
             else
-                dvarValue = 0.0f;
-            newValue.color[2] = (int)((float)(255.0 * dvarValue) + 9.313225746154785e-10);
-            if ( (float)(a - 1.0) < 0.0 )
+                v7 = 0.0f;
+            newValue.color[2] = (int)((float)(255.0 * v7) + 9.313225746154785e-10);
+            if ((float)(a - 1.0) < 0.0)
                 v10 = a;
             else
                 v10 = 1.0f;
-            if ( (float)(0.0 - v10) < 0.0 )
+            if ((float)(0.0 - v10) < 0.0)
                 v6 = v10;
             else
                 v6 = 0.0f;

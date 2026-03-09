@@ -780,7 +780,7 @@ unsigned __int8 *__cdecl Hunk_AllocAlign(unsigned int size, int alignment, const
         __debugbreak();
     }
     if ( endBuf != (unsigned __int8 *)((unsigned int)buf & 0xFFFFF000) )
-        Z_VirtualCommit((char *)((unsigned int)buf & 0xFFFFF000), (int)&endBuf[-((unsigned int)buf & 0xFFFFF000)], 11);
+        Z_VirtualCommit((char *)((unsigned int)buf & 0xFFFFF000), (int)&endBuf[-(int)((unsigned int)buf & 0xFFFFF000)], 11);
     track_hunk_alloc(hunk_high.permanent - old_permanent, hunk_high.temp, name, type);
     memset(buf, 0, size);
     return buf;
@@ -826,7 +826,7 @@ unsigned int __cdecl Hunk_AllocateTempMemoryHigh(int size, const char *name)
         __debugbreak();
     }
     if ( endBuf != (unsigned __int8 *)(buf & 0xFFFFF000) )
-        Z_VirtualCommit((char *)(buf & 0xFFFFF000), (int)&endBuf[-(buf & 0xFFFFF000)], 11);
+        Z_VirtualCommit((char *)(buf & 0xFFFFF000), (int)&endBuf[-(int)(buf & 0xFFFFF000)], 11);
     track_temp_high_alloc(size, hunk_high.temp + hunk_low.temp, hunk_high.permanent, name);
     return buf;
 }

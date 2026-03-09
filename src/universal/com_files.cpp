@@ -19,6 +19,7 @@
 #include <qcommon/md4.h>
 #include <qcommon/cmd.h>
 #include <qcommon/com_profilemapload.h>
+#include <database/db_registry.h>
 
 const char TEN_SPACE[] = "          ";
 

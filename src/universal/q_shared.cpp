@@ -12,15 +12,11 @@
 #include <clientscript/cscr_stringlist.h>
 #include "com_math_anglevectors.h"
 
-struct TraceThreadInfo // sizeof=0x14
-{                                       // XREF: .data:TraceThreadInfo * g_traceThreadInfo/r
-    TraceCheckCount checkcount;
-    cbrush_t *box_brush;                // XREF: CM_Trace(trace_t *,float const * const,float const * const,float const * const,float const * const,uint,int,col_context_t &)+66E/r
-    // CM_Trace(trace_t *,float const * const,float const * const,float const * const,float const * const,uint,int,col_context_t &)+94C/r ...
-    cmodel_t *box_model;
-    PhysGeomList **geoms;
+struct va_info_t
+{
+    char va_string[2][1024];
+    int index;
 };
-
 
 va_info_t va_info[15];
 TraceThreadInfo g_traceThreadInfo[15];
@@ -104,11 +100,11 @@ void __cdecl Com_DefaultExtension(char *path, unsigned int maxSize, const char *
     Com_sprintf(path, maxSize, "%s%s", oldPath, extension);
 }
 
-__int16 __cdecl BigShort(__int16 l)
-{
-    return BigShort(l);
-}
-
+//__int16 __cdecl BigShort(__int16 l)
+//{
+//    return BigShort(l);
+//}
+//
 unsigned __int64 __cdecl LittleLong64(unsigned __int64 l)
 {
     return LittleLong64(l);
@@ -568,12 +564,6 @@ int Com_sprintfPos(char *dest, int destSize, int *destPos, const char *fmt, ...)
         *destPos += len;
     return len;
 }
-
-struct va_info_t
-{
-    char va_string[2][1024];
-    int index;
-};
 
 bool __cdecl CanKeepStringPointer(char *string)
 {

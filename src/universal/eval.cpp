@@ -369,7 +369,7 @@ bool    Eval_EvaluationStep(Eval *eval)
     case 5:
         if (*(_DWORD *)(eval + 16 * (*(_DWORD *)(eval + 20484) - 1) + 4096) == 1)
         {
-            *(_DWORD *)(eval + 16 * (*(_DWORD *)(eval + 20484) - 1) + 4104) = -*(_DWORD *)(eval
+            *(_DWORD *)(eval + 16 * (*(_DWORD *)(eval + 20484) - 1) + 4104) = -*(int *)(eval
                 + 16
                 * (*(_DWORD *)(eval + 20484) - 1)
                 + 4104);

@@ -1,5 +1,8 @@
 #include "com_fileaccess.h"
 #include <qcommon/com_profilemapload.h>
+#include <string.h>
+#include "assertive.h"
+#include "q_shared.h"
 
 unsigned int __cdecl FS_FileRead(void *ptr, unsigned int len, FILE *stream)
 {

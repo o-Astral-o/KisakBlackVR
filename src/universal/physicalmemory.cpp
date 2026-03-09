@@ -1,3 +1,5 @@
+#include <Windows.h>
+
 #include "physicalmemory.h"
 #include <memoryapi.h>
 #include "assertive.h"
