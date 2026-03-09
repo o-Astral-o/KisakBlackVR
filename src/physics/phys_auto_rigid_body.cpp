@@ -59,9 +59,9 @@ void __cdecl auto_rigid_body::add(const centity_s *cent, gjk_physics_collision_v
             while ( m_tree_root && cent != m_tree_root->cent )
             {
                 if ( cent >= m_tree_root->cent )
-                    m_tree_root = m_tree_root->m_avl_node_info.m_right;
+                    m_tree_root = m_tree_root->m_avl_tree_node.m_right;
                 else
-                    m_tree_root = m_tree_root->m_avl_node_info.m_left;
+                    m_tree_root = m_tree_root->m_avl_tree_node.m_left;
             }
             arb = m_tree_root;
             p_ReadLockCount = &g_auto_rigid_body_map_mutex.ThisPtr->ReadLockCount;
@@ -74,9 +74,9 @@ void __cdecl auto_rigid_body::add(const centity_s *cent, gjk_physics_collision_v
                 while ( m_right && cent != m_right->cent )
                 {
                     if ( cent >= m_right->cent )
-                        m_right = m_right->m_avl_node_info.m_right;
+                        m_right = m_right->m_avl_tree_node.m_right;
                     else
-                        m_right = m_right->m_avl_node_info.m_left;
+                        m_right = m_right->m_avl_tree_node.m_left;
                 }
                 arb = m_right;
                 if ( !m_right )
@@ -98,7 +98,7 @@ void __cdecl auto_rigid_body::add(const centity_s *cent, gjk_physics_collision_v
                     arb->next = g_auto_rigid_body_list;
                     g_auto_rigid_body_list = arb;
                     //phys_inplace_avl_tree<centity_s const *,auto_rigid_body,auto_rigid_body>::add(&g_auto_rigid_body_map, &cent, arb);
-                    g_auto_rigid_body_map.add(&cent, arb);
+                    g_auto_rigid_body_map.add(cent, arb);
                 }
                 //tlAtomicReadWriteMutex::WriteUnlock(&g_auto_rigid_body_map_mutex);
                 g_auto_rigid_body_map_mutex.WriteUnlock();
@@ -157,7 +157,7 @@ void    auto_rigid_body::update()
         {
             next = v7->next;
             //phys_inplace_avl_tree<centity_s const *,auto_rigid_body,auto_rigid_body>::remove(&g_auto_rigid_body_map, &v7->cent);
-            g_auto_rigid_body_map.remove(&v7->cent);
+            g_auto_rigid_body_map.remove(v7->cent);
             phys_sys::destroy(v7->rb);
             //phys_simple_allocator<auto_rigid_body>::free(&g_auto_rigid_body_allocator, v7);
             g_auto_rigid_body_allocator.free(v7);
@@ -207,9 +207,9 @@ void __cdecl auto_rigid_body::remove_ent(const centity_s *cent)
     while ( m_tree_root && cent != m_tree_root->cent )
     {
         if ( cent >= m_tree_root->cent )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
     {
@@ -230,7 +230,7 @@ void __cdecl auto_rigid_body::remove_ent(const centity_s *cent)
         }
         *prev_next = m_tree_root->next;
         //phys_inplace_avl_tree<centity_s const *,auto_rigid_body,auto_rigid_body>::remove(&g_auto_rigid_body_map, &m_tree_root->cent);
-        g_auto_rigid_body_map.remove(&m_tree_root->cent);
+        g_auto_rigid_body_map.remove(m_tree_root->cent);
         fixup_wheel_constraints_arb(m_tree_root);
         phys_sys::destroy(m_tree_root->rb);
         //phys_simple_allocator<auto_rigid_body>::free(&g_auto_rigid_body_allocator, m_tree_root);
@@ -246,9 +246,9 @@ user_rigid_body *__cdecl auto_rigid_body::ent_has_auto_rigid_body(const centity_
     while ( m_tree_root && cent != m_tree_root->cent )
     {
         if ( cent >= m_tree_root->cent )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( !m_tree_root )
         return 0;

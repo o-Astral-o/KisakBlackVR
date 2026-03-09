@@ -1,7 +1,12 @@
+#include "phys_gjk.h"
 #include "phys_traverse.h"
+
 #include <qcommon/cm_test.h>
 #include <qcommon/common.h>
 #include <qcommon/cm_load.h>
+
+#include <gfx_d3d/r_material.h>
+
 
 colgeom_visitor_t::colgeom_visitor_t()
 {

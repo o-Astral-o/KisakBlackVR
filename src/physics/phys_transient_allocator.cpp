@@ -24,27 +24,6 @@ void phys_transient_allocator::reset()
     this->m_end = 0;
     this->m_total_memory_allocated = 0;
 }
-
-inline void phys_transient_allocator::reset_to_state(const phys_transient_allocator::allocator_state *as)
-{
-    phys_transient_allocator::block_header *m_first_block; // eax
-    phys_transient_allocator::block_header *m_next_block; // esi
-    phys_slot_pool *slot_pool; // [esp+8h] [ebp-4h]
-
-    slot_pool = (phys_slot_pool *)this->m_slot_pool;
-    m_first_block = this->m_first_block;
-    if (this->m_first_block != as->m_first_block)
-    {
-        do
-        {
-            m_next_block = m_first_block->m_next_block;
-            PSP_FREE(slot_pool, (unsigned __int8 *)m_first_block);
-            m_first_block = m_next_block;
-        } while (m_next_block != as->m_first_block);
-    }
-    *(phys_transient_allocator::allocator_state *)&this->m_first_block = *as;
-}
-
 void __thiscall phys_transient_allocator::reset_to_state(const phys_transient_allocator::allocator_state *as)
 {
     phys_transient_allocator::block_header *m_first_block; // eax

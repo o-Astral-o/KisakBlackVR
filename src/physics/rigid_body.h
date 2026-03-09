@@ -2,6 +2,7 @@
 
 #include "phys_local.h"
 #include "phys_collision.h"
+#include "phys_transient_allocator.h"
 
 struct pulse_sum_cache // sizeof=0x4
 {                                       // XREF: rigid_body_constraint_point/r

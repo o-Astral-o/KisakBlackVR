@@ -153,9 +153,9 @@ gjkcc_info *__thiscall gjkcc_info_database_t::gjkcc_info_find_or_create(
     while ( m_tree_root && gjkcc_id != m_tree_root->m_avl_key )
     {
         if ( gjkcc_id >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     gamn = m_tree_root;
     if ( !m_tree_root )
@@ -241,9 +241,9 @@ gjkcc_info *__thiscall gjkcc_info_database_t::gjkcc_info_find(
     while ( m_tree_root && gjkcc_id != m_tree_root->m_avl_key )
     {
         if ( gjkcc_id >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( !m_tree_root
         && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\bgame\\bg_slidemove.cpp", 173, 0, "%s", "gamn") )

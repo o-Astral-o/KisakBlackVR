@@ -1572,25 +1572,23 @@ void pulse_sum_contact::set(
     double v23; // st7
     const phys_vec3 *v24; // eax
     bool v25; // zf
-    phys_vec3 v26; // [esp+18h] [ebp-78h] BYREF
-    phys_vec3 v27; // [esp+28h] [ebp-68h] BYREF
-    float v28; // [esp+38h] [ebp-58h]
-    float v29; // [esp+3Ch] [ebp-54h]
-    float v30; // [esp+44h] [ebp-4Ch]
-    float v31; // [esp+48h] [ebp-48h]
-    float v32; // [esp+4Ch] [ebp-44h]
+    phys_vec3 v26; // [esp+24h] [ebp-6Ch] BYREF
+    phys_vec3 v27; // [esp+34h] [ebp-5Ch] BYREF
+    float v28; // [esp+44h] [ebp-4Ch]
+    float v29; // [esp+48h] [ebp-48h]
+    float v30; // [esp+4Ch] [ebp-44h]
     phys_vec3 b2_r; // [esp+54h] [ebp-3Ch] BYREF
     float min_restitution_impact_vel_sq; // [esp+6Ch] [ebp-24h]
     const phys_mat44 *p_m_mat; // [esp+70h] [ebp-20h]
     int pp_i; // [esp+74h] [ebp-1Ch]
     phys_vec3 *b2_r_loc; // [esp+78h] [ebp-18h]
     phys_vec3 *b1_r_loc; // [esp+7Ch] [ebp-14h]
-    unsigned int v39; // [esp+80h] [ebp-10h]
-    //_UNKNOWN *v40[2]; // [esp+84h] [ebp-Ch] BYREF
+    unsigned int v37; // [esp+80h] [ebp-10h]
+    //_UNKNOWN *v38[2]; // [esp+84h] [ebp-Ch] BYREF
     //contact_point_info *cpia; // [esp+90h] [ebp+0h]
     //
-    //v40[0] = a2;
-    //v40[1] = cpia;
+    //v38[0] = a2;
+    //v38[1] = cpia;
     if (!b1
         && _tlAssert(
             "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_contact_inline.h",
@@ -1659,7 +1657,7 @@ void pulse_sum_contact::set(
     this->m_ud_n.x = cpi->m_normal.x;
     this->m_ud_n.y = cpi->m_normal.y;
     this->m_ud_n.z = cpi->m_normal.z;
-    v9 = construct_orth_ud((phys_vec3 *)&v27.w, &this->m_ud_n);
+    v9 = construct_orth_ud(&v27, &this->m_ud_n);
     this->m_ud_f1.x = v9->x;
     this->m_ud_f1.y = v9->y;
     this->m_ud_f1.z = v9->z;
@@ -1703,15 +1701,15 @@ void pulse_sum_contact::set(
     if (!v19)
     {
         p_m_mat = &b1->m_mat;
-        v39 = 0;
+        v37 = 0;
         do
         {
-            v21 = &this->m_list_pscp[v39 / 0xD0];
-            phys_multiply((phys_vec3 *)&v27.w, p_m_mat, b1_r_loc);
+            v21 = &this->m_list_pscp[v37 / 0xD0];
+            phys_multiply(&v27, p_m_mat, b1_r_loc);
             v22 = b2_r_loc;
-            v21->m_b1_r.x = v27.w;
-            v21->m_b1_r.y = v28;
-            v21->m_b1_r.z = v29;
+            v21->m_b1_r.x = v27.x;
+            v21->m_b1_r.y = v27.y;
+            v21->m_b1_r.z = v27.z;
             phys_multiply(&b2_r, &b2->m_mat, v22);
             if (this->m_b2)
             {
@@ -1721,14 +1719,14 @@ void pulse_sum_contact::set(
             }
             else
             {
-                v24 = rbint::gtv((phys_vec3 *)&v26.w, b2, &b2_r);
+                v24 = rbint::gtv(&v26, b2, &b2_r);
                 v21->m_b2_ap_n.x = v24->x;
                 v21->m_b2_ap_n.y = v24->y;
                 v21->m_b2_ap_n.z = v24->z;
                 v25 = this->m_b2 == 0;
-                v30 = b2_r.x + b2->m_mat.w.x;
-                v31 = b2->m_mat.w.y + b2_r.y;
-                v32 = b2->m_mat.w.z + b2_r.z;
+                v28 = b2_r.x + b2->m_mat.w.x;
+                v29 = b2->m_mat.w.y + b2_r.y;
+                v30 = b2->m_mat.w.z + b2_r.z;
                 if (!v25)
                 {
                     if (_tlAssert(
@@ -1740,12 +1738,12 @@ void pulse_sum_contact::set(
                         __debugbreak();
                     }
                 }
-                v21->m_b2_r.x = v30;
-                v21->m_b2_r.y = v31;
-                v23 = v32;
+                v21->m_b2_r.x = v28;
+                v21->m_b2_r.y = v29;
+                v23 = v30;
             }
             v21->m_b2_r.z = v23;
-            //pulse_sum_contact_point::calc_abs(v21, (int)v40, this);
+            //pulse_sum_contact_point::calc_abs(v21, (int)v38, this);
             v21->calc_abs(this);
             //pulse_sum_contact_point::setup_vel_uni_restitution(
                 v21->setup_vel_uni_restitution(
@@ -1755,7 +1753,7 @@ void pulse_sum_contact::set(
                 delta_t,
                 50.0,
                 min_restitution_impact_vel_sq);
-            v39 += 208;
+            v37 += 208;
             ++b1_r_loc;
             ++b2_r_loc;
             v19 = ++pp_i < cpi->m_point_pair_count;
@@ -1879,7 +1877,7 @@ void __thiscall pulse_sum_constraint_solver::add_urb(
         if ( p_b1 )
         {
             //v7 = phys_inplace_avl_tree<user_rigid_body *,pulse_sum_constraint_solver::temp_user_rigid_body,pulse_sum_constraint_solver::temp_user_rigid_body::avl_tree_accessor>::find(turb_search_tree, (user_rigid_body **)p_b1);
-            v7 = turb_search_tree->find((user_rigid_body **)p_b1);
+            v7 = turb_search_tree->find(*(user_rigid_body **)p_b1);
             if ( !v7 )
             {
                 //v7 = (pulse_sum_constraint_solver::temp_user_rigid_body *)phys_transient_allocator::allocate(&this->m_solver_memory_allocator, 464, 16, 0, SOLVER_MEMORY_ALLOCATOR_ERROR_MSG);
@@ -1887,7 +1885,7 @@ void __thiscall pulse_sum_constraint_solver::add_urb(
                 //user_rigid_body::operator=(v7, (const user_rigid_body *)*p_b1);
                 *(user_rigid_body*)v7 = (user_rigid_body *)*p_b1;
                 //phys_inplace_avl_tree<user_rigid_body *,pulse_sum_constraint_solver::temp_user_rigid_body,pulse_sum_constraint_solver::temp_user_rigid_body::avl_tree_accessor>::add(turb_search_tree, (user_rigid_body **)p_b1, v7);
-                turb_search_tree->add((user_rigid_body **)p_b1, v7);
+                turb_search_tree->add(*(user_rigid_body **)p_b1, v7);
                 v7->m_next_link = list_turb->m_first;
                 list_turb->m_first = v7;
             }
@@ -3773,37 +3771,68 @@ void __thiscall pulse_sum_wheel::SOLVER_apply_relaxation(float *error_sq)
 
 void __thiscall pulse_sum_wheel::SOLVER_solver_prolog(float delta_t)
 {
-    pulse_sum_normal *p_m_suspension; // esi
-    double vel; // st7
-    float *p_m_pulse_sum; // eax
-    pulse_sum_normal *v6; // ecx
-    pulse_sum_normal *m_side; // ecx
-    pulse_sum_normal *m_fwd; // ecx
-    double ps; // [esp+10h] [ebp-8h]
-    int savedregs; // [esp+18h] [ebp+0h] BYREF
+    //pulse_sum_normal *p_m_suspension; // esi
+    //double vel; // st7
+    //float *p_m_pulse_sum; // eax
+    //pulse_sum_normal *m_side; // ecx
+    //pulse_sum_normal *m_fwd; // ecx
+    //double ps; // [esp+10h] [ebp-8h]
+    //int savedregs; // [esp+18h] [ebp+0h] BYREF
+    //
+    //p_m_suspension = &this->m_suspension;
+    //ps = this->m_suspension.m_right_side;
+    //vel = this->m_suspension.get_vel();
+    //p_m_pulse_sum = &p_m_suspension->m_pulse_sum_cache->m_pulse_sum;
+    //p_m_suspension->m_right_side = ps - vel;
+    //*((float *)&ps + 1) = *p_m_pulse_sum * delta_t;
+    //p_m_suspension->m_pulse_sum = *((float *)&ps + 1);
+    //p_m_suspension->m_pulse_sum = v6->clamp_pulse_sum(*((float *)&ps + 1));
+    //p_m_suspension->apply(&p_m_suspension->m_pulse_sum);
+    //m_side = this->m_side;
+    //if ( m_side )
+    //{
+    //    //pulse_sum_normal::SOLVER_solver_prolog(m_side, delta_t);
+    //    //pulse_sum_normal::SOLVER_solver_prolog(m_side, delta_t);
+    //    m_fwd = this->m_fwd;
+    //    if ( m_fwd )
+    //    {
+    //        //pulse_sum_normal::SOLVER_solver_prolog(m_fwd, delta_t);
+    //        m_fwd->SOLVER_solver_prolog(delta_t);
+    //        pulse_sum_wheel::addp_pulse_chain();
+    //    }
+    //}
 
-    p_m_suspension = &this->m_suspension;
-    ps = this->m_suspension.m_right_side;
-    //vel = pulse_sum_normal::get_vel(&this->m_suspension, (int)&savedregs);
-    vel = this->m_suspension.get_vel();
-    p_m_pulse_sum = &p_m_suspension->m_pulse_sum_cache->m_pulse_sum;
-    p_m_suspension->m_right_side = ps - vel;
-    *((float *)&ps + 1) = *p_m_pulse_sum * delta_t;
-    p_m_suspension->m_pulse_sum = *((float *)&ps + 1);
-    //p_m_suspension->m_pulse_sum = pulse_sum_normal::clamp_pulse_sum(v6, *((float *)&ps + 1));
-    p_m_suspension->m_pulse_sum = v6->clamp_pulse_sum(*((float *)&ps + 1));
-    //pulse_sum_normal::apply(p_m_suspension, &p_m_suspension->m_pulse_sum);
-    p_m_suspension->apply(&p_m_suspension->m_pulse_sum);
-    m_side = this->m_side;
-    if ( m_side )
+    pulse_sum_normal *suspension = &this->m_suspension;
+
+    // Store previous value
+    float prev_right_side = suspension->m_right_side;
+
+    // Compute velocity along suspension axis
+    float vel = suspension->get_vel();
+
+    // Update right side term
+    suspension->m_right_side = prev_right_side - vel;
+
+    // Integrate cached pulse
+    float pulse = suspension->m_pulse_sum_cache->m_pulse_sum * delta_t;
+
+    suspension->m_pulse_sum = pulse;
+    suspension->m_pulse_sum = suspension->clamp_pulse_sum(suspension->m_pulse_sum);
+
+    // Apply suspension impulse
+    suspension->apply(&suspension->m_pulse_sum);
+
+    // Process side constraint
+    if (this->m_side)
     {
-        //pulse_sum_normal::SOLVER_solver_prolog(m_side, delta_t);
-        //pulse_sum_normal::SOLVER_solver_prolog(m_side, delta_t);
-        m_fwd = this->m_fwd;
-        if ( m_fwd )
+        this->m_side->SOLVER_solver_prolog(delta_t);
+
+        // Process forward constraint
+        if (this->m_fwd)
         {
-            //pulse_sum_normal::SOLVER_solver_prolog(m_fwd, delta_t);
-            m_fwd->SOLVER_solver_prolog(delta_t);
+            this->m_fwd->SOLVER_solver_prolog(delta_t);
+
+            // Add pulses together in chain
             pulse_sum_wheel::addp_pulse_chain();
         }
     }

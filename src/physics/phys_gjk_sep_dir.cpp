@@ -493,11 +493,8 @@ const phys_vec3 *gjk_sep_dir::comp_sep_dir(
     return result;
 }
 #endif
-double __cdecl gjk_sep_dir::dist_seg(
-                const phys_vec3 *v0,
-                const phys_vec3 *v1,
-                const phys_vec3 *mesh_center,
-                phys_vec3 *direction)
+
+double gjk_sep_dir::dist_seg(const phys_vec3 *v0, const phys_vec3 *v1, const phys_vec3 *mesh_center, phys_vec3 *direction)
 {
     double v4; // st7
     double v5; // st5

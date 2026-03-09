@@ -2539,6 +2539,8 @@ void __cdecl Phys_FindAndRenderBulletMesh(const float *start, const float *end)
     int modelIndex; // [esp+188h] [ebp-8h]
     float avgArea; // [esp+18Ch] [ebp-4h]
 
+    avgArea = 0.0f; // Is this a bug? I dont see this initialized?
+
     memset(&results, 0, 16);
     results.staticModel = 0;
     bHitDynEnt = 0;
@@ -2584,7 +2586,7 @@ void __cdecl Phys_FindAndRenderBulletMesh(const float *start, const float *end)
     }
     else
     {
-        CG_LocationalTrace(&results, start, end, 0, (int)&cls.recentServers[7543].countrycode[1], 0, 0);
+        CG_LocationalTrace(&results, start, end, 0, 0x280E833, 0, 0);
         if ( results.hitType == TRACE_HITTYPE_ENTITY )
         {
             localClientNum = cgCollWorldLocalClientNum;
@@ -2984,59 +2986,58 @@ void phys_convex_hull::create_intermediate_triangle(
 {
     float v5; // [esp-34h] [ebp-98h]
     float v6; // [esp-30h] [ebp-94h]
-    float v7; // [esp-Ch] [ebp-70h]
-    float v8[2]; // [esp-8h] [ebp-6Ch] BYREF
-    float nnormal; // [esp+0h] [ebp-64h]
-    phys_vec3 normal; // [esp+4h] [ebp-60h] BYREF
-    float v11; // [esp+1Ch] [ebp-48h]
-    float v12; // [esp+20h] [ebp-44h]
-    float v13; // [esp+24h] [ebp-40h]
-    phys_vec3 v14; // [esp+28h] [ebp-3Ch] BYREF
-    float v15; // [esp+44h] [ebp-20h]
-    float v16; // [esp+48h] [ebp-1Ch]
-    float v17; // [esp+4Ch] [ebp-18h]
-    phys_convex_hull::ch_triangle *v18; // [esp+50h] [ebp-14h]
-    //phys_convex_hull *v19; // [esp+54h] [ebp-10h]
-    //int v20; // [esp+58h] [ebp-Ch]
-    //phys_convex_hull::ch_triangle *tri; // [esp+5Ch] [ebp-8h]
-    //phys_convex_hull::ch_triangle *retaddr; // [esp+64h] [ebp+0h]
+    float nnormal; // [esp-Ch] [ebp-70h]
+    phys_vec3 v8; // [esp-8h] [ebp-6Ch] BYREF
+    phys_vec3 v9; // [esp+8h] [ebp-5Ch] BYREF
+    float v10; // [esp+1Ch] [ebp-48h]
+    float v11; // [esp+20h] [ebp-44h]
+    float v12; // [esp+24h] [ebp-40h]
+    phys_vec3 v13; // [esp+28h] [ebp-3Ch] BYREF
+    float v14; // [esp+44h] [ebp-20h]
+    float v15; // [esp+48h] [ebp-1Ch]
+    float v16; // [esp+4Ch] [ebp-18h]
+    phys_convex_hull::ch_triangle *v17; // [esp+50h] [ebp-14h]
+    phys_convex_hull *v18; // [esp+54h] [ebp-10h]
+    phys_convex_hull::ch_triangle *tri; // [esp+58h] [ebp-Ch]
+    //phys_convex_hull *thisa; // [esp+5Ch] [ebp-8h]
+    //phys_vec3 *v0a; // [esp+64h] [ebp+0h]
     //
-    //v20 = a2;
-    //tri = retaddr;
-    //v19 = this;
-    //v18 = phys_static_array<phys_convex_hull::ch_triangle,256>::add(&this->m_intermediate_triangle_list, 0, "phys array add overflow.");
-    v18 = this->m_intermediate_triangle_list.add(0, "phys array add overflow.");
-    v18->m_verts[0] = v0;
-    v18->m_verts[1] = v1;
-    v18->m_verts[2] = v2;
-    v17 = v2->x - v0->x;
-    v16 = v2->y - v0->y;
-    v15 = v2->z - v0->z;
-    v14.x = v17;
-    v14.y = v16;
-    v14.z = v15;
-    v13 = v1->x - v0->x;
-    v12 = v1->y - v0->y;
-    v11 = v1->z - v0->z;
-    normal.y = v13;
-    normal.z = v12;
-    normal.w = v11;
-    phys_cross((phys_vec3 *)v8, (phys_vec3 *)&normal.y, &v14);
-    v7 = Abs(v8);
-    if ( v7 <= 0.0000099999997
+    //tri = a2;
+    //thisa = (phys_convex_hull *)v0a;
+    v18 = this;
+    //v17 = phys_static_array<phys_convex_hull::ch_triangle, 256>::add(&this->m_intermediate_triangle_list, 0, "phys array add overflow.");
+    v17 = this->m_intermediate_triangle_list.add(0, "phys array add overflow.");
+    v17->m_verts[0] = v0;
+    v17->m_verts[1] = v1;
+    v17->m_verts[2] = v2;
+    v16 = v2->x - v0->x;
+    v15 = v2->y - v0->y;
+    v14 = v2->z - v0->z;
+    v13.x = v16;
+    v13.y = v15;
+    v13.z = v14;
+    v12 = v1->x - v0->x;
+    v11 = v1->y - v0->y;
+    v10 = v1->z - v0->z;
+    v9.x = v12;
+    v9.y = v11;
+    v9.z = v10;
+    phys_cross(&v8, &v9, &v13);
+    nnormal = Abs(&v8.x);
+    if (nnormal <= 0.0000099999997
         && _tlAssert(
-                 "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
-                 95,
-                 "nnormal > 0.00001f",
-                 "") )
+            "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_convex_hull.h",
+            95,
+            "nnormal > 0.00001f",
+            ""))
     {
         __debugbreak();
     }
-    v5 = (float)(1.0 / v7) * v8[1];
-    v6 = (float)(1.0 / v7) * nnormal;
-    v18->m_normal.x = (float)(1.0 / v7) * v8[0];
-    v18->m_normal.y = v5;
-    v18->m_normal.z = v6;
+    v5 = (float)(1.0 / nnormal) * v8.y;
+    v6 = (float)(1.0 / nnormal) * v8.z;
+    v17->m_normal.x = (float)(1.0 / nnormal) * v8.x;
+    v17->m_normal.y = v5;
+    v17->m_normal.z = v6;
 }
 
 phys_vec3 **__thiscall phys_convex_hull::support_intermediate_verts(const phys_vec3 *dir)
@@ -3653,9 +3654,9 @@ chull_t *__cdecl get_collmap_chull(PhysGeomList *geomList, unsigned int key)
     while ( m_tree_root && key != m_tree_root->m_avl_key )
     {
         if ( key >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
     {
@@ -3683,9 +3684,9 @@ chull_t *__cdecl get_brushmodel_chull(unsigned int brushmodel, unsigned int key)
     while ( m_tree_root && key != m_tree_root->m_avl_key )
     {
         if ( key >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
     {
@@ -3714,9 +3715,9 @@ chull_t *__cdecl get_brush_chull(const cbrush_t *brush)
     while ( m_tree_root && brush != (const cbrush_t *)m_tree_root->m_avl_key )
     {
         if ( (unsigned int)brush >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
     {
@@ -3745,9 +3746,9 @@ chull_t *__cdecl get_partition_chull(const CollisionAabbTree *tree)
     while ( m_tree_root && tree != (const CollisionAabbTree *)m_tree_root->m_avl_key )
     {
         if ( (unsigned int)tree >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
     {
@@ -4184,7 +4185,6 @@ void __thiscall colgeom_debug_renderer_t::update(
 float scale_3 = 5000.0;
 float velScale = 20.0;
 float sc1 = 20.0;
-float scale_3 = 5000.0;
 int nboxes = 200;
 
 int down;
@@ -4353,6 +4353,7 @@ void __cdecl print_smodel(cStaticModel_s *smodel, int refcount, const float *dim
 
     model = smodel->xmodel;
     //BLOPS_NULLSUB();
+    ntris = 0; // LWSS: ntris is set above in the removed function (in this version, the value is undefined)
     Com_Printf(
         20,
         "%-42s\t refs( %4d ) lods( %d ) ncol_tris( %4d )     avr dims( %5.0f, %5.0f, %5.0f )\n",
@@ -4613,7 +4614,7 @@ void    UpdateRigidBody(float delta_t)
     phys_free_list<rigid_body>::iterator i_end; // [esp+64h] [ebp-1Ch] BYREF
     phys_free_list<rigid_body>::iterator i; // [esp+68h] [ebp-18h]
     float v10; // [esp+6Ch] [ebp-14h]
-    //phys_vec3 gravity_dir; // [esp+70h] [ebp-10h] BYREF
+    phys_vec3 gravity_dir; // [esp+70h] [ebp-10h] BYREF
     //float retaddr; // [esp+80h] [ebp+0h]
     //
     //gravity_dir.y = a1;
@@ -4625,19 +4626,37 @@ void    UpdateRigidBody(float delta_t)
     Sys_EnterCriticalSection(CRITSECT_PHYSICS_UPDATE);
     if ( gravityChange )
     {
-        Phys_Vec3ToNitrousVec(&phys_gravity_dir->current.value, (phys_vec3 *)&i_end);
-        m_next_T_internal = g_physics_system->m_list_rigid_body.m_dummy_head.m_next_T_internal;
-        p_m_list_rigid_body = &g_physics_system->m_list_rigid_body;
-        while ( p_m_list_rigid_body != (phys_free_list<rigid_body> *)m_next_T_internal )
+        Phys_Vec3ToNitrousVec(&phys_gravity_dir->current.value, &gravity_dir);
+        //m_next_T_internal = g_physics_system->m_list_rigid_body.m_dummy_head.m_next_T_internal;
+        //p_m_list_rigid_body = &g_physics_system->m_list_rigid_body;
+        //while ( p_m_list_rigid_body != (phys_free_list<rigid_body> *)m_next_T_internal )
+        //{
+        //    value = phys_gravity->current.value;
+        //    v3 = value * *(float *)&i.m_ptr;
+        //    v4 = value * v10;
+        //    *(float *)&m_next_T_internal[18].m_prev_T_internal = value * *(float *)&i_end.m_ptr;
+        //    *(float *)&m_next_T_internal[18].m_next_T_internal = v3;
+        //    *(float *)&m_next_T_internal[19].m_prev_T_internal = v4;
+        //    m_next_T_internal = m_next_T_internal->m_next_T_internal;
+        //}
+
+        phys_free_list<rigid_body>::T_internal_base *node = g_physics_system->m_list_rigid_body.m_dummy_head.m_next_T_internal;
+        phys_free_list<rigid_body>::T_internal_base *end = &g_physics_system->m_list_rigid_body.m_dummy_head;
+
+        while (node != end)
         {
-            value = phys_gravity->current.value;
-            v3 = value * *(float *)&i.m_ptr;
-            v4 = value * v10;
-            *(float *)&m_next_T_internal[18].m_prev_T_internal = value * *(float *)&i_end.m_ptr;
-            *(float *)&m_next_T_internal[18].m_next_T_internal = v3;
-            *(float *)&m_next_T_internal[19].m_prev_T_internal = v4;
-            m_next_T_internal = m_next_T_internal->m_next_T_internal;
+            rigid_body *rb =
+                &static_cast<phys_free_list<rigid_body>::T_internal *>(node)->m_data;
+
+            float g = phys_gravity->current.value;
+
+            rb->m_t_vel.x = g * gravity_dir.x;
+            rb->m_t_vel.y = g * gravity_dir.y;
+            rb->m_t_vel.z = g * gravity_dir.z;
+
+            node = node->m_next_T_internal;
         }
+
         gravityChange = 0;
     }
     if ( delta_t >= 0.1 )
@@ -4692,10 +4711,8 @@ void    Phys_CollisionCallback()
     const phys_vec3 *v1; // eax
     float v2; // [esp-2Ch] [ebp-CCh]
     float v3; // [esp-28h] [ebp-C8h]
-    float v4; // [esp-Ch] [ebp-ACh] BYREF
-    float v5; // [esp-8h] [ebp-A8h]
-    float v6; // [esp-4h] [ebp-A4h]
-    phys_vec3 closest_point; // [esp+0h] [ebp-A0h] BYREF
+    phys_vec3 v4; // [esp-Ch] [ebp-ACh] OVERLAPPED BYREF
+    phys_vec3 v5; // [esp+4h] [ebp-9Ch] BYREF
     phys_vec3 m_aabb_mx_loc; // [esp+14h] [ebp-8Ch] BYREF
     phys_vec3 m_aabb_mn_loc; // [esp+24h] [ebp-7Ch] BYREF
     phys_vec3 player_origin_loc; // [esp+34h] [ebp-6Ch] BYREF
@@ -4709,16 +4726,15 @@ void    Phys_CollisionCallback()
     phys_free_list<rigid_body_constraint_contact>::iterator rbc_i_end; // [esp+80h] [ebp-20h]
     phys_free_list<rigid_body_constraint_contact>::iterator rbc_i; // [esp+84h] [ebp-1Ch]
     phys_free_list<rigid_body_constraint_contact>::T_internal_base *m_next_T_internal; // [esp+88h] [ebp-18h]
-    int v21; // [esp+8Ch] [ebp-14h]
+    int v19; // [esp+8Ch] [ebp-14h]
     int m_alloc_count; // [esp+90h] [ebp-10h]
-    //_UNKNOWN *v23[2]; // [esp+94h] [ebp-Ch] BYREF
+    //_UNKNOWN *v21[2]; // [esp+94h] [ebp-Ch] BYREF
     //int vars0; // [esp+A0h] [ebp+0h]
     //
-    //v23[0] = a1;
-    //v23[1] = (_UNKNOWN *)vars0;
+    //v21[0] = a1;
+    //v21[1] = (_UNKNOWN *)vars0;
     m_alloc_count = physGlob.objects_by_world[0].m_alloc_count;
-    if (physGlob.objects_by_world[0].m_alloc_count >= 10
-        || (v21 = physGlob.objects_by_world[1].m_alloc_count, physGlob.objects_by_world[1].m_alloc_count >= 4))
+    if (physGlob.objects_by_world[0].m_alloc_count >= 10 || (v19 = physGlob.objects_by_world[1].m_alloc_count, physGlob.objects_by_world[1].m_alloc_count >= 4))
     {
         //cdl_proftimer::start_capture(&proftimer_physics_frame_advance);
         proftimer_physics_frame_advance.start_capture();
@@ -4770,15 +4786,15 @@ void    Phys_CollisionCallback()
                 __debugbreak();
             }
             m_aabb_mx_loc = geom->m_aabb_mx_loc;
-            v1 = phys_max((phys_vec3 *)&closest_point.y, &m_aabb_mn_loc, &player_origin_loc);
-            phys_min((phys_vec3 *)&v4, &m_aabb_mx_loc, v1);
-            v2 = v4 - player_origin_loc.x;
-            v3 = v5 - player_origin_loc.y;
-            if (max_draw_dist_sq >= (float)((float)((float)((float)(v4 - player_origin_loc.x)
-                * (float)(v4 - player_origin_loc.x))
-                + (float)((float)(v5 - player_origin_loc.y)
-                    * (float)(v5 - player_origin_loc.y)))
-                + (float)((float)(v6 - player_origin_loc.z) * (float)(v6 - player_origin_loc.z))))
+            v1 = phys_max(&v5, &m_aabb_mn_loc, &player_origin_loc);
+            phys_min(&v4, &m_aabb_mx_loc, v1);
+            v2 = v4.x - player_origin_loc.x;
+            v3 = v4.y - player_origin_loc.y;
+            if (max_draw_dist_sq >= (float)((float)((float)((float)(v4.x - player_origin_loc.x)
+                * (float)(v4.x - player_origin_loc.x))
+                + (float)((float)(v4.y - player_origin_loc.y)
+                    * (float)(v4.y - player_origin_loc.y)))
+                + (float)((float)(v4.z - player_origin_loc.z) * (float)(v4.z - player_origin_loc.z))))
                 render_gjk_geom(geom, geom_mat);
         }
     }
@@ -5217,8 +5233,8 @@ rigid_body_constraint_ragdoll * Phys_CreateSwivel(
                 float *lowStops,
                 float *highStops)
 {
-    phys_vec3 *v11; // eax
-    phys_vec3 *v12; // eax
+    const phys_vec3 *v11; // eax
+    const phys_vec3 *v12; // eax
     float v13; // xmm0_4
     float theta_max; // xmm0_4
     float z; // xmm0_4
@@ -5234,58 +5250,59 @@ rigid_body_constraint_ragdoll * Phys_CreateSwivel(
     float v25; // [esp+B0h] [ebp-224h]
     int i; // [esp+B4h] [ebp-220h]
     phys_vec3 v27; // [esp+B8h] [ebp-21Ch] BYREF
-    phys_vec3 v28; // [esp+CCh] [ebp-208h] BYREF
-    int v29; // [esp+DCh] [ebp-1F8h]
-    int v30; // [esp+E0h] [ebp-1F4h]
-    int v31; // [esp+F4h] [ebp-1E0h]
-    int v32; // [esp+F8h] [ebp-1DCh]
-    int v33; // [esp+FCh] [ebp-1D8h]
+    float v28; // [esp+CCh] [ebp-208h]
+    int v29; // [esp+D0h] [ebp-204h]
+    int v30; // [esp+D4h] [ebp-200h]
+    phys_vec3 v31; // [esp+D8h] [ebp-1FCh] BYREF
+    int v32; // [esp+F4h] [ebp-1E0h]
+    int v33; // [esp+F8h] [ebp-1DCh]
+    int v34; // [esp+FCh] [ebp-1D8h]
     float max_angle; // [esp+100h] [ebp-1D4h]
-    float v35; // [esp+104h] [ebp-1D0h]
+    float v36; // [esp+104h] [ebp-1D0h]
     float min_angle; // [esp+108h] [ebp-1CCh]
-    float v37; // [esp+10Ch] [ebp-1C8h]
-    float v38; // [esp+110h] [ebp-1C4h]
+    float v38; // [esp+10Ch] [ebp-1C8h]
+    float v39; // [esp+110h] [ebp-1C4h]
     float limit; // [esp+114h] [ebp-1C0h]
     phys_vec3 b2_ref_loc; // [esp+118h] [ebp-1BCh]
-    const phys_vec3 *v41; // [esp+134h] [ebp-1A0h]
-    phys_vec3 v42; // [esp+138h] [ebp-19Ch] BYREF
+    const phys_vec3 *v42; // [esp+134h] [ebp-1A0h]
+    phys_vec3 v43; // [esp+138h] [ebp-19Ch] BYREF
     phys_vec3 b1_ref_loc; // [esp+148h] [ebp-18Ch]
-    const phys_vec3 *v44; // [esp+164h] [ebp-170h]
-    phys_vec3 v45; // [esp+168h] [ebp-16Ch] BYREF
+    const phys_vec3 *v45; // [esp+164h] [ebp-170h]
+    phys_vec3 v46; // [esp+168h] [ebp-16Ch] BYREF
     phys_vec3 b2_axis_loc; // [esp+178h] [ebp-15Ch] BYREF
-    const phys_vec3 *v47; // [esp+194h] [ebp-140h]
-    phys_vec3 v48; // [esp+198h] [ebp-13Ch] BYREF
+    const phys_vec3 *v48; // [esp+194h] [ebp-140h]
+    phys_vec3 v49; // [esp+198h] [ebp-13Ch] BYREF
     phys_vec3 b1_axis_loc; // [esp+1A8h] [ebp-12Ch] BYREF
-    const phys_vec3 *v50; // [esp+1C4h] [ebp-110h]
-    phys_vec3 v51; // [esp+1C8h] [ebp-10Ch] BYREF
+    const phys_vec3 *v51; // [esp+1C4h] [ebp-110h]
+    phys_vec3 v52; // [esp+1C8h] [ebp-10Ch] BYREF
     phys_vec3 b2_anchor_loc; // [esp+1D8h] [ebp-FCh] BYREF
-    phys_vec3 v53; // [esp+1E8h] [ebp-ECh] BYREF
-    phys_vec3 v54; // [esp+1F8h] [ebp-DCh] BYREF
-    const phys_mat44 *v55; // [esp+214h] [ebp-C0h]
+    phys_vec3 v54; // [esp+1E8h] [ebp-ECh] BYREF
+    phys_vec3 v55; // [esp+1F8h] [ebp-DCh] BYREF
+    const phys_mat44 *v56; // [esp+214h] [ebp-C0h]
     phys_vec3 b1_anchor_loc; // [esp+218h] [ebp-BCh] BYREF
-    phys_vec3 v57; // [esp+228h] [ebp-ACh] BYREF
-    phys_vec3 v58; // [esp+238h] [ebp-9Ch] BYREF
+    phys_vec3 v58; // [esp+228h] [ebp-ACh] BYREF
+    phys_vec3 v59; // [esp+238h] [ebp-9Ch] BYREF
     const phys_mat44 *p_m_mat; // [esp+254h] [ebp-80h]
     phys_vec3 ref_abs; // [esp+258h] [ebp-7Ch] BYREF
-    float v61; // [esp+26Ch] [ebp-68h]
-    float v62; // [esp+270h] [ebp-64h]
-    float v63; // [esp+274h] [ebp-60h]
+    float v62; // [esp+26Ch] [ebp-68h]
+    float v63; // [esp+270h] [ebp-64h]
+    float v64; // [esp+274h] [ebp-60h]
     phys_vec3 axis_abs; // [esp+278h] [ebp-5Ch] BYREF
-    float v65; // [esp+28Ch] [ebp-48h]
-    float v66; // [esp+290h] [ebp-44h]
-    float v67; // [esp+294h] [ebp-40h]
+    float v66; // [esp+28Ch] [ebp-48h]
+    float v67; // [esp+290h] [ebp-44h]
+    float v68; // [esp+294h] [ebp-40h]
     phys_vec3 anchor_abs; // [esp+298h] [ebp-3Ch] BYREF
-    float v69; // [esp+2B0h] [ebp-24h]
-    float v70; // [esp+2B4h] [ebp-20h]
-    float v71; // [esp+2B8h] [ebp-1Ch]
+    float v70; // [esp+2B0h] [ebp-24h]
+    float v71; // [esp+2B4h] [ebp-20h]
+    float v72; // [esp+2B8h] [ebp-1Ch]
     rigid_body_constraint_ragdoll *joint; // [esp+2BCh] [ebp-18h]
     rigid_body *body2; // [esp+2C0h] [ebp-14h]
     rigid_body *body1; // [esp+2C4h] [ebp-10h]
-    //_UNKNOWN *v75[2]; // [esp+2C8h] [ebp-Ch] BYREF
+    //_UNKNOWN *v76[2]; // [esp+2C8h] [ebp-Ch] BYREF
     //const float *anchora; // [esp+2D4h] [ebp+0h]
     //
-    //v75[0] = a1;
-    //v75[1] = anchora;
+    //v76[0] = a1;
+    //v76[1] = anchora;
     body1 = Phys_GetUserData(obj1)->body;
     body2 = Phys_GetUserData((int)obj2)->body;
     if ((unsigned int)numAxes >= 4
@@ -5301,88 +5318,91 @@ rigid_body_constraint_ragdoll * Phys_CreateSwivel(
     joint = phys_sys::create_rbc_ragdoll((environment_rigid_body *)body1, (environment_rigid_body *)body2, 1);
     if (joint)
     {
-        v71 = *anchor;
-        v70 = anchor[1];
-        v69 = anchor[2];
-        anchor_abs.x = v71;
-        anchor_abs.y = v70;
-        anchor_abs.z = v69;
-        v67 = (*axes)[0];
-        v66 = (*axes)[1];
-        v65 = (*axes)[2];
-        axis_abs.x = v67;
-        axis_abs.y = v66;
-        axis_abs.z = v65;
-        v63 = (*axes)[3];
-        v62 = (*axes)[4];
-        v61 = (*axes)[5];
-        ref_abs.x = v63;
-        ref_abs.y = v62;
-        ref_abs.z = v61;
+        v72 = *anchor;
+        v71 = anchor[1];
+        v70 = anchor[2];
+        anchor_abs.x = v72;
+        anchor_abs.y = v71;
+        anchor_abs.z = v70;
+        v68 = (*axes)[0];
+        v67 = (*axes)[1];
+        v66 = (*axes)[2];
+        axis_abs.x = v68;
+        axis_abs.y = v67;
+        axis_abs.z = v66;
+        v64 = (*axes)[3];
+        v63 = (*axes)[4];
+        v62 = (*axes)[5];
+        ref_abs.x = v64;
+        ref_abs.y = v63;
+        ref_abs.z = v62;
         p_m_mat = &body1->m_mat;
-        //v11 = operator-(&v58, &anchor_abs, &body1->m_mat.w);
-        *v11 = anchor_abs - body1->m_mat.w;
-        phys_inv_multiply(&v57, p_m_mat, v11);
-        b1_anchor_loc.x = v57.x;
-        b1_anchor_loc.y = v57.y;
-        b1_anchor_loc.z = v57.z;
-        v55 = &body2->m_mat;
-        //v12 = operator-(&v54, &anchor_abs, &body2->m_mat.w);
-        *v12 = anchor_abs - body2->m_mat.w;
-        phys_inv_multiply(&v53, v55, v12);
-        b2_anchor_loc.x = v53.x;
-        b2_anchor_loc.y = v53.y;
-        b2_anchor_loc.z = v53.z;
-        v50 = phys_inv_multiply(&v51, &body1->m_mat, &axis_abs);
-        b1_axis_loc.x = v50->x;
-        b1_axis_loc.y = v50->y;
-        b1_axis_loc.z = v50->z;
-        v47 = phys_inv_multiply(&v48, &body2->m_mat, &axis_abs);
-        b2_axis_loc.x = v47->x;
-        b2_axis_loc.y = v47->y;
-        b2_axis_loc.z = v47->z;
-        v44 = phys_inv_multiply(&v45, &body1->m_mat, &ref_abs);
-        b1_ref_loc.x = v44->x;
-        b1_ref_loc.y = v44->y;
-        b1_ref_loc.z = v44->z;
-        v41 = phys_inv_multiply(&v42, &body2->m_mat, &ref_abs);
-        *(_QWORD *)&b2_ref_loc.x = *(_QWORD *)&v41->x;
-        b2_ref_loc.z = v41->z;
+        v11 = &v59;
+        //v11 = operator-(&v59, &anchor_abs, &body1->m_mat.w);
+        v59 = anchor_abs - body1->m_mat.w;
+        phys_inv_multiply(&v58, p_m_mat, v11);
+        b1_anchor_loc.x = v58.x;
+        b1_anchor_loc.y = v58.y;
+        b1_anchor_loc.z = v58.z;
+        v56 = &body2->m_mat;
+        v12 = &v55;
+        v55 = anchor_abs - body2->m_mat.w;
+        //v12 = operator-(&v55, &anchor_abs, &body2->m_mat.w);
+        phys_inv_multiply(&v54, v56, v12);
+        b2_anchor_loc.x = v54.x;
+        b2_anchor_loc.y = v54.y;
+        b2_anchor_loc.z = v54.z;
+        v51 = phys_inv_multiply(&v52, &body1->m_mat, &axis_abs);
+        b1_axis_loc.x = v51->x;
+        b1_axis_loc.y = v51->y;
+        b1_axis_loc.z = v51->z;
+        v48 = phys_inv_multiply(&v49, &body2->m_mat, &axis_abs);
+        b2_axis_loc.x = v48->x;
+        b2_axis_loc.y = v48->y;
+        b2_axis_loc.z = v48->z;
+        v45 = phys_inv_multiply(&v46, &body1->m_mat, &ref_abs);
+        b1_ref_loc.x = v45->x;
+        b1_ref_loc.y = v45->y;
+        b1_ref_loc.z = v45->z;
+        v42 = phys_inv_multiply(&v43, &body2->m_mat, &ref_abs);
+        *(_QWORD *)&b2_ref_loc.x = *(_QWORD *)&v42->x;
+        b2_ref_loc.z = v42->z;
         //rigid_body_constraint_ragdoll::set(joint, &b1_anchor_loc, &b2_anchor_loc);
         joint->set(&b1_anchor_loc, &b2_anchor_loc);
         limit = 1.2f;
-        //LODWORD(v38) = LODWORD(1.2f) ^ _mask__NegFloat_;
-        (v38) = -(1.2f);
-        if (*lowStops <= -(1.2f))
-            v13 = v38;
+        //LODWORD(v39) = LODWORD(FLOAT_1_2) ^ _mask__NegFloat_;
+        (v39) = -(1.2f);
+        //if (*lowStops <= COERCE_FLOAT(LODWORD(FLOAT_1_2) ^ _mask__NegFloat_))
+        if (*lowStops <= -1.2f)
+            v13 = v39;
         else
             v13 = *lowStops;
-        v37 = v13;
+        v38 = v13;
         min_angle = v13;
         if (limit <= *highStops)
             theta_max = limit;
         else
             theta_max = *highStops;
-        v35 = theta_max;
+        v36 = theta_max;
         max_angle = theta_max;
-        v33 = -(b2_ref_loc.x);
-        v32 = -(b2_ref_loc.y);
-        v31 = -(b2_ref_loc.z);
-        (v28.w) = -(b2_ref_loc.x) ;
-        v29 = -(b2_ref_loc.y);
-        v30 = -(b2_ref_loc.z);
-        (v28.z) = -(b1_ref_loc.x);
-        (v28.y) = -(b1_ref_loc.y);
-        (v28.x) = -(b1_ref_loc.z);
-        (v27.x) = -(b1_ref_loc.x);
-        (v27.y) = -(b1_ref_loc.y);
-        (v27.z) = -(b1_ref_loc.z);
+        v34 = -(b2_ref_loc.x);
+        v33 = -(b2_ref_loc.y);
+        v32 = -(b2_ref_loc.z);
+        (v31.x) = -(b2_ref_loc.x);
+        (v31.y) = -(b2_ref_loc.y);
+        (v31.z) = -(b2_ref_loc.z);
+        v30 = -(b1_ref_loc.x);
+        v29 = -(b1_ref_loc.y);
+        //LODWORD(v28) = LODWORD(b1_ref_loc.z) ^ _mask__NegFloat_;
+        (v27.x) = (b1_ref_loc.x);
+        (v27.y) = (b1_ref_loc.y);
+        (v27.z) = (b1_ref_loc.z);
         //rigid_body_constraint_ragdoll::set_swivel(
             joint->set_swivel(
             &b1_axis_loc,
             &b2_axis_loc,
             &v27,
-            (phys_vec3 *)&v28.w,
+            &v31,
             min_angle,
             theta_max);
         for (i = 1; i < (int)numAxes; ++i)
@@ -6175,40 +6195,6 @@ phys_convex_hull::~phys_convex_hull()
 //        this->remove((phys_free_list<RagdollBody>::T_internal *) &data_[-1].rope_id);
 //    }
 //}
-
-broad_phase_info *__cdecl create_broad_phase_info()
-{
-    phys_free_list<broad_phase_info> *p_g_list_broad_phase_info; // edi
-    phys_free_list<broad_phase_info>::T_internal *v1; // eax
-    phys_free_list<broad_phase_info>::T_internal *v2; // esi
-
-    p_g_list_broad_phase_info = &G_BPM->g_list_broad_phase_info;
-    v1 = (phys_free_list<broad_phase_info>::T_internal *)PMM_ALLOC(0x90u, 0x10u);
-    v2 = v1;
-    if ( v1 )
-    {
-        v1->m_prev_T_internal = &p_g_list_broad_phase_info->m_dummy_head;
-        v1->m_next_T_internal = p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal;
-        p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal->m_prev_T_internal = v1;
-        ++p_g_list_broad_phase_info->m_list_count;
-        p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal = v1;
-        //phys_free_list<broad_phase_info>::debug_add(p_g_list_broad_phase_info, v1);
-        p_g_list_broad_phase_info->debug_add(v1);
-        return &v2->m_data;
-    }
-    else
-    {
-        if ( _tlAssert(
-                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
-                     470,
-                     "no_error",
-                     "phys_free_list error: out of memory.") )
-        {
-            __debugbreak();
-        }
-        return 0;
-    }
-}
 
 void __cdecl destroy_broad_phase_info(broad_phase_info *bpi)
 {

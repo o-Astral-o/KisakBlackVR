@@ -244,9 +244,9 @@ void    parented_pathnode_list_update(gentity_s *gent, const phys_mat44 *mat)
         while (m_tree_root && avl_key != m_tree_root->m_avl_key)
         {
             if (avl_key >= m_tree_root->m_avl_key)
-                m_tree_root = m_tree_root->m_avl_node_info.m_right;
+                m_tree_root = m_tree_root->m_avl_tree_node.m_right;
             else
-                m_tree_root = m_tree_root->m_avl_node_info.m_left;
+                m_tree_root = m_tree_root->m_avl_tree_node.m_left;
         }
         gamn = m_tree_root;
         if (m_tree_root)
@@ -285,9 +285,9 @@ const pathnode_parent_t *__cdecl get_pathnode_parent(const pathnode_t *node)
     while ( m_tree_root && node != (const pathnode_t *)m_tree_root->m_avl_key )
     {
         if ( (unsigned int)node >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
         return (const pathnode_parent_t *)m_tree_root->m_data;
@@ -1133,9 +1133,9 @@ void __cdecl Path_MovingNodesInCylinder()
             while (m_tree_root && v3 != m_tree_root->m_avl_key)
             {
                 if (v3 >= m_tree_root->m_avl_key)
-                    m_tree_root = m_tree_root->m_avl_node_info.m_right;
+                    m_tree_root = m_tree_root->m_avl_tree_node.m_right;
                 else
-                    m_tree_root = m_tree_root->m_avl_node_info.m_left;
+                    m_tree_root = m_tree_root->m_avl_tree_node.m_left;
             }
             if (m_tree_root)
             {

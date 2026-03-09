@@ -28,47 +28,43 @@ debug_patch_info_t *debug_patch_info;
 int debugCollisionAabbTreeCount;
 int g_debug_partition;
 
-void __cdecl make_rotate(phys_mat44 *m, const phys_vec3 *u, float ca, float sa)
+// This version takes a Ref (&)
+void __cdecl make_rotate(phys_mat44 &m, const phys_vec3 *u, float ca, float sa)
 {
-    float yy; // [esp+1Ch] [ebp-28h]
-    float xsa; // [esp+20h] [ebp-24h]
-    float xy; // [esp+24h] [ebp-20h]
-    float zsa; // [esp+28h] [ebp-1Ch]
-    float zz; // [esp+2Ch] [ebp-18h]
-    float ysa; // [esp+34h] [ebp-10h]
-    float xz; // [esp+38h] [ebp-Ch]
-    float yz; // [esp+3Ch] [ebp-8h]
+    float yy;
+    float xsa;
+    float xy;
+    float zsa;
+    float zz;
+    float ysa;
+    float xz;
+    float yz;
 
-    xy = (float)(u->x * u->y) * (float)(1.0 - ca);
-    xz = (float)(u->x * u->z) * (float)(1.0 - ca);
-    yy = (float)(u->y * u->y) * (float)(1.0 - ca);
-    yz = (float)(u->y * u->z) * (float)(1.0 - ca);
-    zz = (float)(u->z * u->z) * (float)(1.0 - ca);
+    xy = (u->x * u->y) * (1.0f - ca);
+    xz = (u->x * u->z) * (1.0f - ca);
+    yy = (u->y * u->y) * (1.0f - ca);
+    yz = (u->y * u->z) * (1.0f - ca);
+    zz = (u->z * u->z) * (1.0f - ca);
     xsa = u->x * sa;
     ysa = u->y * sa;
     zsa = u->z * sa;
-    m->x.x = (float)((float)(u->x * u->x) * (float)(1.0 - ca)) + ca;
-    m->y.x = xy - zsa;
-    m->z.x = xz + ysa;
-    m->w.x = 0.0f;
-    //*phys_vec3::operator[]<int>(&m->x, 1u) = xy + zsa;
-    //*phys_vec3::operator[]<int>(&m->y, 1u) = yy + ca;
-    //*phys_vec3::operator[]<int>(&m->z, 1u) = yz - xsa;
-    //*phys_vec3::operator[]<int>(&m->w, 1u) = 0.0f;
-    //*phys_vec3::operator[]<int>(&m->x, 2u) = xz - ysa;
-    //*phys_vec3::operator[]<int>(&m->y, 2u) = yz + xsa;
-    //*phys_vec3::operator[]<int>(&m->z, 2u) = zz + ca;
-    //*phys_vec3::operator[]<int>(&m->w, 2u) = 0.0f;
-    m->x[1] = xy + zsa;
-    m->y[1] = yy + ca;
-    m->z[1] = yz - xsa;
-    m->w[1] = 0.0f;
-    m->x[2] = xz - ysa;
-    m->y[2] = yz + xsa;
-    m->z[2] = zz + ca;
-    m->w[2] = 0.0f;
-    //phys_mat44::fix_w_column(m);
-    m->fix_w_column();
+
+    m.x.x = (u->x * u->x) * (1.0f - ca) + ca;
+    m.y.x = xy - zsa;
+    m.z.x = xz + ysa;
+    m.w.x = 0.0f;
+
+    m.x[1] = xy + zsa;
+    m.y[1] = yy + ca;
+    m.z[1] = yz - xsa;
+    m.w[1] = 0.0f;
+
+    m.x[2] = xz - ysa;
+    m.y[2] = yz + xsa;
+    m.z[2] = zz + ca;
+    m.w[2] = 0.0f;
+
+    m.fix_w_column();
 }
 
 void    make_rotate(
@@ -145,7 +141,7 @@ void    make_rotate(
     float c = cosf(angle);
 
     // THIS is the real call
-    make_rotate(mat, (const phys_vec3 *) & axis, s, c);
+    make_rotate(*mat, (const phys_vec3 *) & axis, s, c);
 #endif
 }
 
@@ -328,7 +324,7 @@ void debug_brush_info_t::add_brush(
         v65.x = -1.0f;
         v65.y = 0.0f;
         v65.z = 0.0f;
-        v65.w = v71;
+        v65.w = 0.0f;//v71;
         v66 = -v82.x;
         //v64 = phys_static_array<plane_lt,512>::add(&v79, 0, "phys array add overflow.");
         v64 = v79.add(0, "phys array add overflow.");
@@ -343,7 +339,7 @@ void debug_brush_info_t::add_brush(
         v57.x = 0.0f;
         v57.y = -1.0f;
         v57.z = 0.0f;
-        v57.w = v63;
+        v57.w = 0.0f;//v63;
         v58 = -v82.y;
         //v56 = phys_static_array<plane_lt,512>::add(&v79, 0, "phys array add overflow.");
         v56 = v79.add(0, "phys array add overflow.");
@@ -358,7 +354,7 @@ void debug_brush_info_t::add_brush(
         v49.x = 0.0f;
         v49.y = 0.0f;
         v49.z = -1.0f;
-        v49.w = v55;
+        v49.w = 0.0f;//v55;
         v50 = -v82.z;
         //v48 = phys_static_array<plane_lt,512>::add(&v79, 0, "phys array add overflow.");
         v48 = v79.add(0, "phys array add overflow.");
@@ -372,7 +368,7 @@ void debug_brush_info_t::add_brush(
         v41.x = 1.0f;
         v41.y = 0.0f;
         v41.z = 0.0f;
-        v41.w = v47;
+        v41.w = 0.0f;//v47;
         v42 = v81.x;
         //v40 = phys_static_array<plane_lt,512>::add(&v79, 0, "phys array add overflow.");
         v40 = v79.add(0, "phys array add overflow.");
@@ -386,7 +382,7 @@ void debug_brush_info_t::add_brush(
         v33.x = 0.0f;
         v33.y = 1.0f;
         v33.z = 0.0f;
-        v33.w = v39;
+        v33.w = 0.0f;//v39;
         v34 = v81.y;
         //v32 = phys_static_array<plane_lt,512>::add(&v79, 0, "phys array add overflow.");
         v32 = v79.add(0, "phys array add overflow.");
@@ -400,7 +396,7 @@ void debug_brush_info_t::add_brush(
         v25.x = 0.0f;
         v25.y = 0.0f;
         v25.z = 1.0f;
-        v25.w = v31;
+        v25.w = 0.0f;// v31;
         v26 = v81.z;
         //v24 = phys_static_array<plane_lt,512>::add(&v79, 0, "phys array add overflow.");
         v24 = v79.add(0, "phys array add overflow.");
@@ -1848,36 +1844,47 @@ void    init_winding(const plane_lt *plane, phys_static_array<phys_vec3,512> *wi
     v20.x = v26;
     v20.y = v25;
     v20.z = v24;
+
     //v4 = phys_static_array<phys_vec3, 512>::add(winding, 0, "phys array add overflow.");
     v4 = winding->add(0, "phys array add overflow.");
     //phys_vec3::operator=(v4, &v20);
     *v4 = v20;
     //v5 = operator+(&v19, &org, &right);
-    *v5 = org + right;
+    v19 = org + right;
+    v5 = &v19;
     //v6 = operator+(&v18, v5, &up);
-    *v6 = *v5 + up;
+    v18 = *v5 + up;
+    v6 = &v18;
     //phys_vec3::operator=(&v20, v6);
     v20 = *v6;
+
     //v7 = phys_static_array<phys_vec3, 512>::add(winding, 0, "phys array add overflow.");
     v7 = winding->add(0, "phys array add overflow.");
     //phys_vec3::operator=(v7, &v20);
     *v7 = v20;
     //v8 = operator+(&v17, &org, &right);
-    *v8 = org + right;
+    //*v8 = org + right;
+    v17 = org + right;
+    v8 = &v17;
     //v9 = operator-(&v16, v8, &up);
-    *v9 = *v8 - up;
+    v16 = *v8 - up;
+    v9 = &v16;
     //phys_vec3::operator=(&v20, v9);
     v20 = *v9;
+
     //v10 = phys_static_array<phys_vec3, 512>::add(winding, 0, "phys array add overflow.");
     v10 = winding->add(0, "phys array add overflow.");
     //phys_vec3::operator=(v10, &v20);
     *v10 = v20;
     //v11 = operator-(&v15, &org, &right);
-    *v11 = org - right;
+    v15 = org - right;
+    v11 = &v15;
     //v12 = operator-(&v14, v11, &up);
-    *v12 = *v11 - up;
+    v14 = *v11 - up;
+    v12 = &v14;
     //phys_vec3::operator=(&v20, v12);
     v20 = *v12;
+
     //v13 = phys_static_array<phys_vec3, 512>::add(winding, 0, "phys array add overflow.");
     v13 = winding->add(0, "phys array add overflow.");
     //phys_vec3::operator=(v13, &v20);
@@ -2367,7 +2374,7 @@ void    make_rotate(phys_mat44 *mat, const phys_vec3 *v1, const phys_vec3 *v2)
         ud.z = ud.z * (float)(1.0 / si_a);
         co_ = (float)((float)(v1->x * v2->x) + (float)(v1->y * v2->y)) + (float)(v1->z * v2->z);
         len = sqrtf((float)(co_ * co_) + (float)(si_a * si_a));
-        make_rotate(mat, &ud, co_ / len, si_a / len);
+        make_rotate(*mat, &ud, co_ / len, si_a / len);
     }
     else
     {

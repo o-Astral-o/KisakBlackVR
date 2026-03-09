@@ -318,18 +318,18 @@ void    nuge::apply_ballistic_target(
                 float *const dist_sq)
 {
     double v5; // st6
-    double y; // st7
+    double v6; // st7
     rigid_body *v7; // eax
     float w; // eax
     int v9; // ecx
     int v10; // edx
     double v11; // st6
-    double z; // st4
+    double v12; // st4
     double v13; // st4
     double v14; // st2
     double v15; // st3
-    double v16; // st5
-    double v17; // st4
+    long double v16; // st5
+    long double v17; // st4
     double v18; // st5
     int v19; // ecx
     int v20; // esi
@@ -345,200 +345,198 @@ void    nuge::apply_ballistic_target(
     float v30; // [esp-Ch] [ebp-DCh]
     float vt_8; // [esp+8h] [ebp-C8h]
     float dvs_8; // [esp+18h] [ebp-B8h]
-    float v33; // [esp+38h] [ebp-98h]
-    float v34; // [esp+38h] [ebp-98h]
-    double ddvs_12; // [esp+4Ch] [ebp-84h]
-    float v36; // [esp+54h] [ebp-7Ch]
-    float v37; // [esp+58h] [ebp-78h]
-    float v38; // [esp+5Ch] [ebp-74h]
-    float dir_4; // [esp+64h] [ebp-6Ch]
-    float dir_8; // [esp+68h] [ebp-68h]
-    float dir_12; // [esp+6Ch] [ebp-64h]
-    float total_velocity_4; // [esp+74h] [ebp-5Ch]
-    float total_velocity_8; // [esp+78h] [ebp-58h]
-    float total_velocity_12; // [esp+7Ch] [ebp-54h]
-    float v45; // [esp+90h] [ebp-40h] BYREF
-    float v46; // [esp+94h] [ebp-3Ch] BYREF
-    float v47; // [esp+98h] [ebp-38h]
-    float total_mass; // [esp+9Ch] [ebp-34h]
-    phys_vec3 center_of_mass; // [esp+A0h] [ebp-30h] BYREF
-    phys_vec3 total_momentum; // [esp+B0h] [ebp-20h]
-    float delta_x; // [esp+C0h] [ebp-10h]
-    //float s_; // [esp+C4h] [ebp-Ch]
-    //float B; // [esp+C8h] [ebp-8h]
-    float retaddr; // [esp+D0h] [ebp+0h]
-
-    //s_ = a1;
-    //B = retaddr;
-    nuge::get_ballistic_info(list_rigid_body, rbodies_count, (phys_vec3 *)&v46, (phys_vec3 *)&center_of_mass.y, &v45);
-    total_momentum.y = 1.0 / v45;
-    dir_4 = center_of_mass.y * total_momentum.y;
-    dir_8 = center_of_mass.z * total_momentum.y;
-    dir_12 = total_momentum.y * center_of_mass.w;
-    total_velocity_4 = target->x - v46;
-    total_velocity_8 = target->y - v47;
-    total_velocity_12 = target->z - total_mass;
-    v5 = total_velocity_4 * total_velocity_4;
-    *dist_sq = total_velocity_12 * total_velocity_12 + total_velocity_8 * total_velocity_8 + v5;
-    total_momentum.y = total_velocity_12 * total_velocity_12 + v5;
-    total_momentum.y = sqrt(total_momentum.y);
-    y = total_momentum.y;
-    if ( total_momentum.y >= 0.001 )
+    float ddvs_4; // [esp+38h] [ebp-98h]
+    float ddvs_4a; // [esp+38h] [ebp-98h]
+    double v35; // [esp+4Ch] [ebp-84h]
+    float dir; // [esp+54h] [ebp-7Ch]
+    float dir_4; // [esp+58h] [ebp-78h]
+    float dir_8; // [esp+5Ch] [ebp-74h]
+    float total_velocity; // [esp+64h] [ebp-6Ch]
+    float total_velocity_4; // [esp+68h] [ebp-68h]
+    float total_velocity_8; // [esp+6Ch] [ebp-64h]
+    float delta_pos; // [esp+74h] [ebp-5Ch]
+    float delta_pos_4; // [esp+78h] [ebp-58h]
+    float delta_pos_8; // [esp+7Ch] [ebp-54h]
+    float total_mass; // [esp+90h] [ebp-40h] BYREF
+    phys_vec3 center_of_mass; // [esp+94h] [ebp-3Ch] BYREF
+    phys_vec3 total_momentum; // [esp+A4h] [ebp-2Ch] BYREF
+    float delta_x; // [esp+B4h] [ebp-1Ch]
+    float s_; // [esp+B8h] [ebp-18h]
+    float B; // [esp+BCh] [ebp-14h]
+    float s1_; // [esp+C0h] [ebp-10h]
+    //_UNKNOWN *v52; // [esp+C4h] [ebp-Ch]
+    //rigid_body *const *list_rigid_bodya; // [esp+C8h] [ebp-8h]
+    //const phys_vec3 *targeta; // [esp+D0h] [ebp+0h]
+    //
+    //v52 = a1;
+    //list_rigid_bodya = (rigid_body *const *)targeta;
+    nuge::get_ballistic_info(list_rigid_body, rbodies_count, &center_of_mass, &total_momentum, &total_mass);
+    delta_x = 1.0 / total_mass;
+    total_velocity = total_momentum.x * delta_x;
+    total_velocity_4 = total_momentum.y * delta_x;
+    total_velocity_8 = delta_x * total_momentum.z;
+    delta_pos = target->x - center_of_mass.x;
+    delta_pos_4 = target->y - center_of_mass.y;
+    delta_pos_8 = target->z - center_of_mass.z;
+    v5 = delta_pos * delta_pos;
+    *dist_sq = delta_pos_8 * delta_pos_8 + delta_pos_4 * delta_pos_4 + v5;
+    delta_x = delta_pos_8 * delta_pos_8 + v5;
+    delta_x = sqrt(delta_x);
+    v6 = delta_x;
+    if (delta_x >= 0.001)
     {
         v7 = *list_rigid_body;
-        center_of_mass.z = (*list_rigid_body)->m_gravity_acc_vec.y;
-        center_of_mass.y = v7->m_gravity_acc_vec.x;
+        total_momentum.y = (*list_rigid_body)->m_gravity_acc_vec.y;
+        total_momentum.x = v7->m_gravity_acc_vec.x;
         w = v7->m_gravity_acc_vec.w;
         v9 = 0;
-        delta_x = center_of_mass.z * 0.5 * y;
-        total_momentum.x = w;
+        s1_ = total_momentum.y * 0.5 * v6;
+        total_momentum.w = w;
         v10 = 0;
-        total_momentum.w = total_velocity_8 / y;
-        total_momentum.y = 1.0 / y;
-        v36 = total_momentum.y * total_velocity_4;
-        v37 = total_momentum.y * 0.0;
-        v38 = total_momentum.y * total_velocity_12;
-        total_momentum.z = 1.0;
-        v11 = delta_x;
-        ddvs_12 = -2.0 * delta_x;
-        total_momentum.y = 0.0 - 0.0;
-        center_of_mass.w = total_momentum.y;
+        B = delta_pos_4 / v6;
+        delta_x = 1.0 / v6;
+        dir = delta_x * delta_pos;
+        dir_4 = delta_x * 0.0;
+        dir_8 = delta_x * delta_pos_8;
+        s_ = 1.0;
+        v11 = s1_;
+        v35 = -2.0 * s1_;
+        delta_x = 0.0 - 0.0;
+        total_momentum.z = delta_x;
         do
         {
-            z = total_momentum.z;
-            dvs_8 = total_momentum.z * total_momentum.w - v11 / total_momentum.z;
-            vt_8 = total_momentum.w + v11 / (z * z);
-            v33 = ddvs_12 / (z * z * z);
-            v30 = v37 * dir_8 + v36 * dir_4 + v38 * dir_12;
-            delta_x = total_momentum.z - v30;
-            v13 = delta_x;
-            v46 = delta_x;
-            delta_x = dvs_8 - dir_8;
-            v47 = delta_x;
-            total_mass = total_momentum.y;
-            center_of_mass.y = v13;
+            v12 = s_;
+            dvs_8 = s_ * B - v11 / s_;
+            vt_8 = B + v11 / (v12 * v12);
+            ddvs_4 = v35 / (v12 * v12 * v12);
+            v30 = dir_4 * total_velocity_4 + dir * total_velocity + dir_8 * total_velocity_8;
+            s1_ = s_ - v30;
+            v13 = s1_;
+            center_of_mass.x = s1_;
+            s1_ = dvs_8 - total_velocity_4;
+            center_of_mass.y = s1_;
             center_of_mass.z = delta_x;
-            delta_x = vt_8 * delta_x + v46 + total_momentum.y * 0.0;
-            v14 = delta_x;
-            delta_x = center_of_mass.z * v33 + center_of_mass.y * 0.0 + total_momentum.y * 0.0;
-            v15 = delta_x;
-            delta_x = vt_8 * vt_8 + 1.0 + 0.0 * 0.0;
-            delta_x = v15 + delta_x;
-            delta_x = total_momentum.z - v14 / delta_x;
-            v16 = delta_x;
-            delta_x = delta_x - total_momentum.z;
-            delta_x = fabs(delta_x);
-            if ( delta_x < 0.001 )
+            total_momentum.x = v13;
+            total_momentum.y = s1_;
+            s1_ = vt_8 * s1_ + center_of_mass.x + delta_x * 0.0;
+            v14 = s1_;
+            s1_ = total_momentum.y * ddvs_4 + total_momentum.x * 0.0 + delta_x * 0.0;
+            v15 = s1_;
+            s1_ = vt_8 * vt_8 + 1.0 + 0.0 * 0.0;
+            s1_ = v15 + s1_;
+            s1_ = s_ - v14 / s1_;
+            v16 = s1_;
+            s1_ = s1_ - s_;
+            s1_ = fabs(s1_);
+            if (s1_ < 0.001)
                 v10 = 1;
             ++v9;
             v17 = v16;
-            total_momentum.z = v16;
-        }
-        while ( v9 <= 10 && !v10 );
-        delta_x = fabs(v16);
-        if ( delta_x >= 1.0 )
+            s_ = v16;
+        } while (v9 <= 10 && !v10);
+        s1_ = fabs(v16);
+        if (s1_ >= 1.0)
         {
             v18 = 0.0;
         }
         else
         {
             v18 = 0.0;
-            if ( delta_x > 0.001 )
+            if (s1_ > 0.001)
             {
-                if ( v17 < 0.0 )
-                    total_momentum.z = -1.0;
+                if (v17 < 0.0)
+                    s_ = -1.0;
                 else
-                    total_momentum.z = 1.0;
+                    s_ = 1.0;
             }
         }
         v19 = rbodies_count;
         v20 = 0;
-        v34 = total_momentum.z * total_momentum.w - v11 / total_momentum.z;
-        center_of_mass.y = v36 * total_momentum.z;
-        center_of_mass.z = v37 * total_momentum.z;
-        center_of_mass.w = total_momentum.z * v38;
-        v46 = center_of_mass.y + 0.0;
-        v47 = center_of_mass.z + v34;
-        total_mass = center_of_mass.w + 0.0;
-        total_momentum.w = v18;
+        ddvs_4a = s_ * B - v11 / s_;
+        total_momentum.x = dir * s_;
+        total_momentum.y = dir_4 * s_;
+        total_momentum.z = s_ * dir_8;
+        center_of_mass.x = total_momentum.x + 0.0;
+        center_of_mass.y = total_momentum.y + ddvs_4a;
+        center_of_mass.z = total_momentum.z + 0.0;
+        B = v18;
         v21 = 1.0;
-        if ( rbodies_count >= 4 )
+        if (rbodies_count >= 4)
         {
             v22 = ((unsigned int)(rbodies_count - 4) >> 2) + 1;
             v23 = list_rigid_body + 2;
             v20 = 4 * v22;
             do
             {
-                v24 = *((unsigned int *)v23 - 2);
-                if ( v24 )
+                v24 = *((_DWORD *)v23 - 2);
+                if (v24)
                 {
-                    total_momentum.z = *(float *)(v24 + 240);
-                    delta_x = total_momentum.z * total_momentum.z;
-                    total_momentum.w = 1.0 / delta_x + total_momentum.w;
+                    s_ = *(float *)(v24 + 240);
+                    s1_ = s_ * s_;
+                    B = 1.0 / s1_ + B;
                 }
-                v25 = *((unsigned int *)v23 - 1);
-                if ( v25 )
+                v25 = *((_DWORD *)v23 - 1);
+                if (v25)
                 {
-                    total_momentum.z = *(float *)(v25 + 240);
-                    delta_x = total_momentum.z * total_momentum.z;
-                    total_momentum.w = 1.0 / delta_x + total_momentum.w;
+                    s_ = *(float *)(v25 + 240);
+                    s1_ = s_ * s_;
+                    B = 1.0 / s1_ + B;
                 }
-                if ( *v23 )
+                if (*v23)
                 {
-                    total_momentum.z = (*v23)->m_inv_mass;
-                    delta_x = total_momentum.z * total_momentum.z;
-                    total_momentum.w = 1.0 / delta_x + total_momentum.w;
+                    s_ = (*v23)->m_inv_mass;
+                    s1_ = s_ * s_;
+                    B = 1.0 / s1_ + B;
                 }
-                v26 = *((unsigned int *)v23 + 1);
-                if ( v26 )
+                v26 = *((_DWORD *)v23 + 1);
+                if (v26)
                 {
-                    total_momentum.z = *(float *)(v26 + 240);
-                    delta_x = total_momentum.z * total_momentum.z;
-                    total_momentum.w = 1.0 / delta_x + total_momentum.w;
+                    s_ = *(float *)(v26 + 240);
+                    s1_ = s_ * s_;
+                    B = 1.0 / s1_ + B;
                 }
                 v23 += 4;
                 --v22;
-            }
-            while ( v22 );
+            } while (v22);
             v19 = rbodies_count;
         }
-        for ( ; v20 < v19; ++v20 )
+        for (; v20 < v19; ++v20)
         {
             v27 = list_rigid_body[v20];
-            if ( v27 )
+            if (v27)
             {
-                total_momentum.z = v27->m_inv_mass;
-                delta_x = total_momentum.z * total_momentum.z;
-                total_momentum.w = 1.0 / delta_x + total_momentum.w;
+                s_ = v27->m_inv_mass;
+                s1_ = s_ * s_;
+                B = 1.0 / s1_ + B;
             }
         }
-        if ( total_momentum.w <= 0.0000099999997 )
+        if (B <= 0.0000099999997)
         {
-            if ( _tlAssert("source/phys_util.cpp", 82, "total_square_mass > 0.00001f", "") )
+            if (_tlAssert("source/phys_util.cpp", 82, "total_square_mass > 0.00001f", ""))
                 __debugbreak();
             v19 = rbodies_count;
             v21 = 1.0;
         }
         v28 = 0;
-        center_of_mass.y = v46 - dir_4;
-        center_of_mass.z = v47 - dir_8;
-        center_of_mass.w = total_mass - dir_12;
-        delta_x = v45 / total_momentum.w;
-        v46 = center_of_mass.y * delta_x;
-        v47 = center_of_mass.z * delta_x;
-        for ( total_mass = delta_x * center_of_mass.w; v28 < v19; ++v28 )
+        total_momentum.x = center_of_mass.x - total_velocity;
+        total_momentum.y = center_of_mass.y - total_velocity_4;
+        total_momentum.z = center_of_mass.z - total_velocity_8;
+        s1_ = total_mass / B;
+        center_of_mass.x = total_momentum.x * s1_;
+        center_of_mass.y = total_momentum.y * s1_;
+        for (center_of_mass.z = s1_ * total_momentum.z; v28 < v19; ++v28)
         {
-            if ( list_rigid_body[v28] )
+            if (list_rigid_body[v28])
             {
                 v29 = list_rigid_body[v28];
-                delta_x = v29->m_inv_mass;
-                delta_x = delta_x * delta_x;
-                delta_x = v21 / delta_x;
-                center_of_mass.y = delta_x * v46;
-                center_of_mass.z = v47 * delta_x;
-                center_of_mass.w = delta_x * total_mass;
-                //rigid_body::add_force(v29, (phys_vec3 *)&center_of_mass.y);
-                v29->add_force((phys_vec3 *)&center_of_mass.y);
+                s1_ = v29->m_inv_mass;
+                s1_ = s1_ * s1_;
+                s1_ = v21 / s1_;
+                total_momentum.x = s1_ * center_of_mass.x;
+                total_momentum.y = center_of_mass.y * s1_;
+                total_momentum.z = s1_ * center_of_mass.z;
+                //rigid_body::add_force(v29, &total_momentum);
+                v29->add_force(&total_momentum);
                 v21 = 1.0;
                 v19 = rbodies_count;
             }

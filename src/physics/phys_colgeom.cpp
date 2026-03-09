@@ -12,6 +12,8 @@
 #include <clientscript/scr_const.h>
 #include <DynEntity/DynEntity_client.h>
 #include "phys_contact_manifold.h"
+#include "phys_main.h"
+#include <glass/glass.h>
 
 phys_simple_allocator<gjk_aabb_t> aabb_pool;
 phys_simple_allocator<gjk_obb_t> obb_pool;
@@ -713,10 +715,10 @@ gjk_brush_t * gjk_brush_t::create(
     gjk_brush_t *v7; // [esp-Ch] [ebp-CCh]
     gjk_brush_t *v8; // [esp-8h] [ebp-C8h]
     gjk_brush_t *v9; // [esp-4h] [ebp-C4h]
-    gjk_aabb_t *v10; // [esp+10h] [ebp-B0h]
-    float v11[2]; // [esp+14h] [ebp-ACh] BYREF
-    gjk_aabb_t *obj; // [esp+1Ch] [ebp-A4h]
-    phys_vec3 half_dims; // [esp+20h] [ebp-A0h]
+    gjk_aabb_t *obj; // [esp+10h] [ebp-B0h]
+    phys_vec3 half_dims; // [esp+14h] [ebp-ACh] BYREF
+    float v12; // [esp+28h] [ebp-98h]
+    float v13; // [esp+2Ch] [ebp-94h]
     float v14; // [esp+30h] [ebp-90h]
     float v15; // [esp+34h] [ebp-8Ch]
     float v16; // [esp+38h] [ebp-88h]
@@ -724,43 +726,42 @@ gjk_brush_t * gjk_brush_t::create(
     float v18; // [esp+48h] [ebp-78h]
     float v19; // [esp+4Ch] [ebp-74h]
     float v20; // [esp+50h] [ebp-70h]
-    float v21[3]; // [esp+54h] [ebp-6Ch] BYREF
-    phys_vec3 center; // [esp+60h] [ebp-60h]
-    float v23; // [esp+70h] [ebp-50h]
-    float v24; // [esp+74h] [ebp-4Ch]
-    float v25; // [esp+78h] [ebp-48h]
-    float v26; // [esp+7Ch] [ebp-44h]
-    float v27; // [esp+88h] [ebp-38h]
-    float v28; // [esp+8Ch] [ebp-34h]
-    float v29; // [esp+90h] [ebp-30h]
-    float v30; // [esp+94h] [ebp-2Ch] BYREF
-    float v31; // [esp+98h] [ebp-28h]
-    float v32; // [esp+9Ch] [ebp-24h]
-    phys_vec3 aabb_max; // [esp+A0h] [ebp-20h] BYREF
-    phys_vec3 aabb_min; // [esp+B0h] [ebp-10h]
-    float retaddr; // [esp+C0h] [ebp+0h]
-
-    //aabb_min.y = a1;
-    //aabb_min.z = retaddr;
-    if ( brush->numsides )
+    phys_vec3 center; // [esp+54h] [ebp-6Ch] BYREF
+    float v22; // [esp+68h] [ebp-58h]
+    float v23; // [esp+6Ch] [ebp-54h]
+    float v24; // [esp+70h] [ebp-50h]
+    float v25; // [esp+74h] [ebp-4Ch]
+    float v26; // [esp+78h] [ebp-48h]
+    float v27; // [esp+7Ch] [ebp-44h]
+    float v28; // [esp+88h] [ebp-38h]
+    float v29; // [esp+8Ch] [ebp-34h]
+    float v30; // [esp+90h] [ebp-30h]
+    phys_vec3 aabb_max; // [esp+94h] [ebp-2Ch] BYREF
+    phys_vec3 aabb_min; // [esp+A4h] [ebp-1Ch] BYREF
+    //_UNKNOWN *v33; // [esp+B4h] [ebp-Ch]
+    //const cbrush_t *brusha; // [esp+B8h] [ebp-8h]
+    //gjk_collision_visitor *allocatora; // [esp+C0h] [ebp+0h]
+    //
+    //v33 = a1;
+    //brusha = (const cbrush_t *)allocatora;
+    if (brush->numsides)
     {
-        if ( !allocator
-            && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp", 122, 0, "%s", "allocator") )
+        if (!allocator
+            && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp", 122, 0, "%s", "allocator"))
         {
             __debugbreak();
         }
-        if ( allocator->is_query() )
+        if (allocator->is_query())
         {
             v9 = (gjk_brush_t *)allocator->allocate(96, 16, 0);
-            if ( v9 )
+            if (v9)
             {
                 //v9->__vftable = (gjk_brush_t_vtbl *)&phys_gjk_geom::`vftable';
                 //v9->__vftable = (gjk_brush_t_vtbl *)&gjk_base_t::`vftable';
-                //v9->m_flags = 0;
-                //v9->__vftable = (gjk_brush_t_vtbl *)&gjk_brush_t::`vftable';
-                //v8 = v9;
-                *v9 = dummybrush;
+                new ((void *)v9) gjk_brush_t();
                 v9->m_flags = 0;
+                //v9->__vftable = (gjk_brush_t_vtbl *)&gjk_brush_t::`vftable';
+                v8 = v9;
             }
             else
             {
@@ -778,19 +779,19 @@ gjk_brush_t * gjk_brush_t::create(
             //gjk_base_t::set_geom_id_new(v7, unique_id);
             v7->set_geom_id_new(unique_id);
         }
-        if ( !v7 && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp", 122, 0, "%s", "obj") )
+        if (!v7 && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp", 122, 0, "%s", "obj"))
             __debugbreak();
         numverts = brush->numverts;
         v7->verts = brush->verts;
         v7->nverts = numverts;
         v7->brush = brush;
-        if ( stype >= 31
+        if (stype >= 31
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
-                        124,
-                        0,
-                        "%s",
-                        "stype < SURF_TYPECOUNT") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
+                124,
+                0,
+                "%s",
+                "stype < SURF_TYPECOUNT"))
         {
             __debugbreak();
         }
@@ -801,37 +802,37 @@ gjk_brush_t * gjk_brush_t::create(
     }
     else
     {
-        Phys_Vec3ToNitrousVec(brush->mins, (phys_vec3 *)&aabb_max.y);
-        Phys_Vec3ToNitrousVec(brush->maxs, (phys_vec3 *)&v30);
-        v29 = aabb_max.y + v30;
-        v28 = aabb_max.z + v31;
-        v27 = aabb_max.w + v32;
-        v24 = aabb_max.y + v30;
-        v25 = aabb_max.z + v31;
-        v26 = aabb_max.w + v32;
-        v23 = 0.5 * (float)(aabb_max.y + v30);
-        center.w = 0.5 * (float)(aabb_max.z + v31);
-        center.z = 0.5 * (float)(aabb_max.w + v32);
-        v21[0] = v23;
-        v21[1] = center.w;
-        v21[2] = center.z;
-        v20 = v30 - aabb_max.y;
-        v19 = v31 - aabb_max.z;
-        v18 = v32 - aabb_max.w;
-        v15 = v30 - aabb_max.y;
-        v16 = v31 - aabb_max.z;
-        v17 = v32 - aabb_max.w;
-        v14 = 0.5 * (float)(v30 - aabb_max.y);
-        half_dims.w = 0.5 * (float)(v31 - aabb_max.z);
-        half_dims.z = 0.5 * (float)(v32 - aabb_max.w);
-        v11[0] = v14;
-        v11[1] = half_dims.w;
-        obj = (gjk_aabb_t *)LODWORD(half_dims.z);
-        v10 = gjk_aabb_t::create((const phys_vec3 *)v21, (const phys_vec3 *)v11, stype, allocator);
-        //gjk_base_t::set_contents(v10, brush->contents);
-        v10->set_contents(brush->contents);
-        v10->m_brush = brush;
-        return (gjk_brush_t *)v10;
+        Phys_Vec3ToNitrousVec(brush->mins, &aabb_min);
+        Phys_Vec3ToNitrousVec(brush->maxs, &aabb_max);
+        v30 = aabb_min.x + aabb_max.x;
+        v29 = aabb_min.y + aabb_max.y;
+        v28 = aabb_min.z + aabb_max.z;
+        v25 = aabb_min.x + aabb_max.x;
+        v26 = aabb_min.y + aabb_max.y;
+        v27 = aabb_min.z + aabb_max.z;
+        v24 = 0.5 * (float)(aabb_min.x + aabb_max.x);
+        v23 = 0.5 * (float)(aabb_min.y + aabb_max.y);
+        v22 = 0.5 * (float)(aabb_min.z + aabb_max.z);
+        center.x = v24;
+        center.y = v23;
+        center.z = v22;
+        v20 = aabb_max.x - aabb_min.x;
+        v19 = aabb_max.y - aabb_min.y;
+        v18 = aabb_max.z - aabb_min.z;
+        v15 = aabb_max.x - aabb_min.x;
+        v16 = aabb_max.y - aabb_min.y;
+        v17 = aabb_max.z - aabb_min.z;
+        v14 = 0.5 * (float)(aabb_max.x - aabb_min.x);
+        v13 = 0.5 * (float)(aabb_max.y - aabb_min.y);
+        v12 = 0.5 * (float)(aabb_max.z - aabb_min.z);
+        half_dims.x = v14;
+        half_dims.y = v13;
+        half_dims.z = v12;
+        obj = gjk_aabb_t::create(&center, &half_dims, stype, allocator);
+        //gjk_base_t::set_contents(obj, brush->contents);
+        obj->set_contents(brush->contents);
+        obj->m_brush = brush;
+        return (gjk_brush_t *)obj;
     }
 }
 
@@ -978,6 +979,7 @@ gjk_partition_t *__cdecl gjk_partition_t::create(const CollisionAabbTree *tree, 
             //v4 = obj;
             *obj = dummypart;
             obj->m_flags = 0;
+            v4 = obj;
         }
         else
         {
@@ -1271,11 +1273,11 @@ void gjk_double_sphere_t::get_feature(phys_contact_manifold *cman) const
     int j; // [esp-8h] [ebp-14h]
     const gjk_double_sphere_t *v17; // [esp-4h] [ebp-10h]
     //int v18; // [esp+0h] [ebp-Ch]
-    int i; // [esp+4h] [ebp-8h]
-    int retaddr; // [esp+Ch] [ebp+0h]
+    //int i; // [esp+4h] [ebp-8h]
+    //int retaddr; // [esp+Ch] [ebp+0h]
 
     //v18 = a2;
-    i = retaddr;
+    //i = retaddr;
     v17 = this;
     for ( j = 0; j < v17->m_count; ++j )
     {
@@ -1556,6 +1558,7 @@ gjk_cylinder_t *__cdecl gjk_cylinder_t::create(
             //ind = v9;
             new ((void *)v9) gjk_cylinder_t();
             obj = v9;
+            v8 = v9;
         }
         else
         {
@@ -1615,80 +1618,80 @@ void gjk_cylinder_t::support(
     unsigned int direction; // [esp-8h] [ebp-38h]
     float v18; // [esp-4h] [ebp-34h]
     int len; // [esp+0h] [ebp-30h]
-    float x; // [esp+4h] [ebp-2Ch] BYREF
-    float v_dir; // [esp+8h] [ebp-28h]
-    float z; // [esp+Ch] [ebp-24h]
-    const gjk_cylinder_t *v23; // [esp+20h] [ebp-10h]
-    //unsigned int v24[2]; // [esp+24h] [ebp-Ch] BYREF
+    phys_vec3 v20; // [esp+4h] [ebp-2Ch] OVERLAPPED BYREF
+    const gjk_cylinder_t *v21; // [esp+20h] [ebp-10h]
+    //_DWORD v22[2]; // [esp+24h] [ebp-Ch] BYREF
     //_UNKNOWN *retaddr; // [esp+30h] [ebp+0h]
     //
-    //v24[0] = a2;
-    //v24[1] = retaddr;
-    v23 = this;
-    phys_inv_multiply((phys_vec3 *)&x, &this->xform, v);
-    len = v23->direction;
-    if ( (unsigned int)len > 2
+    //v22[0] = a2;
+    //v22[1] = retaddr;
+    v21 = this;
+    phys_inv_multiply(&v20, &this->xform, v);
+    len = v21->direction;
+    if ((unsigned int)len > 2
         && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 34,
-                 "i >= 0 && i < 3",
-                 "") )
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
+            34,
+            "i >= 0 && i < 3",
+            ""))
     {
         __debugbreak();
     }
-    v18 = *(&x + len);
-    direction = v23->direction;
-    if ( direction > 2
+    v18 = *(&v20.x + len);
+    direction = v21->direction;
+    if (direction > 2
         && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 34,
-                 "i >= 0 && i < 3",
-                 "") )
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
+            34,
+            "i >= 0 && i < 3",
+            ""))
     {
         __debugbreak();
     }
-    *(&x + direction) = 0.0f;
-    v16 = Abs(&x);
-    if ( v16 <= 0.001 )
+    //*((_DWORD *)&v20.x + direction) = *(_DWORD *)&FLOAT_0_0;
+    v20[direction] = 0.0f;
+    v16 = Abs(&v20.x);
+    if (v16 <= 0.001)
     {
-        x = PHYS_ZERO_VEC.x;
-        v_dir = PHYS_ZERO_VEC.y;
-        z = PHYS_ZERO_VEC.z;
+        v20.x = PHYS_ZERO_VEC.x;
+        v20.y = PHYS_ZERO_VEC.y;
+        v20.z = PHYS_ZERO_VEC.z;
     }
     else
     {
         v15 = 1.0 / v16;
-        x = x * (float)(1.0 / v16);
-        v_dir = v_dir * (float)(1.0 / v16);
-        z = z * (float)(1.0 / v16);
+        v20.x = v20.x * (float)(1.0 / v16);
+        v20.y = v20.y * (float)(1.0 / v16);
+        v20.z = v20.z * (float)(1.0 / v16);
     }
-    if ( v18 < 0.0 )
+    if (v18 < 0.0)
         v14 = -1.0f;
     else
         v14 = 1.0f;
-    v13 = v23->direction;
-    if ( v13 > 2
+    v13 = v21->direction;
+    if (v13 > 2
         && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                 34,
-                 "i >= 0 && i < 3",
-                 "") )
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
+            34,
+            "i >= 0 && i < 3",
+            ""))
     {
         __debugbreak();
     }
-    *(&x + v13) = v14;
-    support_ind->x = x;
-    support_ind->y = v_dir;
-    support_ind->z = z;
-    //dims = gjk_cylinder_t::get_dims(v23, (int)v24, &v12);
-    dims = v23->get_dims(&v12);
-    v10 = x * dims->x;
-    v9 = v_dir * dims->y;
-    v8 = z * dims->z;
+    *(&v20.x + v13) = v14;
+    support_ind->x = v20.x;
+    support_ind->y = v20.y;
+    support_ind->z = v20.z;
+    //dims = gjk_cylinder_t::get_dims(v21, (int)v22, &v12);
+    dims = v21->get_dims(&v12);
+    v10 = v20.x * dims->x;
+    v9 = v20.y * dims->y;
+    v8 = v20.z * dims->z;
     v7.x = v10;
     v7.y = v9;
     v7.z = v8;
-    v5 = phys_full_multiply(&v6, &v23->xform, &v7);
+    //v5 = phys_full_multiply((int)v22, &v6, &v21->xform, &v7);
+    v5 = phys_full_multiply(&v6, &v21->xform, &v7);
     support_vert->x = v5->x;
     support_vert->y = v5->y;
     support_vert->z = v5->z;
@@ -3099,9 +3102,7 @@ void __cdecl create_gjk_geom(
             allocator->query_create_epilog(gjk_geom);
         }
     }
-    else if ( (char *)cent->nextState.solid != &cls.rankedServers[711].game[34]
-                 || cent->nextState.eType == 14
-                 || cent->nextState.eType == 16 )
+    else if (cent->nextState.solid != 0xFFFFFF || cent->nextState.eType == 14 || cent->nextState.eType == 16)
     {
         ClientDObj = Com_GetClientDObj(cent->nextState.number, localClientNum);
         create_gjk_dobj_geom(

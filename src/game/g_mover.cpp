@@ -45,9 +45,9 @@ mover_info_t *__cdecl get_mover_info(gentity_s *ent)
     while ( m_tree_root && ent != (gentity_s *)m_tree_root->m_avl_key )
     {
         if ( (unsigned int)ent >= m_tree_root->m_avl_key )
-            m_tree_root = m_tree_root->m_avl_node_info.m_right;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_right;
         else
-            m_tree_root = m_tree_root->m_avl_node_info.m_left;
+            m_tree_root = m_tree_root->m_avl_tree_node.m_left;
     }
     if ( m_tree_root )
         return (mover_info_t *)m_tree_root->m_data;

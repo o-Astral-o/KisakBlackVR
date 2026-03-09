@@ -1,6 +1,7 @@
 #include "physics_system.h"
 #include "physics_system_internal.h"
 #include "phys_assert.h"
+#include "phys_broad_phase.h"
 
 phys_assert_info pai_create_rbc_contact = { 0, 2, true };
 
@@ -213,7 +214,7 @@ rigid_body_constraint_contact *__cdecl phys_sys::get_rbc_contact(
 
     //v2 = rigid_body_pair_key::rigid_body_pair_key(&v4, b1, b2);
     //return phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::find(&g_physics_system->m_search_tree_rbc_contact, v2);
-    return g_physics_system->m_search_tree_rbc_contact.find(&v4);
+    return g_physics_system->m_search_tree_rbc_contact.find(v4);
 }
 
 void __cdecl phys_sys::fixup_wheel_constraints(rigid_body *const rb)
@@ -515,7 +516,7 @@ rigid_body *__cdecl phys_sys::create_rigid_body(int no_error)
     //                 &g_physics_system->m_list_rigid_body,
     //                 no_error,
     //                 "POOL OUT OF MEMORY, rigid_body, INCREASE phys_mem_info::m_num_rigid_body.");
-    g_physics_system->m_list_rigid_body.add(no_error, "POOL OUT OF MEMORY, rigid_body, INCREASE phys_mem_info::m_num_rigid_body.");
+    return g_physics_system->m_list_rigid_body.add(no_error, "POOL OUT OF MEMORY, rigid_body, INCREASE phys_mem_info::m_num_rigid_body.");
 }
 
 rigid_body_constraint_point *__cdecl phys_sys::create_rbc_point(
@@ -821,7 +822,7 @@ user_rigid_body *__cdecl phys_sys::create_user_rigid_body(int no_error)
     //                 &g_physics_system->m_list_user_rigid_body,
     //                 no_error,
     //                 "POOL OUT OF MEMORY, user_rigid_body, INCREASE phys_mem_info::m_num_user_rigid_body.");
-    g_physics_system->m_list_user_rigid_body.add(no_error, "POOL OUT OF MEMORY, user_rigid_body, INCREASE phys_mem_info::m_num_user_rigid_body.");
+    return g_physics_system->m_list_user_rigid_body.add(no_error, "POOL OUT OF MEMORY, user_rigid_body, INCREASE phys_mem_info::m_num_user_rigid_body.");
 }
 
 rigid_body_constraint_hinge *__cdecl phys_sys::create_rbc_hinge(
@@ -3345,7 +3346,7 @@ rigid_body_constraint_contact *__cdecl create(
     //rigid_body_pair_key::rigid_body_pair_key(&key, b1, b2);
     v6 = g_physics_system;
     //result = phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::find(&g_physics_system->m_search_tree_rbc_contact, &key);
-    result = g_physics_system->m_search_tree_rbc_contact.find(&key);
+    result = g_physics_system->m_search_tree_rbc_contact.find(key);
     if ( result )
         return result;
     p_m_list_rbc_contact = &v6->m_list_rbc_contact;
@@ -3368,7 +3369,7 @@ rigid_body_constraint_contact *__cdecl create(
             p_m_data->b1 = b1;
             p_m_data->b2 = b2;
             //phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::add(&g_physics_system->m_search_tree_rbc_contact, &key, p_m_data);
-            g_physics_system->m_search_tree_rbc_contact.add(&key, p_m_data);
+            g_physics_system->m_search_tree_rbc_contact.add(key, p_m_data);
             return p_m_data;
         }
     }

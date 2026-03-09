@@ -47,6 +47,12 @@ struct phys_vec3 // sizeof=0x10
         w = _w;
     }
 
+    // Dot product with another vector (ignores w)
+    float dot(const phys_vec3 &other) const
+    {
+        return x * other.x + y * other.y + z * other.z;
+    }
+
     inline float max_component() const // trash for the ai
     {
         float m = x > y ? x : y;
@@ -505,7 +511,7 @@ struct phys_link_list1 //<PhysObjUserData> // sizeof=0xC
                 if (i == this->m_last)
                 {
                     this->m_last = last_i;
-                    iassert(!last_i || last_i->get_next_link() == NULL);
+                    //iassert(!last_i || last_i->get_next_link() == NULL);
                     //if (last_i)
                     //{
                     //    if (last_i->m_next_link)
@@ -743,40 +749,40 @@ struct phys_simple_allocator//<phys_heap_gjk_cache_system_avl_tree::phys_gjk_cac
 //        phys_simple_allocator<gjk_polygon_cylinder_t> *this,
 //        gjk_polygon_cylinder_t *slot);
 
-struct phys_transient_allocator // sizeof=0x18
-{                                       // XREF: pulse_sum_constraint_solver/r
-    struct block_header // sizeof=0xC
-    {
-        unsigned int m_block_size;
-        unsigned int m_block_alignment;
-        phys_transient_allocator::block_header *m_next_block;
-    };
-    struct allocator_state // sizeof=0x10
-    {                                       // XREF: gjk_query_output/r
-        phys_transient_allocator::block_header *m_first_block;
-        char *m_cur;                        // XREF: pulse_sum_constraint_solver::execute_constraint_solver(rigid_body * const)+2B9/w
-        char *m_end;                        // XREF: pulse_sum_constraint_solver::execute_constraint_solver(rigid_body * const)+2CE/w
-        unsigned int m_total_memory_allocated;
-    };
-
-    phys_transient_allocator::block_header *m_first_block;
-    char *m_cur;                        // XREF: physics_system::time_step(float,bool)+14F/w
-    char *m_end;                        // XREF: physics_system::time_step(float,bool)+152/w
-    unsigned int m_total_memory_allocated;
-    minspec_read_write_mutex m_mutex;   // XREF: physics_system::time_step(float,bool)+158/w
-    void *m_slot_pool;                  // XREF: physics_system::time_step(float,bool)+15F/w
-
-    void *__thiscall allocate(
-        int size,
-        int alignment,
-        int no_error,
-        const char *error_msg);
-
-    void resize();
-    void reset();
-
-    void reset_to_state(const phys_transient_allocator::allocator_state *as);
-};
+//struct phys_transient_allocator // sizeof=0x18
+//{                                       // XREF: pulse_sum_constraint_solver/r
+//    struct block_header // sizeof=0xC
+//    {
+//        unsigned int m_block_size;
+//        unsigned int m_block_alignment;
+//        phys_transient_allocator::block_header *m_next_block;
+//    };
+//    struct allocator_state // sizeof=0x10
+//    {                                       // XREF: gjk_query_output/r
+//        phys_transient_allocator::block_header *m_first_block;
+//        char *m_cur;                        // XREF: pulse_sum_constraint_solver::execute_constraint_solver(rigid_body * const)+2B9/w
+//        char *m_end;                        // XREF: pulse_sum_constraint_solver::execute_constraint_solver(rigid_body * const)+2CE/w
+//        unsigned int m_total_memory_allocated;
+//    };
+//
+//    phys_transient_allocator::block_header *m_first_block;
+//    char *m_cur;                        // XREF: physics_system::time_step(float,bool)+14F/w
+//    char *m_end;                        // XREF: physics_system::time_step(float,bool)+152/w
+//    unsigned int m_total_memory_allocated;
+//    minspec_read_write_mutex m_mutex;   // XREF: physics_system::time_step(float,bool)+158/w
+//    void *m_slot_pool;                  // XREF: physics_system::time_step(float,bool)+15F/w
+//
+//    void *__thiscall allocate(
+//        int size,
+//        int alignment,
+//        int no_error,
+//        const char *error_msg);
+//
+//    void resize();
+//    void reset();
+//
+//    void reset_to_state(const phys_transient_allocator::allocator_state *as);
+//};
 
 struct phys_memory_heap // sizeof=0x10
 {                                                                             // XREF: phys_contact_manifold_process/r
@@ -858,7 +864,15 @@ public:
     {
         iassert(is_member(data));
 
-        *data = &this->m_slot_array[--this->m_alloc_count];
+        //*data = &this->m_slot_array[--this->m_alloc_count];
+
+        int idx = data - m_slot_array;
+        int last = --m_alloc_count;
+
+        if (idx != last)
+        {
+            m_slot_array[idx] = m_slot_array[last];
+        }
     }
 };
 
@@ -1767,7 +1781,7 @@ void make_rotate(
 //    float theta_factor,
 //    float max_rotation_radians);
 
-void make_rotate(phys_mat44 *m, const phys_vec3 *u, float ca, float sa);
+void __cdecl make_rotate(phys_mat44 &m, const phys_vec3 *u, float ca, float sa);
 //void __cdecl make_rotate(phys_mat44 *m, const phys_vec3 *u, float ca, float sa);
 
 void make_rotate(phys_mat44 *mat, const phys_vec3 *v1, const phys_vec3 *v2);

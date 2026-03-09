@@ -4,6 +4,7 @@
 #include <universal/com_files.h>
 #include <qcommon/common.h>
 #include <universal/com_memory.h>
+#include <database/db_registry.h>
 
 const char *s_constraintTypeNames[10] =
 {

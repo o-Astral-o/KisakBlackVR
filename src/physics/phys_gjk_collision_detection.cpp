@@ -107,7 +107,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
     }
     key.m_id1 = id1;
     key.m_id2 = id2;
-    gjk_ci = this->m_search_tree.find(&key);
+    gjk_ci = this->m_search_tree.find(key);
     //gjk_ci = phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
                          //&this->m_search_tree,
                          //&key);
@@ -190,7 +190,7 @@ phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall ph
                 //    &this->m_search_tree,
                 //    &key,
                 //    gjk_ci);
-                this->m_search_tree.add(&key, gjk_ci);
+                this->m_search_tree.add(key, gjk_ci);
                 gjk_ci->m_next_gjk_ci = this->m_list_head;
                 this->m_list_head = gjk_ci;
             }
@@ -302,7 +302,7 @@ void __thiscall bpei_database_t::update_database()
         {
             *prev_next = bpei->m_next_bpei;
             //phys_inplace_avl_tree<bpei_database_id,broad_phase_environment_info,broad_phase_environment_info::avl_tree_accessor>::remove(&this->m_bpei_map, &bpei->m_database_id);
-            this->m_bpei_map.remove(&bpei->m_database_id);
+            this->m_bpei_map.remove(bpei->m_database_id);
             //phys_simple_allocator<broad_phase_environment_info>::free(&this->m_bpei_allocator, bpei);
             this->m_bpei_allocator.free(bpei);
         }
@@ -529,7 +529,7 @@ broad_phase_environment_info *__thiscall bpei_database_t::get_bpei_mt(bpei_datab
     //minspec_read_write_mutex::ReadLock(&this->m_mutex);
     this->m_mutex.ReadLock();
     //bpei = phys_inplace_avl_tree<bpei_database_id, broad_phase_environment_info, broad_phase_environment_info::avl_tree_accessor>::find(&this->m_bpei_map, &database_id);
-    bpei = this->m_bpei_map.find(&database_id);
+    bpei = this->m_bpei_map.find(database_id);
     //minspec_read_write_mutex::ReadUnlock(&this->m_mutex);
     this->m_mutex.ReadUnlock();
     if (!bpei)
@@ -537,7 +537,7 @@ broad_phase_environment_info *__thiscall bpei_database_t::get_bpei_mt(bpei_datab
         //minspec_read_write_mutex::WriteLock(&this->m_mutex);
         this->m_mutex.WriteLock();
         //bpei = phys_inplace_avl_tree<bpei_database_id, broad_phase_environment_info, broad_phase_environment_info::avl_tree_accessor>::find(&this->m_bpei_map, &database_id);
-        bpei = this->m_bpei_map.find(&database_id);
+        bpei = this->m_bpei_map.find(database_id);
         if (!bpei)
         {
             bpei = bpei_database_t::create_bpei(database_id);
@@ -564,7 +564,7 @@ broad_phase_environment_info *__thiscall bpei_database_t::get_bpei(bpei_database
     broad_phase_environment_info *bpei; // [esp+160h] [ebp-4h]
 
     //bpei = phys_inplace_avl_tree<bpei_database_id,broad_phase_environment_info,broad_phase_environment_info::avl_tree_accessor>::find(&this->m_bpei_map, &database_id);
-    bpei = this->m_bpei_map.find(&database_id);
+    bpei = this->m_bpei_map.find(database_id);
     if ( !bpei )
     {
         //bpei = bpei_database_t::create_bpei(this, database_id);
@@ -591,7 +591,7 @@ broad_phase_environment_info *__thiscall bpei_database_t::create_bpei(bpei_datab
     //bpei = phys_simple_allocator<broad_phase_environment_info>::allocate(&this->m_bpei_allocator);
     bpei = this->m_bpei_allocator.allocate();
     //phys_inplace_avl_tree<bpei_database_id, broad_phase_environment_info, broad_phase_environment_info::avl_tree_accessor>::add(&this->m_bpei_map, &database_id, bpei);
-    this->m_bpei_map.add(&database_id, bpei);
+    this->m_bpei_map.add(database_id, bpei);
     bpei->m_data = 0;
     //bpei->m_gjk_geom_id = gjk_unique_id_database_t::get_unique_id(&g_gjk_unique_id_database);
     bpei->m_gjk_geom_id = g_gjk_unique_id_database.get_unique_id();
@@ -2373,9 +2373,9 @@ bool gjk_aabb_t::is_walkable(
         {
             __debugbreak();
         }
-        (v14) = -*((_DWORD *)&hit_point->x + j);
-        (v13) = -*((_DWORD *)&aabb_min.x + j);
-        (v12) = -*((_DWORD *)&up->x + j);
+        (v14) = -*((int *)&hit_point->x + j);
+        (v13) = -*((int *)&aabb_min.x + j);
+        (v12) = -*((int *)&up->x + j);
         v11 = v14 >= (float)(0.99900001 * v13) || (float)(0.99900001 * v14) >= v13;
         if (v11 && v12 >= 0.69999999)
         {
@@ -2482,9 +2482,9 @@ bool    is_walkable(
     furthest_walk_normal = 0.0f;
     for (i = 0; i < 3; ++i)
     {
-        (v26) =  -*((_DWORD *)&hit_point_loc->x + i) ;
-        (mins) = -LODWORD(brush->mins[i]) ;
-        (v24) =  -*((_DWORD *)&up_loc->x + i) ;
+        (v26) =  -*((int *)&hit_point_loc->x + i) ;
+        (mins) = -(brush->mins[i]) ;
+        (v24) =  -*((int *)&up_loc->x + i) ;
         v23 = 0.99900001;
         v22 = v26 >= (float)(0.99900001 * mins) || (float)(v23 * v26) >= mins;
         if (v22 && v24 >= 0.69999999)
@@ -2558,6 +2558,7 @@ bool    is_walkable(
                 const phys_vec3 *hit_point_loc,
                 const phys_vec3 *up_loc)
 {
+#if 0
     char v5; // [esp-12h] [ebp-82h]
     bool v6; // [esp-11h] [ebp-81h]
     float v7; // [esp-Ch] [ebp-7Ch]
@@ -2632,6 +2633,79 @@ bool    is_walkable(
         }
     }
     return furthest_walk_normal >= 0.69999999;
+#else // aislop
+    float furthest_dist = -100000.0f;
+    float furthest_walk_normal = 0.0f;
+
+    for (int i = 0; i < partition->triCount; ++i)
+    {
+        int triIndex = partition->firstTri + i;
+        uint16_t *indices = &cm.triIndices[3 * triIndex];
+
+        const float *v0 = cm.verts[indices[0]];
+        const float *v1 = cm.verts[indices[1]];
+        const float *v2 = cm.verts[indices[2]];
+
+        // edge vectors
+        float e1x = v0[0] - v1[0];
+        float e1y = v0[1] - v1[1];
+        float e1z = v0[2] - v1[2];
+
+        float e2x = v0[0] - v2[0];
+        float e2y = v0[1] - v2[1];
+        float e2z = v0[2] - v2[2];
+
+        // cross product (triangle normal * area*2)
+        float nx = e2y * e1z - e2z * e1y;
+        float ny = e2z * e1x - e2x * e1z;
+        float nz = e2x * e1y - e2y * e1x;
+
+        // length of normal
+        float normalLen = sqrtf(nx * nx + ny * ny + nz * nz);
+        if (normalLen <= 0.0001f)
+            continue;
+
+        // normalize
+        float invLen = 1.0f / normalLen;
+        nx *= invLen;
+        ny *= invLen;
+        nz *= invLen;
+
+        // hit point plane distance
+        float hitDist =
+            hit_point_loc->x * nx +
+            hit_point_loc->y * ny +
+            hit_point_loc->z * nz;
+
+        // triangle plane distance
+        float planeDist =
+            v0[0] * nx +
+            v0[1] * ny +
+            v0[2] * nz;
+
+        // slope vs up vector
+        float walkNormal =
+            nx * up_loc->x +
+            ny * up_loc->y +
+            nz * up_loc->z;
+
+        bool onPlane =
+            hitDist >= 0.999f * planeDist ||
+            0.999f * hitDist >= planeDist;
+
+        if (onPlane && walkNormal >= 0.7f)
+            return true;
+
+        float dist = hitDist - planeDist;
+        if (dist > furthest_dist)
+        {
+            furthest_dist = dist;
+            furthest_walk_normal = walkNormal;
+        }
+    }
+
+    return furthest_walk_normal >= 0.7f;
+#endif
 }
 
 #if 0
@@ -3529,174 +3603,174 @@ bool    is_walkable(const gjk_trace_output_t *gto)
     return gto->m_gi->m_cg->is_walkable(&hit_loc, &up_loc);
 }
 
-phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall phys_simple_allocator<phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal>::allocate()
-{
-    char *slot; // [esp+30h] [ebp-4h]
-
-    slot = PMM_ALLOC(0x90u, 0x10u);
-    if ( !slot )
-        return 0;
-    ++this->m_count;
-    //phys_gjk_cache_info::phys_gjk_cache_info((phys_gjk_cache_info *)slot);
-    new (slot) phys_gjk_cache_info;
-    return (phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *)slot;
-}
-
-phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
-                const phys_gjk_geom_id_pair_key *key)
-{
-    bool v3; // [esp+0h] [ebp-18h]
-    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *cur; // [esp+14h] [ebp-4h]
-
-    cur = this->m_tree_root;
-    while ( cur )
-    {
-        if ( key->m_id1 == cur->m_key.m_id1 && key->m_id2 == cur->m_key.m_id2 )
-            break;
-        if ( key->m_id1 == cur->m_key.m_id1 )
-            v3 = key->m_id2 < cur->m_key.m_id2;
-        else
-            v3 = key->m_id1 < cur->m_key.m_id1;
-        if ( v3 )
-            cur = cur->m_avl_tree_node.m_left;
-        else
-            cur = cur->m_avl_tree_node.m_right;
-    }
-    return cur;
-}
-
-void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::add(
-                const phys_gjk_geom_id_pair_key *key,
-                phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *data)
-{
-    unsigned int m_id2; // edx
-    bool v4; // [esp+4h] [ebp-180h]
-    bool v5; // [esp+8h] [ebp-17Ch]
-    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal **m_node; // [esp+74h] [ebp-110h]
-    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *root; // [esp+78h] [ebp-10Ch]
-    phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::stack_item *next_item; // [esp+7Ch] [ebp-108h]
-    phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::stack_item *cur_item; // [esp+80h] [ebp-104h]
-    phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::stack_item the_stack[32]; // [esp+84h] [ebp-100h] BYREF
-
-    cur_item = the_stack;
-    the_stack[0].m_node = &this->m_tree_root;
-    while ( *cur_item->m_node )
-    {
-        root = *cur_item->m_node;
-        if ( &cur_item[1] - the_stack >= 32
-            && _tlAssert(
-                     "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                     103,
-                     "cur_item + 1 - the_stack < 32",
-                     "") )
-        {
-            __debugbreak();
-        }
-        next_item = cur_item + 1;
-        if ( key->m_id1 == root->m_key.m_id1 )
-            v5 = key->m_id2 < root->m_key.m_id2;
-        else
-            v5 = key->m_id1 < root->m_key.m_id1;
-        if ( v5 )
-        {
-            cur_item->m_child = -1;
-            next_item->m_node = &root->m_avl_tree_node.m_left;
-        }
-        else
-        {
-            if ( key->m_id1 == root->m_key.m_id1 )
-                v4 = root->m_key.m_id2 < key->m_id2;
-            else
-                v4 = root->m_key.m_id1 < key->m_id1;
-            if ( !v4 )
-            {
-                if ( _tlAssert(
-                             "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                             112,
-                             "key > accessor::get_avl_key(root)",
-                             "") )
-                {
-                    __debugbreak();
-                }
-            }
-            cur_item->m_child = 1;
-            next_item->m_node = &root->m_avl_tree_node.m_right;
-        }
-        cur_item = next_item;
-    }
-    *cur_item->m_node = data;
-    data->m_avl_tree_node.m_left = 0;
-    data->m_avl_tree_node.m_right = 0;
-    data->m_avl_tree_node.m_balance = 0;
-    m_id2 = key->m_id2;
-    data->m_key.m_id1 = key->m_id1;
-    data->m_key.m_id2 = m_id2;
-    do
-    {
-        if ( cur_item <= the_stack )
-            break;
-        --cur_item;
-        m_node = cur_item->m_node;
-        (*cur_item->m_node)->m_avl_tree_node.m_balance += cur_item->m_child;
-        if ( (*m_node)->m_avl_tree_node.m_balance == -2 )
-        {
-            if ( (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_balance != -1
-                && (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_balance != 1
-                && _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                         130,
-                         "accessor::get_avl_node(accessor::get_avl_node(root)->m_left)->m_balance == -1 || accessor::get_avl_node(acc"
-                         "essor::get_avl_node(root)->m_left)->m_balance == 1",
-                         "") )
-            {
-                __debugbreak();
-            }
-            if ( (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_balance == 1 )
-                phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_left(
-                    &(*m_node)->m_avl_tree_node.m_left);
-            phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_right(
-                m_node);
-            if ( (*m_node)->m_avl_tree_node.m_balance
-                && _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                         134,
-                         "accessor::get_avl_node(root)->m_balance == 0",
-                         "") )
-            {
-                __debugbreak();
-            }
-        }
-        else if ( (*m_node)->m_avl_tree_node.m_balance == 2 )
-        {
-            if ( (*m_node)->m_avl_tree_node.m_right->m_avl_tree_node.m_balance != -1
-                && (*m_node)->m_avl_tree_node.m_right->m_avl_tree_node.m_balance != 1
-                && _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                         138,
-                         "accessor::get_avl_node(accessor::get_avl_node(root)->m_right)->m_balance == -1 || accessor::get_avl_node(ac"
-                         "cessor::get_avl_node(root)->m_right)->m_balance == 1",
-                         "") )
-            {
-                __debugbreak();
-            }
-            if ( (*m_node)->m_avl_tree_node.m_right->m_avl_tree_node.m_balance == -1 )
-                phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_right(
-                    &(*m_node)->m_avl_tree_node.m_right);
-            phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_left(
-                m_node);
-            if ( (*m_node)->m_avl_tree_node.m_balance
-                && _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                         142,
-                         "accessor::get_avl_node(root)->m_balance == 0",
-                         "") )
-            {
-                __debugbreak();
-            }
-        }
-    }
-    while ( (*m_node)->m_avl_tree_node.m_balance );
-}
+//phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall phys_simple_allocator<phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal>::allocate()
+//{
+//    char *slot; // [esp+30h] [ebp-4h]
+//
+//    slot = PMM_ALLOC(0x90u, 0x10u);
+//    if ( !slot )
+//        return 0;
+//    ++this->m_count;
+//    //phys_gjk_cache_info::phys_gjk_cache_info((phys_gjk_cache_info *)slot);
+//    new (slot) phys_gjk_cache_info;
+//    return (phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *)slot;
+//}
+//
+//phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
+//                const phys_gjk_geom_id_pair_key *key)
+//{
+//    bool v3; // [esp+0h] [ebp-18h]
+//    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *cur; // [esp+14h] [ebp-4h]
+//
+//    cur = this->m_tree_root;
+//    while ( cur )
+//    {
+//        if ( key->m_id1 == cur->m_key.m_id1 && key->m_id2 == cur->m_key.m_id2 )
+//            break;
+//        if ( key->m_id1 == cur->m_key.m_id1 )
+//            v3 = key->m_id2 < cur->m_key.m_id2;
+//        else
+//            v3 = key->m_id1 < cur->m_key.m_id1;
+//        if ( v3 )
+//            cur = cur->m_avl_tree_node.m_left;
+//        else
+//            cur = cur->m_avl_tree_node.m_right;
+//    }
+//    return cur;
+//}
+//
+//void __thiscall phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::add(
+//                const phys_gjk_geom_id_pair_key *key,
+//                phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *data)
+//{
+//    unsigned int m_id2; // edx
+//    bool v4; // [esp+4h] [ebp-180h]
+//    bool v5; // [esp+8h] [ebp-17Ch]
+//    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal **m_node; // [esp+74h] [ebp-110h]
+//    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *root; // [esp+78h] [ebp-10Ch]
+//    phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::stack_item *next_item; // [esp+7Ch] [ebp-108h]
+//    phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::stack_item *cur_item; // [esp+80h] [ebp-104h]
+//    phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::stack_item the_stack[32]; // [esp+84h] [ebp-100h] BYREF
+//
+//    cur_item = the_stack;
+//    the_stack[0].m_node = &this->m_tree_root;
+//    while ( *cur_item->m_node )
+//    {
+//        root = *cur_item->m_node;
+//        if ( &cur_item[1] - the_stack >= 32
+//            && _tlAssert(
+//                     "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
+//                     103,
+//                     "cur_item + 1 - the_stack < 32",
+//                     "") )
+//        {
+//            __debugbreak();
+//        }
+//        next_item = cur_item + 1;
+//        if ( key->m_id1 == root->m_key.m_id1 )
+//            v5 = key->m_id2 < root->m_key.m_id2;
+//        else
+//            v5 = key->m_id1 < root->m_key.m_id1;
+//        if ( v5 )
+//        {
+//            cur_item->m_child = -1;
+//            next_item->m_node = &root->m_avl_tree_node.m_left;
+//        }
+//        else
+//        {
+//            if ( key->m_id1 == root->m_key.m_id1 )
+//                v4 = root->m_key.m_id2 < key->m_id2;
+//            else
+//                v4 = root->m_key.m_id1 < key->m_id1;
+//            if ( !v4 )
+//            {
+//                if ( _tlAssert(
+//                             "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
+//                             112,
+//                             "key > accessor::get_avl_key(root)",
+//                             "") )
+//                {
+//                    __debugbreak();
+//                }
+//            }
+//            cur_item->m_child = 1;
+//            next_item->m_node = &root->m_avl_tree_node.m_right;
+//        }
+//        cur_item = next_item;
+//    }
+//    *cur_item->m_node = data;
+//    data->m_avl_tree_node.m_left = 0;
+//    data->m_avl_tree_node.m_right = 0;
+//    data->m_avl_tree_node.m_balance = 0;
+//    m_id2 = key->m_id2;
+//    data->m_key.m_id1 = key->m_id1;
+//    data->m_key.m_id2 = m_id2;
+//    do
+//    {
+//        if ( cur_item <= the_stack )
+//            break;
+//        --cur_item;
+//        m_node = cur_item->m_node;
+//        (*cur_item->m_node)->m_avl_tree_node.m_balance += cur_item->m_child;
+//        if ( (*m_node)->m_avl_tree_node.m_balance == -2 )
+//        {
+//            if ( (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_balance != -1
+//                && (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_balance != 1
+//                && _tlAssert(
+//                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
+//                         130,
+//                         "accessor::get_avl_node(accessor::get_avl_node(root)->m_left)->m_balance == -1 || accessor::get_avl_node(acc"
+//                         "essor::get_avl_node(root)->m_left)->m_balance == 1",
+//                         "") )
+//            {
+//                __debugbreak();
+//            }
+//            if ( (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_balance == 1 )
+//                phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_left(
+//                    &(*m_node)->m_avl_tree_node.m_left);
+//            phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_right(
+//                m_node);
+//            if ( (*m_node)->m_avl_tree_node.m_balance
+//                && _tlAssert(
+//                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
+//                         134,
+//                         "accessor::get_avl_node(root)->m_balance == 0",
+//                         "") )
+//            {
+//                __debugbreak();
+//            }
+//        }
+//        else if ( (*m_node)->m_avl_tree_node.m_balance == 2 )
+//        {
+//            if ( (*m_node)->m_avl_tree_node.m_right->m_avl_tree_node.m_balance != -1
+//                && (*m_node)->m_avl_tree_node.m_right->m_avl_tree_node.m_balance != 1
+//                && _tlAssert(
+//                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
+//                         138,
+//                         "accessor::get_avl_node(accessor::get_avl_node(root)->m_right)->m_balance == -1 || accessor::get_avl_node(ac"
+//                         "cessor::get_avl_node(root)->m_right)->m_balance == 1",
+//                         "") )
+//            {
+//                __debugbreak();
+//            }
+//            if ( (*m_node)->m_avl_tree_node.m_right->m_avl_tree_node.m_balance == -1 )
+//                phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_right(
+//                    &(*m_node)->m_avl_tree_node.m_right);
+//            phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::rotate_left(
+//                m_node);
+//            if ( (*m_node)->m_avl_tree_node.m_balance
+//                && _tlAssert(
+//                         "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
+//                         142,
+//                         "accessor::get_avl_node(root)->m_balance == 0",
+//                         "") )
+//            {
+//                __debugbreak();
+//            }
+//        }
+//    }
+//    while ( (*m_node)->m_avl_tree_node.m_balance );
+//}
 
 phys_gjk_cache_info::phys_gjk_cache_info()
 {

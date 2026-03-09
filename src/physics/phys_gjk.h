@@ -4,6 +4,7 @@
 #include "phys_traverse.h"
 #include "phys_colgeom.h"
 #include <tl/tl_system.h>
+#include "phys_transient_allocator.h"
 
 struct pmove_t;
 struct centity_s;
@@ -846,7 +847,22 @@ struct generic_avl_map_node_t // sizeof=0x14
 {
     void *m_data;
     unsigned int m_avl_key;
-    phys_inplace_avl_tree_node<generic_avl_map_node_t> m_avl_node_info;
+    phys_inplace_avl_tree_node<generic_avl_map_node_t> m_avl_tree_node;
+
+    static inline bool less(unsigned int key, const generic_avl_map_node_t *node)
+    {
+        return key < node->m_avl_key;
+    }
+
+    static inline bool less(const generic_avl_map_node_t *node, unsigned int key)
+    {
+        return node->m_avl_key < key;
+    }
+
+    static inline bool less(const generic_avl_map_node_t *a, const generic_avl_map_node_t *b)
+    {
+        return a->m_avl_key < b->m_avl_key;
+    }
 };
 
 struct __declspec(align(4)) gjkcc_info_database_t // sizeof=0x10

@@ -1944,9 +1944,9 @@ void __cdecl CG_DestructibleBreakPiece(
     float v19; // [esp+34h] [ebp-D8h]
     float power; // [esp+38h] [ebp-D4h]
     PhysConstraint *data; // [esp+50h] [ebp-BCh]
-    float forward; // [esp+54h] [ebp-B8h] BYREF
-    float v23; // [esp+58h] [ebp-B4h]
-    float v24; // [esp+5Ch] [ebp-B0h]
+    float forward[3]; // [esp+54h] [ebp-B8h] BYREF
+    //float v23; // [esp+58h] [ebp-B4h]
+    //float v24; // [esp+5Ch] [ebp-B0h]
     float v25[6]; // [esp+60h] [ebp-ACh] BYREF
     float angles[3]; // [esp+78h] [ebp-94h] BYREF
     const PhysConstraint *c; // [esp+84h] [ebp-88h]
@@ -2050,11 +2050,11 @@ void __cdecl CG_DestructibleBreakPiece(
             angles[0] = self->pose.angles[0] + piece->physConstraints->data[0].scale[0];
             angles[1] = self->pose.angles[1] + data->scale[1];
             angles[2] = self->pose.angles[2] + data->scale[2];
-            AngleVectors(angles, &forward, 0, 0);
+            AngleVectors(angles, forward, 0, 0);
             v15 = data->power;
-            forward = v15 * forward;
-            v23 = v15 * v23;
-            v24 = v15 * v24;
+            forward[0] = v15 * forward[0];
+            forward[1] = v15 * forward[1];
+            forward[2] = v15 * forward[2];
             v12 = G_flrand(-1.0, 1.0);
             v13 = G_flrand(-1.0, 1.0);
             v14 = G_flrand(-1.0, 1.0);
@@ -2070,7 +2070,7 @@ void __cdecl CG_DestructibleBreakPiece(
                                                                                                                                  pieceIndex,
                                                                                                                                  piece->stages[stage].showBone,
                                                                                                                                  v25,
-                                                                                                                                 &forward,
+                                                                                                                                 forward,
                                                                                                                                  mod);
         }
         else

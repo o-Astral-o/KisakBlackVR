@@ -3,6 +3,7 @@
 #include <universal/com_memory.h>
 #include <universal/com_files.h>
 #include <qcommon/common.h>
+#include <database/db_registry.h>
 
 cspField_t physPresetFields[19] =
 {

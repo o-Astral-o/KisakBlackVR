@@ -1,5 +1,6 @@
 #pragma once
 #include "phys_local.h"
+#include <tl/tl_system.h>
 
 volatile struct tagged_void_pointer_t // sizeof=0x8
 {                                       // XREF: phys_slot_pool/r
