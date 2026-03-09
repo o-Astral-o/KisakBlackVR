@@ -509,6 +509,8 @@ long double __cdecl Sys_BenchmarkGHz()
     }
     SetThreadPriority(thread, priority);
     return 0.1010328 / ((double)minTime * msecPerRawTimerTick);
+#else
+    return 2.4; // swag
 #endif
 }
 

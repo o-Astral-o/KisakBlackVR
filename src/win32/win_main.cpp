@@ -488,8 +488,11 @@ void __cdecl Sys_Init()
     Cmd_AddCommandInternal("net_listen", Sys_Listen_f, &Sys_Listen_f_VAR);
     Cmd_AddCommandInternal("net_connect", Sys_Connect_f, &Sys_Connect_f_VAR);
     osversion.dwOSVersionInfoSize = 148;
+#pragma warning(push)
+#pragma warning(disable : 4996) // cannot call GetVersionExA nowadays without this warning suppression
     if ( !GetVersionExA(&osversion) )
         Sys_Error((char*)"Couldn't get OS info");
+#pragma warning(pop)
     if ( osversion.dwMajorVersion < 4 )
     {
         BuildDisplayNameR = Com_GetBuildDisplayNameR();
@@ -813,7 +816,7 @@ char sys_cmdline[1024];
 char g_open_automate_benchmark[260];
 int __stdcall WinMain(HINSTANCE__ *hInstance, HINSTANCE__ *hPrevInstance, char *lpCmdLine, int nCmdShow)
 {
-    int v5; // eax
+    char *v5; // eax
     //jpeg_decompress_struct *SCRIPT_DEBUGGER_SMOKE_TEST_SUCCESS_EXIT_CODE; // [esp+0h] [ebp-4h]
 
     if ( !StartingDedicatedServer(lpCmdLine) && CheckRemoteSession() )
@@ -829,7 +832,7 @@ int __stdcall WinMain(HINSTANCE__ *hInstance, HINSTANCE__ *hPrevInstance, char *
     track_init();
     Win_InitLocalization();
     if ( !I_strnicmp(lpCmdLine, "allowdupe", 9) && lpCmdLine[9] <= 32
-        || (strstr(lpCmdLine, "g_connectpaths 3"), v5)
+        || (v5 = strstr(lpCmdLine, "g_connectpaths 3"), v5)
         || (Sys_GetSemaphoreFileName(), Sys_CheckCrashOrRerun()) )
     {
         s_nosnd = I_stristr(lpCmdLine, "nosnd") != 0;

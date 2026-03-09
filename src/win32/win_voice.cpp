@@ -14,8 +14,6 @@ const dvar_t *winvoice_mic_mute;
 const dvar_t *winvoice_mic_reclevel;
 const dvar_t *winvoice_save_voice;
 const dvar_t *winvoice_mic_scaler;
-const dvar_t *AAAAAAAAAAAAAAAA;
-const dvar_t *AAAAAAAAAAAAAAAA;
 
 char old_rec_source[256];
 int mic_old_reclevel;

@@ -1,3 +1,5 @@
+#include <Windows.h>
+
 #include "win_gamepad.h"
 #include <universal/assertive.h>
 #include <cmath>

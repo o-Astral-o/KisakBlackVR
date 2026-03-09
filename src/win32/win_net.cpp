@@ -251,6 +251,7 @@ int __cdecl Sys_StringToAdr(const char *s, netadr_t *a)
 
 int __cdecl Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
 {
+#if 0
     char *v3; // eax
     int ret; // [esp+14h] [ebp-4h]
 
@@ -270,10 +271,109 @@ int __cdecl Sys_GetPacket(netadr_t *net_from, msg_t *net_message)
         net_message->cursize = ret;
         return 1;
     }
+#else //kcod4
+    const char *v2; // eax
+    const char *v3; // eax
+    sockaddr from; // [esp+8h] [ebp-28h] BYREF
+    int err; // [esp+1Ch] [ebp-14h]
+    int ret; // [esp+20h] [ebp-10h]
+    int protocol; // [esp+24h] [ebp-Ch]
+    int fromlen; // [esp+28h] [ebp-8h] BYREF
+    unsigned int net_socket; // [esp+2Ch] [ebp-4h]
+
+    //for (protocol = 0; protocol < 2; ++protocol)
+    {
+        //if (protocol)
+        //    net_socket = ipx_socket;
+        //else
+            net_socket = ip_socket;
+        if (net_socket)
+        {
+            fromlen = 16;
+            ret = recvfrom(net_socket, (char *)net_message->data, net_message->maxsize, 0, &from, &fromlen);
+            if (ret == -1)
+            {
+                err = WSAGetLastError();
+                if (err != 10035 && err != 10054)
+                {
+                    v2 = NET_ErrorString();
+                    Com_PrintError(16, "NET_GetPacket: %s\n", v2);
+                }
+            }
+            else
+            {
+                if (net_socket == ip_socket)
+                {
+                    *(_DWORD *)&from.sa_data[6] = 0;
+                    *(_DWORD *)&from.sa_data[10] = 0;
+                }
+                //if (usingSocks && net_socket == ip_socket && !memcmp(&from, &socksRelayAddr, fromlen))
+                //{
+                //    if (ret < 10
+                //        || *net_message->data
+                //        || net_message->data[1]
+                //        || net_message->data[2]
+                //        || net_message->data[3] != 1)
+                //    {
+                //        continue;
+                //    }
+                //    net_from->type = NA_IP;
+                //    *(_DWORD *)net_from->ip = *((_DWORD *)net_message->data + 1);
+                //    net_from->port = *(net_message->data + 4);
+                //    net_message->readcount = 10;
+                //}
+                //else
+                {
+                    SockadrToNetadr(&from, net_from);
+                    net_message->readcount = 0;
+                }
+                if (ret != net_message->maxsize)
+                {
+                    net_message->cursize = ret;
+                    return 1;
+                }
+                v3 = NET_AdrToString(*net_from);
+                Com_Printf(16, "Oversize packet from %s\n", v3);
+            }
+        }
+    }
+    return 0;
+#endif
+}
+
+void NetadrToSockadr(netadr_t *a, struct sockaddr *s) {
+    memset(s, 0, sizeof(*s));
+
+    if (a->type == NA_BROADCAST) {
+        ((struct sockaddr_in *)s)->sin_family = AF_INET;
+        ((struct sockaddr_in *)s)->sin_port = a->port;
+        ((struct sockaddr_in *)s)->sin_addr.s_addr = INADDR_BROADCAST;
+    }
+    else if (a->type == NA_IP) {
+        ((struct sockaddr_in *)s)->sin_family = AF_INET;
+        ((struct sockaddr_in *)s)->sin_addr.s_addr = *(int *)&a->ip;
+        ((struct sockaddr_in *)s)->sin_port = a->port;
+    }
+    // LWSS: remove IPX, noone uses this
+//#ifndef _XBOX
+//	else if( a->type == NA_IPX ) {
+//		((struct sockaddr_ipx *)s)->sa_family = AF_IPX;
+//		memcpy( ((struct sockaddr_ipx *)s)->sa_netnum, &a->ipx[0], 4 );
+//		memcpy( ((struct sockaddr_ipx *)s)->sa_nodenum, &a->ipx[4], 6 );
+//		((struct sockaddr_ipx *)s)->sa_socket = a->port;
+//	}
+//	else if( a->type == NA_BROADCAST_IPX ) {
+//		((struct sockaddr_ipx *)s)->sa_family = AF_IPX;
+//		memset( ((struct sockaddr_ipx *)s)->sa_netnum, 0, 4 );
+//		memset( ((struct sockaddr_ipx *)s)->sa_nodenum, 0xff, 6 );
+//		((struct sockaddr_ipx *)s)->sa_socket = a->port;
+//	}
+//#endif //_XBOX
 }
 
 char __cdecl Sys_SendPacket(unsigned int length, unsigned __int8 *data, netadr_t to)
 {
+#if 0
     const char *v4; // eax
     char *v5; // eax
     int err; // [esp+0h] [ebp-Ch]
@@ -308,6 +408,63 @@ char __cdecl Sys_SendPacket(unsigned int length, unsigned __int8 *data, netadr_t
     {
         return 1;
     }
+#else //kcod4
+    const char *v4; // eax
+    int err; // [esp+0h] [ebp-20h]
+    sockaddr addr; // [esp+4h] [ebp-1Ch] BYREF
+    int ret; // [esp+14h] [ebp-Ch]
+    unsigned int net_socket; // [esp+18h] [ebp-8h]
+
+    net_socket = 0;
+    switch (to.type)
+    {
+    case NA_BROADCAST:
+        net_socket = ip_socket;
+        break;
+    case NA_IP:
+        net_socket = ip_socket;
+        break;
+        // LWSS: remove IPX, noone uses this
+            //case NA_IPX:
+            //	net_socket = ipx_socket;
+            //	break;
+            //case NA_BROADCAST_IPX:
+            //	net_socket = ipx_socket;
+            //	break;
+    default:
+        Com_Error(ERR_FATAL, "Sys_SendPacket: bad address type");
+        break;
+    }
+    if (!net_socket)
+        return 1;
+    NetadrToSockadr(&to, &addr);
+    //if (usingSocks && to.type == NA_IP)
+    //{
+    //    socksBuf[0] = 0;
+    //    socksBuf[1] = 0;
+    //    socksBuf[2] = 0;
+    //    socksBuf[3] = 1;
+    //    *(_DWORD *)&socksBuf[4] = *(_DWORD *)&addr.sa_data[2];
+    //    *(_WORD *)&socksBuf[8] = *(_WORD *)addr.sa_data;
+    //    memcpy((unsigned __int8 *)&socksBuf[10], data, length);
+    //    ret = sendto(net_socket, socksBuf, length + 10, 0, &socksRelayAddr, 16);
+    //}
+    //else
+    {
+        ret = sendto(net_socket, (const char *)data, length, 0, &addr, 16);
+    }
+    if (ret != -1)
+        return 1;
+    err = WSAGetLastError();
+    if (err == 10035)
+        return 1;
+    //	if (err == 10049 && (to.type == NA_BROADCAST || to.type == NA_BROADCAST_IPX))
+    if (err == 10049 && (to.type == NA_BROADCAST))
+        return 1;
+    v4 = NET_ErrorString();
+    Com_PrintError(16, "Sys_SendPacket: %s\n", v4);
+    return 0;
+#endif
 }
 
 bool __cdecl Sys_IsLANAddress_IgnoreSubnet(netadr_t adr)
@@ -359,6 +516,7 @@ void __cdecl NET_OpenIP()
 
 int __cdecl dwPlatformInit(bdNetStartParams *params)
 {
+#ifdef KISAK_LIVE
     char addrString[16]; // [esp+40h] [ebp-134h] BYREF
     bdInetAddr firstAddr; // [esp+50h] [ebp-124h] BYREF
     unsigned int v4; // [esp+54h] [ebp-120h]
@@ -420,6 +578,9 @@ int __cdecl dwPlatformInit(bdNetStartParams *params)
     }
     //bdInetAddr::~bdInetAddr(&bindAddr);
     return 0;
+#else
+    return 0;
+#endif
 }
 
 void __cdecl NET_SocketPool_Init()

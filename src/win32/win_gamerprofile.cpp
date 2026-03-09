@@ -1,3 +1,5 @@
+#include <Windows.h>
+
 #include "win_gamerprofile.h"
 #include <universal/dvar.h>
 #include <universal/assertive.h>
@@ -45,20 +47,6 @@ const char *commonXProfileDvarList[1];
 
 extern dvar_t *sv_botUseFriendNames; // KISAKTODO: remove later
 
-void __cdecl ResetCreateAClassNames(int controllerIndex)
-{
-    SetDvarFromLocString(controllerIndex, "customclass1",   (char*)"CLASS_SLOT1_CAPS");
-    SetDvarFromLocString(controllerIndex, "customclass2",   (char*)"CLASS_SLOT2_CAPS");
-    SetDvarFromLocString(controllerIndex, "customclass3",   (char*)"CLASS_SLOT3_CAPS");
-    SetDvarFromLocString(controllerIndex, "customclass4",   (char*)"CLASS_SLOT4_CAPS");
-    SetDvarFromLocString(controllerIndex, "customclass5",   (char*)"CLASS_SLOT5_CAPS");
-    SetDvarFromLocString(controllerIndex, "prestigeclass1", (char*)"CLASS_PRESTIGE1");
-    SetDvarFromLocString(controllerIndex, "prestigeclass2", (char*)"CLASS_PRESTIGE2");
-    SetDvarFromLocString(controllerIndex, "prestigeclass3", (char*)"CLASS_PRESTIGE3");
-    SetDvarFromLocString(controllerIndex, "prestigeclass4", (char*)"CLASS_PRESTIGE4");
-    SetDvarFromLocString(controllerIndex, "prestigeclass5", (char*)"CLASS_PRESTIGE5");
-}
-
 void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText)
 {
     char *localizedText; // [esp+0h] [ebp-4h]
@@ -78,6 +66,20 @@ void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, cha
         Dvar_SetCommand(dvarName, localizedText);
     else
         Dvar_SetCommand(dvarName, preLocalizedText);
+}
+
+void __cdecl ResetCreateAClassNames(int controllerIndex)
+{
+    SetDvarFromLocString(controllerIndex, "customclass1", (char *)"CLASS_SLOT1_CAPS");
+    SetDvarFromLocString(controllerIndex, "customclass2", (char *)"CLASS_SLOT2_CAPS");
+    SetDvarFromLocString(controllerIndex, "customclass3", (char *)"CLASS_SLOT3_CAPS");
+    SetDvarFromLocString(controllerIndex, "customclass4", (char *)"CLASS_SLOT4_CAPS");
+    SetDvarFromLocString(controllerIndex, "customclass5", (char *)"CLASS_SLOT5_CAPS");
+    SetDvarFromLocString(controllerIndex, "prestigeclass1", (char *)"CLASS_PRESTIGE1");
+    SetDvarFromLocString(controllerIndex, "prestigeclass2", (char *)"CLASS_PRESTIGE2");
+    SetDvarFromLocString(controllerIndex, "prestigeclass3", (char *)"CLASS_PRESTIGE3");
+    SetDvarFromLocString(controllerIndex, "prestigeclass4", (char *)"CLASS_PRESTIGE4");
+    SetDvarFromLocString(controllerIndex, "prestigeclass5", (char *)"CLASS_PRESTIGE5");
 }
 
 GamerSettingState *__cdecl GamerProfile_GetProfileSettings(int controllerIndex)
@@ -333,20 +335,6 @@ void __cdecl SetDvarFromLocString_0(int controllerIndex, const char *dvarName, c
         Dvar_SetCommand(dvarName, localizedText);
     else
         Dvar_SetCommand(dvarName, preLocalizedText);
-}
-
-void __cdecl ResetCreateAClassNames(int controllerIndex)
-{
-    SetDvarFromLocString_0(controllerIndex, "customclass1",   (char*)"CLASS_SLOT1_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "customclass2",   (char*)"CLASS_SLOT2_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "customclass3",   (char*)"CLASS_SLOT3_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "customclass4",   (char*)"CLASS_SLOT4_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "customclass5",   (char*)"CLASS_SLOT5_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "prestigeclass1", (char*)"CLASS_PRESTIGE1_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "prestigeclass2", (char*)"CLASS_PRESTIGE2_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "prestigeclass3", (char*)"CLASS_PRESTIGE3_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "prestigeclass4", (char*)"CLASS_PRESTIGE4_CAPS");
-    SetDvarFromLocString_0(controllerIndex, "prestigeclass5", (char*)"CLASS_PRESTIGE5_CAPS");
 }
 
 void __cdecl GamerProfile_UpdateProfileFromDvars(int controllerIndex, profileWriteState_t profileWriteState)

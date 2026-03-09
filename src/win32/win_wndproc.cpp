@@ -7,6 +7,7 @@
 #include <client/cl_keys.h>
 #include <universal/com_memory.h>
 #include <cgame_mp/cg_newDraw_mp.h>
+#include <gfx_d3d/rb_backend.h>
 
 unsigned __int8 virtualKeyConvert[146][2] =
 {
@@ -259,13 +260,13 @@ int __stdcall MainWndProc(HWND__ *hWnd, UINT uMsg, signed int wParam, LPARAM lPa
     {
         if ( wParam <= 0 )
         {
-            Sys_QueEvent(time, SE_KEY, 205, 1, 0, 0);
-            Sys_QueEvent(time, SE_KEY, 205, 0, 0, 0);
+            Sys_QueEvent(g_msgTime, SE_KEY, 205, 1, 0, 0);
+            Sys_QueEvent(g_msgTime, SE_KEY, 205, 0, 0, 0);
         }
         else
         {
-            Sys_QueEvent(time, SE_KEY, 206, 1, 0, 0);
-            Sys_QueEvent(time, SE_KEY, 206, 0, 0, 0);
+            Sys_QueEvent(g_msgTime, SE_KEY, 206, 1, 0, 0);
+            Sys_QueEvent(g_msgTime, SE_KEY, 206, 0, 0, 0);
         }
         return DefWindowProcA(hWnd, uMsg, wParam, lParam);
     }
@@ -298,13 +299,13 @@ int __stdcall MainWndProc(HWND__ *hWnd, UINT uMsg, signed int wParam, LPARAM lPa
                 case 0x20Au:
                     if ( SHIWORD(wParam) <= 0 )
                     {
-                        Sys_QueEvent(time, SE_KEY, 205, 1, 0, 0);
-                        Sys_QueEvent(time, SE_KEY, 205, 0, 0, 0);
+                        Sys_QueEvent(g_msgTime, SE_KEY, 205, 1, 0, 0);
+                        Sys_QueEvent(g_msgTime, SE_KEY, 205, 0, 0, 0);
                     }
                     else
                     {
-                        Sys_QueEvent(time, SE_KEY, 206, 1, 0, 0);
-                        Sys_QueEvent(time, SE_KEY, 206, 0, 0, 0);
+                        Sys_QueEvent(g_msgTime, SE_KEY, 206, 1, 0, 0);
+                        Sys_QueEvent(g_msgTime, SE_KEY, 206, 0, 0, 0);
                     }
                     return DefWindowProcA(hWnd, uMsg, wParam, lParam);
                 case 0x218u:
@@ -331,11 +332,11 @@ int __stdcall MainWndProc(HWND__ *hWnd, UINT uMsg, signed int wParam, LPARAM lPa
                 case 0x105u:
                     code = MapKey(lParam, wParam);
                     if ( code )
-                        Sys_QueEvent(time, SE_KEY, code, 0, 0, 0);
+                        Sys_QueEvent(g_msgTime, SE_KEY, code, 0, 0, 0);
                     result = 0;
                     break;
                 case 0x102u:
-                    Sys_QueEvent(time, SE_CHAR, wParam, 0, 0, 0);
+                    Sys_QueEvent(g_msgTime, SE_CHAR, wParam, 0, 0, 0);
                     return DefWindowProcA(hWnd, uMsg, wParam, lParam);
                 case 0x104u:
                     if ( wParam != 13 )
@@ -364,7 +365,7 @@ int __stdcall MainWndProc(HWND__ *hWnd, UINT uMsg, signed int wParam, LPARAM lPa
 LABEL_60:
         code = MapKey(lParam, wParam);
         if ( code )
-            Sys_QueEvent(time, SE_KEY, code, 1, 0, 0);
+            Sys_QueEvent(g_msgTime, SE_KEY, code, 1, 0, 0);
         return 0;
     }
     else

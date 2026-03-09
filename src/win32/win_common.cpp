@@ -13,7 +13,7 @@ _RTL_CRITICAL_SECTION s_criticalSection[75];
 
 void __cdecl Sys_Mkdir(const char *path)
 {
-    mkdir(path);
+    _mkdir(path);
 }
 
 char *__cdecl Sys_Cwd()
