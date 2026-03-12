@@ -247,9 +247,6 @@ struct scrVmDebugPub_t // sizeof=0x120C
     int dummy;
 };
 
-void __cdecl Scr_AddStruct();
-void __cdecl Scr_ResetTimeout();
-void __cdecl RemoveRefToValue(scriptInstance_t inst, int type, VariableUnion u);
 void __cdecl Scr_ClearErrorMessage(scriptInstance_t inst);
 void __cdecl Scr_Init(scriptInstance_t inst);
 void __cdecl Scr_VM_Init(scriptInstance_t inst);
@@ -329,7 +326,6 @@ void __cdecl VM_TrimStack(
 void __cdecl Scr_CancelWaittill(scriptInstance_t inst, unsigned int startLocalId);
 unsigned __int16 __cdecl Scr_ExecThread(scriptInstance_t inst, int handle, unsigned int paramcount);
 unsigned int __cdecl VM_Execute(scriptInstance_t inst, unsigned int localId, char *pos, unsigned int paramcount);
-void __cdecl RemoveRefToValue(scriptInstance_t inst, VariableValue *value);
 unsigned int __cdecl Scr_GetLocalVar(scriptInstance_t inst, const char *pos);
 unsigned __int16 __cdecl Scr_ReadUnsignedShort(const char **pos);
 const char *__cdecl Scr_ReadCodePos(scriptInstance_t inst, const char **pos);

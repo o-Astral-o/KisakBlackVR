@@ -41,49 +41,6 @@ const dvar_t *sv_clientside;
 
 unsigned int __cdecl VM_Execute_0(scriptInstance_t inst);
 
-void __cdecl Scr_AddStruct()
-{
-    Scr_AddStruct(SCRIPTINSTANCE_SERVER);
-}
-
-void __cdecl Scr_ResetTimeout()
-{
-    Scr_ResetTimeout(SCRIPTINSTANCE_SERVER);
-}
-
-void __cdecl RemoveRefToValue(scriptInstance_t inst, int type, VariableUnion u)
-{
-    unsigned int value; // [esp+4h] [ebp-4h]
-
-    value = type - 1;
-    if ( (unsigned int)(type - 1) < 4 )
-    {
-        if ( type == 1 )
-        {
-            RemoveRefToObject(inst, u.stringValue);
-        }
-        else if ( value > 2 )
-        {
-            if ( type != 4
-                && !Assert_MyHandler(
-                            "c:\\projects_pc\\cod\\codsrc\\src\\clientscript\\scr_variable.h",
-                            446,
-                            0,
-                            "%s\n\t(value) = %i",
-                            "(value == VAR_VECTOR - VAR_BEGIN_REF)",
-                            value) )
-            {
-                __debugbreak();
-            }
-            RemoveRefToVector(inst, u.vectorValue);
-        }
-        else
-        {
-            SL_RemoveRefToString(inst, u.stringValue);
-        }
-    }
-}
-
 void __cdecl Scr_ClearErrorMessage(scriptInstance_t inst)
 {
     gScrVarPub[inst].error_message = 0;
@@ -2140,11 +2097,6 @@ unsigned int __cdecl VM_Execute(scriptInstance_t inst, unsigned int localId, cha
     }
 }
 
-void __cdecl RemoveRefToValue(scriptInstance_t inst, VariableValue *value)
-{
-    RemoveRefToValue(inst, value->type, value->u);
-}
-
 unsigned int __cdecl Scr_GetLocalVar(scriptInstance_t inst, const char *pos)
 {
     return gScrVmPub[inst].localVars[-*(unsigned __int8 *)pos];
@@ -3408,11 +3360,11 @@ void __cdecl Scr_AddInt(int value, scriptInstance_t inst)
     gScrVmPub[inst].top->u.intValue = value;
 }
 
-void __cdecl Scr_AddFloat(VariableUnion value, scriptInstance_t inst)
+void __cdecl Scr_AddFloat(float value, scriptInstance_t inst)
 {
     IncInParam(inst);
-    gScrVmPub[inst].top->type = 5;
-    *(float *)&gScrVmPub[inst].top->u.intValue = value.floatValue;
+    gScrVmPub[inst].top->type = VAR_FLOAT;
+    gScrVmPub[inst].top->u.floatValue = value;
 }
 
 void __cdecl Scr_AddAnim(scr_anim_s value, scriptInstance_t inst)

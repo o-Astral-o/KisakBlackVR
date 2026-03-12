@@ -26,7 +26,7 @@ static const float vehicleGunnerADSLerpTimeMS = 300.0f;
 static const float vehicleADSLerpTimeMS = 500.0f;
 static const float trace_dist = 1000.0f;
 
-const char *impactTypeNames[15 + 1] =
+static const char *impactTypeNames[15 + 1] =
 {
   "bad allocation",
   "bullet_small",
@@ -5256,13 +5256,13 @@ void __cdecl BG_CalcVehicleTurretWeaponPosOffset(float positionFrac, const Weapo
     outOffset[2] = powf(offsetADS_Z - offsetZ, ofs) * adjustedFrac + offsetZ;
 }
 
-WeaponVariantDef *__cdecl BG_LoadWeaponVariantDef(char *name)
+WeaponVariantDef *__cdecl BG_LoadWeaponVariantDef(const char *name)
 {
     bool v2; // [esp+4h] [ebp-8h]
 
     v2 = fs_gameDirVar && *(_BYTE *)fs_gameDirVar->current.integer;
     if ( v2 || !useFastFile->current.enabled )
-        return BG_LoadWeaponVariantDef_LoadObj(name);
+        return BG_LoadWeaponVariantDef_LoadObj((char*)name);
     else
         return BG_LoadWeaponVariantDef_FastFile(name);
 }

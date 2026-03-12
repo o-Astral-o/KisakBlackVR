@@ -35,4 +35,3 @@ int __cdecl XModelGetContents(const XModel *model);
 bool __cdecl XModelHasCollmap(const XModel *model);
 PhysGeomList *__cdecl XModelGetCollmap(const XModel *model, int collMapIndex);
 PhysGeomList *__cdecl XModelGetCollmapForBoneIndex(const XModel *model, int boneIndex);
-int __cdecl XModelGetBoneIndex(const XModel *model, unsigned int name, unsigned __int8 *index);

@@ -15,11 +15,6 @@ void R_RegisterSkyboxModel()
     }
 }
 
-void __cdecl R_RegisterSkyboxModel(char *xmodelName)
-{
-    g_skyboxModel = R_RegisterModel(xmodelName);
-}
-
 void __cdecl R_ClearSkyboxModel()
 {
     g_skyboxModel = 0;

@@ -1455,9 +1455,6 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\md2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\md4.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\md5.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1476,25 +1473,13 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\sha1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\sha2\sha224.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\sha2\sha256.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\sha2\sha384.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\sha2\sha512.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\tiger.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\whirl\whirl.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\whirl\whirltab.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\mac\f9\f9_done.c">
@@ -1818,30 +1803,6 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\f8\f8_test_mode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_decrypt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_done.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_encrypt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_getiv.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_process.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_setiv.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_start.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_test.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\ofb\ofb_decrypt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1998,36 +1959,6 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\asn1\der\utf8\der_length_utf8_string.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_decrypt_key.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_encrypt_key.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_export.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_free.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_import.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_make_key.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_shared_secret.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_sign_hash.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_verify_hash.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_verify_key.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ecc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2071,30 +2002,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ecc_verify_hash.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_is_valid_idx.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_map.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_mul2add.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_mulmod.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_mulmod_timing.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_points.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_projective_add_point.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_projective_dbl_point.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\katja\katja_decrypt_key.c">
@@ -2182,12 +2089,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\rng_make_prng.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\sober128.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\sober128tab.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\sprng.c">
@@ -3117,222 +3018,6 @@
     <ClCompile Include="src\binklib\dx9rad3d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\libjpeg\ansi2knr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\cdjpeg.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\cjpeg.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\ckconfig.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\djpeg.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\example.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jaricom.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcapimin.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcapistd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcarith.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jccoefct.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jccolor.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcdctmgr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jchuff.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcinit.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcmainct.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcmarker.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcmaster.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcomapi.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcparam.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcprepct.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jcsample.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jctrans.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdapimin.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdapistd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdarith.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdatadst.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdatasrc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdcoefct.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdcolor.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jddctmgr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdhuff.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdinput.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdmainct.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdmarker.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdmaster.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdmerge.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdpostct.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdsample.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jdtrans.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jerror.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jfdctflt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jfdctfst.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jfdctint.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jidctflt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jidctfst.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jidctint.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jmemansi.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jmemdos.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jmemmac.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jmemmgr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jmemname.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jmemnobs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jpegtran.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jquant1.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jquant2.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\jutils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdbmp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdcolmap.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdgif.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdjpgcom.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdppm.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdrle.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdswitch.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\rdtarga.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\transupp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\wrbmp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\wrgif.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\wrjpgcom.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\wrppm.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\wrrle.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libjpeg\wrtarga.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\jpeg\jcapimin.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3462,12 +3147,6 @@
     <ClCompile Include="src\jpeg\jmemmgr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\jpeg\jmemname.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\jpeg\jmemnobs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\jpeg\jquant1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3480,22 +3159,448 @@
     <ClCompile Include="src\game\actor_function_table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\libs\vpx\src\vpx_codec.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\vpx\src\vpx_decoder.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\vpx\src\vpx_decoder_compat.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\vpx\src\vpx_encoder.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\libs\vpx\src\vpx_image.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DemonWare\bdCore\bdSocket\bdAddr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bncore.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_error.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_mp_invmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_mp_montgomery_reduce.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_s_mp_mul_digs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_s_mp_mul_high_digs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_s_mp_sqr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_2expt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_abs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_add.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_addmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_add_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_and.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_clamp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_clear.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_clear_multi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cmp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cmp_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cmp_mag.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cnt_lsb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_copy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_count_bits.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_2d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_dr_is_modulus.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_dr_reduce.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_dr_setup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_export.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exptmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exptmod_fast.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_expt_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_expt_d_ex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exteuclid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_fread.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_fwrite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_gcd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_get_int.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_get_long.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_get_long_long.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_grow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_import.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_copy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_multi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_set.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_set_int.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_size.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_invmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_invmod_slow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_is_square.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_jacobi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_karatsuba_mul.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_karatsuba_sqr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_lcm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_lshd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mod_2d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mod_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_montgomery_calc_normalization.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_montgomery_reduce.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_montgomery_setup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mulmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul_2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul_2d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_neg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_n_root.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_n_root_ex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_or.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_fermat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_is_divisible.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_is_prime.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_miller_rabin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_next_prime.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_rabin_miller_trials.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_random_ex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_radix_size.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_radix_smap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_rand.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_read_radix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_read_signed_bin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_read_unsigned_bin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k_l.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k_setup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k_setup_l.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_is_2k.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_is_2k_l.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_setup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_rshd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set_int.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set_long.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set_long_long.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_shrink.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_signed_bin_size.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqrmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqrt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqrtmod_prime.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_submod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sub_d.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toom_mul.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toom_sqr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toradix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toradix_n.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_signed_bin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_signed_bin_n.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_unsigned_bin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_unsigned_bin_n.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_unsigned_bin_size.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_xor.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_zero.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_prime_tab.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_reverse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_add.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_exptmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_mul_digs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_mul_high_digs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_sqr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_sub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_decrypt_key.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_encrypt_key.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_export.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_free.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_import.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_make_key.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_shared_secret.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_sign_hash.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_verify_hash.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\dsa\dsa_verify_key.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_is_valid_idx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_map.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_mul2add.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_mulmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_mulmod_timing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_points.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_projective_add_point.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\libs\libtomcrypt-1.17\src\pk\ecc\ltc_ecc_projective_dbl_point.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\g_bsp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -5903,39 +6008,6 @@
     <ClInclude Include="src\binklib\radbase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\libjpeg\cderror.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\cdjpeg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jdct.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jerror.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jinclude.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jmemsys.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jmorecfg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jpegint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jpeglib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\jversion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libjpeg\transupp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\jpeg\jchuff.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -5981,53 +6053,21 @@
     <ClInclude Include="DemonWare\bdCore\bdCrypto\bdHashTiger192.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\libs\vpx\internal\vpx_codec_internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vp8.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vp8cx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vp8dx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vp8e.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_codec.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_codec_impl_bottom.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_codec_impl_top.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_decoder_compat.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_encoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_image.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libs\vpx\vpx_integer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\database\database.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="src\CubeMapGenLib\resource.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <ClInclude Include="src\libs\libtommath-1.0\tommath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\libtommath-1.0\tommath_class.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\libtommath-1.0\tommath_private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libs\libtommath-1.0\tommath_superclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\libjpeg\jmemdosa.asm">

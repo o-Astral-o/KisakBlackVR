@@ -3628,3 +3628,10 @@ void __cdecl Vec2NormalizeFast(float *v)
     *v = *v * invLength;
     v[1] = v[1] * invLength;
 }
+
+float Q_fabs(float f)
+{
+    int tmp = *(int *)&f;
+    tmp &= 0x7FFFFFFF;
+    return *(float *)&tmp;
+}

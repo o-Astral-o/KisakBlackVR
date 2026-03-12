@@ -55,7 +55,7 @@ HunkUser *__cdecl Hunk_UserDefaultInit(
                 const char *name,
                 int type);
 void __cdecl Hunk_UserDefaultReset(HunkUserDefault *_user);
-void __cdecl Hunk_UserDefaultDestroy(HunkUser *_user);
+void __cdecl Hunk_UserDefaultDestroy(HunkUserDefault *_user);
 int __cdecl Hunk_UserDefaultAlloc(HunkUserDefault *_user, unsigned int size, int alignment, const char *name);
 void __cdecl Hunk_UserDefaultFree(HunkUser *user, void *ptr);
 void __cdecl Hunk_UserStartup();

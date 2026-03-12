@@ -80,6 +80,5 @@ void __cdecl CScr_GetTeamName(centity_s *cent, const cent_field_s *pField);
 team_t __cdecl GetTeam(centity_s *cent);
 unsigned __int16 __cdecl CScr_GetFootTag(eFoot foot);
 void __cdecl CScr_PlayDogstepSound(int localClientNum, centity_s *cent, eFoot foot);
-int __cdecl GetField(char *i, int size);
 
 extern cscr_mp_data_t cg_scr_mp_data;

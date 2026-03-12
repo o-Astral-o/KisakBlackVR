@@ -247,6 +247,13 @@ void __thiscall rigid_body_constraint_point::set(
   this->m_b2_r_loc.z = b2_r_loc->z;
 }
 
+void rigid_body_constraint_point::epilog_vel_constaint(float __formal)
+{
+    this->m_stress = this->m_ps_cache_list[1].m_pulse_sum * this->m_ps_cache_list[1].m_pulse_sum
+        + this->m_ps_cache_list[0].m_pulse_sum * this->m_ps_cache_list[0].m_pulse_sum
+        + this->m_ps_cache_list[2].m_pulse_sum * this->m_ps_cache_list[2].m_pulse_sum;
+}
+
 //void __thiscall rigid_body_constraint_point::epilog_vel_constraint(float __formal)
 //{
 //  this->m_stress = this->m_ps_cache_list[1].m_pulse_sum * this->m_ps_cache_list[1].m_pulse_sum

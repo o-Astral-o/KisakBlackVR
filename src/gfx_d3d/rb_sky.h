@@ -18,8 +18,6 @@ struct SunFlareDynamic // sizeof=0x2C
     int hitNum;
 };
 
-double __cdecl R_UpdateOverTime(float fCurrent, float fGoal, int frametime);
-GfxVertex *__cdecl RB_SetTessQuad(GfxColor color);
 unsigned int __cdecl RB_CalcSunSpriteSamples();
 void __cdecl RB_DrawSun(unsigned int localClientNum);
 void __cdecl RB_DrawSunQuerySprite(SunFlareDynamic *sunFlare);

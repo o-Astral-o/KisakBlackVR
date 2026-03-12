@@ -18,3 +18,5 @@ int __cdecl mixerGetRecordSource(char *srcName);
 int __cdecl mixerSetRecordSource(char *SrcName);
 int __cdecl mixerSetMicrophoneMute(unsigned __int8 bMute);
 int __cdecl Live_GetClientNumForXuid(const SessionData_s *session, unsigned __int64 xuid);
+
+extern float voice_current_scaler;

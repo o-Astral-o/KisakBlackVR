@@ -49,3 +49,5 @@ extern const dvar_t *sys_sysMB;
 extern const dvar_t *sys_gpu;
 extern const dvar_t *sys_configSum;
 extern const dvar_t *sys_SSE;
+
+extern bool g_allowMature;

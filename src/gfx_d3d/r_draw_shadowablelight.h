@@ -25,7 +25,7 @@ enum GfxLightType : __int32
 // local variable allocation has failed, the output may be wrong!
 void    R_SetLightProperties(
                 GfxCmdBufSourceState *source,
-                const GfxLight *light,
+                GfxLight *light,
                 const GfxLightDef *def,
                 LightHasShadowMap hasShadowMap,
                 float spotShadowFade);

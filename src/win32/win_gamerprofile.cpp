@@ -45,9 +45,9 @@ const char *mpDvarList[1];
 const char *nonResetMPDvarList[1];
 const char *commonXProfileDvarList[1];
 
-extern dvar_t *sv_botUseFriendNames; // KISAKTODO: remove later
+extern const dvar_t *sv_botUseFriendNames; // KISAKTODO: remove later
 
-void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText)
+static void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText)
 {
     char *localizedText; // [esp+0h] [ebp-4h]
 
@@ -68,7 +68,7 @@ void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, cha
         Dvar_SetCommand(dvarName, preLocalizedText);
 }
 
-void __cdecl ResetCreateAClassNames(int controllerIndex)
+static void __cdecl ResetCreateAClassNames(int controllerIndex)
 {
     SetDvarFromLocString(controllerIndex, "customclass1", (char *)"CLASS_SLOT1_CAPS");
     SetDvarFromLocString(controllerIndex, "customclass2", (char *)"CLASS_SLOT2_CAPS");

@@ -502,7 +502,7 @@ unsigned int __cdecl FindArrayVariableIndex(scriptInstance_t inst, unsigned int 
 unsigned int __cdecl FindVariable(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue);
 unsigned int __cdecl FindObjectVariable(scriptInstance_t inst, unsigned int parentId, unsigned int id);
 unsigned int __cdecl GetArrayVariableIndex(scriptInstance_t inst, unsigned int parentId, unsigned int unsignedValue);
-unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, int parentId, int name);
+unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, unsigned int parentId, int name);
 VariableValue __cdecl Scr_FindVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name);
 unsigned int __cdecl Scr_FindAllVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int *names);
 void __cdecl ClearVariableField(scriptInstance_t inst, unsigned int parentId, unsigned int name, VariableValue *value);

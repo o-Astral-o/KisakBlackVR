@@ -2244,6 +2244,13 @@ int __cdecl NodeVisCacheEntry(int i, int j)
     return j + g_path.actualNodeCount * i;
 }
 
+int ExpandedNodeVisCacheEntry(int i, int j)
+{
+    if (i <= j && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2040, 0, "%s", "i > j"))
+        __debugbreak();
+    return j + g_path.actualNodeCount * (i - 1);
+}
+
 bool __cdecl Path_ExpandedNodeVisible(const pathnode_t *node0, const pathnode_t *node1)
 {
     int entry; // [esp+4h] [ebp-Ch]
@@ -2289,13 +2296,6 @@ bool __cdecl Path_ExpandedNodeVisible(const pathnode_t *node0, const pathnode_t 
         entry = ExpandedNodeVisCacheEntry(nodeIndex0, nodeIndex1);
     }
     return gameWorldCurrent->path.pathVis && ((1 << (entry & 7)) & gameWorldCurrent->path.pathVis[entry >> 3]) != 0;
-}
-
-int __cdecl ExpandedNodeVisCacheEntry(int i, int j)
-{
-    if ( i <= j && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2040, 0, "%s", "i > j") )
-        __debugbreak();
-    return j + g_path.actualNodeCount * (i - 1);
 }
 
 pathnode_t *__cdecl Path_NearestNode(

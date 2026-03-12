@@ -1,13 +1,12 @@
 #include "decode.h"
 #include <qcommon/common.h>
 #include <speex/speex.h>
+#include "encode.h"
 
 void *g_decoder;
 int g_decode_frame_size;
 int g_current_decode_bandwidth_setting;
 SpeexBits decodeBits;
-
-int g_encoder_samplerate = 8000;
 
 char __cdecl Decode_Init(int bandwidthEnum)
 {

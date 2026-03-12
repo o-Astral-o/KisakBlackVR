@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs\libtomcrypt-1.17\src\headers;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs\libtomcrypt-1.17\src\headers;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs\libtommath-1.0;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs\libvpx-1.5.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\libs\libvpx-1.5.0;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\steam\redistributable_bin;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\binklib;C:\Users\M1911\Documents\kisak-COD\blops\kisakblack\src\nvapi;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,8 +84,9 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>steam_api.lib;binkw32.lib;nvapi.lib;d3dx9d.lib;d3d9.lib;ws2_32.lib;dxguid.lib;dsound.lib;winmm.lib;xinput.lib;xapobase.lib;dxerr.lib;libvpx.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -376,6 +377,7 @@
     <ClCompile Include="src\game\bullet.cpp" />
     <ClCompile Include="src\game\enthandle.cpp" />
     <ClCompile Include="src\game\g_actor_prone.cpp" />
+    <ClCompile Include="src\game\g_bsp.cpp" />
     <ClCompile Include="src\game\g_client_fields.cpp" />
     <ClCompile Include="src\game\g_debug.cpp" />
     <ClCompile Include="src\game\g_helicopter1.cpp" />
@@ -640,8 +642,6 @@
     <ClCompile Include="src\jpeg\jidctred.c" />
     <ClCompile Include="src\jpeg\jmemansi.c" />
     <ClCompile Include="src\jpeg\jmemmgr.c" />
-    <ClCompile Include="src\jpeg\jmemname.c" />
-    <ClCompile Include="src\jpeg\jmemnobs.c" />
     <ClCompile Include="src\jpeg\jquant1.c" />
     <ClCompile Include="src\jpeg\jquant2.c" />
     <ClCompile Include="src\jpeg\jutils.c" />
@@ -703,7 +703,6 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\helper\hash_memory.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\helper\hash_memory_multi.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\md2.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\md4.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\md5.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\rmd128.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\hashes\rmd160.c" />
@@ -820,14 +819,6 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\f8\f8_setiv.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\f8\f8_start.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\f8\f8_test_mode.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_decrypt.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_done.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_encrypt.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_getiv.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_process.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_setiv.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_start.c" />
-    <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\lrw\lrw_test.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\ofb\ofb_decrypt.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\ofb\ofb_done.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\modes\ofb\ofb_encrypt.c" />
@@ -944,11 +935,134 @@
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\rng_make_prng.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\sprng.c" />
     <ClCompile Include="src\libs\libtomcrypt-1.17\src\prngs\yarrow.c" />
-    <ClCompile Include="src\libs\vpx\src\vpx_codec.c" />
-    <ClCompile Include="src\libs\vpx\src\vpx_decoder.c" />
-    <ClCompile Include="src\libs\vpx\src\vpx_decoder_compat.c" />
-    <ClCompile Include="src\libs\vpx\src\vpx_encoder.c" />
-    <ClCompile Include="src\libs\vpx\src\vpx_image.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bncore.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_error.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_mp_invmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_mp_montgomery_reduce.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_s_mp_mul_digs.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_s_mp_mul_high_digs.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_fast_s_mp_sqr.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_2expt.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_abs.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_add.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_addmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_add_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_and.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_clamp.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_clear.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_clear_multi.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cmp.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cmp_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cmp_mag.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_cnt_lsb.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_copy.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_count_bits.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_2.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_2d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_3.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_div_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_dr_is_modulus.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_dr_reduce.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_dr_setup.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exch.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_export.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exptmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exptmod_fast.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_expt_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_expt_d_ex.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_exteuclid.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_fread.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_fwrite.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_gcd.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_get_int.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_get_long.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_get_long_long.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_grow.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_import.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_copy.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_multi.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_set.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_set_int.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_init_size.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_invmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_invmod_slow.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_is_square.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_jacobi.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_karatsuba_mul.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_karatsuba_sqr.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_lcm.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_lshd.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mod_2d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mod_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_montgomery_calc_normalization.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_montgomery_reduce.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_montgomery_setup.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mulmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul_2.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul_2d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_mul_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_neg.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_n_root.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_n_root_ex.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_or.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_fermat.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_is_divisible.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_is_prime.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_miller_rabin.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_next_prime.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_rabin_miller_trials.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_prime_random_ex.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_radix_size.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_radix_smap.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_rand.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_read_radix.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_read_signed_bin.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_read_unsigned_bin.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k_l.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k_setup.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_2k_setup_l.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_is_2k.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_is_2k_l.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_reduce_setup.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_rshd.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set_int.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set_long.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_set_long_long.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_shrink.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_signed_bin_size.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqr.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqrmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqrt.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sqrtmod_prime.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sub.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_submod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_sub_d.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toom_mul.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toom_sqr.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toradix.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_toradix_n.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_signed_bin.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_signed_bin_n.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_unsigned_bin.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_to_unsigned_bin_n.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_unsigned_bin_size.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_xor.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_mp_zero.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_prime_tab.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_reverse.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_add.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_exptmod.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_mul_digs.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_mul_high_digs.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_sqr.c" />
+    <ClCompile Include="src\libs\libtommath-1.0\bn_s_mp_sub.c" />
     <ClCompile Include="src\live\live.cpp" />
     <ClCompile Include="src\live\live_anticheat.cpp" />
     <ClCompile Include="src\live\live_clans.cpp" />
@@ -1734,19 +1848,10 @@
     <ClInclude Include="src\libs\libtomcrypt-1.17\src\headers\tomcrypt_pk.h" />
     <ClInclude Include="src\libs\libtomcrypt-1.17\src\headers\tomcrypt_pkcs.h" />
     <ClInclude Include="src\libs\libtomcrypt-1.17\src\headers\tomcrypt_prng.h" />
-    <ClInclude Include="src\libs\vpx\internal\vpx_codec_internal.h" />
-    <ClInclude Include="src\libs\vpx\vp8.h" />
-    <ClInclude Include="src\libs\vpx\vp8cx.h" />
-    <ClInclude Include="src\libs\vpx\vp8dx.h" />
-    <ClInclude Include="src\libs\vpx\vp8e.h" />
-    <ClInclude Include="src\libs\vpx\vpx_codec.h" />
-    <ClInclude Include="src\libs\vpx\vpx_codec_impl_bottom.h" />
-    <ClInclude Include="src\libs\vpx\vpx_codec_impl_top.h" />
-    <ClInclude Include="src\libs\vpx\vpx_decoder.h" />
-    <ClInclude Include="src\libs\vpx\vpx_decoder_compat.h" />
-    <ClInclude Include="src\libs\vpx\vpx_encoder.h" />
-    <ClInclude Include="src\libs\vpx\vpx_image.h" />
-    <ClInclude Include="src\libs\vpx\vpx_integer.h" />
+    <ClInclude Include="src\libs\libtommath-1.0\tommath.h" />
+    <ClInclude Include="src\libs\libtommath-1.0\tommath_class.h" />
+    <ClInclude Include="src\libs\libtommath-1.0\tommath_private.h" />
+    <ClInclude Include="src\libs\libtommath-1.0\tommath_superclass.h" />
     <ClInclude Include="src\live\live.h" />
     <ClInclude Include="src\live\live_anticheat.h" />
     <ClInclude Include="src\live\live_clans.h" />

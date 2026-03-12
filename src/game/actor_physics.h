@@ -68,13 +68,6 @@ struct actor_physics_t // sizeof=0x7D0
                                         // AIPhys_StepSlideMove+133/w ...
 };
 
-struct ai_gjk_slide_move_input_t : gjk_slide_move_input_t // sizeof=0x30
-{                                       // XREF: AIPhys_SlideMove/r
-    actor_physics_t *m_pPhys;
-
-    void custom_process(gjk_trace_output_t *gto);
-};
-
 struct actor_physics_local_t // sizeof=0x68
 {                                       // XREF: .data:g_apl/r
                                         // AIPhys_StepSlideMove/r
@@ -98,7 +91,6 @@ struct actor_physics_local_t // sizeof=0x68
                                         // Actor_Physics_1(actor_physics_t *)+12E/w ...
 };
 
-void __cdecl setup_gjkcc_input(pmove_t *pm, gjkcc_input_t *gjkcc_in);
 void __cdecl AIPhys_AddTouchEnt(actor_physics_t *pPhys, int entityNum);
 void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in);
 void __cdecl ai_physics_trace(

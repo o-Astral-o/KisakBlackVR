@@ -21,7 +21,6 @@ struct va_info_t
 va_info_t va_info[15];
 TraceThreadInfo g_traceThreadInfo[15];
 int g_com_error[15][16];
-CmdArgs g_cmd_args[2];
 int valueindex;
 
 // *WARNING* One or more selections were skipped as they could not be interpreted as c data

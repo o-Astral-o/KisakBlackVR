@@ -4093,7 +4093,7 @@ void __cdecl Phys_RenderWorldCollMesh(const float *pos, bool bRenderStaticCollis
             previous_pos[2] = pos[2];
             DebugPatchesAndBrushesProlog();
             clear_debug_brushes_and_patches();
-            colgeom_visitor_t::colgeom_visitor_t(&colgeomDebugVisitor);
+            //colgeom_visitor_t::colgeom_visitor_t(&colgeomDebugVisitor);
             //colgeomDebugVisitor.__vftable = (colgeom_debug_renderer_t_vtbl *)&colgeom_debug_renderer_t::`vftable';
             //colgeom_debug_renderer_t::reset(&colgeomDebugVisitor);
             colgeomDebugVisitor.reset();
@@ -4570,6 +4570,36 @@ void __cdecl process_destructible_hits()
     num_destructible_hits = 0;
 }
 
+void destructible_ent_aa::auto_activate(broad_phase_info *bpi_impactor)
+{
+    centity_s *cent; // [esp+4h] [ebp-4h]
+
+    if (this->m_has_auto_activated
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            233,
+            0,
+            "%s",
+            "m_has_auto_activated == false"))
+    {
+        __debugbreak();
+    }
+    this->m_has_auto_activated = 1;
+    cent = this->m_cent;
+    if (!cent->destructible
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            237,
+            0,
+            "%s",
+            "cent->destructible"))
+    {
+        __debugbreak();
+    }
+    if (num_destructible_hits < 10)
+        destructible_hits[num_destructible_hits++] = (destructible_hit)cent->nextState.number;
+}
+
 struct dynent_hit // sizeof=0x2
 {
     unsigned __int16 absId;
@@ -4601,6 +4631,39 @@ void __cdecl process_dynent_hits()
         DynEntCl_Damage(0, dynEntId, (DynEntityCollType)drawType, hitPos, hitDir, 100);
     }
     num_dynent_hits = 0;
+}
+
+void dynamic_ent_aa::auto_activate(broad_phase_info *bpi_impactor)
+{
+    DynEntityPose *dynEntPose; // [esp+Ch] [ebp-14h]
+    DynEntityDrawType drawType; // [esp+10h] [ebp-10h]
+    DynEntityClient *dynEntClient; // [esp+14h] [ebp-Ch]
+    DynEntityDef *dynEntDef; // [esp+18h] [ebp-8h]
+    unsigned __int16 dynEntId; // [esp+1Ch] [ebp-4h]
+
+    if (this->m_has_auto_activated
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            161,
+            0,
+            "%s",
+            "m_has_auto_activated == false"))
+    {
+        __debugbreak();
+    }
+    this->m_has_auto_activated = 1;
+    dynEntDef = this->m_dynEntDef;
+    drawType = (DynEntityDrawType)(dynEntDef->xModel == 0);
+    dynEntId = DynEnt_GetId(dynEntDef, drawType);
+    dynEntClient = DynEnt_GetClientEntity(dynEntId, drawType);
+    dynEntPose = DynEnt_GetClientPose(dynEntId, drawType);
+    if (!dynEntClient->physObjId)
+    {
+        if (DynEnt_GetEntityProps(dynEntDef->type)->usePhysics)
+            DynEntCl_CreatePhysObj(dynEntDef, dynEntClient, &dynEntPose->pose);
+        else
+            dynent_hits[num_dynent_hits++].absId = DynEnt_GetClientAbsId(dynEntId, drawType);
+    }
 }
 
 void    UpdateRigidBody(float delta_t)
@@ -6196,20 +6259,21 @@ phys_convex_hull::~phys_convex_hull()
 //    }
 //}
 
-void __cdecl destroy_broad_phase_info(broad_phase_info *bpi)
-{
-    phys_free_list<broad_phase_info> *p_g_list_broad_phase_info; // edi
-
-    environment_collision_list_remove(bpi);
-    //axis_aligned_sweep_and_prune::destroy_sap_node(g_axis_aligned_sweep_and_prune, bpi);
-    g_axis_aligned_sweep_and_prune->destroy_sap_node(bpi);
-    p_g_list_broad_phase_info = &G_BPM->g_list_broad_phase_info;
-    if ( bpi )
-    {
-        PMM_VALIDATE((char *)&bpi[-1].m_gjk_geom, 0x90u, 0x10u);
-        //phys_free_list<broad_phase_info>::remove(
-            p_g_list_broad_phase_info->remove(
-            (phys_free_list<broad_phase_info>::T_internal *)&bpi[-1].m_gjk_geom);
-    }
-}
-
+//void __cdecl destroy_broad_phase_info(broad_phase_info *bpi)
+//{
+//    phys_free_list<broad_phase_info> *p_g_list_broad_phase_info; // edi
+//
+//    environment_collision_list_remove(bpi);
+//    //axis_aligned_sweep_and_prune::destroy_sap_node(g_axis_aligned_sweep_and_prune, bpi);
+//    g_axis_aligned_sweep_and_prune->destroy_sap_node(bpi);
+//    p_g_list_broad_phase_info = &G_BPM->g_list_broad_phase_info;
+//    if ( bpi )
+//    {
+//        PMM_VALIDATE((char *)&bpi[-1].m_gjk_geom, 0x90u, 0x10u);
+//        //phys_free_list<broad_phase_info>::remove(
+//            p_g_list_broad_phase_info->remove(
+//            (phys_free_list<broad_phase_info>::T_internal *)&bpi[-1].m_gjk_geom);
+//    }
+//}
+//
+//

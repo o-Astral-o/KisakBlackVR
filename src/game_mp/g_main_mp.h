@@ -421,7 +421,6 @@ bool __cdecl G_GetEntityOriginAngles(int localClientNum, int entityNum, float *o
 void __cdecl G_EntityLinkFromPMove(unsigned int entityNum, int parentEntityNum, int tagName);
 void __cdecl G_AddDebugString(const float *xyz, const float *color, float scale, char *pszText, int duration);
 //gclient_s *__thiscall gclient_s::gclient_s(gclient_s *this);
-void __cdecl G_SafeDObjFree(gentity_s *ent);
 
 extern const dvar_t *g_connectpaths;
 extern const dvar_t *g_loadScripts;

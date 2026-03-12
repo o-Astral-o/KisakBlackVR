@@ -26,7 +26,7 @@ ALLOCATION_SCHEME_FUNCTIONS g_HunkUserAllocationSchemeMap[4] =
   {
     (HunkUser *(*)(void*, int, HU_ALLOCATION_SCHEME, unsigned int, void*, const char *, int))Hunk_UserDefaultInit,
     (void(*)(HunkUser*))Hunk_UserDefaultReset,
-    Hunk_UserDefaultDestroy,
+     (void(*)(HunkUser *))Hunk_UserDefaultDestroy,
     (void *(*)(HunkUser *, int, int, const char *))Hunk_UserDefaultAlloc,
     Hunk_UserDefaultFree
   },
@@ -273,7 +273,8 @@ void __cdecl Hunk_UserDefaultReset(HunkUserDefault *_user)
     }
     if (_user->next)
     {
-        Hunk_UserDefaultDestroy(&_user->next->hunkUser);
+        //Hunk_UserDefaultDestroy(&_user->next->hunkUser);
+        Hunk_UserDefaultDestroy(_user->next);
         _user->current = _user;
         _user->next = 0;
     }

@@ -9,8 +9,12 @@
 #include <Windows.h>
 #include <cstdio>
 #include <cstdint>
+extern "C"
+{
 #include <mjpeg/mjpeg.h>
 #include <jpeg/jpeglib.h>
+
+}
 
 #include <d3d9.h>
 

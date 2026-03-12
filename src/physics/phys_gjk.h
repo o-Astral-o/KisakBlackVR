@@ -5,6 +5,10 @@
 #include "phys_colgeom.h"
 #include <tl/tl_system.h>
 #include "phys_transient_allocator.h"
+#include <qcommon/common.h>
+#include <qcommon/cm_load.h>
+#include <qcommon/cm_test.h>
+#include <qcommon/cm_trace.h>
 
 struct pmove_t;
 struct centity_s;
@@ -145,10 +149,6 @@ struct phys_heap_gjk_cache_system_avl_tree // sizeof=0x10
 
     ~phys_heap_gjk_cache_system_avl_tree();
 
-    static phys_gjk_cache_info_internal *get_gjk_cache_info(
-        phys_heap_gjk_cache_system_avl_tree *gjk_cache,
-        gjk_base_t *cg1,
-        gjk_base_t *cg2);
     phys_gjk_cache_info_internal *get_gjk_cache_info(
         unsigned int id1,
         unsigned int id2,
@@ -215,188 +215,6 @@ struct __declspec(align(16)) gjk_geom_info_t // sizeof=0x40
 
     void calc_aabb();
     struct gjk_entity_info_t *get_xform();
-};
-
-struct col_prim_t // sizeof=0x8
-{                                       // XREF: colgeom_visitor_inlined_t<200>/r
-                                        // colgeom_visitor_inlined_t<500>/r
-    int type;
-    //$9DB6BB71550D5B679E9F92FB2EA07EBE ___u1;
-    union //$9DB6BB71550D5B679E9F92FB2EA07EBE // sizeof=0x4
-    {                                       // XREF: col_prim_t/r
-        const struct CollisionAabbTree *tree;
-        const struct cbrush_t *brush;
-    };
-};
-
-template <int NUM_PRIMS>
-struct colgeom_visitor_inlined_t : colgeom_visitor_t // sizeof=0x6B8
-{                                                                             // XREF: .data:dummy/r
-    int nprims;                                                 // XREF: debug_loop(void)+385/r
-    // Rope_CollideWorld(int)+28A/r
-    bool overflow;
-    // padding byte
-    // padding byte
-    // padding byte
-    col_prim_t prims[NUM_PRIMS];                            // XREF: debug_loop(void)+38C/o
-    // Rope_CollideWorld(int)+27E/o
-
-    colgeom_visitor_inlined_t() : colgeom_visitor_t()
-    {
-        reset();
-    }
-
-    colgeom_visitor_inlined_t &operator=(const colgeom_visitor_inlined_t *that)
-    {
-        colgeom_visitor_t::operator=((colgeom_visitor_t *)that);
-        this->nprims = that->nprims;
-        this->overflow = that->overflow;
-
-        for (int i = 0; i < NUM_PRIMS; i++)
-        {
-            this->prims[i].type = that->prims[i].type;
-            this->prims[i].tree = that->prims[i].tree;
-        }
-    }
-
-    void visit(const cbrush_t *brush)
-    {
-        col_prim_t *prim;
-
-        if (this->nprims < NUM_PRIMS)
-        {
-            prim = &this->prims[this->nprims++];
-            prim->type = 1;
-            prim->tree = (const CollisionAabbTree *)brush;
-        }
-    }
-
-    void visit(const CollisionAabbTree *tree)
-    {
-        col_prim_t *prim; // [esp+4h] [ebp-4h]
-
-        if (this->nprims < NUM_PRIMS)
-        {
-            prim = &this->prims[this->nprims++];
-            prim->type = 0;
-            prim->tree = tree;
-        }
-    }
-
-    void reset()
-    {
-        this->nprims = 0;
-        this->overflow = 0;
-
-        this->m_mn.vec.v[0] = 9.9999997e37f; // cool float constant, man
-        this->m_mn.vec.v[1] = 9.9999997e37f;
-        this->m_mn.vec.v[2] = 9.9999997e37f;
-
-        this->m_mx.vec.v[0] = -9.9999997e37f;
-        this->m_mx.vec.v[1] = -9.9999997e37f;
-        this->m_mx.vec.v[2] = -9.9999997e37f;
-    }
-
-    void intersect_box(float *mn, float *mx, int mask);
-    void intersect_box_brushes(cLeaf_s *leaf);
-    void intersect_box_brushnode(cLeafBrushNode_s *node);
-    void intersect_box_partitions(cLeaf_s *leaf);
-    void intersect_box_partitions_r(CollisionAabbTree *aabbTree);
-
-    void update(
-        const float *_mn,
-        const float *_mx,
-        int mask,
-        const float *expand_vec)
-    {
-        bool v5; // [esp+0h] [ebp-58h]
-        float result[3]; // [esp+18h] [ebp-40h] BYREF
-        float b[3]; // [esp+24h] [ebp-34h] BYREF
-        float a[3]; // [esp+30h] [ebp-28h] BYREF
-        bool inside; // [esp+3Fh] [ebp-19h]
-        float mx[3]; // [esp+40h] [ebp-18h] BYREF
-        float mn[3]; // [esp+4Ch] [ebp-Ch] BYREF
-
-        a[0] = this->m_mn.vec.v[0] - *_mn;
-        a[1] = this->m_mn.vec.v[1] - _mn[1];
-        a[2] = this->m_mn.vec.v[2] - _mn[2];
-        b[0] = *_mx - this->m_mx.vec.v[0];
-        b[1] = _mx[1] - this->m_mx.vec.v[1];
-        b[2] = _mx[2] - this->m_mx.vec.v[2];
-        Vec3Max(a, b, result);
-        v5 = result[0] < 0.0 && result[1] < 0.0 && result[2] < 0.0;
-        inside = v5;
-        if (this->m_mask != mask || !inside)
-        {
-            mn[0] = *_mn - *expand_vec;
-            mn[1] = _mn[1] - expand_vec[1];
-            mn[2] = _mn[2] - expand_vec[2];
-            mx[0] = *_mx + *expand_vec;
-            mx[1] = _mx[1] + expand_vec[1];
-            mx[2] = _mx[2] + expand_vec[2];
-            //colgeom_visitor_inlined_t<500>::reset(this);
-            reset();
-            //colgeom_visitor_t::intersect_box(this, mn, mx, mask);
-            intersect_box(mn, mx, mask);
-            if (this->nprims == NUM_PRIMS)
-            {
-                StatMon_Warning(8, 3000, (char *)"code_warning_collision");
-                this->nprims = 0;
-                this->overflow = 1;
-            }
-        }
-    }
-
-    void update(
-        const float *start,
-        const float *end,
-        const float *mins,
-        const float *maxs,
-        int mask)
-    {
-        float _mn[3]; // [esp+14h] [ebp-60h] BYREF
-        float extents_start[3]; // [esp+20h] [ebp-54h] BYREF
-        float extents_end[3]; // [esp+2Ch] [ebp-48h] BYREF
-        float _mx[3]; // [esp+38h] [ebp-3Ch] BYREF
-        float offset[3]; // [esp+44h] [ebp-30h]
-        float size[3]; // [esp+50h] [ebp-24h]
-        float expand_vec[3]; // [esp+5Ch] [ebp-18h] BYREF
-        float fudge[3]; // [esp+68h] [ebp-Ch]
-
-        fudge[0] = 1.0f;//`colgeom_visitor_inlined_t<200 > ::update'::`2'::fFudge;
-        fudge[1] = 1.0f;//`colgeom_visitor_inlined_t<200 > ::update'::`2'::fFudge;
-        fudge[2] = 1.0f;//`colgeom_visitor_inlined_t<200 > ::update'::`2'::fFudge;
-        offset[0] = (float)(0.5 * *mins) + (float)(0.5 * *maxs);
-        offset[1] = (float)(0.5 * mins[1]) + (float)(0.5 * maxs[1]);
-        offset[2] = (float)(0.5 * mins[2]) + (float)(0.5 * maxs[2]);
-        size[0] = *maxs - offset[0];
-        size[1] = maxs[1] - offset[1];
-        size[2] = maxs[2] - offset[2];
-        extents_start[0] = *start + offset[0];
-        extents_start[1] = start[1] + offset[1];
-        extents_start[2] = start[2] + offset[2];
-        extents_end[0] = *end + offset[0];
-        extents_end[1] = end[1] + offset[1];
-        extents_end[2] = end[2] + offset[2];
-        Vec3Min(extents_start, extents_end, _mn);
-        Vec3Max(extents_start, extents_end, _mx);
-        _mn[0] = _mn[0] - size[0];
-        _mn[1] = _mn[1] - size[1];
-        _mn[2] = _mn[2] - size[2];
-        _mx[0] = _mx[0] + size[0];
-        _mx[1] = _mx[1] + size[1];
-        _mx[2] = _mx[2] + size[2];
-        _mn[0] = _mn[0] - fudge[0];
-        _mn[1] = _mn[1] - fudge[1];
-        _mn[2] = _mn[2] - fudge[2];
-        _mx[0] = _mx[0] + fudge[0];
-        _mx[1] = _mx[1] + fudge[1];
-        _mx[2] = _mx[2] + fudge[2];
-        expand_vec[0] = 70.0f;
-        expand_vec[1] = 70.0f;
-        expand_vec[2] = 20.0f;
-        this->update(_mn, _mx, mask, expand_vec);
-    }
 };
 
 const struct __declspec(align(16)) gjk_query_input // sizeof=0x80
@@ -959,7 +777,18 @@ struct __declspec(align(4)) gjk_slide_move_input_t // sizeof=0x2C
     // padding byte
     // padding byte
 
-    virtual void custom_process(gjk_trace_output_t *gto);
+    //virtual void custom_process(gjk_trace_output_t *gto) = 0;
+    virtual void custom_process(gjk_trace_output_t *gto)
+    {
+        iassert(0);
+    }
+};
+
+struct ai_gjk_slide_move_input_t : gjk_slide_move_input_t // sizeof=0x30
+{                                       // XREF: AIPhys_SlideMove/r
+    struct actor_physics_t *m_pPhys;
+
+    void custom_process(gjk_trace_output_t *gto) override;
 };
 
 struct __declspec(align(4)) gjk_slide_move_output_t // sizeof=0x1C
@@ -979,12 +808,17 @@ struct player_gjk_slide_move_input_t : gjk_slide_move_input_t // sizeof=0x30
 {                                       // XREF: PM_SlideMove/r
     pmove_t *pm;
 
-    void custom_process(gjk_trace_output_t *gto);
+    void custom_process(gjk_trace_output_t *gto) override;
 };
 
 struct player_push_slide_move_input_t : gjk_slide_move_input_t // sizeof=0x38
 {
     float velocity_[3];
+
+    void custom_process(gjk_trace_output_t *gto) override
+    {
+
+    }
 };
 
 struct list_gjk_trace_output // sizeof=0x10
@@ -1203,7 +1037,10 @@ int    backup1(phys_gjk_info *gjk_info, int new_index, bool seed_simplex);
 
 void __cdecl setup_gjk_input_from_pcp(phys_gjk_input *pgi, struct phys_collision_pair *pcp);
 
-
+phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *get_gjk_cache_info(
+    phys_heap_gjk_cache_system_avl_tree *gjk_cache,
+    gjk_base_t *cg1,
+    gjk_base_t *cg2);
 
 extern create_gjk_geom_collision_visitor g_empty_collision_visitor;
 extern gjk_unique_id_database_t g_gjk_unique_id_database;

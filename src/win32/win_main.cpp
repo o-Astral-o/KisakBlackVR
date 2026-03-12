@@ -37,6 +37,8 @@ const dvar_t *sys_gpu;
 const dvar_t *sys_configSum;
 const dvar_t *sys_SSE;
 
+bool g_allowMature = true;
+
 int s_nosnd;
 SysInfo sys_info;
 char sys_exitCmdLine[1024];
@@ -811,7 +813,6 @@ int __cdecl PrivateUnhandledExceptionFilter(_EXCEPTION_POINTERS *ExceptionInfo)
     return 1;
 }
 
-bool g_allowMature = true;
 char sys_cmdline[1024];
 char g_open_automate_benchmark[260];
 int __stdcall WinMain(HINSTANCE__ *hInstance, HINSTANCE__ *hPrevInstance, char *lpCmdLine, int nCmdShow)

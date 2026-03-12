@@ -30,7 +30,7 @@ struct GamePad // sizeof=0x7C
     _XINPUT_CAPABILITIES keyboardCaps;
 };
 
-void __cdecl GPad_InitAll();
+void GPad_InitAll();
 void __cdecl GPad_UpdateAll();
 int GPad_RefreshAll();
 void __cdecl GPad_Check(int portIndex);

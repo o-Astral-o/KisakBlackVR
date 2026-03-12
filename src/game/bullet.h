@@ -3,13 +3,6 @@
 #include <bgame/bg_local.h>
 #include <bgame/bg_public.h>
 
-char __cdecl BulletTrace(
-                int localClientNum,
-                const BulletFireParams *bp,
-                const WeaponDef *weapDef,
-                const centity_s *attacker,
-                BulletTraceResults *br,
-                unsigned int lastSurfaceType);
 double __cdecl G_GoodRandomFloat(int *idum);
 void __cdecl Bullet_Endpos(int randSeed, float spread, float *end, float *dir, const weaponParms *wp, float maxRange);
 void __cdecl Bullet_RandomDir(int time, float *x, float *y);

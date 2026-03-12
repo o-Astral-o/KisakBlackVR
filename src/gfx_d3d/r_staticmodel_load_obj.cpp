@@ -7,62 +7,6 @@
 #include "r_bsp.h"
 #include "r_reflection_probe.h"
 
-int __cdecl R_CellForPoint(const float *origin)
-{
-    cplane_s *v1; // edx
-    mnode_t *node; // [esp+4h] [ebp-1Ch]
-    int cellIndex; // [esp+14h] [ebp-Ch]
-    int cellCount; // [esp+18h] [ebp-8h]
-
-    if ( !rgp.world
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_dpvs.cpp", 925, 0, "%s", "rgp.world") )
-    {
-        __debugbreak();
-    }
-    node = (mnode_t *)rgp.world->dpvsPlanes.nodes;
-    cellCount = rgp.world->dpvsPlanes.cellCount + 1;
-    while ( 1 )
-    {
-        cellIndex = node->cellIndex;
-        if ( cellIndex - cellCount < 0 )
-            break;
-        v1 = &rgp.world->dpvsPlanes.planes[cellIndex - cellCount];
-        node = (mnode_t *)((char *)node
-                                         + 2
-                                         * ((float)((float)((float)((float)(*origin * v1->normal[0]) + (float)(origin[1] * v1->normal[1]))
-                                                                            + (float)(origin[2] * v1->normal[2]))
-                                                            - v1->dist) <= 0.0)
-                                         * (node->rightChildOffset - 2)
-                                         + 4);
-    }
-    return cellIndex - 1;
-}
-
-unsigned int __cdecl R_CalcReflectionProbeIndex(const float *origin)
-{
-    unsigned int cellIndex; // [esp+0h] [ebp-8h]
-    unsigned int bestProbe; // [esp+4h] [ebp-4h]
-
-    bestProbe = R_FindProbeFromVolume(g_worldDraw, origin);
-    if ( bestProbe )
-        return bestProbe;
-    cellIndex = R_CellForPoint(origin);
-    if ( cellIndex == -1 )
-        return R_FindNearestReflectionProbe(g_worldDraw, origin);
-    if ( cellIndex >= rgp.world->dpvsPlanes.cellCount
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_dpvs.cpp",
-                    1221,
-                    0,
-                    "cellIndex doesn't index rgp.world->dpvsPlanes.cellCount\n\t%i not in [0, %i)",
-                    cellIndex,
-                    rgp.world->dpvsPlanes.cellCount) )
-    {
-        __debugbreak();
-    }
-    return R_FindNearestReflectionProbeInCell(g_worldDraw, &rgp.world->cells[cellIndex], origin);
-}
-
 void __cdecl R_AllocStaticModels(GfxAabbTree *tree)
 {
     GfxAabbTree *children; // [esp+0h] [ebp-Ch]

@@ -62,44 +62,9 @@ IKBoneNames minBoneExtents[6] =
   IKBONE_RFOOT
 };
 
-bool ikEssentialBones[] =
-{
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  false,
-  false,
-  false,
-  false,
-  false
-};
-
 int notMovedTime = 200;
 
-
 unsigned __int16 ikImportBoneStringVars[24];
-
-
 
 void __cdecl IKImport_InitVars(IKSystem *ikSystem)
 {
@@ -2809,7 +2774,7 @@ void __cdecl IKImport_InitCollisionCache(IKState *ikState)
     if ( (_S1_11 & 1) == 0 )
     {
         _S1_11 |= 1u;
-        new (&dummy_2) colgeom_visitor_t(); // this is so retarded
+        new (&dummy_2) colgeom_visitor_inlined_t<200>(); // this is so retarded
         //colgeom_visitor_t::colgeom_visitor_t(&dummy_2);
         //dummy_2.__vftable = (colgeom_visitor_inlined_t<200>_vtbl *)&colgeom_visitor_inlined_t<200>::`vftable';
         //colgeom_visitor_inlined_t<500>::reset(&dummy_2);

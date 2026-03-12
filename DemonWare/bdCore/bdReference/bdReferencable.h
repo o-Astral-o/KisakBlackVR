@@ -60,5 +60,5 @@ struct bdReferencable // sizeof=0x8
 {                                                                             // XREF: bdByteBuffer/r
     volatile unsigned int m_refCount;
 
-    virtual ~bdReferencable();
+    virtual ~bdReferencable() = default;
 };

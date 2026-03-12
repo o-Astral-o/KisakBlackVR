@@ -167,14 +167,15 @@ const dvar_t *cl_punkbuster;
 const dvar_t *password;
 const dvar_t *nextdemo;
 const dvar_t *mortarStrikesLeft;
-const dvar_t *hud_enable;
-const dvar_t *cg_blood;
-const dvar_t *cg_allow_mature;
-const dvar_t *cg_mature;
+//const dvar_t *hud_enable;
+//const dvar_t *cg_blood;
+//const dvar_t *cg_allow_mature;
+//const dvar_t *cg_mature;
 const dvar_t *cl_serverchallenge;
 const dvar_t *cl_debugMessageKey;
 const dvar_t *motd;
 
+clientActive_t *clients;
 UiContext cgDC[1];
 
 clientStatic_t cls;
@@ -190,8 +191,6 @@ unsigned int frame_msec;
 int old_com_frameTime;
 
 voiceCommunication_t cl_voiceCommunication[1];
-
-bool g_allowMature = true;
 
 void __cdecl CL_AddReliableCommand(int localClientNum, const char *cmd)
 {

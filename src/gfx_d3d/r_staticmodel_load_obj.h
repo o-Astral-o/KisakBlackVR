@@ -1,13 +1,11 @@
 #pragma once
 #include "r_dpvs.h"
 
-unsigned int __cdecl R_CalcReflectionProbeIndex(const float *origin);
 unsigned int __cdecl R_CalcReflectionProbeIndex(const GfxWorld *world, const float *origin);
 
 struct GfxStaticModelInst;
 struct GfxStaticModelDrawInst;
 
-int __cdecl R_CellForPoint(const float *origin);
 void __cdecl R_AllocStaticModels(GfxAabbTree *tree);
 void __cdecl R_SortGfxAabbTree(GfxWorld *world, GfxAabbTree *tree);
 int __cdecl R_SortGfxAabbTreeChildren(

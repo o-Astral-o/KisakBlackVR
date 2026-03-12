@@ -58,7 +58,6 @@ struct __declspec(align(8)) clientSession_t // sizeof=0x1F0
 };
 
 void __cdecl SetClientViewAngle(gentity_s *ent, const float *angle);
-void __cdecl G_GetPlayerViewOrigin_Internal(const playerState_s *ps, float *origin);
 void __cdecl G_GetPlayerViewOrigin(const playerState_s *ps, float *origin);
 void __cdecl G_GetPlayerBodyViewOrigin(const playerState_s *ps, float *origin);
 void __cdecl G_GetPlayerViewDirection(const gentity_s *ent, float *forward, float *right, float *up);

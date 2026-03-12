@@ -103,7 +103,6 @@ struct XModel;
 struct DynEntityCreateParams;
 struct DynEntityPose;
 
-const DynEntityDef *__cdecl DynEnt_GetEntityDef(unsigned __int16 dynEntId, DynEntityDrawType drawType);
 DynEntityClient *__cdecl DynEnt_GetClientEntity(unsigned __int16 dynEntId, DynEntityDrawType drawType);
 PhysPreset *__cdecl DynEnt_PhysPresetPrecache(const char *name);
 unsigned __int8 *__cdecl DynEnt_AllocPhysPreset(int size);

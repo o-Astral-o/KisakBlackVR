@@ -258,7 +258,28 @@ void __cdecl LiveStorage_ResetStats(unsigned __int8 *buffer)
     }
 }
 
-void __cdecl ResetCreateAClassNames(int controllerIndex)
+static void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText)
+{
+    char *localizedText; // [esp+0h] [ebp-4h]
+
+    if (!Dvar_IsValidName(dvarName)
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\live\\live_storage_win.cpp",
+            414,
+            0,
+            "%s",
+            "Dvar_IsValidName( dvarName )"))
+    {
+        __debugbreak();
+    }
+    localizedText = SEH_LocalizeTextMessage(preLocalizedText, "dvar string", LOCMSG_NOERR);
+    if (localizedText && *localizedText)
+        Dvar_SetCommand(dvarName, localizedText);
+    else
+        Dvar_SetCommand(dvarName, preLocalizedText);
+}
+
+static void __cdecl ResetCreateAClassNames(int controllerIndex)
 {
     SetDvarFromLocString(controllerIndex, "customclass1",   (char*)"CLASS_SLOT1_CAPS");
     SetDvarFromLocString(controllerIndex, "customclass2",   (char*)"CLASS_SLOT2_CAPS");
@@ -270,27 +291,6 @@ void __cdecl ResetCreateAClassNames(int controllerIndex)
     SetDvarFromLocString(controllerIndex, "prestigeclass3", (char*)"CLASS_PRESTIGE3");
     SetDvarFromLocString(controllerIndex, "prestigeclass4", (char*)"CLASS_PRESTIGE4");
     SetDvarFromLocString(controllerIndex, "prestigeclass5", (char*)"CLASS_PRESTIGE5");
-}
-
-void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText)
-{
-    char *localizedText; // [esp+0h] [ebp-4h]
-
-    if ( !Dvar_IsValidName(dvarName)
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\live\\live_storage_win.cpp",
-                    414,
-                    0,
-                    "%s",
-                    "Dvar_IsValidName( dvarName )") )
-    {
-        __debugbreak();
-    }
-    localizedText = SEH_LocalizeTextMessage(preLocalizedText, "dvar string", LOCMSG_NOERR);
-    if ( localizedText && *localizedText )
-        Dvar_SetCommand(dvarName, localizedText);
-    else
-        Dvar_SetCommand(dvarName, preLocalizedText);
 }
 
 void __cdecl LiveStorage_ReadStats(int __formal, bool validate, bool silent)

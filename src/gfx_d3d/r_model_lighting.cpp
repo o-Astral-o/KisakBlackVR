@@ -93,19 +93,19 @@ GfxSmodelLightGlob smodelLightGlob;
 
 GfxLightingInfo lightingInfo[1024];
 
-GfxModelLightingPatch *__cdecl R_BackEndDataAllocAndClearModelLightingPatch(GfxBackEndData *frontEndDataOut)
-{
-    unsigned int patchIndex; // [esp+4h] [ebp-4h]
-
-    patchIndex = _InterlockedExchangeAdd(&frontEndDataOut->modelLightingPatchCount, 1u);
-    if ( patchIndex >= 0x1000 )
-        Com_Error(ERR_FATAL, "modelLightingPatchList ran out of elements.");
-    memset(
-        (unsigned __int8 *)&frontEndDataOut->modelLightingPatchList[patchIndex],
-        0,
-        sizeof(frontEndDataOut->modelLightingPatchList[patchIndex]));
-    return &frontEndDataOut->modelLightingPatchList[patchIndex];
-}
+//GfxModelLightingPatch *__cdecl R_BackEndDataAllocAndClearModelLightingPatch(GfxBackEndData *frontEndDataOut)
+//{
+//    unsigned int patchIndex; // [esp+4h] [ebp-4h]
+//
+//    patchIndex = _InterlockedExchangeAdd(&frontEndDataOut->modelLightingPatchCount, 1u);
+//    if ( patchIndex >= 0x1000 )
+//        Com_Error(ERR_FATAL, "modelLightingPatchList ran out of elements.");
+//    memset(
+//        (unsigned __int8 *)&frontEndDataOut->modelLightingPatchList[patchIndex],
+//        0,
+//        sizeof(frontEndDataOut->modelLightingPatchList[patchIndex]));
+//    return &frontEndDataOut->modelLightingPatchList[patchIndex];
+//}
 
 void __cdecl R_SetModelLightingCoords(unsigned __int16 handle, float *out)
 {

@@ -763,3 +763,65 @@ void avi_s::add_samples(__int16 *in, int count)
     }
 }
 
+void avi::RIFF_s::LIST_hdrl_s::LIST_aud_strl_s::strh_s::Out(unsigned __int8 **out)
+{
+    unsigned __int16 rBottom;
+    unsigned __int16 rRight;
+    unsigned __int16 rTop;
+    unsigned __int16 rLeft;
+    unsigned __int16 Language;
+    unsigned __int16 Priority;
+    unsigned int k;
+    unsigned int j;
+    unsigned int i;
+    unsigned __int8 *sizePtr;
+
+    for (i = 0; i < 4; ++i)
+        *(*out)++ = this->header[i];
+
+    sizePtr = *out;
+    avi::Out32(out, this->size);
+
+    for (j = 0; j < 4; ++j)
+        *(*out)++ = this->type[j];
+
+    for (k = 0; k < 4; ++k)
+        *(*out)++ = this->format[k];
+
+    avi::Out32(out, this->Flags);
+
+    Priority = this->Priority;
+    *(*out)++ = Priority;
+    *(*out)++ = HIBYTE(Priority);
+
+    Language = this->Language;
+    *(*out)++ = Language;
+    *(*out)++ = HIBYTE(Language);
+
+    avi::Out32(out, this->InitialFrames);
+    avi::Out32(out, this->Scale);
+    avi::Out32(out, this->Rate);
+    avi::Out32(out, this->Start);
+    avi::Out32(out, this->Length);
+    avi::Out32(out, this->SuggestedBufferSize);
+    avi::Out32(out, this->Quality);
+    avi::Out32(out, this->SampleSize);
+
+    rLeft = this->rLeft;
+    *(*out)++ = rLeft;
+    *(*out)++ = HIBYTE(rLeft);
+
+    rTop = this->rTop;
+    *(*out)++ = rTop;
+    *(*out)++ = HIBYTE(rTop);
+
+    rRight = this->rRight;
+    *(*out)++ = rRight;
+    *(*out)++ = HIBYTE(rRight);
+
+    rBottom = this->rBottom;
+    *(*out)++ = rBottom;
+    *(*out)++ = HIBYTE(rBottom);
+
+    avi::Out32(&sizePtr, *out - sizePtr - 4);
+}

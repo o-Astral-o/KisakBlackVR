@@ -15,6 +15,7 @@
 #include <glass/glass_server.h>
 #include <glass/glass_client.h>
 #include <new>
+#include <cgame_mp/cg_local_mp.h>
 
 phys_assert_info pai_gjk_cache_system_max_num_gjk_ci = { 0, 1, true };
 phys_assert_info pai_gjk_cache_system_create_gjk_ci = { 0, 1, true };
@@ -1210,7 +1211,7 @@ void __cdecl gjk_query_terrain(const gjk_query_input *input, gjk_query_output *o
 {
     int j; // [esp+20h] [ebp-10A4h]
     int i; // [esp+28h] [ebp-109Ch]
-    colgeom_visitor_t v4; // [esp+2Ch] [ebp-1098h] BYREF
+    static_colgeom_visitor_t v4; // [esp+2Ch] [ebp-1098h] BYREF
     int v5; // [esp+9Ch] [ebp-1028h]
     unsigned int v6[512]; // [esp+A0h] [ebp-1024h]
     int v7; // [esp+8A0h] [ebp-824h]
@@ -1220,7 +1221,7 @@ void __cdecl gjk_query_terrain(const gjk_query_input *input, gjk_query_output *o
 
     Phys_NitrousVecToVec3(&output->m_query_aabb_min, outVector);
     Phys_NitrousVecToVec3(&output->m_query_aabb_max, mx);
-    colgeom_visitor_t::colgeom_visitor_t(&v4);
+    //colgeom_visitor_t::colgeom_visitor_t(&v4);
     //v4.__vftable = (colgeom_visitor_t_vtbl *)&static_colgeom_visitor_t::`vftable';
     v5 = 0;
     v7 = 0;
@@ -1307,7 +1308,7 @@ void __cdecl gjk_query_cents(const gjk_query_input *input, gjk_query_output *out
     for ( i = 0; i < v10; ++i )
     {
         entityIndex = entityList[i];
-        if ( ((unsigned int)&cls.rankedServers[711].game[35] & CG_GetEntity(0, entityIndex)->nextState.lerp.eFlags2) == 0
+        if ((CG_GetEntity(0, entityIndex)->nextState.lerp.eFlags2 & 0x1000000) == 0
             && entityIndex != input->m_pass_entity_num
             && entityIndex < 1024 )
         {
@@ -1324,10 +1325,9 @@ void __cdecl gjk_query_cents(const gjk_query_input *input, gjk_query_output *out
                     if ( DObjHasCollmap(ClientDObj) && DObjHasContents(ClientDObj, input->m_contents) )
                         goto LABEL_22;
                 }
-                else if ( cent->nextState.solid
-                             && ((char *)cent->nextState.solid != &cls.rankedServers[711].game[34]
-                                || (cent->nextState.lerp.eFlags & 1) == 0)
-                             && (input->m_contents & CG_GetEntityBModelContents(cent)) != 0 )
+                else if (cent->nextState.solid
+                    && (cent->nextState.solid != 0xFFFFFF || (cent->nextState.lerp.eFlags & 1) == 0)
+                    && (input->m_contents & CG_GetEntityBModelContents(cent)) != 0)
                 {
 LABEL_22:
                     //gjk_query_output::add(output, (broad_phase_environment_info *)&savedregs, input, cent);

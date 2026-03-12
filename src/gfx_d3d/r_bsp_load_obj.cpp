@@ -2657,7 +2657,7 @@ signed int R_SortSurfaces()
     return result;
 }
 
-bool __cdeclR_CompareSurfaces(const GfxSurface &surf0, const GfxSurface &surf1)
+bool __cdecl R_CompareSurfaces(const GfxSurface &surf0, const GfxSurface &surf1)
 {
     int v3; // [esp+0h] [ebp-ACh]
     int v4; // [esp+4h] [ebp-A8h]

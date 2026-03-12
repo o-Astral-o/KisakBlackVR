@@ -298,7 +298,6 @@ struct GfxCmdDrawLines // sizeof=0x28
     GfxPointVertex verts[2];
 };
 
-bool __cdecl ValidGamePadButtonIcon(unsigned int letter);
 void __cdecl RB_CopyBackendStats();
 void __cdecl RB_SetIdentity();
 void __cdecl R_SetVertex2d(GfxVertex *vert, float x, float y, float s, float t, unsigned int color);

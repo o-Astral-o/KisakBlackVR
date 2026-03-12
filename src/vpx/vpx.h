@@ -1,6 +1,6 @@
 #pragma once
-#include <libs/vpx/vpx_codec.h>
-#include <libs/vpx/vpx_encoder.h>
+#include <vpx/vpx_codec.h>
+#include <vpx/vpx_encoder.h>
 #include <cstdio>
 
 void __cdecl vpx_init(const char *filename, int width, int height);

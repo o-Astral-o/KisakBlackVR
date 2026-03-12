@@ -361,3 +361,4 @@ void __cdecl DB_LoadGraphicsAssetsForPC();
 
 
 extern int skipLoadingMaterialsHack;
+extern volatile unsigned int g_mainThreadBlocked;

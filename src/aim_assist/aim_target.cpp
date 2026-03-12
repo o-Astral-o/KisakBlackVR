@@ -37,26 +37,6 @@ const dvar_s *aim_target_frustum_min_distance;
 const dvar_s *aim_target_aim_tag_fast_update_interval;
 const dvar_s *aim_target_aim_tag_slow_update_interval;
 
-int __cdecl AimTarget_GetTagPos(int localClientNum, const centity_s *cent, unsigned int tagName, float *pos)
-{
-    char *v5; // eax
-    DObj *dobj; // [esp+0h] [ebp-4h]
-
-    if ( !cent && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\aim_assist\\aim_assist.cpp", 920, 0, "%s", "cent") )
-        __debugbreak();
-    if ( !pos && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\aim_assist\\aim_assist.cpp", 921, 0, "%s", "pos") )
-        __debugbreak();
-    dobj = Com_GetClientDObj(cent->nextState.number, localClientNum);
-    if ( !dobj )
-        return 0;
-    if ( !CG_DObjGetWorldTagPos(&cent->pose, dobj, tagName, pos) )
-    {
-        v5 = SL_ConvertToString(tagName, SCRIPTINSTANCE_SERVER);
-        Com_Error(ERR_DROP, "AimTarget_GetTagPos: Cannot find tag [%s] on entity\n", v5);
-    }
-    return 1;
-}
-
 AimTargetGlob *__cdecl AimTarget_GetGlobArray(int localClientNum)
 {
     return &atGlobArray[localClientNum];

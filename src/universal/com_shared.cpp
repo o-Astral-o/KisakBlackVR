@@ -245,34 +245,129 @@ void __cdecl _copyDWord(unsigned int *dest, unsigned int constant, unsigned int 
     }
 }
 
-void __cdecl Com_Memcpy(unsigned __int8 *dest, unsigned __int8 *src, unsigned int count)
+void __cdecl Com_Memcpy(void *dest_p, const void *src_p, const size_t count)
 {
-    memcpy(dest, src, count);
+    char *dest = (char *)dest_p;
+    const char *src = (const char *)src_p;
+
+    iassert(src || !count);
+    iassert(dest || !count);
+
+#if 0
+
+    int v3; // ecx
+    char *v4; // edx
+    const char *v5; // ebx
+    signed int v6; // edi
+    int v7; // esi
+    int v8; // esi
+    int v9; // esi
+    int v10; // esi
+    bool v11; // cc
+    int v12; // eax
+
+    Com_Prefetch(src, count);
+    v3 = count;
+    if (count)
+    {
+        v4 = dest;
+        v5 = src;
+        if (count < 32)
+            goto padding_0;
+        v6 = (count & 0xFFFFFFE0) - 32;
+        do
+        {
+            v7 = *(unsigned int *)&src[v6 + 4];
+            *(unsigned int *)&dest[v6] = *(unsigned int *)&src[v6];
+            *(unsigned int *)&dest[v6 + 4] = v7;
+            v8 = *(unsigned int *)&src[v6 + 12];
+            *(unsigned int *)&dest[v6 + 8] = *(unsigned int *)&src[v6 + 8];
+            *(unsigned int *)&dest[v6 + 12] = v8;
+            v9 = *(unsigned int *)&src[v6 + 20];
+            *(unsigned int *)&dest[v6 + 16] = *(unsigned int *)&src[v6 + 16];
+            *(unsigned int *)&dest[v6 + 20] = v9;
+            v10 = *(unsigned int *)&src[v6 + 28];
+            *(unsigned int *)&dest[v6 + 24] = *(unsigned int *)&src[v6 + 24];
+            *(unsigned int *)&dest[v6 + 28] = v10;
+            v11 = v6 < 32;
+            v6 -= 32;
+        } while (!v11);
+        v5 = &src[count & 0xFFFFFFE0];
+        v4 = &dest[count & 0xFFFFFFE0];
+        v3 = count & 0x1F;
+        if ((count & 0x1F) != 0)
+        {
+        padding_0:
+            if (v3 >= 16)
+            {
+                *(unsigned int *)v4 = *(unsigned int *)v5;
+                *((unsigned int *)v4 + 1) = *((unsigned int *)v5 + 1);
+                *((unsigned int *)v4 + 2) = *((unsigned int *)v5 + 2);
+                *((unsigned int *)v4 + 3) = *((unsigned int *)v5 + 3);
+                v3 -= 16;
+                v5 += 16;
+                v4 += 16;
+            }
+            if (v3 >= 8)
+            {
+                *(unsigned int *)v4 = *(unsigned int *)v5;
+                v3 -= 8;
+                *((unsigned int *)v4 + 1) = *((unsigned int *)v5 + 1);
+                v5 += 8;
+                v4 += 8;
+            }
+            if (v3 >= 4)
+            {
+                v12 = *(unsigned int *)v5;
+                v5 += 4;
+                v3 -= 4;
+                *(unsigned int *)v4 = v12;
+                v4 += 4;
+            }
+            if (v3 < 2)
+            {
+                if (v3 >= 1)
+                    *v4 = *v5;
+            }
+            else
+            {
+                *(_WORD *)v4 = *(_WORD *)v5;
+                if (v3 >= 3)
+                    v4[2] = v5[2];
+            }
+        }
+    }
+#else
+    memcpy(dest_p, src_p, count);
+#endif
 }
 
-void __cdecl Com_Memset(unsigned int *dest, int val, int count)
+
+void __cdecl Com_Memset(void *dest_p, const int val, const size_t count)
 {
+    unsigned int *dest = (unsigned int *)dest_p;
+
     unsigned int *v3; // edx
     int v4; // eax
     int v5; // eax
     int v6; // ecx
     char *v7; // ebx
 
-    if ( count >= 8 )
+    if (count >= 8)
     {
         _copyDWord(dest, val | (val << 8) | ((val | (val << 8)) << 16), count / 4);
-        if ( (count & 3) != 0 )
+        if ((count & 3) != 0)
         {
             v7 = (char *)dest + (count & 0xFFFFFFFC);
-            if ( (count & 3u) < 2 )
+            if ((count & 3u) < 2)
             {
-                if ( (count & 3) != 0 )
+                if ((count & 3) != 0)
                     *v7 = val;
             }
             else
             {
                 *(_WORD *)v7 = val | ((_WORD)val << 8);
-                if ( (count & 3) != 2 )
+                if ((count & 3) != 2)
                     v7[2] = val;
             }
         }
@@ -284,20 +379,19 @@ void __cdecl Com_Memset(unsigned int *dest, int val, int count)
         BYTE1(v4) = val;
         v5 = (unsigned __int16)v4 + (v4 << 16);
         v6 = count;
-        if ( count >= 4 )
+        if (count >= 4)
         {
             *dest = v5;
             v3 = dest + 1;
             v6 = count - 4;
         }
-        if ( v6 >= 2 )
+        if (v6 >= 2)
         {
             *(_WORD *)v3 = v5;
             v3 = (unsigned int *)((char *)v3 + 2);
             v6 -= 2;
         }
-        if ( v6 )
+        if (v6)
             *(_BYTE *)v3 = v5;
     }
 }
-

@@ -64,7 +64,7 @@ const char *(__cdecl *DB_XAssetGetNameHandler[43])(const XAssetHeader *) =
   &DB_GetEmblemSetName
 };
 
-const char *g_assetNames[] =
+const char *g_assetNames[43] =
 {
   "xmodelpieces",
   "physpreset",
@@ -176,12 +176,22 @@ int __cdecl DB_SizeofXAsset_PhysConstraints_()
     return 2696;
 }
 
-int __cdecl SV_GetMaxAttachCount()
+static_assert(sizeof(DestructibleDef) == 24);
+//int __cdecl SV_GetMaxAttachCount()
+int __cdecl DB_SizeofXAsset_DestructibleDef_()
 {
     return 24;
 }
 
-int __cdecl PM_MediumLandingForSurface()
+static_assert(sizeof(Font_s) == 24);
+int __cdecl DB_SizeofXAsset_Font_s_()
+{
+    return 24;
+}
+
+static_assert(sizeof(XAnimParts) == 104);
+//int __cdecl PM_MediumLandingForSurface()
+int __cdecl DB_SizeofXAsset_XAnimParts_()
 {
     return 104;
 }
@@ -259,10 +269,10 @@ int __cdecl DB_SizeofXAsset_menuDef_t_()
 }
 
 static_assert(sizeof(XAnimTree_s) == 8);
-int __cdecl XAnimTreeSize()
-{
-    return 8;
-}
+//int __cdecl XAnimTreeSize()
+//{
+//    return 8;
+//}
 
 static_assert(sizeof(WeaponVariantDef) == 228);
 int __cdecl DB_SizeofXAsset_WeaponVariantDef_()
@@ -293,8 +303,9 @@ int(__cdecl *DB_GetXAssetSizeHandler[43])() =
   &DB_SizeofXAsset_RawFile_,
   &DB_SizeofXAsset_PhysPreset_,
   &DB_SizeofXAsset_PhysConstraints_,
-  &SV_GetMaxAttachCount,
-  &PM_MediumLandingForSurface,
+  &DB_SizeofXAsset_DestructibleDef_,
+  //&PM_MediumLandingForSurface,
+  DB_SizeofXAsset_XAnimParts_,
   &DB_SizeofXAsset_XModel_,
   &DB_SizeofXAsset_Material_,
   &DB_SizeofXAsset_MaterialTechniqueSet_,
@@ -310,7 +321,7 @@ int(__cdecl *DB_GetXAssetSizeHandler[43])() =
   &DB_SizeofXAsset_GfxWorld_,
   &DB_SizeofXAsset_GfxLightDef_,
   NULL,
-  &SV_GetMaxAttachCount,
+  &DB_SizeofXAsset_Font_s_,
   &DB_SizeofXAsset_RawFile_,
   &DB_SizeofXAsset_menuDef_t_,
   &XAnimTreeSize,

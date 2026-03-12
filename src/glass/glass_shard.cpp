@@ -1,5 +1,6 @@
 #include "glass_shard.h"
 #include "glass.h"
+#include "glass_renderer.h"
 #include <universal/q_shared.h>
 #include <physics/phys_util.h>
 #include <bgame/bg_slidemove.h>
@@ -11,9 +12,19 @@
 
 float hitPos[3];
 
-void __cdecl GlassShard::Defrag(void *ptr)
+int GlassShard::splitFailCount[8];
+int GlassShard::lastFreeMemorySize;
+int GlassShard::removeReasonsCount[7];
+
+//void __cdecl GlassShard::Defrag(GlassShard *ptr)
+//{
+//    ptr->Defrag();
+//}
+
+void GlassShard_Defrag(void *ptr) // changed from static member func
 {
-    GlassShard::Defrag(ptr);
+    GlassShard *shard = (GlassShard *)ptr;
+    shard->Defrag();
 }
 
 #if 0

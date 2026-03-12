@@ -373,8 +373,18 @@ struct __declspec(align(8)) bdFileInfo : bdTaskResult // sizeof=0xB0
 
 struct __declspec(align(4)) dwFileTask // sizeof=0xE0
 {                                       // XREF: .data:s_fetchPlaylistsFileTask/r
-                                        // dwFileOperationInfo/r
-    dwFileTask();
+    dwFileTask()
+    {
+        this->m_filename = 0;
+        //bdFileData::bdFileData(&this->m_fileData, 0, 0);
+        this->m_error = BD_NO_ERROR;
+        this->m_fileID = 0;
+        this->m_fileSize = 0;
+        this->m_bufferSize = 0;
+        //bdFileInfo::bdFileInfo(&this->m_fileInfo);
+        this->m_buffer = 0;
+        this->m_optional = 0;
+    }
 
     char *m_filename;                   // XREF: SV_AP_GetControlFile(void)+31/w
     // LiveStorage_FetchOnlineWAD(int)+16A/w

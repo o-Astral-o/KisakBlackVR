@@ -1,14 +1,7 @@
 #pragma once
 
 #include <list>
-
-struct StackAllocator // sizeof=0xC
-{                                       // XREF: .data:StackAllocator GlassesClient::allocator/r
-    unsigned __int8 *memory;            // XREF: GlassesClient::InitAllocator(Glasses *)+1B/w
-    unsigned int size;                  // XREF: GlassesClient::InitAllocator(Glasses *)+24/w
-                                        // GlassesClient::GetFreeMem(void)+3/r
-    unsigned int pos;                   // XREF: GlassesClient::InitAllocator(Glasses *)+2A/w
-};
+#include "glass_client.h"
 
 struct SmallAllocator // sizeof=0x18
 {                                       // XREF: GlassRenderer/r
@@ -69,8 +62,15 @@ struct FixedSizeAllocator
 
     unsigned int maxUsed;
 
-    static void *operator new(size_t size);
-    static void operator delete(void *ptr);
+    void *operator new(std::size_t size)
+    {
+        return GlassesClient::Allocate(size, "C:\\projects_pc\\cod\\codsrc\\src\\glass\\glass_renderer.cpp", 72);
+    }
+    void operator delete(void *ptr)
+    {
+        GlassesClient::Free((char *)ptr);
+    }
+
 
     void Init(void *mem, unsigned int numObjects)
     {

@@ -32,7 +32,7 @@ IKBoneNames IKBoneParents[23] =
   IKBONE_RHAND
 };
 
-bool ikEssentialBones[] =
+bool ikEssentialBones[28] =
 {
   true,
   true,

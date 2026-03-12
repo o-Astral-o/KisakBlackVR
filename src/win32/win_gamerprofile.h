@@ -115,7 +115,6 @@ struct __declspec(align(2)) GamerSettingState // sizeof=0xCC4
 
 void __cdecl SetDvarFromLocString_0(int controllerIndex, const char *dvarName, char *preLocalizedText);
 
-void __cdecl ResetCreateAClassNames(int controllerIndex);
 //void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText);
 GamerSettingState *__cdecl GamerProfile_GetProfileSettings(int controllerIndex);
 bool __cdecl GamerProfile_IsProfileLoggedIn(int controllerIndex);
@@ -125,7 +124,6 @@ void __cdecl GamerProfile_SetPlaylistNum(int controllerIndex, int playlistNum);
 void __cdecl GamerProfile_ExecControllerBindings(int controllerIndex);
 void __cdecl GamerProfile_UpdateDvarsFromProfile(int controllerIndex);
 void __cdecl DebugReportProfileDVars(const char *headerMsg);
-void __cdecl ResetCreateAClassNames(int controllerIndex);
 void __cdecl GamerProfile_UpdateProfileFromDvars(int controllerIndex, profileWriteState_t profileWriteState);
 void __cdecl GamerProfile_SaveProfile(int controllerIndex);
 void __cdecl GamerProfile_CreateExeBindingsConfig(int controllerIndex);

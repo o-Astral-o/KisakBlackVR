@@ -57,7 +57,6 @@ struct game_hudelem_s // sizeof=0x7C
     int archived;
 };
 
-int __cdecl GetField(const int *i, int size);
 game_hudelem_s *__cdecl HudElem_Alloc(int clientNum, int teamNum);
 void __cdecl HudElem_SetDefaults(game_hudelem_s *hud);
 void __cdecl HudElem_ClearTypeSettings(game_hudelem_s *hud);

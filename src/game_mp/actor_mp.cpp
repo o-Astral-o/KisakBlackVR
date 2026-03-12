@@ -96,7 +96,7 @@ const char *animModeNames[10] =
 };
 
 
-const char *g_entinfoAITextNames[6] = { "all", "brief", "combat", "movement", "state", NULL };
+static const char *g_entinfoAITextNames[6] = { "all", "brief", "combat", "movement", "state", NULL };
 
 
 

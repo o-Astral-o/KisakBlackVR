@@ -12,44 +12,6 @@
 #include <server_mp/sv_main_mp.h>
 #include <game/g_scr_helicopter.h>
 
-void __cdecl RotatePoint(const float *v, const float *q, float *out)
-{
-    float t4; // [esp+0h] [ebp-24h]
-    float t5; // [esp+4h] [ebp-20h]
-    float t6; // [esp+8h] [ebp-1Ch]
-    float t8; // [esp+Ch] [ebp-18h]
-    float t3; // [esp+10h] [ebp-14h]
-    float t2; // [esp+14h] [ebp-10h]
-    float t7; // [esp+18h] [ebp-Ch]
-    float t9; // [esp+1Ch] [ebp-8h]
-    float t10; // [esp+20h] [ebp-4h]
-
-    t2 = q[3] * *q;
-    t3 = q[3] * q[1];
-    t4 = q[3] * q[2];
-    //t5 = COERCE_FLOAT(*(unsigned int *)q ^ _mask__NegFloat_) * *q;
-    t5 = -*q * *q;
-    t6 = *q * q[1];
-    t7 = *q * q[2];
-    //t8 = COERCE_FLOAT(*((unsigned int *)q + 1) ^ _mask__NegFloat_) * q[1];
-    t8 = -q[1] * q[1];
-    t9 = q[1] * q[2];
-    //t10 = COERCE_FLOAT(*((unsigned int *)q + 2) ^ _mask__NegFloat_) * q[2];
-    t10 = -q[2] * q[2];
-    *out = (float)((float)((float)((float)((float)(t8 + t10) * *v) + (float)((float)(t6 - t4) * v[1]))
-                                             + (float)((float)(t3 + t7) * v[2]))
-                             * 2.0)
-             + *v;
-    out[1] = (float)((float)((float)((float)((float)(t4 + t6) * *v) + (float)((float)(t5 + t10) * v[1]))
-                                                 + (float)((float)(t9 - t2) * v[2]))
-                                 * 2.0)
-                 + v[1];
-    out[2] = (float)((float)((float)((float)((float)(t7 - t3) * *v) + (float)((float)(t2 + t9) * v[1]))
-                                                 + (float)((float)(t5 + t8) * v[2]))
-                                 * 2.0)
-                 + v[2];
-}
-
 col_context_t::col_context_t()
 {
     this->mask = 0;
@@ -2293,23 +2255,6 @@ void __cdecl TransposeMatrix(const float (*matrix)[3], float (*transpose)[3])
         for ( j = 0; j < 3; ++j )
             (*transpose)[3 * i + j] = (*matrix)[3 * j + i];
     }
-}
-
-void __cdecl RotatePoint(float *point, const float (*mat)[3])
-{
-    float tvec; // [esp+8h] [ebp-Ch]
-    float tvec_4; // [esp+Ch] [ebp-8h]
-    float tvec_8; // [esp+10h] [ebp-4h]
-
-    tvec = *point;
-    tvec_4 = point[1];
-    tvec_8 = point[2];
-    *point = (float)((float)((*mat)[0] * *point) + (float)((float)(*mat)[1] * tvec_4))
-                 + (float)((float)(*mat)[2] * tvec_8);
-    point[1] = (float)((float)((float)(*mat)[3] * tvec) + (float)((float)(*mat)[4] * tvec_4))
-                     + (float)((float)(*mat)[5] * tvec_8);
-    point[2] = (float)((float)((float)(*mat)[6] * tvec) + (float)((float)(*mat)[7] * tvec_4))
-                     + (float)((float)(*mat)[8] * tvec_8);
 }
 
 void __cdecl CM_TransformedBoxTrace(

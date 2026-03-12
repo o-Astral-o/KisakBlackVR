@@ -10,8 +10,6 @@
 #include "r_foliage.h"
 #include "r_material_load_obj.h"
 
-unsigned int s_decodeSamplerFilterState[24];
-
 void __cdecl R_InitCmdBufSourceState(GfxCmdBufSourceState *source, const GfxCmdBufInput *input, int cameraView)
 {
     float *v3; // eax

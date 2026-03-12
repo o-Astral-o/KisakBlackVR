@@ -53,178 +53,6 @@ colgeom_visitor_t::colgeom_visitor_t(const colgeom_visitor_t *__that)
     this->m_threadInfo = __that->m_threadInfo;
 }
 
-void colgeom_visitor_t::intersect_box(float *mn, float *mx, int mask)
-{
-    cLeaf_s *leaf; // [esp+18h] [ebp-1050h]
-    int i; // [esp+1Ch] [ebp-104Ch]
-    leafList_s ll; // [esp+20h] [ebp-1048h] BYREF
-    char v8; // [esp+4Ch] [ebp-101Ch] BYREF
-    _WORD v9[2048]; // [esp+60h] [ebp-1008h] BYREF
-    int v10; // [esp+1064h] [ebp-4h]
-
-    v10 = 2048;
-    this->m_mn.vec.v[0] = *mn;
-    this->m_mn.vec.v[1] = mn[1];
-    this->m_mn.vec.v[2] = mn[2];
-    this->m_mx.vec.v[0] = *mx;
-    this->m_mx.vec.v[1] = mx[1];
-    this->m_mx.vec.v[2] = mx[2];
-    this->m_mask = mask;
-    *(_QWORD *)&ll.bounds[0][0] = *(_QWORD *)this->m_mn.vec.v;
-    LODWORD(ll.bounds[0][2]) = this->m_mn.vec.u[2];
-    ll.bounds[1][0] = this->m_mx.vec.v[0];
-    ll.bounds[1][1] = this->m_mx.vec.v[1];
-    ll.bounds[1][2] = this->m_mx.vec.v[2];
-    ll.count = 0;
-    ll.maxcount = 2048;
-    ll.list = v9;
-    ll.lastLeaf = 0;
-    ll.overflowed = 0;
-    CM_BoxLeafnums_r(&ll, 0);
-    if ( ll.count )
-    {
-        if ( ll.overflowed )
-            Com_Printf(0, "colgeom_visitor_t::intersect_box: leafList overflow (max %d)\n", 2048);
-        this->m_threadInfo = (TraceThreadInfo *)&v8;
-        CM_GetTraceThreadInfo(this->m_threadInfo);
-        if ( this->m_threadInfo->checkcount.partitions || !cm.partitionCount )
-        {
-            for ( i = 0; i < ll.count; ++i )
-            {
-                leaf = &cm.leafs[(unsigned __int16)v9[i]];
-                if ( (this->m_mask & leaf->brushContents) != 0 )
-                    colgeom_visitor_t::intersect_box_brushes(leaf);
-                if ( (this->m_mask & leaf->terrainContents) != 0 )
-                    colgeom_visitor_t::intersect_box_partitions(leaf);
-            }
-        }
-    }
-}
-
-void colgeom_visitor_t::intersect_box_brushes(cLeaf_s *leaf)
-{
-    if ( leaf->leafBrushNode )
-    {
-        if ( this->m_mx.vec.v[0] >= leaf->mins[0]
-            && this->m_mx.vec.v[1] >= leaf->mins[1]
-            && this->m_mx.vec.v[2] >= leaf->mins[2]
-            && leaf->maxs[0] >= this->m_mn.vec.v[0]
-            && leaf->maxs[1] >= this->m_mn.vec.v[1]
-            && leaf->maxs[2] >= this->m_mn.vec.v[2] )
-        {
-            colgeom_visitor_t::intersect_box_brushnode(&cm.leafbrushNodes[leaf->leafBrushNode]);
-        }
-    }
-}
-
-void colgeom_visitor_t::intersect_box_partitions(cLeaf_s *leaf)
-{
-    CollisionAabbTree *aabbTree; // [esp+8h] [ebp-8h]
-    int k; // [esp+Ch] [ebp-4h]
-
-    for ( k = 0; k < leaf->collAabbCount; ++k )
-    {
-        aabbTree = &cm.aabbTrees[k + leaf->firstCollAabbIndex];
-        if ( (cm.materials[aabbTree->materialIndex].contentFlags & this->m_mask) != 0 )
-            colgeom_visitor_t::intersect_box_partitions_r(aabbTree);
-    }
-}
-
-void colgeom_visitor_t::intersect_box_brushnode(cLeafBrushNode_s *node)
-{
-    cbrush_t *b; // [esp+14h] [ebp-Ch]
-    int i; // [esp+1Ch] [ebp-4h]
-
-    while ( (this->m_mask & node->contents) != 0 )
-    {
-        if ( node->leafBrushCount )
-        {
-            if ( node->leafBrushCount > 0 )
-            {
-                for ( i = 0; i < node->leafBrushCount; ++i )
-                {
-                    b = &cm.brushes[node->data.leaf.brushes[i]];
-                    if ( (this->m_mask & b->contents) != 0
-                        && this->m_mx.vec.v[0] >= b->mins[0]
-                        && this->m_mx.vec.v[1] >= b->mins[1]
-                        && this->m_mx.vec.v[2] >= b->mins[2]
-                        && b->maxs[0] >= this->m_mn.vec.v[0]
-                        && b->maxs[1] >= this->m_mn.vec.v[1]
-                        && b->maxs[2] >= this->m_mn.vec.v[2] )
-                    {
-                        this->visit(b);
-                    }
-                }
-                return;
-            }
-            colgeom_visitor_t::intersect_box_brushnode(node + 1);
-        }
-        if ( this->m_mn.vec.v[node->axis] <= node->data.children.dist )
-        {
-            if ( this->m_mx.vec.v[node->axis] >= node->data.children.dist )
-                colgeom_visitor_t::intersect_box_brushnode(&node[node->data.children.childOffset[0]]);
-            node += node->data.children.childOffset[1];
-        }
-        else
-        {
-            node += node->data.children.childOffset[0];
-        }
-    }
-}
-
-void colgeom_visitor_t::intersect_box_partitions_r(CollisionAabbTree *aabbTree)
-{
-    bool v3; // [esp+7h] [ebp-25h]
-    int childIndex; // [esp+18h] [ebp-14h]
-    int partitionIndex; // [esp+1Ch] [ebp-10h]
-    CollisionAabbTree *child; // [esp+20h] [ebp-Ch]
-    int checkStamp; // [esp+24h] [ebp-8h]
-
-    if ( this->m_mn.vec.v[0] <= (float)(aabbTree->origin[0] + aabbTree->halfSize[0]) )
-    {
-        if ( this->m_mn.vec.v[1] <= (float)(aabbTree->origin[1] + aabbTree->halfSize[1]) )
-        {
-            if ( this->m_mn.vec.v[2] <= (float)(aabbTree->origin[2] + aabbTree->halfSize[2]) )
-                v3 = (float)(aabbTree->origin[0] - aabbTree->halfSize[0]) <= this->m_mx.vec.v[0]
-                    && (float)(aabbTree->origin[1] - aabbTree->halfSize[1]) <= this->m_mx.vec.v[1]
-                    && (float)(aabbTree->origin[2] - aabbTree->halfSize[2]) <= this->m_mx.vec.v[2];
-            else
-                v3 = 0;
-        }
-        else
-        {
-            v3 = 0;
-        }
-    }
-    else
-    {
-        v3 = 0;
-    }
-    if ( v3 )
-    {
-        if ( aabbTree->childCount )
-        {
-            childIndex = 0;
-            child = &cm.aabbTrees[aabbTree->u.firstChildIndex];
-            while ( childIndex < aabbTree->childCount )
-            {
-                colgeom_visitor_t::intersect_box_partitions_r(child);
-                ++childIndex;
-                ++child;
-            }
-        }
-        else
-        {
-            partitionIndex = aabbTree->u.firstChildIndex;
-            checkStamp = this->m_threadInfo->checkcount.global;
-            if ( this->m_threadInfo->checkcount.partitions[partitionIndex] != checkStamp )
-            {
-                this->m_threadInfo->checkcount.partitions[partitionIndex] = checkStamp;
-                this->visit(aabbTree);
-            }
-        }
-    }
-}
 
 void static_colgeom_visitor_t::visit(const CollisionAabbTree *tree)
 {
@@ -280,7 +108,186 @@ void static_colgeom_visitor_t::update(
         mx[2] = _mx[2] + expand_vec[2];
         this->prolog();
         //colgeom_visitor_t::intersect_box(this, mn, mx, mask);
-        this->intersect_box(mn, mx, mask);
+        colgeom_visitor_t::intersect_box(mn, mx, mask);
     }
 }
 
+
+void colgeom_visitor_t::intersect_box(float *mn, float *mx, int mask)
+{
+    cLeaf_s *leaf; // [esp+18h] [ebp-1050h]
+    int i; // [esp+1Ch] [ebp-104Ch]
+    leafList_s ll; // [esp+20h] [ebp-1048h] BYREF
+    //char v8; // [esp+4Ch] [ebp-101Ch] BYREF
+    TraceThreadInfo v8; // [esp+4Ch] [ebp-101Ch] BYREF
+    _WORD v9[2048]; // [esp+60h] [ebp-1008h] BYREF
+    int v10; // [esp+1064h] [ebp-4h]
+
+    v10 = 2048;
+    this->m_mn.vec.v[0] = *mn;
+    this->m_mn.vec.v[1] = mn[1];
+    this->m_mn.vec.v[2] = mn[2];
+    this->m_mx.vec.v[0] = *mx;
+    this->m_mx.vec.v[1] = mx[1];
+    this->m_mx.vec.v[2] = mx[2];
+    this->m_mask = mask;
+
+    ll.bounds[0][0] = this->m_mn.vec.v[0];
+    ll.bounds[0][1] = this->m_mn.vec.v[1];
+    ll.bounds[0][2] = this->m_mn.vec.v[2];
+    //*(_QWORD *)&ll.bounds[0][0] = *(_QWORD *)this->m_mn.vec.v;
+    //LODWORD(ll.bounds[0][2]) = this->m_mn.vec.u[2];
+    ll.bounds[1][0] = this->m_mx.vec.v[0];
+    ll.bounds[1][1] = this->m_mx.vec.v[1];
+    ll.bounds[1][2] = this->m_mx.vec.v[2];
+    ll.count = 0;
+    ll.maxcount = 2048;
+    ll.list = v9;
+    ll.lastLeaf = 0;
+    ll.overflowed = 0;
+    CM_BoxLeafnums_r(&ll, 0);
+    if (ll.count)
+    {
+        if (ll.overflowed)
+            Com_Printf(0, "colgeom_visitor_t::intersect_box: leafList overflow (max %d)\n", 2048);
+        this->m_threadInfo = &v8;
+        CM_GetTraceThreadInfo(this->m_threadInfo);
+        if (this->m_threadInfo->checkcount.partitions || !cm.partitionCount)
+        {
+            for (i = 0; i < ll.count; ++i)
+            {
+                leaf = &cm.leafs[(unsigned __int16)v9[i]];
+                if ((this->m_mask & leaf->brushContents) != 0)
+                    colgeom_visitor_t::intersect_box_brushes(leaf);
+                if ((this->m_mask & leaf->terrainContents) != 0)
+                    colgeom_visitor_t::intersect_box_partitions(leaf);
+            }
+        }
+    }
+}
+
+
+void colgeom_visitor_t::intersect_box_brushes(cLeaf_s *leaf)
+{
+    if (leaf->leafBrushNode)
+    {
+        if (this->m_mx.vec.v[0] >= leaf->mins[0]
+            && this->m_mx.vec.v[1] >= leaf->mins[1]
+            && this->m_mx.vec.v[2] >= leaf->mins[2]
+            && leaf->maxs[0] >= this->m_mn.vec.v[0]
+            && leaf->maxs[1] >= this->m_mn.vec.v[1]
+            && leaf->maxs[2] >= this->m_mn.vec.v[2])
+        {
+            colgeom_visitor_t::intersect_box_brushnode(&cm.leafbrushNodes[leaf->leafBrushNode]);
+        }
+    }
+}
+
+void colgeom_visitor_t::intersect_box_partitions(cLeaf_s *leaf)
+{
+    CollisionAabbTree *aabbTree; // [esp+8h] [ebp-8h]
+    int k; // [esp+Ch] [ebp-4h]
+
+    for (k = 0; k < leaf->collAabbCount; ++k)
+    {
+        aabbTree = &cm.aabbTrees[k + leaf->firstCollAabbIndex];
+        if ((cm.materials[aabbTree->materialIndex].contentFlags & this->m_mask) != 0)
+            colgeom_visitor_t::intersect_box_partitions_r(aabbTree);
+    }
+}
+
+void colgeom_visitor_t::intersect_box_brushnode(cLeafBrushNode_s *node)
+{
+    cbrush_t *b; // [esp+14h] [ebp-Ch]
+    int i; // [esp+1Ch] [ebp-4h]
+
+    while ((this->m_mask & node->contents) != 0)
+    {
+        if (node->leafBrushCount)
+        {
+            if (node->leafBrushCount > 0)
+            {
+                for (i = 0; i < node->leafBrushCount; ++i)
+                {
+                    b = &cm.brushes[node->data.leaf.brushes[i]];
+                    if ((this->m_mask & b->contents) != 0
+                        && this->m_mx.vec.v[0] >= b->mins[0]
+                        && this->m_mx.vec.v[1] >= b->mins[1]
+                        && this->m_mx.vec.v[2] >= b->mins[2]
+                        && b->maxs[0] >= this->m_mn.vec.v[0]
+                        && b->maxs[1] >= this->m_mn.vec.v[1]
+                        && b->maxs[2] >= this->m_mn.vec.v[2])
+                    {
+                        this->visit(b);
+                    }
+                }
+                return;
+            }
+            colgeom_visitor_t::intersect_box_brushnode(node + 1);
+        }
+        if (this->m_mn.vec.v[node->axis] <= node->data.children.dist)
+        {
+            if (this->m_mx.vec.v[node->axis] >= node->data.children.dist)
+                colgeom_visitor_t::intersect_box_brushnode(&node[node->data.children.childOffset[0]]);
+            node += node->data.children.childOffset[1];
+        }
+        else
+        {
+            node += node->data.children.childOffset[0];
+        }
+    }
+}
+
+void colgeom_visitor_t::intersect_box_partitions_r(CollisionAabbTree *aabbTree)
+{
+    bool v3; // [esp+7h] [ebp-25h]
+    int childIndex; // [esp+18h] [ebp-14h]
+    int partitionIndex; // [esp+1Ch] [ebp-10h]
+    CollisionAabbTree *child; // [esp+20h] [ebp-Ch]
+    int checkStamp; // [esp+24h] [ebp-8h]
+
+    if (this->m_mn.vec.v[0] <= (float)(aabbTree->origin[0] + aabbTree->halfSize[0]))
+    {
+        if (this->m_mn.vec.v[1] <= (float)(aabbTree->origin[1] + aabbTree->halfSize[1]))
+        {
+            if (this->m_mn.vec.v[2] <= (float)(aabbTree->origin[2] + aabbTree->halfSize[2]))
+                v3 = (float)(aabbTree->origin[0] - aabbTree->halfSize[0]) <= this->m_mx.vec.v[0]
+                && (float)(aabbTree->origin[1] - aabbTree->halfSize[1]) <= this->m_mx.vec.v[1]
+                && (float)(aabbTree->origin[2] - aabbTree->halfSize[2]) <= this->m_mx.vec.v[2];
+            else
+                v3 = 0;
+        }
+        else
+        {
+            v3 = 0;
+        }
+    }
+    else
+    {
+        v3 = 0;
+    }
+    if (v3)
+    {
+        if (aabbTree->childCount)
+        {
+            childIndex = 0;
+            child = &cm.aabbTrees[aabbTree->u.firstChildIndex];
+            while (childIndex < aabbTree->childCount)
+            {
+                colgeom_visitor_t::intersect_box_partitions_r(child);
+                ++childIndex;
+                ++child;
+            }
+        }
+        else
+        {
+            partitionIndex = aabbTree->u.firstChildIndex;
+            checkStamp = this->m_threadInfo->checkcount.global;
+            if (this->m_threadInfo->checkcount.partitions[partitionIndex] != checkStamp)
+            {
+                this->m_threadInfo->checkcount.partitions[partitionIndex] = checkStamp;
+                this->visit(aabbTree);
+            }
+        }
+    }
+}

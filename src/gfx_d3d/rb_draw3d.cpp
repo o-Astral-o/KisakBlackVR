@@ -451,7 +451,7 @@ void __cdecl R_DrawFullbrightEmissiveCallback(char *data, GfxCmdBufContext conte
 }
 
 void R_DrawFullbrightOrDebugShader(
-    void(__cdecl *callback)(const void *, GfxCmdBufContext, GfxCmdBufContext),
+    void(__cdecl *callback)(const void *, GfxCmdBufSourceState *, GfxCmdBufState *, GfxCmdBufSourceState *, GfxCmdBufState *),
     const GfxViewInfo *viewInfo,
     const GfxDrawSurfListInfo *info,
     GfxCmdBuf *cmdBuf)
@@ -497,7 +497,7 @@ void R_DrawFullbrightOrDebugShader(
     v9.input.consts[46][3] = 0.0f;
     R_DirtyCodeConstant(&v9, 46);
 
-    R_DrawCall((void(__cdecl *)(const void *, GfxCmdBufSourceState *, GfxCmdBufState *, GfxCmdBufSourceState *, GfxCmdBufState *))callback, viewInfo, &v9, viewInfo, info, &viewInfo->cullViewInfo.viewParms, cmdBuf, 0);
+    R_DrawCall(callback, viewInfo, &v9, viewInfo, info, &viewInfo->cullViewInfo.viewParms, cmdBuf, 0);
 }
 
 void __cdecl RB_DebugShaderDrawCommands(const GfxViewInfo *viewInfo)

@@ -26,7 +26,6 @@ debug_brush_info_t *debug_brush_info;
 debug_patch_info_t *debug_patch_info;
 
 int debugCollisionAabbTreeCount;
-int g_debug_partition;
 
 // This version takes a Ref (&)
 void __cdecl make_rotate(phys_mat44 &m, const phys_vec3 *u, float ca, float sa)
@@ -2591,6 +2590,9 @@ void __cdecl render_debug_draw_gjk_trace_geom()
 {
     GjkTraceGeom::Render();
 }
+
+GjkTraceGeom GjkTraceGeom::geoms[50];
+int GjkTraceGeom::nGeoms;
 
 void __cdecl GjkTraceGeom::Render()
 {

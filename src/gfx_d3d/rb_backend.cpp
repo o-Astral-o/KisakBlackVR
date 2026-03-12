@@ -39,6 +39,7 @@
 #include "rb_resource.h"
 #include <client_mp/cl_scrn_mp.h>
 #include "rb_compositing.h"
+#include <ui/ui_main_pc.h>
 
 int g_msgTime;
 bool assets_released;
@@ -310,19 +311,6 @@ GfxBackEndData *backEndData;
 
 int rb_execCmdsMS;
 int rb_swapMS;
-
-bool __cdecl ValidGamePadButtonIcon(unsigned int letter)
-{
-    if ( letter && letter <= 6 )
-        return 1;
-    if ( letter >= 0xE && letter <= 0x19 )
-        return 1;
-    if ( letter >= 0x1C && letter <= 0x1F )
-        return 1;
-    if ( letter == 188 )
-        return 1;
-    return letter == 189;
-}
 
 void __cdecl RB_CopyBackendStats()
 {

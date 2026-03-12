@@ -54,7 +54,7 @@ int window_center_y;
 WinMouseVars_t s_wmv;
 
 const dvar_t *in_mouse;
-const dvar_s *gpad_present;
+//const dvar_s *gpad_present;
 int in_appactive;
 
 

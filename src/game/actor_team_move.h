@@ -51,7 +51,6 @@ struct team_move_other_context_t // sizeof=0x30
     float fScale;
 };
 
-bool __cdecl Actor_AtDifferentElevation(float *vOrgSelf, float *vOrgOther);
 void __fastcall Actor_TeamMoveBlocked(actor_s *self);
 void __fastcall Actor_TeamMoveBlockedClear(actor_s *self);
 char __cdecl Actor_TeamMoveCalcMovementDir(team_move_context_t *context, ai_teammove_t *result);

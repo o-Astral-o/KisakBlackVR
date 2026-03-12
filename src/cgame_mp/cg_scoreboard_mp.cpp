@@ -1041,7 +1041,7 @@ double __cdecl CG_DrawScoreboard_ListColumnHeaders(
     return y + h + 4.0;
 }
 
-void __cdecl CG_GetScoreboardInfo(int localClientNum, listColumnInfo_t **colInfo, int *numFields)
+void __cdecl CG_GetScoreboardInfo(int localClientNum, const listColumnInfo_t **colInfo, int *numFields)
 {
     Demo_IsPlaying();
     *colInfo = matchScoreBoardData[localClientNum].inGameScoreboardColumnInfo;

@@ -7,3 +7,4 @@ int __cdecl Encode_Sample(__int16 *buffer_in, char *buffer_out, int maxLength);
 int __cdecl Encode_GetFrameSize();
 
 extern int g_current_bandwidth_setting; // KISAKTODO: move somewhere
+extern int g_encoder_samplerate;

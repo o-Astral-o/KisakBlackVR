@@ -93,7 +93,6 @@ void assertexCmd();
 void assertmsgCmd();
 void print();
 void println();
-gentity_s *__cdecl GetEntity(const unsigned __int16 *targetname);
 void GScr_IsCollectors();
 void __cdecl    GScr_AllocString(char *s);
 void __cdecl Scr_LoadLevel();
@@ -843,8 +842,6 @@ void __cdecl Scr_PlayerVote(gentity_s *self, char *option);
 void __cdecl GScr_Shutdown();
 void __cdecl GScr_Gdt_Update(char *asset, char *keyValue);
 void __cdecl Scr_GlassSmash(float *pos, float *dir);
-void __cdecl Scr_AddStruct(scriptInstance_t inst);
-void __cdecl Scr_ResetTimeout(scriptInstance_t inst);
 
 
 extern scr_data_t g_scr_data;

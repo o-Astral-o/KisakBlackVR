@@ -491,3 +491,5 @@ static const MaterialUpdateFrequency s_codeConstUpdateFreq[] =
   MTL_UPDATE_PER_OBJECT,
   MTL_UPDATE_RARELY
 };
+
+extern unsigned int s_decodeSamplerFilterState[24];

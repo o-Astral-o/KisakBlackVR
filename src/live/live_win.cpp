@@ -95,7 +95,7 @@ const dvar_t *dw_popup;
 const dvar_t *inviteText;
 const dvar_t *scr_bot_difficulty;
 const dvar_t *clancard_clanid;
-const dvar_t *clanName;
+//const dvar_t *clanName;
 const dvar_t *bot_difficulty;
 const dvar_t *dw_usernames[5];
 

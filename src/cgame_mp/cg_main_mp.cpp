@@ -78,8 +78,7 @@
 #include <physics/rope.h>
 #include "cg_predict_mp.h"
 #include <cgame/cg_local.h>
-
-bool g_allowMature = true;
+#include <win32/win_main.h>
 
 const char *cg_thirdPersonModeNames[4] =
 { "Free", "Fixed", "Locked", NULL };
@@ -111,6 +110,9 @@ const char *debugOverlayNames[4] =
 
 float (*cg_entityOriginArray[1])[3];
 unsigned __int8 *cg_ikBuf[1];
+
+centity_s *cg_entitiesArray[1];
+fake_centity_s *cg_fakeEntitiesArray;
 
 BattleChatterParams cg_BattleChatters[8];
 
@@ -398,11 +400,6 @@ const dvar_s *cg_debugLocHitTime;
 
 cg_s *cgArray;
 cgs_t *cgsArray;
-
-unsigned __int8 *__cdecl Hunk_AllocXAnimCreate(unsigned int size)
-{
-    return Hunk_AllocLow(size, "XAnimCreateAnims", 13);
-}
 
 int __cdecl CG_GetClientNumForLocalClient(int localClientNum)
 {

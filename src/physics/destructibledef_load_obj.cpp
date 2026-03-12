@@ -540,50 +540,6 @@ cspField_t destructibleDefFields[453] =
   { "pieceLabel31", 0, 462 }
 };
 
-
-
-
-int __cdecl XModelGetBoneIndex(const XModel *model, unsigned int name, unsigned int offset, unsigned __int8 *index)
-{
-    unsigned int numBones; // [esp+0h] [ebp-Ch]
-    unsigned int localBoneIndex; // [esp+4h] [ebp-8h]
-    unsigned __int16 *boneNames; // [esp+8h] [ebp-4h]
-
-    if ( !index && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\xmodel_utils.cpp", 379, 0, "%s", "index") )
-        __debugbreak();
-    boneNames = model->localBoneNames;
-    numBones = model->numBones;
-    if ( numBones >= 0xA0
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\xmodel_utils.cpp",
-                    388,
-                    0,
-                    "%s",
-                    "numBones < DOBJ_MAX_PARTS") )
-    {
-        __debugbreak();
-    }
-    for ( localBoneIndex = 0; ; ++localBoneIndex )
-    {
-        if ( localBoneIndex >= numBones )
-            return 0;
-        if ( name == boneNames[localBoneIndex] )
-            break;
-    }
-    *index = localBoneIndex + offset;
-    if ( *index != localBoneIndex + offset
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\xmodel_utils.cpp",
-                    395,
-                    0,
-                    "%s",
-                    "*index == offset + localBoneIndex") )
-    {
-        __debugbreak();
-    }
-    return 1;
-}
-
 bool __cdecl DestructiblePiece_ParseDefSpecificFieldType(unsigned __int8 *pStruct, const char *pValue, int iFieldType)
 {
     if ( DestructiblePiece_SetFlag((DestructiblePiece *)pStruct, pValue, iFieldType, 15, 19, 1) )

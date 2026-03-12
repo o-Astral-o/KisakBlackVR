@@ -1,4 +1,5 @@
 #include "glass_client.h"
+#include "glass_renderer.h"
 #include <universal/com_memory.h>
 
 #include <new>
@@ -11,6 +12,8 @@
 #include <bgame/bg_misc.h>
 
 GlassesClient *clGlasses;
+
+StackAllocator GlassesClient::allocator;
 
 void __cdecl GlassesClient::InitAllocator(Glasses *glasses)
 {

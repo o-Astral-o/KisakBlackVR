@@ -44,17 +44,35 @@ struct phys_gjk_geom // sizeof=0x4
 {                                       // XREF: gjk_base_t/r
     //phys_gjk_geom_vtbl *__vftable;
     virtual void support(const phys_vec3 *, phys_vec3 *, phys_vec3 *) const = 0;
-    virtual void get_simplex(const struct cached_simplex_info *, const int, phys_vec3 *, phys_vec3 *);
+    virtual void get_simplex(const struct cached_simplex_info *, const int, phys_vec3 *, phys_vec3 *)
+    {
+        iassert(0);
+    }
     virtual void set_simplex(const phys_vec3 *, const int, const phys_vec3 *, cached_simplex_info *);
-    virtual const phys_vec3 *get_center(phys_vec3 *result) const;
-    virtual void get_feature(struct phys_contact_manifold *) const;
+    virtual const phys_vec3 *get_center(phys_vec3 *result) const
+    {
+        // suckage
+        iassert(0);
+        return NULL;
+    }
+    virtual void get_feature(struct phys_contact_manifold *) const
+    {
+        iassert(0);
+    }
     virtual float get_geom_radius() const
     {
+        iassert(0);
         return 0.0f;
     }
-    virtual void calc_aabb(const phys_mat44 *, phys_vec3 *, phys_vec3 *) const;
+    virtual void calc_aabb(const phys_mat44 *, phys_vec3 *, phys_vec3 *) const
+    {
+        iassert(0);
+    }
     virtual bool ray_cast(const phys_vec3 *, const phys_vec3 *, const float, float *, phys_vec3 *);
-    virtual bool is_polyhedron();
+    virtual bool is_polyhedron()
+    {
+        return false;
+    }
 
     const phys_vec3 *support_only(const phys_vec3 *result, const phys_mat44 *xform, const phys_vec3 *v) const;
 };
@@ -118,7 +136,11 @@ public:
         void set_xform(const phys_mat44 *xform);
 
         virtual void comp_aabb_loc();
-        virtual unsigned int get_type() const = 0;
+        virtual unsigned int get_type() const
+        {
+            iassert(0);
+            return 0;
+        }
         virtual bool is_foot(const phys_vec3 *hit_point) const;
         virtual bool is_walkable(const phys_vec3 *hit_point, const phys_vec3 *up);
         virtual const cbrush_t *get_brush() const;
@@ -170,7 +192,11 @@ struct __declspec(align(16)) gjk_aabb_t : gjk_base_t // sizeof=0x80
         const cbrush_t * get_brush();
         static void __cdecl destroy(gjk_aabb_t *geom);
 
-        unsigned int get_type() const;
+        unsigned int get_type() const
+        {
+            iassert(0);
+            return 0;
+        }
 };
 
 struct BrushWrapper // sizeof=0x60
@@ -292,20 +318,7 @@ const struct CollisionPartition // sizeof=0x14
         CollisionBorder *borders;
 };
 
-union CollisionAabbTreeIndex // sizeof=0x4
-{                                                                             // XREF: CollisionAabbTree/r
-        int firstChildIndex;
-        int partitionIndex;
-};
-
-const struct CollisionAabbTree // sizeof=0x20
-{
-        float origin[3];
-        unsigned __int16 materialIndex;
-        unsigned __int16 childCount;
-        float halfSize[3];
-        CollisionAabbTreeIndex u;
-};
+struct CollisionAabbTree;
 
 struct __declspec(align(16)) gjk_partition_t : gjk_base_t // sizeof=0x70
 {
@@ -334,7 +347,7 @@ struct __declspec(align(16)) gjk_partition_t : gjk_base_t // sizeof=0x70
         void support(
                 const phys_vec3 *v,
                 phys_vec3 *support_vert,
-                phys_vec3 *support_ind);
+                phys_vec3 *support_ind) const;
         void get_simplex(
                 const cached_simplex_info *cache_info,
                 int index_count,
@@ -347,11 +360,6 @@ struct __declspec(align(16)) gjk_partition_t : gjk_base_t // sizeof=0x70
                 phys_vec3 *aabb_max);
         unsigned int get_type();
         static void __cdecl destroy(gjk_partition_t *geom);
-
-        void support(
-            const phys_vec3 *v,
-            phys_vec3 *support_vert,
-            phys_vec3 *support_ind) const;
 
         inline unsigned int get_type() const
         {

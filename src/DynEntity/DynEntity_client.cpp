@@ -3243,12 +3243,3 @@ void __cdecl MapHitLocationToRagdollBoneName(hitLocation_t hitLoc, unsigned int 
             return;
     }
 }
-
-const DynEntityDef *__cdecl DynEnt_GetEntityDef(unsigned __int16 absDynEntId)
-{
-    DynEntityDrawType drawType; // [esp+0h] [ebp-8h] BYREF
-    unsigned __int16 id; // [esp+4h] [ebp-4h] BYREF
-
-    DynEnt_GetClientIdDrawType(absDynEntId, &id, &drawType);
-    return DynEnt_GetEntityDef(id, drawType);
-}

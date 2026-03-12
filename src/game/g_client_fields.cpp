@@ -360,7 +360,7 @@ const char *__cdecl CScr_GetColumnNameByType(scoreboardColumnType_t columnType)
     return g_scoreboardColumnNames[0];
 }
 
-void __cdecl ClientScr_SetSessionState(gclient_s *pSelf)
+void __cdecl ClientScr_SetSessionState(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *v1; // eax
     const char *v2; // eax
@@ -560,6 +560,11 @@ int __cdecl ClientScr_GetScoreboardColumnIndexByType(scoreboardColumnType_t colu
     return -1;
 }
 
+void ClientScr_SetDeaths(gclient_s *pSelf, const client_fields_s *__formal)
+{
+    pSelf->sess.cs.score.deaths = ClientScr_SetColumnValue(pSelf, SB_TYPE_DEATHS).intValue;
+}
+
 void __cdecl ClientScr_SetAssists(gclient_s *pSelf, const client_fields_s *__formal)
 {
     pSelf->sess.cs.score.assists =
@@ -657,7 +662,7 @@ void __cdecl ClientScr_SetKillCamEntity(gclient_s *pSelf, const client_fields_s 
     pSelf->sess.killCamEntity = iNewKillCamEntity;
 }
 
-void __cdecl ClientScr_SetKillCamTargetEntity(gclient_s *pSelf)
+void __cdecl ClientScr_SetKillCamTargetEntity(gclient_s *pSelf, const client_fields_s *__formal)
 {
     int iNewKillCamEntity; // [esp+0h] [ebp-4h]
 
@@ -672,7 +677,7 @@ void __cdecl ClientScr_SetKillCamTargetEntity(gclient_s *pSelf)
     pSelf->sess.killCamTargetEntity = iNewKillCamEntity;
 }
 
-void __cdecl ClientScr_SetStatusIcon(gclient_s *pSelf)
+void __cdecl ClientScr_SetStatusIcon(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char *pszIcon; // [esp+0h] [ebp-4h]
 
@@ -685,7 +690,7 @@ void __cdecl ClientScr_SetStatusIcon(gclient_s *pSelf)
     pSelf->sess.cs.score.status_icon = GScr_GetStatusIconIndex(pszIcon);
 }
 
-void __cdecl ClientScr_GetStatusIcon(gclient_s *pSelf)
+void __cdecl ClientScr_GetStatusIcon(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char szConfigString[1028]; // [esp+0h] [ebp-408h] BYREF
 
@@ -715,7 +720,7 @@ void __cdecl ClientScr_GetStatusIcon(gclient_s *pSelf)
     }
 }
 
-void __cdecl ClientScr_SetHeadIcon(gclient_s *pSelf)
+void __cdecl ClientScr_SetHeadIcon(gclient_s *pSelf, const client_fields_s *__formal)
 {
     gentity_s *pEnt; // [esp+0h] [ebp-8h]
     char *pszIcon; // [esp+4h] [ebp-4h]
@@ -741,7 +746,7 @@ void __cdecl ClientScr_SetHeadIcon(gclient_s *pSelf)
     pEnt->s.iHeadIcon = GScr_GetHeadIconIndex(pszIcon);
 }
 
-void __cdecl ClientScr_GetHeadIcon(gclient_s *pSelf)
+void __cdecl ClientScr_GetHeadIcon(gclient_s *pSelf, const client_fields_s *__formal)
 {
     char szConfigString[1024]; // [esp+0h] [ebp-408h] BYREF
     gentity_s *pEnt; // [esp+404h] [ebp-4h]

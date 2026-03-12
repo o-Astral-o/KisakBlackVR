@@ -3,8 +3,6 @@
 #include <clientscript/cscr_variable.h>
 #include <qcommon/common.h>
 
-gentity_s *__cdecl GetEntity(const unsigned __int16 *targetname);
-gentity_s *__cdecl GetEntity(scr_entref_t entref);
 void __cdecl Reached_ScriptMover(gentity_s *pEnt);
 int __cdecl ScriptMover_UpdateMove(
                 trajectory_t *pTr,

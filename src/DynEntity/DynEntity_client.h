@@ -213,7 +213,6 @@ void __cdecl DynEntCl_DestroyEvent(
                 const float *hitDir);
 void __cdecl CreateRopes(int localClientNum);
 void __cdecl MapHitLocationToRagdollBoneName(hitLocation_t hitLoc, unsigned int *boneName);
-const DynEntityDef *__cdecl DynEnt_GetEntityDef(unsigned __int16 absDynEntId);
 
 
 extern const dvar_t *dynEnt_bulletForce;

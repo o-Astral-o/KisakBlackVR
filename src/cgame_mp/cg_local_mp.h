@@ -1305,35 +1305,35 @@ struct cgMedia_t // sizeof=0x31BC
                                                                                 // XREF: CG_RegisterGraphics+C48/w
 };
 
-centity_s *cg_entitiesArray[1];
-fake_centity_s *cg_fakeEntitiesArray;
+extern centity_s *cg_entitiesArray[1];
+extern fake_centity_s *cg_fakeEntitiesArray;
 
 extern cg_s *cgArray;
 extern cgs_t *cgsArray;
 
 inline centity_s *__cdecl CG_GetEntity(int32_t localClientNum, uint32_t entityIndex)
 {
-        iassert(localClientNum == 0);
-        bcassert(entityIndex, MAX_LOCAL_CENTITIES);
+    iassert(localClientNum == 0);
+    bcassert(entityIndex, MAX_LOCAL_CENTITIES);
 
-        if (entityIndex < 1024)
-                return &cg_entitiesArray[localClientNum][entityIndex];
-        else
-                return &cg_fakeEntitiesArray[512 * localClientNum - 1024 + entityIndex].cent;
+    if (entityIndex < 1024)
+        return &cg_entitiesArray[localClientNum][entityIndex];
+    else
+        return &cg_fakeEntitiesArray[512 * localClientNum - 1024 + entityIndex].cent;
 }
 
 inline cg_s *CG_GetLocalClientGlobals(int32_t localClientNum)
 {
-        iassert(localClientNum == 0);
+    iassert(localClientNum == 0);
 
-        return &cgArray[localClientNum];
+    return &cgArray[localClientNum];
 }
 
 inline cgs_t *CG_GetLocalClientStaticGlobals(int32_t localClientNum)
 {
-        iassert(localClientNum == 0);
+    iassert(localClientNum == 0);
 
-        return &cgsArray[localClientNum];
+    return &cgsArray[localClientNum];
 }
 
 

@@ -28,7 +28,7 @@ _XINPUT_STATE delayedInputState[1];
 void(__cdecl *s_removedCB)(int);
 void(__cdecl *s_insertedCB)(int);
 
-void __cdecl GPad_InitAll()
+void GPad_InitAll()
 {
     GamePad *gPad; // [esp+14h] [ebp-8h]
     signed int portIndex; // [esp+18h] [ebp-4h]

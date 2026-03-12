@@ -1172,54 +1172,54 @@ void CScr_IsArray()
     }
 }
 
-void assertCmd()
-{
-    if ( !Scr_GetInt(0, SCRIPTINSTANCE_CLIENT).intValue )
-        Scr_Error(SCRIPTINSTANCE_CLIENT, "assert fail", 1);
-}
+//void assertCmd()
+//{
+//    if ( !Scr_GetInt(0, SCRIPTINSTANCE_CLIENT).intValue )
+//        Scr_Error(SCRIPTINSTANCE_CLIENT, "assert fail", 1);
+//}
+//
+//void assertexCmd()
+//{
+//    char *error; // [esp+0h] [ebp-8h]
+//    char *String; // [esp+4h] [ebp-4h]
+//
+//    if ( !Scr_GetInt(0, SCRIPTINSTANCE_CLIENT).intValue )
+//    {
+//        String = Scr_GetString(1u, SCRIPTINSTANCE_CLIENT);
+//        error = va("assert fail: %s", String);
+//        Scr_Error(SCRIPTINSTANCE_CLIENT, error, 1);
+//    }
+//}
+//
+//void assertmsgCmd()
+//{
+//    char *error; // [esp+0h] [ebp-8h]
+//    char *String; // [esp+4h] [ebp-4h]
+//
+//    String = Scr_GetString(0, SCRIPTINSTANCE_CLIENT);
+//    error = va("assert fail: %s", String);
+//    Scr_Error(SCRIPTINSTANCE_CLIENT, error, 1);
+//}
 
-void assertexCmd()
-{
-    char *error; // [esp+0h] [ebp-8h]
-    char *String; // [esp+4h] [ebp-4h]
+//void print()
+//{
+//    char *DebugString; // [esp+0h] [ebp-Ch]
+//    int num; // [esp+4h] [ebp-8h]
+//    signed int i; // [esp+8h] [ebp-4h]
+//
+//    num = Scr_GetNumParam(SCRIPTINSTANCE_CLIENT);
+//    for (i = 0; i < num; ++i)
+//    {
+//        DebugString = Scr_GetDebugString(i, SCRIPTINSTANCE_CLIENT);
+//        Com_Printf(cg_level.scriptPrintChannel, "%s", DebugString);
+//    }
+//}
 
-    if ( !Scr_GetInt(0, SCRIPTINSTANCE_CLIENT).intValue )
-    {
-        String = Scr_GetString(1u, SCRIPTINSTANCE_CLIENT);
-        error = va("assert fail: %s", String);
-        Scr_Error(SCRIPTINSTANCE_CLIENT, error, 1);
-    }
-}
-
-void assertmsgCmd()
-{
-    char *error; // [esp+0h] [ebp-8h]
-    char *String; // [esp+4h] [ebp-4h]
-
-    String = Scr_GetString(0, SCRIPTINSTANCE_CLIENT);
-    error = va("assert fail: %s", String);
-    Scr_Error(SCRIPTINSTANCE_CLIENT, error, 1);
-}
-
-void print()
-{
-    char *DebugString; // [esp+0h] [ebp-Ch]
-    int num; // [esp+4h] [ebp-8h]
-    signed int i; // [esp+8h] [ebp-4h]
-
-    num = Scr_GetNumParam(SCRIPTINSTANCE_CLIENT);
-    for (i = 0; i < num; ++i)
-    {
-        DebugString = Scr_GetDebugString(i, SCRIPTINSTANCE_CLIENT);
-        Com_Printf(cg_level.scriptPrintChannel, "%s", DebugString);
-    }
-}
-
-void println()
-{
-    print();
-    Com_Printf(cg_level.scriptPrintChannel, "\n");
-}
+//void println()
+//{
+//    print();
+//    Com_Printf(cg_level.scriptPrintChannel, "\n");
+//}
 
 void CScr_IPrintLnBold()
 {

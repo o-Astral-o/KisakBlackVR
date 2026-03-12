@@ -102,6 +102,12 @@ struct fifo_t//<tilemesh_t,4> // sizeof=0x88
     unsigned int tail;
     T data[SIZE];
 
+    fifo_t()
+    {
+        tail = 0;
+        head = 0;
+    }
+
     void add(const T *t)
     {
         data[tail] = *t;
@@ -311,7 +317,7 @@ struct WaterSimInfo // sizeof=0x3C
 
 struct waterdata_t // sizeof=0x160A0
 {                                       // XREF: .data:data/r
-    waterdata_t();
+    waterdata_t() = default;
 
     float waveTimeleft;                 // XREF: R_WaterSimulationRestart(void)+E/w
                                         // R_WaterSimulationApplyWaveSeed+6/r ...

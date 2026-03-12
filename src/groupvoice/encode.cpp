@@ -6,8 +6,8 @@
 void *g_encoder;
 SpeexBits encodeBits;
 int g_frame_size;
-int g_encoder_quality;
-int g_encoder_samplerate;
+int g_encoder_quality = 1;
+int g_encoder_samplerate = 8000;
 int g_speex_initialized;
 int g_current_bandwidth_setting;
 

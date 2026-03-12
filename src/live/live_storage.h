@@ -280,8 +280,8 @@ struct __declspec(align(8)) bdVoteRankStatsInfo : bdStatsInfo // sizeof=0xC8
 struct __declspec(align(8)) fileSharePrivateData // sizeof=0xB418
 {                                       // XREF: .data:s_fileSharePrimary/r
                                         // .data:s_fileShareSecondary/r
-    ~fileSharePrivateData();
-    fileSharePrivateData();
+    //~fileSharePrivateData();
+    //fileSharePrivateData();
 
     bool valid;
     // padding byte
@@ -632,8 +632,8 @@ struct __declspec(align(8)) dwFileShareGetTopRatedTask // sizeof=0x4E48
 
 struct playerFileOperations // sizeof=0x6F58
 {                                       // XREF: .data:controllerFileOps/r
-    ~playerFileOperations();
-    playerFileOperations();
+    ~playerFileOperations() = default;
+    playerFileOperations() = default;
 
     dwFileOperationInfo statsBackupFileInfo;
     dwFileOperationInfo readDWEmailFileInfo;

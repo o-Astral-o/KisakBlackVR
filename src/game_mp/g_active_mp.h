@@ -45,4 +45,4 @@ void __cdecl G_AddClientKnife(clientInfo_t *ci, playerState_s *ps);
 gentity_s *__cdecl G_GetPlayer(unsigned int clientNum);
 void __cdecl G_PlayerEvent(int clientNum, int event);
 
-extern pmove_t g_pmove[];
+extern pmove_t g_pmove[32];

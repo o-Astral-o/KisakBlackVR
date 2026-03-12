@@ -147,3 +147,4 @@ CmdArgs *__cdecl Cmd_Args();
 int __cdecl Cmd_Argc();
 
 extern CmdArgs sv_cmd_args;
+extern CmdArgs g_cmd_args[2];

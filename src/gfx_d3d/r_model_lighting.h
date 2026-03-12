@@ -50,7 +50,6 @@ struct CalcLightingCmd // sizeof=0x2C
     unsigned __int8 *modelLightGlobPrimaryLightIndex;
 };
 
-GfxModelLightingPatch *__cdecl R_BackEndDataAllocAndClearModelLightingPatch(GfxBackEndData *frontEndDataOut);
 void __cdecl R_SetModelLightingCoords(unsigned __int16 handle, float *out);
 unsigned int __cdecl R_ModelLightingIndexFromHandle(unsigned __int16 handle);
 char __cdecl R_AllocStaticModelLighting(GfxStaticModelDrawInst *smodelDrawInst, unsigned int smodelIndex);

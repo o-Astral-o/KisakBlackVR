@@ -1607,11 +1607,6 @@ int startIndex_0;
 int currIndex_0;
 
 
-bool __cdecl IsVisible(char flags)
-{
-    return (flags & 4) != 0 && (flags & 0x10) == 0;
-}
-
 char __cdecl GetTwoOperands(OperandStack *dataStack, Operand *data1, Operand *data2)
 {
     GetOperand(dataStack, data2);

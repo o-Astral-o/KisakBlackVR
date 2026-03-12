@@ -350,6 +350,58 @@ contact_point_info *__cdecl contact_point_info::create_cpi(
     return result;
 }
 
+void __thiscall contact_point_info::set_solver_priority(unsigned int priority)
+{
+    if ((priority & 7) != priority
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
+            78,
+            "(priority & FLAG_SOLVER_PRIORITY_MASK) == priority",
+            ""))
+    {
+        __debugbreak();
+    }
+    this->m_flags &= 0xFFFFFFF8;
+    this->m_flags |= priority;
+}
+
+void __thiscall contact_point_info::set_rb2_entity(const void *rb2_entity)
+{
+    this->m_flags |= 0x10u;
+    this->m_rb2_entity = rb2_entity;
+}
+
+void __thiscall contact_point_info::check_surface_properties()
+{
+    if (this->m_fric_coef < 0.0
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
+            137,
+            "m_fric_coef >= 0.0f",
+            ""))
+    {
+        __debugbreak();
+    }
+    if ((this->m_bounce_coef > 1.0 || this->m_bounce_coef < 0.0)
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
+            138,
+            "m_bounce_coef <= 1.0f && m_bounce_coef >= 0.0f",
+            ""))
+    {
+        __debugbreak();
+    }
+    if (this->m_max_restitution_vel < 0.0
+        && _tlAssert(
+            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
+            139,
+            "m_max_restitution_vel >= 0.0f",
+            ""))
+    {
+        __debugbreak();
+    }
+}
+
 extern const char *g_contact_manifold_error_msg;
 void __thiscall phys_contact_manifold::set_get_feature_params(
                 const phys_vec3 *hitp,
@@ -2162,7 +2214,7 @@ void standard_query::query(
     phys_vec3 v73; // [esp-1200h] [ebp-120Ch] BYREF
     const cbrush_t *v74; // [esp-11E8h] [ebp-11F4h]
     int i; // [esp-11E4h] [ebp-11F0h]
-    colgeom_visitor_t v76; // [esp-11E0h] [ebp-11ECh] BYREF
+    static_colgeom_visitor_t v76; // [esp-11E0h] [ebp-11ECh] BYREF
     int v77; // [esp-1170h] [ebp-117Ch]
     _DWORD v78[512]; // [esp-116Ch] [ebp-1178h]
     int v79; // [esp-96Ch] [ebp-978h]
@@ -2584,4 +2636,258 @@ void standard_query::query(
             }
         }
     }
+}
+
+void gjk_physics_collision_visitor::set_local_query_info(
+    const void *entity)
+{
+    const phys_vec3 *v3; // eax
+    phys_vec3 *p_m_local_query_trace_translation; // [esp-58h] [ebp-64h]
+    phys_vec3 v5; // [esp-50h] [ebp-5Ch] BYREF
+    phys_vec3 v6; // [esp-40h] [ebp-4Ch] BYREF
+    float v7; // [esp-30h] [ebp-3Ch]
+    float v8; // [esp-2Ch] [ebp-38h]
+    float v9; // [esp-28h] [ebp-34h]
+    const float *p_x; // [esp-24h] [ebp-30h]
+    phys_vec3 m_moved_vec; // [esp-20h] [ebp-2Ch]
+    rigid_body *rb; // [esp-8h] [ebp-14h]
+    gjk_physics_collision_visitor *v13; // [esp-4h] [ebp-10h]
+    //int v14; // [esp+0h] [ebp-Ch]
+    //void *v15; // [esp+4h] [ebp-8h]
+    //void *retaddr; // [esp+Ch] [ebp+0h]
+    //
+    //v14 = a2;
+    //v15 = retaddr;
+    v13 = this;
+    phys_calc_local_aabb(
+        &this->bpeqi->trace_aabb_min_wace,
+        &this->bpeqi->trace_aabb_max_wace,
+        this->cg_to_world_xform,
+        &this->m_local_query_trace_aabb_min,
+        &this->m_local_query_trace_aabb_max);
+    rb = v13->rb;
+    m_moved_vec = rb->m_moved_vec;
+    p_x = &v13->bpeqi->trace_translation.x;
+    v9 = *p_x - m_moved_vec.x;
+    v8 = p_x[1] - m_moved_vec.y;
+    v7 = p_x[2] - m_moved_vec.z;
+    v6.x = v9;
+    v6.y = v8;
+    v6.z = v7;
+    v3 = phys_inv_multiply(&v5, v13->cg_to_world_xform, &v6);
+    p_m_local_query_trace_translation = &v13->m_local_query_trace_translation;
+    v13->m_local_query_trace_translation.x = v3->x;
+    p_m_local_query_trace_translation->y = v3->y;
+    p_m_local_query_trace_translation->z = v3->z;
+    v13->m_local_entity = entity;
+}
+
+void gjk_physics_collision_visitor::get_local_query_aabb(
+    float *local_query_aabb_min,
+    float *local_query_aabb_max)
+{
+    phys_vec3 v4; // [esp-Ch] [ebp-8Ch] BYREF
+    phys_vec3 m_local_query_aabb_max_4; // [esp+4h] [ebp-7Ch] BYREF
+    float v6; // [esp+20h] [ebp-60h]
+    float v7; // [esp+24h] [ebp-5Ch]
+    float v8; // [esp+28h] [ebp-58h]
+    phys_vec3 *p_m_local_query_trace_aabb_max; // [esp+2Ch] [ebp-54h]
+    phys_vec3 *v10; // [esp+30h] [ebp-50h]
+    phys_vec3 m_local_query_aabb_min; // [esp+34h] [ebp-4Ch] BYREF
+    phys_vec3 v12; // [esp+44h] [ebp-3Ch] BYREF
+    float v13; // [esp+5Ch] [ebp-24h]
+    float v14; // [esp+60h] [ebp-20h]
+    float v15; // [esp+64h] [ebp-1Ch]
+    phys_vec3 *p_m_local_query_trace_aabb_min; // [esp+68h] [ebp-18h]
+    phys_vec3 *p_m_local_query_trace_translation; // [esp+6Ch] [ebp-14h]
+    gjk_physics_collision_visitor *thisa; // [esp+70h] [ebp-10h]
+    //_UNKNOWN *v19; // [esp+74h] [ebp-Ch]
+    //float *local_query_aabb_mina; // [esp+78h] [ebp-8h]
+    //int vars0; // [esp+80h] [ebp+0h]
+    //
+    //v19 = a2;
+    //local_query_aabb_mina = (float *)vars0;
+    thisa = this;
+    p_m_local_query_trace_translation = &this->m_local_query_trace_translation;
+    p_m_local_query_trace_aabb_min = &this->m_local_query_trace_aabb_min;
+    v15 = this->m_local_query_trace_aabb_min.x + this->m_local_query_trace_translation.x;
+    v14 = this->m_local_query_trace_aabb_min.y + this->m_local_query_trace_translation.y;
+    v13 = this->m_local_query_trace_aabb_min.z + this->m_local_query_trace_translation.z;
+    v12.x = v15;
+    v12.y = v14;
+    v12.z = v13;
+    phys_min(&m_local_query_aabb_min, &this->m_local_query_trace_aabb_min, &v12);
+    v10 = &thisa->m_local_query_trace_translation;
+    p_m_local_query_trace_aabb_max = &thisa->m_local_query_trace_aabb_max;
+    v8 = thisa->m_local_query_trace_aabb_max.x + thisa->m_local_query_trace_translation.x;
+    v7 = thisa->m_local_query_trace_aabb_max.y + thisa->m_local_query_trace_translation.y;
+    v6 = thisa->m_local_query_trace_aabb_max.z + thisa->m_local_query_trace_translation.z;
+    m_local_query_aabb_max_4.x = v8;
+    m_local_query_aabb_max_4.y = v7;
+    m_local_query_aabb_max_4.z = v6;
+    phys_max(&v4, &thisa->m_local_query_trace_aabb_max, &m_local_query_aabb_max_4);
+    Phys_NitrousVecToVec3(&m_local_query_aabb_min, local_query_aabb_min);
+    Phys_NitrousVecToVec3(&v4, local_query_aabb_max);
+}
+
+bool gjk_physics_collision_visitor::query_create_prolog(const void *geom)
+{
+    if (!geom
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp", 290, 0, "%s", "geom"))
+    {
+        __debugbreak();
+    }
+    this->m_local_database_id.m_id1 = (unsigned int)this->m_local_entity;
+    this->m_local_database_id.m_id2 = (unsigned int)geom;
+    //this->m_local_bpei = bpei_database_t::get_bpei_mt(&G_BPM->g_bpei_database, this->m_local_database_id);
+    this->m_local_bpei = G_BPM->g_bpei_database.get_bpei_mt(this->m_local_database_id);
+
+    if (!this->m_local_bpei->m_data)
+    {
+        //minspec_mutex::Lock(&this->m_local_bpei->m_mutex);
+        this->m_local_bpei->m_mutex.Lock();
+        if (!this->m_local_bpei->m_data)
+            return 1;
+        //minspec_mutex::Unlock(&this->m_local_bpei->m_mutex);
+        this->m_local_bpei->m_mutex.Unlock();
+    }
+
+    if (!this->m_local_bpei->m_data
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            300,
+            0,
+            "%s",
+            "m_local_bpei->m_data"))
+    {
+        __debugbreak();
+    }
+
+    //broad_phase_environement_query_results::add(this->bpeqr, (broad_phase_base *)this->m_local_bpei->m_data);
+    this->bpeqr->add((broad_phase_base *)this->m_local_bpei->m_data);
+    return 0;
+}
+
+bool gjk_physics_collision_visitor::query_create_prolog_1(
+    float *local_aabb_min,
+    float *local_aabb_max,
+    const void *geom)
+{
+    float v6; // [esp-Ch] [ebp-40h] BYREF
+    phys_vec3 v7; // [esp-8h] [ebp-3Ch] BYREF
+    phys_vec3 pv_local_aabb_min; // [esp+8h] [ebp-2Ch] BYREF
+    gjk_physics_collision_visitor *thisa; // [esp+24h] [ebp-10h]
+    //_UNKNOWN *v10; // [esp+28h] [ebp-Ch]
+    //const float *local_aabb_mina; // [esp+2Ch] [ebp-8h]
+    //const void *geoma; // [esp+34h] [ebp+0h]
+    //
+    //v10 = a2;
+    //local_aabb_mina = (const float *)geoma;
+    thisa = this;
+    Phys_Vec3ToNitrousVec(local_aabb_min, &pv_local_aabb_min);
+    Phys_Vec3ToNitrousVec(local_aabb_max, &v7);
+    return phys_are_potentially_colliding(
+        &thisa->m_local_query_trace_aabb_min,
+        &thisa->m_local_query_trace_aabb_max,
+        &thisa->m_local_query_trace_translation,
+        &pv_local_aabb_min,
+        &v7,
+        &v6)
+        && thisa->query_create_prolog(geom);
+}
+
+void gjk_physics_collision_visitor::query_create_epilog(gjk_base_t *gjk_geom)
+{
+    unsigned int geom_id; // eax
+    int stype; // [esp-Ch] [ebp-90h]
+    unsigned int env_collision_flags; // [esp-4h] [ebp-88h]
+    BOOL v6; // [esp+0h] [ebp-84h]
+    broad_phase_info *bpi_env; // [esp+80h] [ebp-4h]
+
+    if (!gjk_geom
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp", 307, 0, "%s", "gjk_geom"))
+    {
+        __debugbreak();
+    }
+    if (gjk_geom->stype > 0x22u
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            308,
+            0,
+            "%s",
+            "gjk_geom->stype >= 0 && gjk_geom->stype < MAX_NUM_SURFACE_TYPES"))
+    {
+        __debugbreak();
+    }
+    if (!this->m_local_bpei
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp", 309, 0, "%s", "m_local_bpei"))
+    {
+        __debugbreak();
+    }
+    if (this->m_local_bpei->m_data
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            310,
+            0,
+            "%s",
+            "m_local_bpei->m_data == NULL"))
+    {
+        __debugbreak();
+    }
+    v6 = this->m_local_bpei->m_database_id.m_id1 == this->m_local_database_id.m_id1
+        && this->m_local_bpei->m_database_id.m_id2 == this->m_local_database_id.m_id2;
+    if (!v6
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            311,
+            0,
+            "%s",
+            "m_local_bpei->m_database_id == m_local_database_id"))
+    {
+        __debugbreak();
+    }
+    //gjk_base_t::set_geom_id_new(gjk_geom, this->m_local_bpei->m_gjk_geom_id);
+    gjk_geom->set_geom_id_new(this->m_local_bpei->m_gjk_geom_id);
+    bpi_env = allocate_bpi_env();
+    env_collision_flags = this->env_collision_flags;
+    stype = gjk_geom->stype;
+    //geom_id = gjk_base_t::get_geom_id(gjk_geom);
+    geom_id = gjk_geom->get_geom_id();
+    //broad_phase_info::set(
+        bpi_env->set(
+        this->rb,
+        this->rb_to_world_xform,
+        this->cg_to_world_xform,
+        this->cg_to_rb_xform,
+        gjk_geom,
+        geom_id,
+        0,
+        stype,
+        0,
+        env_collision_flags);
+    //broad_phase_info::set_bpi_env(bpi_env, this->auto_activate_callback);
+    bpi_env->set_bpi_env(this->auto_activate_callback);
+    //broad_phase_info::collision_prolog(bpi_env);
+    bpi_env->collision_prolog();
+    this->m_local_bpei->m_data = bpi_env;
+    //minspec_mutex::Unlock(&this->m_local_bpei->m_mutex);
+    this->m_local_bpei->m_mutex.Unlock();
+    if (!this->m_local_bpei->m_data
+        && !Assert_MyHandler(
+            "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_collision.cpp",
+            321,
+            0,
+            "%s",
+            "m_local_bpei->m_data"))
+    {
+        __debugbreak();
+    }
+    //broad_phase_environement_query_results::add(this->bpeqr, (broad_phase_base *)this->m_local_bpei->m_data);
+    this->bpeqr->add((broad_phase_base *)this->m_local_bpei->m_data);
+}
+
+void __thiscall gjk_physics_collision_visitor::query_create_epilog_1(
+    gjk_base_t *gjk_geom)
+{
+    this->query_create_epilog(gjk_geom);
 }

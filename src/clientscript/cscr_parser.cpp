@@ -1095,6 +1095,36 @@ SourceBufferInfo *__cdecl Scr_GetNewSourceBuffer(scriptInstance_t inst)
     return &gScrParserPub[inst].sourceBufferLookup[gScrParserPub[inst].sourceBufferLookupLen++];
 }
 
+char *__cdecl Scr_ReadFile_LoadObj(
+    scriptInstance_t inst,
+    const char *filename,
+    char *extFilename,
+    const char *codePos,
+    bool archive)
+{
+    int len; // [esp+4h] [ebp-Ch]
+    int f; // [esp+8h] [ebp-8h] BYREF
+    char *sourceBuf; // [esp+Ch] [ebp-4h]
+
+    len = FS_FOpenFileByMode(extFilename, &f, FS_READ);
+    if (len >= 0)
+    {
+        if (!fs_gameDirVar || !*(_BYTE *)fs_gameDirVar->current.integer)
+            g_loadedImpureScript = 1;
+        sourceBuf = (char *)Hunk_AllocateTempMemoryHigh(len + 1, "Scr_ReadFile");
+        FS_Read((unsigned __int8 *)sourceBuf, len, f);
+        sourceBuf[len] = 0;
+        FS_FCloseFile(f);
+        Scr_AddSourceBufferInternal(inst, extFilename, codePos, sourceBuf, len, 1, archive);
+        return sourceBuf;
+    }
+    else
+    {
+        Scr_AddSourceBufferInternal(inst, extFilename, codePos, 0, -1, 1, archive);
+        return 0;
+    }
+}
+
 char *__cdecl Scr_ReadFile(
                 scriptInstance_t inst,
                 const char *filename,

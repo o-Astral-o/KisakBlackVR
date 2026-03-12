@@ -3055,7 +3055,6 @@ void    CG_CompassDrawTickertape(
 
 // aislop
 void CG_CompassDrawTickertape(
-    const cg_s * /*unused*/,
     int localClientNum,
     CompassType compassType,
     const rectDef_s *parentRect,

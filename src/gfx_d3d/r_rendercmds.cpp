@@ -36,8 +36,6 @@ unsigned int s_smpFrame;
 DynSModelClientView g_dynSModelClientView[2][4];
 unsigned int g_frameIndex;
 
-volatile unsigned int g_mainThreadBlocked;
-
 void __cdecl R_InitRenderCommands()
 {
     int renderCmdBufferSize; // [esp+4h] [ebp-Ch]

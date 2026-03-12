@@ -1848,39 +1848,39 @@ void    do_initial_tunnel_test(
     }
 }
 
-broad_phase_info *__cdecl create_broad_phase_info()
-{
-    phys_free_list<broad_phase_info> *p_g_list_broad_phase_info; // edi
-    phys_free_list<broad_phase_info>::T_internal *v1; // eax
-    phys_free_list<broad_phase_info>::T_internal *v2; // esi
-
-    p_g_list_broad_phase_info = &G_BPM->g_list_broad_phase_info;
-    v1 = (phys_free_list<broad_phase_info>::T_internal *)PMM_ALLOC(0x90u, 0x10u);
-    v2 = v1;
-    if ( v1 )
-    {
-        v1->m_prev_T_internal = &p_g_list_broad_phase_info->m_dummy_head;
-        v1->m_next_T_internal = p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal;
-        p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal->m_prev_T_internal = v1;
-        ++p_g_list_broad_phase_info->m_list_count;
-        p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal = v1;
-        //phys_free_list<broad_phase_info>::debug_add(p_g_list_broad_phase_info, v1);
-        p_g_list_broad_phase_info->debug_add(v1);
-        return &v2->m_data;
-    }
-    else
-    {
-        if ( _tlAssert(
-                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
-                     470,
-                     "no_error",
-                     "phys_free_list error: out of memory.") )
-        {
-            __debugbreak();
-        }
-        return 0;
-    }
-}
+//broad_phase_info *__cdecl create_broad_phase_info()
+//{
+//    phys_free_list<broad_phase_info> *p_g_list_broad_phase_info; // edi
+//    phys_free_list<broad_phase_info>::T_internal *v1; // eax
+//    phys_free_list<broad_phase_info>::T_internal *v2; // esi
+//
+//    p_g_list_broad_phase_info = &G_BPM->g_list_broad_phase_info;
+//    v1 = (phys_free_list<broad_phase_info>::T_internal *)PMM_ALLOC(0x90u, 0x10u);
+//    v2 = v1;
+//    if ( v1 )
+//    {
+//        v1->m_prev_T_internal = &p_g_list_broad_phase_info->m_dummy_head;
+//        v1->m_next_T_internal = p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal;
+//        p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal->m_prev_T_internal = v1;
+//        ++p_g_list_broad_phase_info->m_list_count;
+//        p_g_list_broad_phase_info->m_dummy_head.m_next_T_internal = v1;
+//        //phys_free_list<broad_phase_info>::debug_add(p_g_list_broad_phase_info, v1);
+//        p_g_list_broad_phase_info->debug_add(v1);
+//        return &v2->m_data;
+//    }
+//    else
+//    {
+//        if ( _tlAssert(
+//                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h",
+//                     470,
+//                     "no_error",
+//                     "phys_free_list error: out of memory.") )
+//        {
+//            __debugbreak();
+//        }
+//        return 0;
+//    }
+//}
 
 void __cdecl destroy_broad_phase_info(broad_phase_info *bpi)
 {
@@ -3786,156 +3786,165 @@ bpei_database_t::~bpei_database_t()
 //    this->m_ptr_list_count = 0;
 //}
 
-//phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall phys_heap_gjk_cache_system_avl_tree::get_gjk_cache_info_mutex(
-//                phys_heap_gjk_cache_system_avl_tree *this,
-//                unsigned int id1,
-//                unsigned int id2,
-//                tlAtomicReadWriteMutex *query_mutex,
-//                bool __formal)
-//{
-//    unsigned int v5; // esi
-//    unsigned int v6; // edi
-//    bool v8; // cc
-//    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *v10; // eax
-//    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *v11; // esi
-//    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *v13; // eax
-//    unsigned int m_id2; // ecx
-//    phys_gjk_geom_id_pair_key key; // [esp+Ch] [ebp-8h] BYREF
-//    int savedregs; // [esp+14h] [ebp+0h] BYREF
-//    bool swapped; // [esp+1Ch] [ebp+8h]
-//
-//    v5 = id1;
-//    v6 = id2;
-//    v8 = id1 <= id2;
-//    if ( id1 == id2 )
-//    {
-//        if ( _tlAssert(
-//                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                     347,
-//                     "id1 != id2",
-//                     "") )
-//        {
-//            __debugbreak();
-//        }
-//        v8 = id1 <= id2;
-//    }
-//    if ( v8 )
-//    {
-//        swapped = 0;
-//    }
-//    else
-//    {
-//        v5 = id2;
-//        swapped = 1;
-//        v6 = id1;
-//    }
-//    if ( v5 >= v6
-//        && _tlAssert(
-//                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                 24,
-//                 "id1 < id2",
-//                 "") )
-//    {
-//        __debugbreak();
-//    }
-//    key.m_id1 = v5;
-//    key.m_id2 = v6;
-//    tlAtomicReadWriteMutex::ReadLock(query_mutex);
-//    v10 = phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
-//                    &this->m_search_tree,
-//                    &key);
-//    v11 = v10;
-//    _InterlockedExchangeAdd(&query_mutex->ThisPtr->ReadLockCount, 0xFFFFFFFF);
-//    if ( v10 )
-//    {
-//        phys_gjk_cache_info::update_swapped(v10, (int)&savedregs, swapped);
-//        return v11;
-//    }
-//    if ( this->m_list_phys_gjk_cache_info_internal.m_count >= this->m_max_num_gjk_ci )
-//    {
-//        if ( (pai_gjk_cache_system_max_num_gjk_ci.m_hits_total_count < pai_gjk_cache_system_max_num_gjk_ci.m_max_hits_total
-//             || !pai_gjk_cache_system_max_num_gjk_ci.m_max_hits_total)
-//            && pai_gjk_cache_system_max_num_gjk_ci.m_hits_frame_count < pai_gjk_cache_system_max_num_gjk_ci.m_max_hits_per_frame )
-//        {
-//            if ( pai_gjk_cache_system_max_num_gjk_ci.m_use_warnings_only )
-//            {
-//                PHYS_WARNING(
-//                    "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                    368,
-//                    "m_list_phys_gjk_cache_info_internal.get_count() < m_max_num_gjk_ci",
-//                    "max num gjk_ci reached.");
-//            }
-//            else if ( _tlAssert(
-//                                    "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                                    368,
-//                                    "m_list_phys_gjk_cache_info_internal.get_count() < m_max_num_gjk_ci",
-//                                    "max num gjk_ci reached.") )
-//            {
-//                __debugbreak();
-//            }
-//        }
-//        _InterlockedExchangeAdd(&pai_gjk_cache_system_max_num_gjk_ci.m_hits_total_count, 1u);
-//        _InterlockedExchangeAdd(&pai_gjk_cache_system_max_num_gjk_ci.m_hits_frame_count, 1u);
-//    }
-//    if ( this->m_list_phys_gjk_cache_info_internal.m_count >= this->m_max_num_gjk_ci )
-//        return v11;
-//    tlAtomicReadWriteMutex::WriteLock(query_mutex);
-//    if ( phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
-//                 &this->m_search_tree,
-//                 &key)
-//        && _tlAssert(
-//                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                 372,
-//                 "m_search_tree.find(key) == NULL",
-//                 "") )
-//    {
-//        __debugbreak();
-//    }
-//    v13 = (phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *)PMM_ALLOC(0x90u, 0x10u);
-//    v11 = v13;
-//    if ( v13 )
-//    {
-//        ++this->m_list_phys_gjk_cache_info_internal.m_count;
-//        m_id2 = key.m_id2;
-//        v13->m_key.m_id1 = key.m_id1;
-//        v13->m_key.m_id2 = m_id2;
-//        v13->m_flags = 0;
-//        v13->m_flags = swapped ? 2 : 0;
-//        phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::add(
-//            &this->m_search_tree,
-//            &key,
-//            v13);
-//        v11->m_next_gjk_ci = this->m_list_head;
-//        this->m_list_head = v11;
-//        tlAtomicReadWriteMutex::WriteUnlock(query_mutex);
-//        return v11;
-//    }
-//    if ( (pai_gjk_cache_system_create_gjk_ci.m_hits_total_count < pai_gjk_cache_system_create_gjk_ci.m_max_hits_total
-//         || !pai_gjk_cache_system_create_gjk_ci.m_max_hits_total)
-//        && pai_gjk_cache_system_create_gjk_ci.m_hits_frame_count < pai_gjk_cache_system_create_gjk_ci.m_max_hits_per_frame )
-//    {
-//        if ( pai_gjk_cache_system_create_gjk_ci.m_use_warnings_only )
-//        {
-//            PHYS_WARNING(
-//                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                374,
-//                "gjk_ci",
-//                "gjk_ci memory allocation failed.");
-//        }
-//        else if ( _tlAssert(
-//                                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
-//                                374,
-//                                "gjk_ci",
-//                                "gjk_ci memory allocation failed.") )
-//        {
-//            __debugbreak();
-//        }
-//    }
-//    _InterlockedExchangeAdd(&pai_gjk_cache_system_create_gjk_ci.m_hits_total_count, 1u);
-//    _InterlockedExchangeAdd(&pai_gjk_cache_system_create_gjk_ci.m_hits_frame_count, 1u);
-//    tlAtomicReadWriteMutex::WriteUnlock(query_mutex);
-//    return 0;
-//}
+extern phys_assert_info pai_gjk_cache_system_max_num_gjk_ci;
+extern phys_assert_info pai_gjk_cache_system_create_gjk_ci;
+phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *__thiscall phys_heap_gjk_cache_system_avl_tree::get_gjk_cache_info_mutex(
+                unsigned int id1,
+                unsigned int id2,
+                tlAtomicReadWriteMutex *query_mutex,
+                bool __formal)
+{
+    unsigned int v5; // esi
+    unsigned int v6; // edi
+    bool v8; // cc
+    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *v10; // eax
+    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *v11; // esi
+    phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *v13; // eax
+    unsigned int m_id2; // ecx
+    phys_gjk_geom_id_pair_key key; // [esp+Ch] [ebp-8h] BYREF
+    int savedregs; // [esp+14h] [ebp+0h] BYREF
+    bool swapped; // [esp+1Ch] [ebp+8h]
+
+    v5 = id1;
+    v6 = id2;
+    v8 = id1 <= id2;
+    if ( id1 == id2 )
+    {
+        if ( _tlAssert(
+                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+                     347,
+                     "id1 != id2",
+                     "") )
+        {
+            __debugbreak();
+        }
+        v8 = id1 <= id2;
+    }
+    if ( v8 )
+    {
+        swapped = 0;
+    }
+    else
+    {
+        v5 = id2;
+        swapped = 1;
+        v6 = id1;
+    }
+    if ( v5 >= v6
+        && _tlAssert(
+                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+                 24,
+                 "id1 < id2",
+                 "") )
+    {
+        __debugbreak();
+    }
+    key.m_id1 = v5;
+    key.m_id2 = v6;
+    //tlAtomicReadWriteMutex::ReadLock(query_mutex);
+    query_mutex->ReadLock();
+    //v10 = phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::
+    // phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
+    v10 = this->m_search_tree.find(key);
+    v11 = v10;
+    _InterlockedExchangeAdd(&query_mutex->ThisPtr->ReadLockCount, 0xFFFFFFFF);
+    if ( v10 )
+    {
+        //phys_gjk_cache_info::update_swapped(v10, (int)&savedregs, swapped);
+        v10->update_swapped(swapped);
+        return v11;
+    }
+    if ( this->m_list_phys_gjk_cache_info_internal.m_count >= this->m_max_num_gjk_ci )
+    {
+        if ( (pai_gjk_cache_system_max_num_gjk_ci.m_hits_total_count < pai_gjk_cache_system_max_num_gjk_ci.m_max_hits_total
+             || !pai_gjk_cache_system_max_num_gjk_ci.m_max_hits_total)
+            && pai_gjk_cache_system_max_num_gjk_ci.m_hits_frame_count < pai_gjk_cache_system_max_num_gjk_ci.m_max_hits_per_frame )
+        {
+            if ( pai_gjk_cache_system_max_num_gjk_ci.m_use_warnings_only )
+            {
+                PHYS_WARNING(
+                    "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+                    368,
+                    "m_list_phys_gjk_cache_info_internal.get_count() < m_max_num_gjk_ci",
+                    "max num gjk_ci reached.");
+            }
+            else if ( _tlAssert(
+                                    "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+                                    368,
+                                    "m_list_phys_gjk_cache_info_internal.get_count() < m_max_num_gjk_ci",
+                                    "max num gjk_ci reached.") )
+            {
+                __debugbreak();
+            }
+        }
+        _InterlockedExchangeAdd(&pai_gjk_cache_system_max_num_gjk_ci.m_hits_total_count, 1u);
+        _InterlockedExchangeAdd(&pai_gjk_cache_system_max_num_gjk_ci.m_hits_frame_count, 1u);
+    }
+    if ( this->m_list_phys_gjk_cache_info_internal.m_count >= this->m_max_num_gjk_ci )
+        return v11;
+    //tlAtomicReadWriteMutex::WriteLock(query_mutex);
+    query_mutex->WriteLock();
+    //if ( phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal::avl_tree_accessor>::find(
+    //             &this->m_search_tree,
+    //             &key)
+    //    && _tlAssert(
+    //             "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+    //             372,
+    //             "m_search_tree.find(key) == NULL",
+    //             "") )
+    //{
+    //    __debugbreak();
+    //}
+    iassert(m_search_tree.find(key) == NULL);
+    v13 = (phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal *)PMM_ALLOC(0x90u, 0x10u);
+    v11 = v13;
+    if ( v13 )
+    {
+        ++this->m_list_phys_gjk_cache_info_internal.m_count;
+        m_id2 = key.m_id2;
+        v13->m_key.m_id1 = key.m_id1;
+        v13->m_key.m_id2 = m_id2;
+        v13->m_flags = 0;
+        v13->m_flags = swapped ? 2 : 0;
+        //phys_inplace_avl_tree<phys_gjk_geom_id_pair_key,phys_heap_gjk_cache_system_avl_tree::phys_gjk_cache_info_internal,phys_heap_gjk_cache_system_avl_tree
+        //    ::phys_gjk_cache_info_internal::avl_tree_accessor>::add(
+        //    &this->m_search_tree,
+        //    &key,
+        //    v13);
+        this->m_search_tree.add(key, v13);
+        v11->m_next_gjk_ci = this->m_list_head;
+        this->m_list_head = v11;
+        //tlAtomicReadWriteMutex::WriteUnlock(query_mutex);
+        query_mutex->WriteUnlock();
+        return v11;
+    }
+    if ( (pai_gjk_cache_system_create_gjk_ci.m_hits_total_count < pai_gjk_cache_system_create_gjk_ci.m_max_hits_total
+         || !pai_gjk_cache_system_create_gjk_ci.m_max_hits_total)
+        && pai_gjk_cache_system_create_gjk_ci.m_hits_frame_count < pai_gjk_cache_system_create_gjk_ci.m_max_hits_per_frame )
+    {
+        if ( pai_gjk_cache_system_create_gjk_ci.m_use_warnings_only )
+        {
+            PHYS_WARNING(
+                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+                374,
+                "gjk_ci",
+                "gjk_ci memory allocation failed.");
+        }
+        else if ( _tlAssert(
+                                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_gjk_cache_system.h",
+                                374,
+                                "gjk_ci",
+                                "gjk_ci memory allocation failed.") )
+        {
+            __debugbreak();
+        }
+    }
+    _InterlockedExchangeAdd(&pai_gjk_cache_system_create_gjk_ci.m_hits_total_count, 1u);
+    _InterlockedExchangeAdd(&pai_gjk_cache_system_create_gjk_ci.m_hits_frame_count, 1u);
+    //tlAtomicReadWriteMutex::WriteUnlock(query_mutex);
+    query_mutex->WriteUnlock();
+    return 0;
+}
 
 broad_phase_memory::broad_phase_memory()
 {

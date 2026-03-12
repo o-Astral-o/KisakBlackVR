@@ -4,11 +4,11 @@
 #include <win32/win_shared.h>
 #include <clientscript/cscr_vm.h>
 #include <gfx_d3d/rb_backend.h>
+#include <universal/timing.h>
 
 CG_PerfInfo cg_perfInfo;
 
 unsigned __int64 gRunFrameTicks;
-long double msecPerRawTimerTick;
 
 void __cdecl CG_PerfInit()
 {

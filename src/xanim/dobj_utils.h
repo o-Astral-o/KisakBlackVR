@@ -5,7 +5,6 @@ struct DObjAnimMat;
 struct XBoneInfo;
 struct XModel;
 
-int __cdecl DObjGetModelBoneIndex(const DObj *obj, const char *modelName, unsigned int name, unsigned __int8 *index);
 DObjAnimMat *__cdecl DObjGetRotTransArray(const DObj *obj);
 int __cdecl DObjGetNumModels(const DObj *obj);
 unsigned __int16 __cdecl DObjGetEntNum(const DObj *obj);

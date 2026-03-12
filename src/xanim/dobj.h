@@ -211,4 +211,3 @@ void __cdecl DObjSetFlag(DObj *obj, unsigned __int8 flag, int val);
 bool __cdecl DObjHasIKActiveFlag(const DObj *obj);
 void __cdecl DObjSetIKActiveFlag(DObj *obj, int val);
 void __cdecl DObjSetIKState(DObj *obj, unsigned __int8 *pIKState);
-int __cdecl DObjGetModelBoneIndex(const DObj *obj, int model_index, unsigned int name, unsigned __int8 *index);

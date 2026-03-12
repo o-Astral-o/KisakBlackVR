@@ -1018,26 +1018,3 @@ void __cdecl trigger_use_touch(gentity_s *ent, SpawnVar *spawnVar)
 //    return (mover_info_t *)slot;
 //}
 
-gentity_s *__cdecl GetEntity(scr_entref_t entref)
-{
-    if ( entref.classnum )
-    {
-        Scr_ObjectError("not an entity", SCRIPTINSTANCE_SERVER);
-        return 0;
-    }
-    else
-    {
-        if ( entref.entnum >= 0x400u
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_main_mp.cpp",
-                        449,
-                        0,
-                        "%s",
-                        "entref.entnum < MAX_GENTITIES") )
-        {
-            __debugbreak();
-        }
-        return &g_entities[entref.entnum];
-    }
-}
-

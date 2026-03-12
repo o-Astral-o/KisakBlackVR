@@ -63,7 +63,6 @@ r_global_permanent_t rgp;
 r_globals_t rg;
 GfxMetrics gfxMetrics;
 GfxGlobals r_glob;
-GfxDrawConsts g_drawConsts;
 GfxWorldDpvsStatic *g_worldDpvs;
 GfxWorldDraw *g_worldDraw;
 GfxWorldDpvsPlanes *g_worldDpvsPlanes;

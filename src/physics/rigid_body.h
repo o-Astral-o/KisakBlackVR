@@ -101,7 +101,7 @@ struct __declspec(align(16)) rigid_body_constraint_distance : rigid_body_constra
     pulse_sum_cache m_ps_cache_list[3];
 
 public:
-    inline void set(
+    void set(
         const phys_vec3 *b1_r_loc,
         const phys_vec3 *b2_r_loc,
         float min_distance,

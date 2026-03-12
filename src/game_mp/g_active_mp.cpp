@@ -37,7 +37,7 @@
 #include <game/turret.h>
 #include <client/cl_debugdata.h>
 
-pmove_t g_pmove[];
+pmove_t g_pmove[32]; // i think this is 32
 
 float zBoost = 100.0;
 float xySpeed = 100.0;

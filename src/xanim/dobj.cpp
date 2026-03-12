@@ -1920,30 +1920,3 @@ void __cdecl DObjSetIKState(DObj *obj, unsigned __int8 *pIKState)
 {
     obj->ikState = pIKState;
 }
-
-int __cdecl DObjGetModelBoneIndex(const DObj *obj, int model_index, unsigned int name, unsigned __int8 *index)
-{
-    int j; // [esp+0h] [ebp-14h]
-    unsigned int boneIndex; // [esp+4h] [ebp-10h]
-    XModel *model; // [esp+Ch] [ebp-8h]
-
-    if ( !obj && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj_utils.cpp", 569, 0, "%s", "obj") )
-        __debugbreak();
-    if ( !name && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj_utils.cpp", 570, 0, "%s", "name") )
-        __debugbreak();
-    boneIndex = 0;
-    for ( j = 0; j < obj->numModels; ++j )
-    {
-        model = obj->localModels[j];
-        if ( j == model_index )
-        {
-            if ( XModelGetBoneIndex(model, name, boneIndex, index) )
-                return 1;
-            break;
-        }
-        boneIndex += model->numBones;
-    }
-    *index = -1;
-    return 0;
-}
-

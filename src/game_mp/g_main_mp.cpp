@@ -67,7 +67,7 @@ const char *g_entcountNames[8] =
   NULL
 };
 
-const char *g_entinfoTypeNames[4] =
+static const char *g_entinfoTypeNames[4] =
 { "all", "AI only", "vehicle only", NULL };
 
 const char *g_entinfoAITextNames[6] =
@@ -252,7 +252,7 @@ const dvar_t *player_useRadius;
 const dvar_t *player_MGUseRadius;
 const dvar_t *vehicle_useRadius;
 const dvar_t *g_minGrenadeDamageSpeed;
-const dvar_t *g_compassShowEnemies;
+//const dvar_t *g_compassShowEnemies;
 const dvar_t *pickupPrints;
 const dvar_t *g_revive;
 const dvar_t *g_dumpAnims;
@@ -3415,9 +3415,3 @@ gclient_s::gclient_s()
         this->button_bitsSinceLastFrame.array[m] = 0;
     //return this;
 }
-
-void __cdecl G_SafeDObjFree(gentity_s *ent)
-{
-    Com_SafeServerDObjFree(ent->s.number);
-}
-

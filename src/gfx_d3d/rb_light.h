@@ -182,7 +182,7 @@ char __cdecl R_CanLightInfluenceLightGridCorner(
 void __cdecl R_GetAverageLightingAtPoint(const float *samplePos, float *outColor);
 void __cdecl R_GetAverageSecondaryLightingAtPoint(const float *samplePos, float *outColor);
 void __cdecl R_SetLightGridSampleDeltas(int rowStride, int sliceStride);
-void __cdecl R_InitLightVisHistory(char *bspName);
+void __cdecl R_InitLightVisHistory(const char *bspName);
 void __cdecl R_LightVisHistoryFilename(char *bspName, char *filename);
 void __cdecl R_SaveLightVisHistory();
 void __cdecl HashUnpackPoint(unsigned __int64 value, unsigned __int16 (*p)[3]);

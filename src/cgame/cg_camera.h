@@ -17,7 +17,12 @@ enum CameraMode : __int32
 
 struct cg_s;
 
-void __cdecl InterpolateAnglesSmooth(float *curAngles, float *initialAngles, float *targetAngles, float t);
+
+void __cdecl InterpolateAnglesSmooth(
+    float *curAngles,
+    const float *initialAngles,
+    const float *targetAngles,
+    float t);
 void __cdecl InterpolatePositionSmooth(float *curPos, const float *initialPos, const float *targetPos, float t);
 void __cdecl CG_StartCameraTween(int localClientNum, float tweenTime);
 double __cdecl CG_UpdateCameraTweenFOV(int localClientNum, float currentFov);
@@ -61,7 +66,7 @@ void __cdecl CG_Calc3rdPersonSpringDamp(
                 float dampConst,
                 float springLen,
                 float *newPos);
-double __cdecl GetPitchOffsetRelativeToADirection(float *angles, float *direction);
+double __cdecl GetPitchOffsetRelativeToADirection(const float *angles, const float *direction);
 void __cdecl CG_Calc3rdPersonVehicleViewValues(int localClientNum);
 void __cdecl RotatePoint(const float *v, const float *q, float *out);
 void __cdecl CG_OffsetVehicleView(int localClientNum, CameraMode camMode);
@@ -86,8 +91,6 @@ void __cdecl CG_ExtraCamDebug_SaveView(int localClientNum);
 void __cdecl CG_CalcFov_ExtraCam(int localClientNum);
 void __cdecl CG_ExtraCam_GetViewOrigin(int localClientNum, float *out);
 bool __cdecl CG_ExtraCamIsActive(int localClientNum);
-
-void __cdecl RotatePoint(float *point, const float (*mat)[3]);
 
 struct ExtraCamClientStateRestore // sizeof=0x3A0
 {                                       // XREF: ?CG_DrawExtraCamFrame@@YAHHHW4DemoType@@W4CubemapShot@@HH@Z/r

@@ -224,12 +224,12 @@ void __cdecl G_GetPlayerViewOrigin_Internal(const playerState_s *ps, float *orig
 
 void __cdecl G_GetPlayerViewOrigin(const playerState_s *ps, float *origin)
 {
-    G_GetPlayerViewOrigin_Internal(ps, origin);
+    G_GetPlayerViewOrigin_Internal(ps, origin, false);
 }
 
 void __cdecl G_GetPlayerBodyViewOrigin(const playerState_s *ps, float *origin)
 {
-    G_GetPlayerViewOrigin_Internal(ps, origin);
+    G_GetPlayerViewOrigin_Internal(ps, origin, true);
 }
 
 void __cdecl G_GetPlayerViewDirection(const gentity_s *ent, float *forward, float *right, float *up)

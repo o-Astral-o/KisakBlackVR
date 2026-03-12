@@ -2091,11 +2091,6 @@ void __thiscall GlassRenderer::DoMaintenance()
 }
 #endif
 
-void __cdecl GlassShard::Defrag(void *ptr)
-{
-    GlassShard::Defrag(ptr);
-}
-
 void __cdecl Sys_WaitInterlockedCompareExchange(volatile unsigned int *destination, int value, int comperand)
 {
     do
@@ -2175,7 +2170,7 @@ void GlassRenderer::DoMaintenance()
 
     // Defrag shard memory
     //Allocator::Defrag(&shardMemoryAllocator, reinterpret_cast<void(*)(void *)>(GlassShard::Defrag), 10);
-    shardMemoryAllocator.Defrag(GlassShard::Defrag, 10);
+    shardMemoryAllocator.Defrag(GlassShard_Defrag, 10);
 
 
     // Pre-shatter step

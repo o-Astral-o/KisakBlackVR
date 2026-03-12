@@ -98,21 +98,21 @@ const BuiltinMethodDef client_project_methods[29] =
 cached_tag_mat_t cg_cachedTagMat;
 cscr_mp_data_t cg_scr_mp_data;
 
-void __cdecl CScrCmd_Earthquake(scr_entref_t entref)
-{
-    float Float; // [esp+20h] [ebp-1Ch]
-    float source[3]; // [esp+24h] [ebp-18h] BYREF
-    int duration; // [esp+30h] [ebp-Ch]
-    float radius; // [esp+34h] [ebp-8h]
-    float scale; // [esp+38h] [ebp-4h]
-
-    scale = Scr_GetFloat(0, SCRIPTINSTANCE_CLIENT);
-    Float = Scr_GetFloat(1u, SCRIPTINSTANCE_CLIENT);
-    duration = (int)((float)(Float * 1000.0) + 9.313225746154785e-10);
-    Scr_GetVector(2u, source, SCRIPTINSTANCE_CLIENT);
-    radius = Scr_GetFloat(3u, SCRIPTINSTANCE_CLIENT);
-    CG_StartShakeCamera(entref.client, scale, duration, source, radius);
-}
+//void __cdecl CScrCmd_Earthquake(scr_entref_t entref)
+//{
+//    float Float; // [esp+20h] [ebp-1Ch]
+//    float source[3]; // [esp+24h] [ebp-18h] BYREF
+//    int duration; // [esp+30h] [ebp-Ch]
+//    float radius; // [esp+34h] [ebp-8h]
+//    float scale; // [esp+38h] [ebp-4h]
+//
+//    scale = Scr_GetFloat(0, SCRIPTINSTANCE_CLIENT);
+//    Float = Scr_GetFloat(1u, SCRIPTINSTANCE_CLIENT);
+//    duration = (int)((float)(Float * 1000.0) + 9.313225746154785e-10);
+//    Scr_GetVector(2u, source, SCRIPTINSTANCE_CLIENT);
+//    radius = Scr_GetFloat(3u, SCRIPTINSTANCE_CLIENT);
+//    CG_StartShakeCamera(entref.client, scale, duration, source, radius);
+//}
 
 unsigned int __cdecl CScr_SpawnFXInternal(int localClientNum, int fxId, float (*axis)[3], float *pos, int time)
 {
@@ -1910,21 +1910,5 @@ void __cdecl CScr_PlayDogstepSound(int localClientNum, centity_s *cent, eFoot fo
         t = Scr_ExecThread(SCRIPTINSTANCE_CLIENT, cg_scr_mp_data.dogstep, 5u);
         Scr_FreeThread(t, SCRIPTINSTANCE_CLIENT);
     }
-}
-
-int __cdecl GetField(char *i, int size)
-{
-    switch ( size )
-    {
-        case 1:
-            return *i;
-        case 2:
-            return *(__int16 *)i;
-        case 4:
-            return *(unsigned int *)i;
-    }
-    if ( !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\g_hudelem.cpp", 187, 0, "unknown field size") )
-        __debugbreak();
-    return 0;
 }
 

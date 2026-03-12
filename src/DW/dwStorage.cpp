@@ -7,18 +7,18 @@
 #include "dwUtils.h"
 #include "dwUtils_pc.h"
 
-dwFileTask::dwFileTask()
-{
-    this->m_filename = 0;
-    //bdFileData::bdFileData(&this->m_fileData, 0, 0);
-    this->m_error = BD_NO_ERROR;
-    this->m_fileID = 0;
-    this->m_fileSize = 0;
-    this->m_bufferSize = 0;
-    //bdFileInfo::bdFileInfo(&this->m_fileInfo);
-    this->m_buffer = 0;
-    this->m_optional = 0;
-}
+//dwFileTask::dwFileTask()
+//{
+//    this->m_filename = 0;
+//    //bdFileData::bdFileData(&this->m_fileData, 0, 0);
+//    this->m_error = BD_NO_ERROR;
+//    this->m_fileID = 0;
+//    this->m_fileSize = 0;
+//    this->m_bufferSize = 0;
+//    //bdFileInfo::bdFileInfo(&this->m_fileInfo);
+//    this->m_buffer = 0;
+//    this->m_optional = 0;
+//}
 
 void __cdecl dwReadFileFailure(TaskRecord *task)
 {

@@ -251,27 +251,6 @@ const char *g_he_vertalign[11] =
 
 hudelem_s g_dummyHudCurrent_0;
 
-
-int __cdecl GetField(const int *i, int size)
-{
-    switch ( size )
-    {
-        case 1:
-            return *(char *)i;
-        case 2:
-            return *(__int16 *)i;
-        case 4:
-            return *i;
-    }
-    if ( !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_scr_main_mp.cpp",
-                    1861,
-                    0,
-                    "unknown field size") )
-        __debugbreak();
-    return 0;
-}
-
 game_hudelem_s *__cdecl HudElem_Alloc(int clientNum, int teamNum)
 {
     unsigned int i; // [esp+0h] [ebp-4h]

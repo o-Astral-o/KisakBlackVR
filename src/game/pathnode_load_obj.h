@@ -2,8 +2,6 @@
 #include <qcommon/common.h>
 #include "pathnode.h"
 
-int __cdecl NodeVisCacheEntry(int i, int j);
-int __cdecl ExpandedNodeVisCacheEntry(int i, int j);
 void __cdecl Path_CreateNodes();
 void __cdecl Path_InitStatic(int restart);
 void __cdecl Path_ShutdownStatic();

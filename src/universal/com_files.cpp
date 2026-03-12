@@ -1187,7 +1187,7 @@ unsigned int __cdecl FS_Read(unsigned __int8 *buffer, unsigned int len, int h)
     return len;
 }
 
-int __cdecl FS_Write(char *buffer, int len, int h)
+unsigned int __cdecl FS_Write(char *buffer, unsigned int len, int h)
 {
     int tries; // [esp+4h] [ebp-14h]
     unsigned int remaining; // [esp+8h] [ebp-10h]

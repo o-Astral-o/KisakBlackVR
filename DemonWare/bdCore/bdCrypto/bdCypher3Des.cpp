@@ -34,6 +34,7 @@ bdCypher3Des::bdCypher3Des()
 {
     //this->__vftable = (bdCypher3Des_vtbl *)&bdCypher::`vftable';
     //this->__vftable = (bdCypher3Des_vtbl *)&bdCypher3Des::`vftable';
+#if 0
     if (register_cipher(&des3_desc) == -1)
             bdLogMessage(
                 BD_LOG_ERROR,
@@ -43,6 +44,7 @@ bdCypher3Des::bdCypher3Des()
                 "bdCypher3Des::bdCypher3Des",
                 0x17u,
                 "Error registering cipher.");
+#endif
 }
 
 bool bdCypher3Des::init(const unsigned char *buf, unsigned int size)

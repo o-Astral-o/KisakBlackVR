@@ -8,7 +8,8 @@ const char *BUILD_TIME = "Fri Nov 05 11:33:52 2010";
 const int BUILD_NUMBER = 61;
 const int CHANGELIST_NUMBER = 794515;
 
-
+miniDumper *miniDumper::s_pMiniDumper;
+LPCRITICAL_SECTION miniDumper::s_pCriticalSection;
 
 miniDumper *g_miniDumper;
 bool g_miniDumperStarted;

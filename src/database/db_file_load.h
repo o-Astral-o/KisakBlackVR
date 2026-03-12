@@ -80,3 +80,5 @@ char __cdecl DB_LoadXFile(
                 int flags);
 
 extern XAssetList *varXAssetList;
+
+extern volatile unsigned int g_loadingAssets;

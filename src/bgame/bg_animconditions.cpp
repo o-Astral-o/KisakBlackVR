@@ -137,7 +137,7 @@ LABEL_7:
         BG_SetConditionBit(pm->ps->clientNum, 5, 1);
 }
 
-void __cdecl BG_EvalMoveStatus(const entityState_s *es)
+void __cdecl BG_EvalMoveStatus(const entityState_s *es, const clientInfo_t *)
 {
     unsigned int legsAnim; // [esp+0h] [ebp-4h]
 

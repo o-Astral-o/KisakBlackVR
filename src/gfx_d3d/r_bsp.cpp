@@ -271,15 +271,6 @@ void __cdecl R_SetWorldPtr_FastFile(const char *name)
     rgp.needSortMaterials = 1;
 }
 
-void R_RegisterSkyboxModel()
-{
-    if ( rgp.world->skyBoxModel )
-    {
-        if ( *rgp.world->skyBoxModel )
-            R_RegisterSkyboxModel((char*)rgp.world->skyBoxModel);
-    }
-}
-
 void __cdecl R_ShutdownWorld()
 {
     R_ReleaseWorld();

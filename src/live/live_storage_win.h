@@ -37,8 +37,6 @@ enum day_t : __int32
 
 int __cdecl SystemTimeToInt();
 void __cdecl LiveStorage_ResetStats(unsigned __int8 *buffer);
-void __cdecl ResetCreateAClassNames(int controllerIndex);
-void __cdecl SetDvarFromLocString(int controllerIndex, const char *dvarName, char *preLocalizedText);
 void __cdecl LiveStorage_ReadStats(int __formal, bool validate, bool silent);
 void LiveStorage_InitCustomClassesNames();
 void __cdecl LiveStorage_ReadStatsIfDirChanged();
@@ -178,7 +176,6 @@ void __cdecl LiveStorage_ReadRecentServersSuccess(int controllerIndex, void *dat
 void __cdecl LiveStorage_DeleteGlobalStats(int controllerIndex);
 void __cdecl LiveStorage_DeleteGlobalStatsSuccess();
 void __cdecl LiveStorage_DeleteGlobalStatsNotFound();
-void __cdecl ResetCreateAClassNames(int controllerIndex);
 
 
 extern sv_cacvalidate_state_t g_cacvalidateState;

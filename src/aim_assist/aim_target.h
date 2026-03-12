@@ -1,7 +1,6 @@
 #pragma once
 #include "aim_assist.h"
 
-int __cdecl AimTarget_GetTagPos(int localClientNum, const centity_s *cent, unsigned int tagName, float *pos);
 AimTargetGlob *__cdecl AimTarget_GetGlobArray(int localClientNum);
 void __cdecl AimTarget_Init(int localClientNum);
 void AimTarget_RegisterDvars();

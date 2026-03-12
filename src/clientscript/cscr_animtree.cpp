@@ -393,6 +393,7 @@ void __cdecl SetVariableValue(scriptInstance_t inst, unsigned int id, VariableVa
     entryValue->u.next = value->u.intValue;
 }
 
+// KISAKTODO: move to scr_variable
 void __cdecl RemoveRefToValue(scriptInstance_t inst, int type, VariableUnion u)
 {
     unsigned int value; // [esp+4h] [ebp-4h]

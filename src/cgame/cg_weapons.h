@@ -513,12 +513,6 @@ void __cdecl CG_MolotovFloat(int localClientNum, const centity_s *cent, const en
 Material *__cdecl CG_GetWeaponOverlay(int localClientNum, unsigned int weaponIndex);
 bool __cdecl CG_IsInGuidedMissile(const playerState_s *ps);
 bool __cdecl CG_IsInGuidedMissileStatic(const playerState_s *ps);
-char __cdecl Bullet_Trace(
-                const BulletFireParams *bp,
-                const WeaponVariantDef *weapVariantDef,
-                gentity_s *attacker,
-                BulletTraceResults *br,
-                unsigned int lastSurfaceType);
 
 
 extern unsigned __int8 bulletPriorityMap[20];

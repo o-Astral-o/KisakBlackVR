@@ -127,18 +127,6 @@ void println()
     Com_Printf(cg_level.scriptPrintChannel, "\n");
 }
 
-gentity_s *__cdecl GetEntity(const unsigned __int16 *targetname)
-{
-    int i; // [esp+0h] [ebp-4h]
-
-    for ( i = 0; i < level.num_entities; ++i )
-    {
-        if ( g_entities[i].targetname == *targetname )
-            return &g_entities[i];
-    }
-    return 0;
-}
-
 void GScr_IsCollectors()
 {
     if ( Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 1 )
@@ -15810,6 +15798,36 @@ void assertmsgCmd_0()
     Scr_Error(v2, 0);
 }
 
+void GScr_SetPlayerStatsForMatchRecording()
+{
+    DWORD result; // eax
+    char *statName; // [esp+8h] [ebp-10h]
+    unsigned int statValue; // [esp+Ch] [ebp-Ch]
+    gentity_s *ent; // [esp+14h] [ebp-4h]
+
+    //PIXBeginNamedEvent(-1, "GScr_SetPlayerStatsForMatchRecording");
+    if (Scr_GetNumParam(SCRIPTINSTANCE_SERVER) != 3)
+        Scr_ParamError(0, "recordPlayerStats [player] [statName] [value]", SCRIPTINSTANCE_SERVER);
+    ent = Scr_GetEntity(0);
+    if (!ent)
+        Scr_ParamError(0, "recordPlayerStats Error: param 0 is not an entity.", SCRIPTINSTANCE_SERVER);
+    if (!ent->client)
+        Scr_ParamError(0, "recordPlayerStats Error: param 0 is not an player.", SCRIPTINSTANCE_SERVER);
+    statName = Scr_GetString(1u, SCRIPTINSTANCE_SERVER);
+    if (!statName)
+        Scr_ParamError(1u, "recordPlayerStats Error: param 1 is not a string.", SCRIPTINSTANCE_SERVER);
+    statValue = Scr_GetInt(2u, SCRIPTINSTANCE_SERVER).stringValue;
+
+#ifdef KISAK_LIVE
+    MatchRecordSetPlayerStat(ent->client, statName, statValue);
+#endif
+
+    //result = GetCurrentThreadId();
+    //if (result == g_DXDeviceThread)
+    //    return D3DPERF_EndEvent();
+    //return result;
+}
+
 BuiltinFunctionDef functions[383] =
 {
   { "createprintchannel", GScr_CreatePrintChannel, 1 },
@@ -16570,7 +16588,7 @@ void (__cdecl *__cdecl Scr_GetMethod(const char **pName, int *type))(scr_entref_
         return BuiltIn_GetMethod(pName, type);
 }
 
-void METHOD_NULLSUB(scr_entref_t ref)
+static void METHOD_NULLSUB(scr_entref_t ref)
 {
 
 }
@@ -16869,7 +16887,7 @@ void __cdecl Scr_SetExposureLerpToDarker(gentity_s *ent, int)
     ent->trigger.exposureLerpToDarker = Scr_GetFloat(0, SCRIPTINSTANCE_SERVER);
 }
 
-void __cdeclScr_SetHealth(gentity_s *ent, int)
+void __cdecl Scr_SetHealth(gentity_s *ent, int)
 {
     int health; // [esp+0h] [ebp-4h]
 
@@ -17432,36 +17450,3 @@ void __cdecl Scr_GlassSmash(float *pos, float *dir)
         Scr_FreeThread(t, SCRIPTINSTANCE_SERVER);
     }
 }
-
-void __cdecl Scr_AddStruct(scriptInstance_t inst)
-{
-    unsigned int id; // [esp+0h] [ebp-4h]
-
-    id = AllocObject(inst);
-    Scr_AddObject(id, inst);
-    RemoveRefToObject(inst, id);
-}
-
-void __cdecl Scr_ResetTimeout(scriptInstance_t inst)
-{
-    DWORD v1; // eax
-
-    gScrVmGlob[inst].starttime = Sys_Milliseconds();
-    if (!logScriptTimes
-        && !Assert_MyHandler(
-            "C:\\projects_pc\\cod\\codsrc\\src\\clientscript\\cscr_vm.cpp",
-            5847,
-            0,
-            "%s",
-            "logScriptTimes"))
-    {
-        __debugbreak();
-    }
-    if (logScriptTimes->current.enabled)
-    {
-        v1 = Sys_Milliseconds();
-        Com_Printf(24, "RESET TIME: %d\n", v1);
-    }
-    memset((unsigned __int8 *)gScrVmDebugPub[inst].jumpbackHistory, 0, sizeof(gScrVmDebugPub[inst].jumpbackHistory));
-}
-

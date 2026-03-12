@@ -155,7 +155,7 @@ const dvar_t *zombiefive_discovered;
 const dvar_t *zombiefive_norandomchar;
 const dvar_t *blackopsmode;
 const dvar_t *spmode;
-const dvar_t *onlinegame;
+//const dvar_t *onlinegame;
 const dvar_t *xblive_rankedmatch;
 const dvar_t *xblive_privatematch;
 const dvar_t *sys_lockThreads;
@@ -163,7 +163,7 @@ const dvar_t *com_developer;
 const dvar_t *com_developer_script;
 const dvar_t *com_script_debugger_smoke_test;
 const dvar_t *com_logfile;
-const dvar_t *com_statmon;
+//const dvar_t *com_statmon;
 const dvar_t *com_timescale;
 const dvar_t *dev_timescale;
 const dvar_t *com_fixedtime;
@@ -229,8 +229,6 @@ int com_fixedConsolePosition;
 
 float com_timescaleValue;
 int timeClientFrame;
-
-int com_fileAccessed;
 
 int com_frameTime;
 int com_fullyInitialized;

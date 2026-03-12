@@ -63,7 +63,7 @@ void __cdecl SND_GetNearestPointOnStrip(
                 float *position);
 unsigned int __cdecl SND_HashAlias(const snd_alias_list_t *alias);
 const char *__cdecl SND_GetAliasName(const snd_alias_list_t *alias);
-double __cdecl SND_dBToLinear(float value);
+float __cdecl SND_dBToLinear(float value);
 double __cdecl SND_LinearToDb(float linear);
 double __cdecl SND_LinearToDbSpl(float linear);
 double __cdecl SND_dBSPLToLinear(float value);

@@ -19,9 +19,6 @@
 #include <EffectsCore/fx_marks.h>
 #include "r_staticmodelcache.h"
 
-
-volatile unsigned int g_waterLock;
-
 jqModule fx_update_spotModule;
 jqModule fx_updateModule;
 jqModule fx_update_remainingModule;
@@ -37,7 +34,7 @@ jqModule dobj_skinModule;
 jqModule fx_drawModule;
 jqModule fx_marks_drawModule;
 jqModule r_model_skinModule;
-jqModule nuge_physicsModule;
+//jqModule nuge_physicsModule;
 jqModule r_skin_cached_staticmodelModule;
 
 jqModule r_water_simModule;
@@ -91,8 +88,8 @@ jqWorkerCmd fx_marks_drawWorkerCmd = { &fx_marks_drawModule, 52u, 0, 0, &fx_mark
 volatile unsigned int r_model_skinLimit;
 jqWorkerCmd r_model_skinWorkerCmd = { &r_model_skinModule, 48u, 0, 0, &r_model_skinLimit, NULL, 0u };
 
-volatile unsigned int nuge_physicsLimit= 1;
-jqWorkerCmd nuge_physicsWorkerCmd = { &nuge_physicsModule, 124u, 0, 0, &nuge_physicsLimit, NULL, 0u };
+//volatile unsigned int nuge_physicsLimit= 1;
+//jqWorkerCmd nuge_physicsWorkerCmd = { &nuge_physicsModule, 124u, 0, 0, &nuge_physicsLimit, NULL, 0u };
 
 volatile unsigned int r_skin_cached_staticmodelLimit = 1;
 jqWorkerCmd r_skin_cached_staticmodelWorkerCmd =

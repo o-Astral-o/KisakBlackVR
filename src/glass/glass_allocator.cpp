@@ -447,15 +447,3 @@ int __thiscall Allocator::GetLargestFree()
     return largest;
 }
 
-template <typename T>
-void *FixedSizeAllocator<T>::operator new(std::size_t size) 
-{
-    return GlassesClient::Allocate(size, "C:\\projects_pc\\cod\\codsrc\\src\\glass\\glass_renderer.cpp", 72);
-}
-
-template <typename T>
-void FixedSizeAllocator<T>::operator delete(void *ptr)
-{
-    GlassesClient::Free((char *)ptr);
-}
-

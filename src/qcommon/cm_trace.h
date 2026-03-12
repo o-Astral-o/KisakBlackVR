@@ -1,6 +1,6 @@
 #pragma once
 #include <DynEntity/DynEntity_gamestate.h>
-#include <physics/phys_colgeom.h>
+//#include <physics/phys_colgeom.h>
 
 struct heli_height_lock_patches_t // sizeof=0x18
 {                                       // XREF: .data:heli_height_lock_patches_t * heli_height_lock_patches/r
@@ -496,7 +496,6 @@ struct BulletTraceResults // sizeof=0x50
     int depthSurfaceType;                             // XREF: FireBulletPenetrate:loc_52B4A6/r
 };
 
-void __cdecl RotatePoint(const float *v, const float *q, float *out);
 unsigned __int16 __cdecl Trace_GetEntityHitId(const trace_t *trace);
 unsigned __int16 __cdecl Trace_GetDynEntHitId(const trace_t *trace, DynEntityDrawType *drawType);
 int __cdecl Trace_GetGlassHitId(const trace_t *trace);

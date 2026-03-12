@@ -106,7 +106,7 @@ int __cdecl CL_LocalActiveIndexFromClientNum(int localClientNum)
     return 0;
 }
 
-extern dvar_t *name; // KISAKTODO: remove this extern hack after live/ folder done
+extern const dvar_t *name; // KISAKTODO: remove this extern hack after live/ folder done
 const char *__cdecl CL_ControllerIndex_GetUsername()
 {
     return name->current.string;

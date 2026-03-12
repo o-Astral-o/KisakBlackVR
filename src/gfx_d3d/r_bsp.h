@@ -441,7 +441,6 @@ void __cdecl R_CopyParseParamsToDvars(const SunLightParseParams *sunParse, int s
 void R_InitDynamicData();
 void __cdecl R_SetWorldPtr_LoadObj(const char *name);
 void __cdecl R_SetWorldPtr_FastFile(const char *name);
-void R_RegisterSkyboxModel();
 void __cdecl R_ShutdownWorld();
 void __cdecl R_ReleaseWorld();
 void __cdecl R_ReloadWorld();

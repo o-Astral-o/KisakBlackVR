@@ -34,23 +34,6 @@ const DynEntityProps dynEntProps[3] =
 };
 
 
-
-const DynEntityDef *__cdecl DynEnt_GetEntityDef(unsigned __int16 dynEntId, DynEntityDrawType drawType)
-{
-    if ( dynEntId >= (unsigned int)cm.dynEntCount[drawType]
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\dynentity\\DynEntity_load_obj.h",
-                    60,
-                    0,
-                    "dynEntId doesn't index cm.dynEntCount[DynEntGetClientCollType( drawType )]\n\t%i not in [0, %i)",
-                    dynEntId,
-                    cm.dynEntCount[drawType]) )
-    {
-        __debugbreak();
-    }
-    return (const DynEntityDef *)((char *)cm.dynEntPoseList[drawType - 2] + 84 * dynEntId);
-}
-
 DynEntityClient *__cdecl DynEnt_GetClientEntity(unsigned __int16 dynEntId, DynEntityDrawType drawType)
 {
     if ( dynEntId >= (unsigned int)cm.dynEntCount[drawType]

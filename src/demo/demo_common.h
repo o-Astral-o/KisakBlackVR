@@ -23,9 +23,20 @@ struct bdTaskResult // sizeof=0x4
     {
 
     }
-    virtual ~bdTaskResult();
-    virtual bool deserialize(bdReference<bdByteBuffer>);
-    virtual unsigned int sizeOf();
+    virtual ~bdTaskResult() = default;
+    //virtual bool deserialize(bdReference<bdByteBuffer>) = 0;
+    //virtual unsigned int sizeOf() = 0;
+
+    // HACK: I really dont give 2 shits about this class
+
+    inline bool deserialize()
+    {
+        return false;
+    }
+    inline int sizeOf()
+    {
+        return sizeof(this);
+    }
 };
 
 struct bdSessionID : bdTaskResult // sizeof=0xC
@@ -55,7 +66,7 @@ struct bdTag : bdTaskResult // sizeof=0x18
             m_secTag = 0;
         }
 
-        virtual ~bdTag();
+        virtual ~bdTag() = default;
 
         void set(unsigned __int64 a2, unsigned __int64 a3)
         {
@@ -140,7 +151,8 @@ struct bdFileMetaData : bdTaskResult // sizeof=0x838
             resetArrays();
             //return this;
         }
-        virtual ~bdFileMetaData();
+
+        virtual ~bdFileMetaData() = default;
 
         // aislop 
         bdFileMetaData &operator=(const bdFileMetaData &that)

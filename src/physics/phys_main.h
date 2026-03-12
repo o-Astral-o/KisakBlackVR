@@ -453,3 +453,5 @@ extern cdl_proftimer proftimer_physics_frame_advance;
 extern PhysGlob physGlob;
 extern axis_aligned_sweep_and_prune *g_axis_aligned_sweep_and_prune;
 extern minspec_mutex g_render_mutex;
+
+extern int g_debug_partition;

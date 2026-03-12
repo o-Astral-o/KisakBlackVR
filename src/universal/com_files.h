@@ -278,3 +278,5 @@ extern iwd_pure_check_s *fs_iwdPureChecks;
 extern int fs_checksumFeed;
 extern int fs_fakeChkSum;
 extern int fs_serverIwds[1024];
+
+extern int com_fileAccessed;

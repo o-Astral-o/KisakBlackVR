@@ -1,7 +1,13 @@
 #pragma once
 
 #include "glass.h"
-#include "glass_renderer.h"
+
+struct GlassShard;
+struct GlassRenderer;
+struct msg_t;
+struct trace_t;
+struct pointtrace_t;
+struct moveclip_t;
 
 struct GlassClient // sizeof=0xC
 {
@@ -46,6 +52,14 @@ struct GlassClient // sizeof=0xC
     void __thiscall Shatter(const float *pos, const float *dir);
     char __thiscall PreShatter();
 
+};
+
+struct StackAllocator // sizeof=0xC
+{                                       // XREF: .data:StackAllocator GlassesClient::allocator/r
+    unsigned __int8 *memory;            // XREF: GlassesClient::InitAllocator(Glasses *)+1B/w
+    unsigned int size;                  // XREF: GlassesClient::InitAllocator(Glasses *)+24/w
+    // GlassesClient::GetFreeMem(void)+3/r
+    unsigned int pos;                   // XREF: GlassesClient::InitAllocator(Glasses *)+2A/w
 };
 
 struct GlassesClient // sizeof=0x10

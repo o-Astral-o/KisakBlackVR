@@ -15,7 +15,7 @@
 #include <universal/q_parse.h>
 #include <database/db_registry.h>
 
-
+#undef GetObject // windows aids
 
 scrVarGlob_t gScrVarGlob[2];
 scrVarPub_t gScrVarPub[2];
@@ -3140,7 +3140,7 @@ unsigned int __cdecl GetArrayVariableIndex(scriptInstance_t inst, unsigned int p
     return GetVariableIndexInternal(inst, parentId, (unsignedValue + 0x800000) & 0xFFFFFF);
 }
 
-unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, unsigned int parentId, unsigned int name)
+unsigned int __cdecl Scr_GetVariableFieldIndex(scriptInstance_t inst, unsigned int parentId, int name)
 {
     const char *v4; // eax
     VariableValueInternal *v5; // [esp+20h] [ebp-10h]

@@ -1,6 +1,8 @@
 #ifndef TOMCRYPT_CUSTOM_H_
 #define TOMCRYPT_CUSTOM_H_
 
+#undef MPI           // (LWSS MOD) prevents libtommath symbols from being required
+
 /* macros for various libc functions you can change for embedded targets */
 #ifndef XMALLOC
      #ifdef malloc 
@@ -126,6 +128,7 @@
 /* #define LTC_NO_BSWAP */
 
 /* ---> Symmetric Block Ciphers <--- */
+#define LTC_NO_CIPHERS // LWSS MOD
 #ifndef LTC_NO_CIPHERS
 
 #define LTC_BLOWFISH
@@ -209,6 +212,7 @@
 #endif /* LTC_NO_HASHES */
 
 /* ---> MAC functions <--- */
+#define LTC_NO_MACS // LWSS MOD
 #ifndef LTC_NO_MACS
 
 #define LTC_HMAC
@@ -249,6 +253,7 @@
 #define LTC_BASE64
 
 /* --> Pseudo Random Number Generators <--- */
+#define LTC_NO_PRNGS // LWSS MOD
 #ifndef LTC_NO_PRNGS
 
 /* Yarrow */
@@ -296,6 +301,9 @@
 #endif /* LTC_NO_MATH */
 
 /* ---> Public Key Crypto <--- */
+
+#define LTC_NO_PK // LWSS ADD
+
 #ifndef LTC_NO_PK
 
 /* Include RSA support */
@@ -326,6 +334,7 @@
 #endif /* LTC_NO_PK */
 
 /* LTC_PKCS #1 (RSA) and #5 (Password Handling) stuff */
+#define LTC_NO_PKCS // LWSS MOD
 #ifndef LTC_NO_PKCS
 
 #define LTC_PKCS_1

@@ -117,6 +117,32 @@ unsigned __int64 __cdecl tlAtomicOr(volatile unsigned __int64 *var, unsigned __i
 #endif
 }
 
+void __thiscall tlAtomicMutex::Lock()
+{
+    LONG Target; // [esp+1Ch] [ebp-10h] BYREF
+    tlAtomicMutex *ThisPtr; // [esp+20h] [ebp-Ch]
+    unsigned __int64 CurThread; // [esp+24h] [ebp-8h]
+
+    CurThread = GetCurrentThreadId();
+    if (this->ThreadId == CurThread)
+    {
+        ++this->LockCount;
+    }
+    else
+    {
+        while (1)
+        {
+            ThisPtr = this->ThisPtr;
+            if (!_InterlockedCompareExchange64((volatile signed __int64 *)ThisPtr, CurThread, 0))
+                break;
+            SwitchToThread();
+        }
+        Target = 0;
+        InterlockedExchange(&Target, 0);
+        this->LockCount = 1;
+    }
+}
+
 void tlAtomicMutex::Unlock()
 {
   volatile unsigned int Target; // [esp+4h] [ebp-4h] BYREF

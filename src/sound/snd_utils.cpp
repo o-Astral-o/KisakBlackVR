@@ -633,7 +633,7 @@ const char *__cdecl SND_GetAliasName(const snd_alias_list_t *alias)
 }
 
 // aislop cleanup
-double __cdecl SND_dBToLinear(double db)
+float __cdecl SND_dBToLinear(float db)
 {
     // Compute 10^(db / 20)
     float x = static_cast<float>(pow(10.0, db / 20.0));

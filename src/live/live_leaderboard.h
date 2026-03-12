@@ -218,8 +218,8 @@ struct LeaderBoardResult : bdStatsInfo //<LeaderBoardRow<10>,100> : bdStatsInfo 
     LeaderBoardRow<10> m_leaderBoardEntries[SIZE];// 100];
                                         // XREF: .rdata:off_D0DB08/o
 
-    LeaderBoardResult();
-    ~LeaderBoardResult();
+    //LeaderBoardResult();
+    //~LeaderBoardResult();
 };
 
 struct __declspec(align(8)) Leaderboard // sizeof=0x3CA0
@@ -262,8 +262,8 @@ struct __declspec(align(8)) Leaderboard // sizeof=0x3CA0
     // padding byte
     // padding byte
 
-    Leaderboard();
-    ~Leaderboard();
+    Leaderboard() = default;
+    ~Leaderboard() = default;
 };
 
 struct LBSelectedPlayerInfo // sizeof=0x48
@@ -302,8 +302,8 @@ struct LbGlob // sizeof=0x3D528
     LeaderBoardRow<10> prestigeMonthlyEntry[1];
                                         // XREF: Lb_InitiateWeeklyAndMonthlyLbWrite(int,LbType)+DE/o
 
-    LbGlob();
-    ~LbGlob();
+    LbGlob() = default;
+    ~LbGlob() = default;
 };
 
 bool __cdecl LB_NeedToReadLeaderBoard();

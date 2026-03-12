@@ -2,6 +2,7 @@
 #include "cm_trace.h"
 #include "cm_load.h"
 #include <gfx_d3d/r_material.h>
+#include <physics/phys_gjk.h>
 
 void __cdecl CM_TracePointThroughTriangle(const traceWork_t *tw, const unsigned __int16 *indices, trace_t *trace)
 {

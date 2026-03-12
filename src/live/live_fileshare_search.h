@@ -48,8 +48,8 @@ struct fshSearchBookFiles_t // sizeof=0x5470
     bdVoteRankStatsInfo ratings[100];   // XREF: Live_FileShareSearch_LoadBook+11C/o
                                         // Live_FileShareSearch_LoadRatings+49/o ...
 
-    fshSearchBookFiles_t();
-    ~fshSearchBookFiles_t();
+    fshSearchBookFiles_t() = default;
+    ~fshSearchBookFiles_t() = default;
 };
 
 struct __declspec(align(8)) fshSearchContext_t // sizeof=0x3E0
@@ -78,7 +78,7 @@ struct __declspec(align(8)) fshSearchContext_t // sizeof=0x3E0
     // padding byte
     // padding byte
 
-    ~fshSearchContext_t();
+    //~fshSearchContext_t();
 };
 
 struct fshSearch_t // sizeof=0x14F18
@@ -96,8 +96,8 @@ struct fshSearch_t // sizeof=0x14F18
     fshSearchContext_t context;         // XREF: Live_FileShareSearch_SetIndexOverride(int,int)+1E/r
                                         // Live_FileShareSearch_SetIndexOverride(int,int)+27/w ...
 
-    fshSearch_t();
-    ~fshSearch_t();
+    fshSearch_t() = default;
+    ~fshSearch_t() = default;
 
     //fshSearch_t *__thiscall fshSearch_t::fshSearch_t(fshSearch_t *this);
     //void __thiscall fshSearch_t::~fshSearch_t(fshSearch_t *this);

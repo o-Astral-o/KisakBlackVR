@@ -1017,7 +1017,7 @@ gjk_partition_t *__cdecl gjk_partition_t::create(const CollisionAabbTree *tree, 
 void gjk_partition_t::support(
                 const phys_vec3 *v,
                 phys_vec3 *support_vert,
-                phys_vec3 *support_ind)
+                phys_vec3 *support_ind) const
 {
     float *v5; // [esp+4h] [ebp-24h]
     float *v6; // [esp+8h] [ebp-20h]
@@ -2392,6 +2392,8 @@ void    setup_gjk_polygon_cylinder(
     gjk_cylinder->m_mode = 0;
 }
 
+gjk_polygon_cylinder_t::poly_verts gjk_polygon_cylinder_t::s_poly_verts;
+
 gjk_polygon_cylinder_t *__cdecl gjk_polygon_cylinder_t::create(
                 float (*mins)[3],
                 float (*maxs)[3],
@@ -2696,6 +2698,11 @@ void __cdecl query_brush_model_gjk_geom(
     model = CM_ClipHandleToModel(brushModel);
     //colgeom_visitor_t::intersect_box_brushes(&query_visitor, &model->leaf);
     query_visitor.intersect_box_brushes(&model->leaf);
+}
+
+void query_brush_model_gjk_geom_visitor::visit(const CollisionAabbTree *)
+{
+    iassert(0);
 }
 
 void query_brush_model_gjk_geom_visitor::visit(const cbrush_t *brush)
@@ -3475,29 +3482,6 @@ gjk_polygon_cylinder_t::poly_verts::poly_verts()
         this->m_si[i] = sinf(angle);
     }
 #endif
-}
-
-void __cdecl destroy_gjk_geom(gjk_geom_list_t *gjk_geom_list)
-{
-    gjk_base_t *next_geom; // [esp+0h] [ebp-8h]
-    gjk_aabb_t *geom; // [esp+4h] [ebp-4h]
-
-    if ( gjk_geom_list->m_geom_count < 0
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h",
-                 1035,
-                 "m_geom_count >= 0",
-                 "") )
-    {
-        __debugbreak();
-    }
-    for ( geom = (gjk_aabb_t *)gjk_geom_list->m_first_geom; geom; geom = (gjk_aabb_t *)next_geom )
-    {
-        next_geom = geom->m_next_geom;
-        destroy_gjk_geom(geom);
-    }
-    gjk_geom_list->m_first_geom = 0;
-    gjk_geom_list->m_geom_count = 0;
 }
 
 void gjk_polygon_cylinder_t::support(

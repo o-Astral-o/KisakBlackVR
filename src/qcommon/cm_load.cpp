@@ -10,6 +10,7 @@
 #include <win32/win_main.h>
 #include <physics/physconstraints_load_obj.h>
 #include <database/db_registry.h>
+#include <physics/rope.h>
 
 clipMap_t cm;
 
@@ -21,12 +22,10 @@ int undertow_volumes[32];
 float undertow_origins[32][3];
 float undertow_forces[32][4];
 
-TraceThreadInfo g_traceThreadInfo[15];
+extern TraceThreadInfo g_traceThreadInfo[15];
 cbrush_t g_box_brush[12];
 cmodel_t g_box_model[12];
 
-int g_mapRopeCount;
-int g_totalRopeCount;
 int g_entsWithRopesCount;
 
 void __cdecl CM_LoadMap(const char *name, int *checksum)

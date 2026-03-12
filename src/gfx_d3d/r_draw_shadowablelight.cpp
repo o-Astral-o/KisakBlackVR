@@ -380,7 +380,7 @@ void __cdecl R_SetShadowableLight(GfxCmdBufSourceState *source, unsigned int sha
                 }
                 R_SetLightProperties(
                     source,
-                    &data->shadowableLights[shadowableLightIndex],
+                    (GfxLight*)&data->shadowableLights[shadowableLightIndex], // de-const
                     def,
                     hasShadowMap,
                     spotShadowFade);
@@ -402,7 +402,7 @@ void __cdecl R_SetDrawSurfsShadowableLight(GfxCmdBufSourceState *source, const G
         if ( shadowableLightIndex )
             R_SetShadowableLight(source, shadowableLightIndex);
         else
-            R_SetLightProperties(source, light, light->def, LIGHT_HAS_NO_SHADOWMAP, 0.0);
+            R_SetLightProperties(source, (GfxLight*)light, light->def, LIGHT_HAS_NO_SHADOWMAP, 0.0); // de-const
     }
 }
 

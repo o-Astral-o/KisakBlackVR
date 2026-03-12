@@ -317,7 +317,8 @@ struct __declspec(align(16)) IKState // sizeof=0xE60
 
 void __cdecl IK_AllocateLocalClientMemory(void *ikStatesBuf, int localClientIndex);
 void __cdecl IK_InitSystem();
-IKState *__cdecl IK_GetIKStateForEntity(unsigned int entityNum, unsigned __int8 *model, bool bScanAll);
+IKState *__cdecl IK_GetIKStateForEntity(int entityNum, unsigned __int8 *model, bool bScanAll);
+
 void __cdecl IK_InitializeIKState(IKState *ikState);
 IKState *__cdecl IK_CreateIKForEntity(int entityNum, unsigned __int8 *model);
 IKState *__cdecl IK_FindFreeIKState(int entityNum, unsigned __int8 *model);
@@ -343,3 +344,4 @@ extern int ikLegSolverLayers[21];
 extern int ikArmSolverLayers[21];
 
 extern IKBoneNames IKBoneParents[23];
+extern bool ikEssentialBones[28];

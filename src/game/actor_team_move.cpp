@@ -7,11 +7,6 @@
 const float g_actorAssumedSpeed[1] = { 300.0 };
 
 
-bool __cdecl Actor_AtDifferentElevation(float *vOrgSelf, float *vOrgOther)
-{
-    return fabs(vOrgSelf[2] - vOrgOther[2]) >= 80.0;
-}
-
 void __fastcall Actor_TeamMoveBlocked(actor_s *self)
 {
     self->iTeamMoveWaitTime = ACTOR_TEAMMOVE_WAIT_TIME + level.time;

@@ -1,4 +1,5 @@
 #include "db_registry.h"
+#include <clientscript/cscr_parsetree.h>
 #include <gfx_d3d/rb_resource.h>
 #include <qcommon/cm_load.h>
 #include <gfx_d3d/r_stream.h>
@@ -82,53 +83,6 @@
 #define POOLSIZE_EMBLEMSET         2
 
 
-const char *g_assetNames[43] =
-{
-  "xmodelpieces",
-  "physpreset",
-  "physconstraints",
-  "destructibledef",
-  "xanim",
-  "xmodel",
-  "material",
-  "techset",
-  "image",
-  "sound",
-  "sound_patch",
-  "col_map_sp",
-  "col_map_mp",
-  "com_map",
-  "game_map_sp",
-  "game_map_mp",
-  "map_ents",
-  "gfx_map",
-  "lightdef",
-  "ui_map",
-  "font",
-  "menufile",
-  "menu",
-  "localize",
-  "weapon",
-  "weapondef",
-  "weaponvariant",
-  "snddriverglobals",
-  "fx",
-  "impactfx",
-  "aitype",
-  "mptype",
-  "mpbody",
-  "mphead",
-  "character",
-  "xmodelalias",
-  "rawfile",
-  "stringtable",
-  "packindex",
-  "xGlobals",
-  "ddl",
-  "glasses",
-  "emblemset"
-};
-
 static const int g_poolSize[43] =
 {
     POOLSIZE_XMODELPIECES,
@@ -175,11 +129,6 @@ static const int g_poolSize[43] =
     POOLSIZE_GLASSES,
     POOLSIZE_EMBLEMSET,
 };
-
-XAssetHeader __cdecl node_pos(void *pool)
-{
-    return (XAssetHeader)pool;
-}
 
 void __cdecl DB_FreeXAssetHeader_EmblemSet_(XAssetPoolEntry<EmblemSet> **pool, XAssetHeader header);
 XAssetHeader __cdecl DB_AllocXAsset_EmblemSet_(void *arg);
@@ -521,7 +470,6 @@ unsigned __int16 *s_inuseCache;
 unsigned int s_inuseCacheHits;
 unsigned int s_inuseCacheMisses;
 volatile unsigned int g_zoneInfoCount;
-volatile unsigned int g_loadingAssets;
 bool g_archiveBuf;
 XZoneInfoInternal g_zoneInfo[32];
 
@@ -4736,7 +4684,12 @@ void DB_ExternalInitAssets()
     BG_FillInAllWeaponItems();
 }
 
-extern void __cdecl r_PumpDemonware(); // KISAKTODO: remove
+// this is a hack, the real one is ifdef'd out
+static void r_PumpDemonware()
+{
+
+}
+//extern void __cdecl r_PumpDemonware(); // KISAKTODO: remove
 void DB_StreamCompletePreload()
 {
     R_StreamUpdate_SetupInitialImageList();

@@ -4,6 +4,9 @@
 
 // really dont see much point to this class, guys
 
+cCurve cCurveManager::mCurves[4];
+int cCurveManagerLLlevelNotifyFunc;
+
 int __cdecl cCurveManager::GetFreeCurve()
 {
     int i; // [esp+4h] [ebp-4h]

@@ -32,22 +32,6 @@ const char *origErrorMsg = "localized string";
 
 XModel *cached_models[512];
 
-void __cdecl G_SafeDObjFree(unsigned int handle, int unusedLocalClientNum)
-{
-    if ( unusedLocalClientNum != -1
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_main_mp.cpp",
-                    1614,
-                    0,
-                    "unusedLocalClientNum == INVALID_CLIENT_NUMBER\n\t%i, %i",
-                    unusedLocalClientNum,
-                    -1) )
-    {
-        __debugbreak();
-    }
-    Com_SafeServerDObjFree(handle);
-}
-
 void __cdecl G_ClearCachedModels()
 {
     memset((unsigned __int8 *)cached_models, 0, sizeof(cached_models));

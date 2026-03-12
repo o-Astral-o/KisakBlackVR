@@ -15,7 +15,7 @@ struct __declspec(align(4)) DDraw // sizeof=0x14
     // padding byte
 
     DDraw();
-    ~DDraw();
+    //~DDraw();
     static DDraw *Instance();
 };
 

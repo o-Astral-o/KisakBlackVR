@@ -10,65 +10,6 @@
 #include <gfx_d3d/r_dvars.h>
 #include <ik/ik_import.h>
 
-int __cdecl DObjGetModelBoneIndex(const DObj *obj, const char *modelName, unsigned int name, unsigned __int8 *index)
-{
-    char *v4; // eax
-    int j; // [esp+0h] [ebp-18h]
-    int ja; // [esp+0h] [ebp-18h]
-    unsigned int boneIndex; // [esp+4h] [ebp-14h]
-    int numModels; // [esp+8h] [ebp-10h]
-    XModel *model; // [esp+Ch] [ebp-Ch]
-    XModel *modela; // [esp+Ch] [ebp-Ch]
-    unsigned int localBoneIndex; // [esp+10h] [ebp-8h]
-    XModel **models; // [esp+14h] [ebp-4h]
-
-    if ( !obj && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 2354, 0, "%s", "obj") )
-        __debugbreak();
-    if ( !name && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 2355, 0, "%s", "name") )
-        __debugbreak();
-    if ( !SL_IsLowercaseString(name, SCRIPTINSTANCE_SERVER) )
-    {
-        v4 = SL_ConvertToString(name, SCRIPTINSTANCE_SERVER);
-        if ( !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                        2357,
-                        0,
-                        "%s\n\t(SL_ConvertToString( name )) = %s",
-                        "(SL_IsLowercaseString( name ))",
-                        v4) )
-            __debugbreak();
-    }
-    localBoneIndex = *index;
-    if ( localBoneIndex == 255 )
-        return 0;
-    numModels = obj->numModels;
-    models = obj->localModels;
-    if ( localBoneIndex < obj->numBones )
-    {
-        for ( j = 0; j < numModels; ++j )
-        {
-            model = models[j];
-            if ( localBoneIndex < model->numBones )
-            {
-                if ( name == model->localBoneNames[localBoneIndex] && !I_stricmp(modelName, model->name) )
-                    return 1;
-                break;
-            }
-            localBoneIndex -= model->numBones;
-        }
-    }
-    boneIndex = 0;
-    for ( ja = 0; ja < numModels; ++ja )
-    {
-        modela = models[ja];
-        if ( !I_stricmp(modelName, modela->name) && XModelGetBoneIndex(modela, name, boneIndex, index) )
-            return 1;
-        boneIndex += modela->numBones;
-    }
-    *index = -1;
-    return 0;
-}
-
 DObjAnimMat *__cdecl DObjGetRotTransArray(const DObj *obj)
 {
     if ( !obj && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj_utils.cpp", 37, 0, "%s", "obj") )

@@ -343,13 +343,15 @@ struct GlassShard // sizeof=0x90
         float glassSize,
         float stickiness);
     void DrawOutline();
-    static void __cdecl Defrag(GlassShard *ptr);
-    static void __cdecl Defrag(void *ptr);
+
+    //static void __cdecl Defrag(GlassShard *ptr);
 
     static int splitFailCount[8];
     static int lastFreeMemorySize;
     static int removeReasonsCount[7];
 };
+
+void GlassShard_Defrag(void *ptr); // changed from static member func
 
 struct TempOutline : GlassShard::Outline // sizeof=0x610
 {                                       // XREF: ?Create@GlassShard@@QAE_NPBUGlass@@@Z/r

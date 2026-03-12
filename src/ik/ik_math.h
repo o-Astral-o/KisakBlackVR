@@ -64,3 +64,6 @@ void __cdecl ikNormalizedMatrixAssert_func(float (*mat)[4]);
 // local variable allocation has failed, the output may be wrong!
 void    ikRotateBone(IKState *ikState, IKBoneNames boneName, float *rot, bool local);
 void __cdecl ikMatrixLerp44(float (*from)[4], float (*to)[4], float lerp, float (*res)[4]);
+
+extern float fMaxFootReachSubtract;
+extern float fMaxHandReachSubtract;

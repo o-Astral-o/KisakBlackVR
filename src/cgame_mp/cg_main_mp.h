@@ -32,7 +32,6 @@ struct BattleChatterParams // sizeof=0x20
                                         // CG_CheckBattleChatter(void)+7E/o
 };
 
-unsigned __int8 *__cdecl Hunk_AllocXAnimCreate(unsigned int size);
 int __cdecl CG_GetClientNumForLocalClient(int localClientNum);
 bool __cdecl CG_IsRagdollTrajectory(const trajectory_t *trajectory);
 void __cdecl CG_SetupSplitscreenDvars();

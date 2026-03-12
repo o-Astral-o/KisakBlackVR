@@ -5,6 +5,7 @@
 #include "encode.h"
 #include <qcommon/common.h>
 #include "record_dsound.h"
+#include <win32/win_voice.h>
 
 int(__cdecl *current_audioCallback)(audioSample_t *);
 
@@ -15,8 +16,6 @@ int samples_in_partial_audio_buffer;
 
 char enc_buffer[4096];
 int enc_buffer_pos;
-
-float voice_current_scaler = 1.0f;
 
 void __cdecl Record_SetRecordingCallback(int (__cdecl *new_audioCallback)(audioSample_t *))
 {

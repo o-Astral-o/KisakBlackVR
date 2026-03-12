@@ -4615,7 +4615,7 @@ bool __cdecl PM_ShouldFlinch(playerState_s *ps)
     return ps->damageTimer > flinch_end_time;
 }
 
-void __cdecl PM_VehicleDrive(pmove_t *pm)
+void __cdecl PM_VehicleDrive(pmove_t *pm, pml_t *pml)
 {
     playerState_s *ps; // [esp+0h] [ebp-4h]
 
@@ -5642,16 +5642,3 @@ void __cdecl Pmove(pmove_t *pm)
     gjkcc_epilog(&gjkcc_in, pm->ps->origin);
     pm->m_gjkcc_input = 0;
 }
-
-void __cdecl setup_gjkcc_input(actor_physics_t *pPhys, gjkcc_input_t *gjkcc_in)
-{
-    gjkcc_in->gjkcc_id = (unsigned int)pPhys;
-    gjkcc_in->is_server_thread = 1;
-    gjkcc_in->proximity_data = &pPhys->proximity_data;
-    gjkcc_in->proximity_mask = (int)&cls.recentServers[7995].countrycode[1];
-    gjkcc_in->m_ent_num = pPhys->iEntNum;
-    gjkcc_in->m_gjk_query_flags = 3;
-    gjkcc_in->m_gjk_cg = 0;
-    gjkcc_in->m_mat = 0;
-}
-

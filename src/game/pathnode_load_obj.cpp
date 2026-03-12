@@ -92,20 +92,6 @@ struct NodeNums // sizeof=0x10000
     int array[2][8192];
 };
 
-int __cdecl NodeVisCacheEntry(int i, int j)
-{
-    if ( i >= j && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2033, 0, "%s", "i < j") )
-        __debugbreak();
-    return j + g_path.actualNodeCount * i;
-}
-
-int __cdecl ExpandedNodeVisCacheEntry(int i, int j)
-{
-    if ( i <= j && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game\\pathnode.cpp", 2040, 0, "%s", "i > j") )
-        __debugbreak();
-    return j + g_path.actualNodeCount * (i - 1);
-}
-
 void __cdecl Path_CreateNodes()
 {
     pathstatic.pathLinks = 0;

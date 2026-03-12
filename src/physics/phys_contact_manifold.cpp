@@ -1,6 +1,9 @@
 #include "phys_contact_manifold.h"
 #include <tl/tl_system.h>
 
+#include <utility>
+#include <algorithm>
+
 const phys_vec3 *__cdecl phys_v2_to_v3_multiply(phys_vec3 *result, const phys_mat44 *m, const phys_vec2 *v)
 {
     const phys_vec3 *v3; // eax

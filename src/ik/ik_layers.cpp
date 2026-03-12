@@ -17,10 +17,6 @@ float velIdleMax = 100.0f;
 
 float leftHandRotationStatic[3];
 float leftHandOffsetStatic[3];
-float fMaxFootReachSubtract;
-float fMaxHandReachSubtract;
-
-
 
 // local variable allocation has failed, the output may be wrong!
 void    IK_Layer_TerrainMapping(IKState *ikState)

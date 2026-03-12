@@ -1,6 +1,7 @@
 #include "huffman.h"
 #include <universal/com_shared.h>
 #include <cstdlib>
+#include <universal/q_shared.h>
 
 thread_local int bloc;
 

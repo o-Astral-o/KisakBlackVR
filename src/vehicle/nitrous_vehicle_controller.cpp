@@ -1098,18 +1098,18 @@ void NitrousVehicleController::UpdateJump(
     }
 }
 
-void __thiscall rigid_body::add_force(const phys_vec3 *force)
-{
-    this->m_force_sum.x = this->m_force_sum.x + force->x;
-    this->m_force_sum.y = this->m_force_sum.y + force->y;
-    this->m_force_sum.z = this->m_force_sum.z + force->z;
-    if ( fabs(this->m_force_sum.x) > 100000.0
-        || fabs(this->m_force_sum.y) > 100000.0
-        || fabs(this->m_force_sum.z) > 100000.0 )
-    {
-        phys_exec_debug_callback(this);
-    }
-}
+//void __thiscall rigid_body::add_force(const phys_vec3 *force)
+//{
+//    this->m_force_sum.x = this->m_force_sum.x + force->x;
+//    this->m_force_sum.y = this->m_force_sum.y + force->y;
+//    this->m_force_sum.z = this->m_force_sum.z + force->z;
+//    if ( fabs(this->m_force_sum.x) > 100000.0
+//        || fabs(this->m_force_sum.y) > 100000.0
+//        || fabs(this->m_force_sum.z) > 100000.0 )
+//    {
+//        phys_exec_debug_callback(this);
+//    }
+//}
 
 // local variable allocation has failed, the output may be wrong!
 void NitrousVehicleController::UpdateApplyBoatAccel(
@@ -1485,54 +1485,55 @@ void NitrousVehicleController::UpdateApplyBoatAccel(
     }
 }
 
-void __thiscall rigid_body::add_force(
-                const phys_vec3 *force,
-                const phys_vec3 *point,
-                float torque_mult)
-{
-    double v6; // st7
-    float v7; // [esp-30h] [ebp-3Ch]
-    float v8; // [esp-2Ch] [ebp-38h]
-    float v9; // [esp-28h] [ebp-34h]
-    float v10; // [esp-20h] [ebp-2Ch]
-    float v11; // [esp-20h] [ebp-2Ch]
-    float v12; // [esp-1Ch] [ebp-28h]
-    float v13; // [esp-1Ch] [ebp-28h]
-    float v14; // [esp-18h] [ebp-24h]
-    float v15; // [esp-18h] [ebp-24h]
-    float v16; // [esp-4h] [ebp-10h]
-    float v17; // [esp-4h] [ebp-10h]
-    float v18; // [esp-4h] [ebp-10h]
-    float v19; // [esp-4h] [ebp-10h]
-    float v20; // [esp-4h] [ebp-10h]
-    float v21; // [esp-4h] [ebp-10h]
-
-    this->m_force_sum.x = this->m_force_sum.x + force->x;
-    this->m_force_sum.y = this->m_force_sum.y + force->y;
-    this->m_force_sum.z = this->m_force_sum.z + force->z;
-    v10 = point->x - this->m_mat.w.x;
-    v12 = point->y - this->m_mat.w.y;
-    v14 = point->z - this->m_mat.w.z;
-    v7 = force->z * v12 - force->y * v14;
-    v8 = v14 * force->x - force->z * v10;
-    v9 = v10 * force->y - v12 * force->x;
-    v11 = v7 * torque_mult;
-    v13 = v8 * torque_mult;
-    v15 = torque_mult * v9;
-    this->m_torque_sum.x = this->m_torque_sum.x + v11;
-    this->m_torque_sum.y = v13 + this->m_torque_sum.y;
-    this->m_torque_sum.z = this->m_torque_sum.z + v15;
-    v6 = 100000.0;
-    v16 = fabs(this->m_force_sum.x);
-    if ( v16 > 100000.0
-        || (v17 = fabs(this->m_force_sum.y), v17 > 100000.0)
-        || (v18 = fabs(this->m_force_sum.z), v18 > 100000.0) )
-    {
-        phys_exec_debug_callback(this);
-        v6 = 100000.0;
-    }
-    v19 = fabs(this->m_torque_sum.x);
-    if ( v19 > v6 || (v20 = fabs(this->m_torque_sum.y), v20 > v6) || (v21 = fabs(this->m_torque_sum.z), v6 < v21) )
-        phys_exec_debug_callback(this);
-}
-
+//void __thiscall rigid_body::add_force(
+//                const phys_vec3 *force,
+//                const phys_vec3 *point,
+//                float torque_mult)
+//{
+//    double v6; // st7
+//    float v7; // [esp-30h] [ebp-3Ch]
+//    float v8; // [esp-2Ch] [ebp-38h]
+//    float v9; // [esp-28h] [ebp-34h]
+//    float v10; // [esp-20h] [ebp-2Ch]
+//    float v11; // [esp-20h] [ebp-2Ch]
+//    float v12; // [esp-1Ch] [ebp-28h]
+//    float v13; // [esp-1Ch] [ebp-28h]
+//    float v14; // [esp-18h] [ebp-24h]
+//    float v15; // [esp-18h] [ebp-24h]
+//    float v16; // [esp-4h] [ebp-10h]
+//    float v17; // [esp-4h] [ebp-10h]
+//    float v18; // [esp-4h] [ebp-10h]
+//    float v19; // [esp-4h] [ebp-10h]
+//    float v20; // [esp-4h] [ebp-10h]
+//    float v21; // [esp-4h] [ebp-10h]
+//
+//    this->m_force_sum.x = this->m_force_sum.x + force->x;
+//    this->m_force_sum.y = this->m_force_sum.y + force->y;
+//    this->m_force_sum.z = this->m_force_sum.z + force->z;
+//    v10 = point->x - this->m_mat.w.x;
+//    v12 = point->y - this->m_mat.w.y;
+//    v14 = point->z - this->m_mat.w.z;
+//    v7 = force->z * v12 - force->y * v14;
+//    v8 = v14 * force->x - force->z * v10;
+//    v9 = v10 * force->y - v12 * force->x;
+//    v11 = v7 * torque_mult;
+//    v13 = v8 * torque_mult;
+//    v15 = torque_mult * v9;
+//    this->m_torque_sum.x = this->m_torque_sum.x + v11;
+//    this->m_torque_sum.y = v13 + this->m_torque_sum.y;
+//    this->m_torque_sum.z = this->m_torque_sum.z + v15;
+//    v6 = 100000.0;
+//    v16 = fabs(this->m_force_sum.x);
+//    if ( v16 > 100000.0
+//        || (v17 = fabs(this->m_force_sum.y), v17 > 100000.0)
+//        || (v18 = fabs(this->m_force_sum.z), v18 > 100000.0) )
+//    {
+//        phys_exec_debug_callback(this);
+//        v6 = 100000.0;
+//    }
+//    v19 = fabs(this->m_torque_sum.x);
+//    if ( v19 > v6 || (v20 = fabs(this->m_torque_sum.y), v20 > v6) || (v21 = fabs(this->m_torque_sum.z), v6 < v21) )
+//        phys_exec_debug_callback(this);
+//}
+//
+//
