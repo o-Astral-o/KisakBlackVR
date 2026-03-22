@@ -259,8 +259,6 @@ void __cdecl SV_AddOperatorCommands()
 
 void __cdecl SV_Map_f()
 {
-    const char *v0; // eax
-    const char *v1; // eax
     bool v2; // [esp+0h] [ebp-60h]
     bool isDevmap; // [esp+7h] [ebp-59h]
     char *map; // [esp+8h] [ebp-58h]
@@ -272,64 +270,106 @@ void __cdecl SV_Map_f()
     const char *cmd; // [esp+5Ch] [ebp-4h]
 
     map = (char *)SV_Cmd_Argv(1);
-    if ( !map && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\server_mp\\sv_ccmds_mp.cpp", 256, 0, "%s", "map") )
-        __debugbreak();
-    if ( *map )
+
+    iassert(map);
+
+    if (!map[0])
     {
-        if ( SV_Cmd_Argc() <= 2 )
-        {
-            mapIsPreloaded = 0;
-        }
-        else
-        {
-            v0 = SV_Cmd_Argv(2);
-            mapIsPreloaded = atoi(v0) != 0;
-        }
-        if ( SV_Cmd_Argc() <= 3 )
-        {
-            sv_migrate = 0;
-        }
-        else
-        {
-            v1 = SV_Cmd_Argv(3);
-            sv_migrate = atoi(v1);
-        }
-        com_errorPrintsCount = 0;
-
-        if (!IsDedicatedServer())
-        {
-            Cbuf_ExecuteBuffer(0, 0, (char*)"selectStringTableEntryInDvar mp/didyouknow.csv 0 didyouknow");
-        }
-
-        basename = SV_GetMapBaseName(map);
-        I_strncpyz(mapname, basename, 64);
-        I_strlwr(mapname);
-        if ( !useFastFile->current.enabled )
-        {
-            if ( !SV_CheckMapExists(mapname) )
-            {
-                Com_PrintError(1, "Can't find map \"%s\".\n", mapname);
-                return;
-            }
-LABEL_18:
-            if ( Demo_IsRecording() )
-                Demo_End(0);
-            cmd = SV_Cmd_Argv(0);
-            isDevmap = I_stricmp(cmd, "devmap") == 0;
-            cheat = com_developer->current.integer == 2;
-            cow = Dvar_FindVar("thereisacow");
-            if ( !cow || atoi(cow->current.string) != 1960 )
-                cheat = 0;
-            v2 = isDevmap || cheat;
-            cheat = v2;
-            Dvar_SetBool((dvar_s *)sv_cheats, v2);
-            FS_ConvertPath(mapname);
-            SV_SpawnServer(0, mapname, mapIsPreloaded, sv_migrate);
-        }
-        if ( DB_FileExists(mapname, FFD_DEFAULT) || DB_FileExists(mapname, FFD_USER_MAP) )
-            goto LABEL_18;
-        Com_PrintError(1, "Can't find map \"%s\" in usermaps\\%s folder.\n", mapname, mapname);
+        return;
     }
+
+    if ( SV_Cmd_Argc() <= 2 )
+    {
+        mapIsPreloaded = 0;
+    }
+    else
+    {
+        mapIsPreloaded = atoi(SV_Cmd_Argv(2)) != 0;
+    }
+
+    if ( SV_Cmd_Argc() <= 3 )
+    {
+        sv_migrate = 0;
+    }
+    else
+    {
+        sv_migrate = atoi(SV_Cmd_Argv(3));
+    }
+
+    com_errorPrintsCount = 0;
+
+    if (!IsDedicatedServer())
+    {
+        Cbuf_ExecuteBuffer(0, 0, (char*)"selectStringTableEntryInDvar mp/didyouknow.csv 0 didyouknow");
+    }
+
+    basename = SV_GetMapBaseName(map);
+
+    I_strncpyz(mapname, basename, 64);
+    I_strlwr(mapname);
+
+// LWSS: IDA got this totally wrong. The goto logic is wrong and causes SV_SpawnServer() to be called in an infinite loop
+//    if ( !useFastFile->current.enabled )
+//    {
+//        if ( !SV_CheckMapExists(mapname) )
+//        {
+//            Com_PrintError(1, "Can't find map \"%s\".\n", mapname);
+//            return;
+//        }
+//LABEL_18:
+//        if ( Demo_IsRecording() )
+//            Demo_End(0);
+//        cmd = SV_Cmd_Argv(0);
+//        isDevmap = I_stricmp(cmd, "devmap") == 0;
+//        cheat = com_developer->current.integer == 2;
+//        cow = Dvar_FindVar("thereisacow");
+//        if ( !cow || atoi(cow->current.string) != 1960 )
+//            cheat = 0;
+//        v2 = isDevmap || cheat;
+//        cheat = v2;
+//        Dvar_SetBool((dvar_s *)sv_cheats, v2);
+//        FS_ConvertPath(mapname);
+//        SV_SpawnServer(0, mapname, mapIsPreloaded, sv_migrate);
+//    }
+//    if ( DB_FileExists(mapname, FFD_DEFAULT) || DB_FileExists(mapname, FFD_USER_MAP) )
+//        goto LABEL_18;
+//    Com_PrintError(1, "Can't find map \"%s\" in usermaps\\%s folder.\n", mapname, mapname);
+
+    if (!IsFastFileLoad())
+    {
+        if (!SV_CheckMapExists(mapname))
+        {
+            Com_PrintError(1, "Can't find map \"%s\".\n", mapname);
+            return;
+        }
+    }
+    else
+    {
+        if (!DB_FileExists(mapname, FFD_DEFAULT) && !DB_FileExists(mapname, FFD_USER_MAP))
+        {
+            Com_PrintError(1, "Can't find map \"%s\" in usermaps\\%s folder.\n", mapname, mapname);
+            return;
+        }
+    }
+
+    if (Demo_IsRecording())
+        Demo_End(0);
+
+    cmd = SV_Cmd_Argv(0);
+    isDevmap = I_stricmp(cmd, "devmap") == 0;
+
+    cheat = (com_developer->current.integer == 2);
+
+    cow = Dvar_FindVar("thereisacow");
+    if (!cow || atoi(cow->current.string) != 1960)
+        cheat = 0;
+
+    cheat = isDevmap || cheat;
+
+    Dvar_SetBool((dvar_s*)sv_cheats, cheat);
+
+    FS_ConvertPath(mapname);
+    SV_SpawnServer(0, mapname, mapIsPreloaded, sv_migrate);
 }
 
 char __cdecl SV_CheckMapExists(const char *map)
