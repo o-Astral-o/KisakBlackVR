@@ -74,10 +74,6 @@
 
 scr_data_t g_scr_data;
 
-int g_scr_faceeventnotify;
-int g_scr_levelnotify;
-int g_scr_glasssmash;
-
 void assertCmd()
 {
     if ( !Scr_GetInt(0, SCRIPTINSTANCE_CLIENT).intValue )
@@ -220,18 +216,17 @@ void __cdecl GScr_LoadGameTypeScript()
                                                                                     "CodeCallback_PlayerLastStand",
                                                                                     1);
 
-    // LWSS: these were added after cod4... idk the names, they show up as dword_***
-    g_scr_levelnotify = GScr_LoadScriptAndLabel(
+    g_scr_data.levelnotify = GScr_LoadScriptAndLabel(
                                         SCRIPTINSTANCE_SERVER,
                                         "maps/mp/gametypes/_callbacksetup",
                                         "CodeCallback_LevelNotify",
                                         1);
-    g_scr_faceeventnotify = GScr_LoadScriptAndLabel(
+    g_scr_data.faceeventnotify = GScr_LoadScriptAndLabel(
                          SCRIPTINSTANCE_SERVER,
                          "maps/mp/gametypes/_callbacksetup",
                          "CodeCallback_FaceEventNotify",
                          0);
-    g_scr_glasssmash = GScr_LoadScriptAndLabel(
+    g_scr_data.glassSmash = GScr_LoadScriptAndLabel(
                                         SCRIPTINSTANCE_SERVER,
                                         "maps/mp/gametypes/_callbacksetup",
                                         "CodeCallback_GlassSmash",
@@ -273,26 +268,41 @@ void __cdecl    GScr_LoadScripts(scriptInstance_t inst)
         "CodeCallback_UpdateSpawnPoints",
         1);
     GScr_LoadDogAnimScripts(inst);
+
+    GScr_SetScriptsForPathNodes();
+    GScr_LoadPreGameScript();
+    GScr_LoadGameTypeScript();
+    GScr_LoadLevelScript();
+    Scr_PostCompileScripts(inst);
+    GScr_PostLoadScripts(inst);
+    Scr_EndLoadScripts(inst);
 }
 
 void __cdecl    GScr_LoadDogAnimScripts(scriptInstance_t inst)
 {
-    GScr_LoadSingleAnimScript(inst, &g_scr_data.dogAnim.combat, "dog_combat");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.combat, "dog_combat");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.death, "dog_death");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.init, "dog_init");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.pain, "dog_pain");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.move, "dog_move");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.stop, "dog_stop");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.flashed, "dog_flashed");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.jump, "dog_jump");
+  GScr_LoadSingleAnimScript (inst, &g_scr_data.dogAnim.turn, "dog_turn");
+  g_animScriptTable[0] = &g_scr_data.dogAnim;
 }
 
 void __cdecl    GScr_LoadSingleAnimScript(scriptInstance_t inst, scr_animscript_t *pAnim, const char *name)
 {
-    char filename[68]; // [esp+0h] [ebp-48h] BYREF
+    char filename[64]; // [esp+0h] [ebp-48h] BYREF
 
-    if ( !pAnim
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_main_mp.cpp", 272, 0, "%s", "pAnim") )
-    {
-        __debugbreak();
-    }
-    if ( !name && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_scr_main_mp.cpp", 273, 0, "%s", "name") )
-        __debugbreak();
-    Com_sprintf(filename, 0x40u, "maps/mp/animscripts/%s", name);
-    GScr_AllocString((char*)name);
+    iassert(pAnim);
+    iassert(name);
+
+    Com_sprintf(filename, sizeof(filename), "maps/mp/animscripts/%s", name);
+
+    pAnim->name = GScr_AllocString(name);
+    pAnim->func = GScr_LoadScriptAndLabel(inst, filename, "main", 1);
 }
 
 void GScr_SetScriptsForPathNodes()
@@ -17623,7 +17633,7 @@ void __cdecl GScr_Gdt_Update(char *asset, char *keyValue)
     Scr_AddString(keyValue, SCRIPTINSTANCE_SERVER);
     Scr_AddString(asset, SCRIPTINSTANCE_SERVER);
     Scr_AddString("gdt_update", SCRIPTINSTANCE_SERVER);
-    t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_levelnotify, 3u);
+    t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_data.levelnotify, 3u);
     Scr_FreeThread(t, SCRIPTINSTANCE_SERVER);
 }
 
@@ -17631,11 +17641,11 @@ void __cdecl Scr_GlassSmash(float *pos, float *dir)
 {
     unsigned __int16 t; // [esp+0h] [ebp-4h]
 
-    if ( g_scr_glasssmash )
+    if (g_scr_data.glassSmash)
     {
         Scr_AddVector(dir, SCRIPTINSTANCE_SERVER);
         Scr_AddVector(pos, SCRIPTINSTANCE_SERVER);
-        t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_glasssmash, 2u);
+        t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_data.glassSmash, 2u);
         Scr_FreeThread(t, SCRIPTINSTANCE_SERVER);
     }
 }

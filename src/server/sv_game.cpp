@@ -806,6 +806,7 @@ void __cdecl    SV_InitGameVM(int restart, int registerDvars)
     //PIXBeginNamedEvent(-1, "SV_InitGameVM");
     G_ResetEntityParsePoint();
     SV_ResetSkeletonCache();
+
     if ( (com_maxclients->current.integer < 1 || com_maxclients->current.integer > 32)
         && !Assert_MyHandler(
                     "C:\\projects_pc\\cod\\codsrc\\src\\server\\sv_game.cpp",
@@ -817,8 +818,10 @@ void __cdecl    SV_InitGameVM(int restart, int registerDvars)
     {
         __debugbreak();
     }
+
     for ( i = 0; i < com_maxclients->current.integer; ++i )
         svs.clients[i].gentity = 0;
+
     Sys_LoadingKeepAlive();
     G_InitGame(svs.time, Sys_MillisecondsRaw(), restart, registerDvars);
 

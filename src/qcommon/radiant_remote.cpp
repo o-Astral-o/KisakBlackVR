@@ -605,7 +605,7 @@ void __cdecl G_NotifyScriptsOfSelectedScriptStruct(int structId)
         numparams = 2;
     }
     Scr_AddConstString(scr_const.obstacle, SCRIPTINSTANCE_SERVER);
-    t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_levelnotify, numparams);
+    t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_data.levelnotify, numparams);
     Scr_FreeThread(t, SCRIPTINSTANCE_SERVER);
 }
 

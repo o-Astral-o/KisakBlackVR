@@ -510,7 +510,6 @@ void __cdecl SV_SetServerDvarsBeforeScriptsInit()
 
 void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPreloaded, int savegame)
 {
-    char *v4; // eax
     unsigned int v5; // eax
     int v6; // esi
     int v7; // esi
@@ -529,16 +528,8 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
 #ifdef KISAK_LIVE
     MatchRecord_InitMatchData();
 #endif
-    if ( SV_GetServerThreadOwnsGame()
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\server_mp\\sv_init_mp.cpp",
-                    927,
-                    0,
-                    "%s",
-                    "SV_GetServerThreadOwnsGame() == 0") )
-    {
-        __debugbreak();
-    }
+    iassert(SV_GetServerThreadOwnsGame() == 0);
+
     if ( useFastFile->current.enabled && !mapIsPreloaded )
     {
         DB_AddUserMapDir(server);
@@ -554,24 +545,22 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
     CL_AllocatePerLocalClientMemory();
     Scr_ParseGameTypeList();
     SV_SetGametype();
+
     if ( !mapIsPreloaded )
         CL_InitLoad(server, sv_gametype->current.string);
+
     if ( useFastFile->current.enabled && !mapIsPreloaded )
         DB_SyncXAssets();
+
     R_BeginRemoteScreenUpdate();
+
     if ( fs_debug->current.integer == 2 )
         Dvar_SetInt((dvar_s*)fs_debug, 0);
+
     ProfLoad_Activate();
-    if ( SV_GetServerThreadOwnsGame()
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\server_mp\\sv_init_mp.cpp",
-                    1009,
-                    0,
-                    "%s",
-                    "SV_GetServerThreadOwnsGame() == 0") )
-    {
-        __debugbreak();
-    }
+
+    iassert(SV_GetServerThreadOwnsGame() == 0);
+
     if ( com_sv_running->current.enabled )
     {
         savepersist = G_GetSavePersist();
@@ -593,20 +582,13 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
     {
         savepersist = 0;
     }
-    v4 = strstr(server, "\\");
-    if ( v4
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\server_mp\\sv_init_mp.cpp",
-                    1035,
-                    0,
-                    "%s",
-                    "!strstr( server, \"\\\\\" )") )
-    {
-        __debugbreak();
-    }
+
+    iassert(!strstr(server, "\\"));
+
     Dvar_SetString((dvar_s*)sv_mapname, server);
     LiveSteam_Server_Init();
     R_EndRemoteScreenUpdate(0);
+
     if ( !mapIsPreloaded )
     {
         CL_MapLoading(server);
@@ -614,10 +596,12 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
         R_EndRemoteScreenUpdate(0);
         CL_ShutdownAll();
     }
+
     SV_ShutdownGameProgs();
     Com_Printf(15, "------ Server Initialization ------\n");
     Com_Printf(15, "Server: %s\n", server);
     SV_ClearServer();
+
     if ( !useFastFile->current.enabled )
     {
         FS_Shutdown();
@@ -625,12 +609,16 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
     }
     if ( !mapIsPreloaded )
         Com_Restart();
+
     if (com_sv_running->current.enabled)
     {
         //BLOPS_NULLSUB(v10);
     }
     else
+    {
         SV_Startup(controllerIndex);
+    }
+
     Dvar_ClearModified(com_maxclients);
     I_strncpyz((char *)&sv.killServer, sv_gametype->current.string, 64);
     v5 = Sys_MillisecondsRaw();
@@ -739,10 +727,13 @@ void __cdecl    SV_SpawnServer(int controllerIndex, char *server, int mapIsPrelo
     SV_SetXUIDConfigStrings();
     Pregame_Reset();
     SV_SetServerDvarsBeforeScriptsInit();
-    ProfLoad_Begin("Init game");
-    SV_InitGameProgs(savepersist);
-    // === AFTER THIS POINT, IDA GAVE UP AND I FED THE ASM TO AISLOP. ===
-    ProfLoad_End();
+
+    {
+        ProfLoad_Begin("Init game");
+        SV_InitGameProgs(savepersist);
+        ProfLoad_End();
+    }
+
 
     SV_CreateBaseline();
     Demo_SetDemoClientState(0);

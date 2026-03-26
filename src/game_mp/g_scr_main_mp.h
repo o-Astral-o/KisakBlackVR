@@ -853,7 +853,3 @@ void __cdecl Scr_GlassSmash(float *pos, float *dir);
 
 
 extern scr_data_t g_scr_data;
-
-extern int g_scr_faceeventnotify;
-extern int g_scr_levelnotify;
-extern int g_scr_glasssmash;

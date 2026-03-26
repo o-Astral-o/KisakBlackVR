@@ -302,7 +302,7 @@ void __cdecl ScrNotify_FaceEvent(gentity_s *self, unsigned __int16 face_event)
 
     Scr_AddEntity(self, SCRIPTINSTANCE_SERVER);
     Scr_AddConstString(face_event, SCRIPTINSTANCE_SERVER);
-    t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_faceeventnotify, 2u);
+    t = Scr_ExecThread(SCRIPTINSTANCE_SERVER, g_scr_data.faceeventnotify, 2u);
     Scr_FreeThread(t, SCRIPTINSTANCE_SERVER);
 }
 
