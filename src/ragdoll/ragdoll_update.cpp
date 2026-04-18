@@ -1033,26 +1033,10 @@ char __cdecl Ragdoll_CreatePhysObjs(RagdollBody *body)
         {
             userData0 = (PhysObjUserData *)body->bones[i0].rigidBody;
             userData1 = (PhysObjUserData *)body->bones[i1].rigidBody;
-            if ( (!userData0->m_bpb || (userData0->m_bpb->m_flags & 1) == 0)
-                && _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
-                         667,
-                         "userData0->m_bpb && userData0->m_bpb->is_bpi()",
-                         "") )
-            {
-                __debugbreak();
-            }
-            if ( !userData1->m_bpb || (userData1->m_bpb->m_flags & 1) == 0 )
-            {
-                if ( _tlAssert(
-                             "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
-                             668,
-                             "userData1->m_bpb && userData1->m_bpb->is_bpi()",
-                             "") )
-                {
-                    __debugbreak();
-                }
-            }
+
+            iassert(userData0->m_bpb && userData0->m_bpb->is_bpi());
+            iassert(userData1->m_bpb && userData1->m_bpb->is_bpi());
+
             bpcp = create_broad_phase_collision_pair();
             if ( bpcp )
             {
@@ -1073,15 +1057,9 @@ char __cdecl Ragdoll_CreatePhysObjs(RagdollBody *body)
         if ( body->bones[ia].rigidBody )
         {
             userData = (PhysObjUserData *)body->bones[ia].rigidBody;
-            if ( (!userData->m_bpb || (userData->m_bpb->m_flags & 1) == 0)
-                && _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\src\\ragdoll\\ragdoll_update.cpp",
-                         685,
-                         "userData->m_bpb && userData->m_bpb->is_bpi()",
-                         "") )
-            {
-                __debugbreak();
-            }
+            
+            iassert(userData->m_bpb && userData->m_bpb->is_bpi());
+
             aasap_list_remove(userData->m_bpb);
             userData->m_bpb->m_env_collision_flags &= ~0x80u;
             userData->m_bpb->m_my_collision_type_flags |= 0x200u;

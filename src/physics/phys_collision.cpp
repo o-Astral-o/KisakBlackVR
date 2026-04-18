@@ -1966,15 +1966,7 @@ void broad_phase_info::collision_prolog()
 
 void broad_phase_info::set_bpi_env(phys_auto_activate_callback *auto_activate_callback)
 {
-    if ((this->m_flags & 1) == 0
-        && _tlAssert(
-            "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_base.h",
-            163,
-            "is_bpi()",
-            "call broad_phase_info::set first."))
-    {
-        __debugbreak();
-    }
+    iassert(is_bpi()); // "call broad_phase_info::set first."
     iassert(m_sap_node == NULL);
     this->m_flags = 0;
     this->m_sap_node = auto_activate_callback;

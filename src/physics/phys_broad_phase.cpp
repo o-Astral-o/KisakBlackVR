@@ -3656,9 +3656,9 @@ void __thiscall axis_aligned_sweep_and_prune::add_active_pair(
             v4->m_p1 = p1;
             v4->m_p2 = p2;
             v4->m_gjk_ci = 0;
-            if ( (p1->m_bpb->m_flags & 1) != 0 )
+            if ( p1->m_bpb->is_bpi() )
             {
-                if ( (p2->m_bpb->m_flags & 1) != 0 )
+                if ( p2->m_bpb->is_bpi() )
                 {
                     v4->m_next = this->m_list_bpi_bpi;
                     this->m_list_bpi_bpi = v4;
@@ -3669,7 +3669,7 @@ void __thiscall axis_aligned_sweep_and_prune::add_active_pair(
                     this->m_list_bpi_bpg = v4;
                 }
             }
-            else if ( (p2->m_bpb->m_flags & 1) != 0 )
+            else if ( p2->m_bpb->is_bpi() )
             {
                 v4->m_p1 = p2;
                 v4->m_p2 = p1;

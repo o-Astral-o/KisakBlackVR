@@ -716,16 +716,8 @@ void __cdecl environment_collision_list_add(broad_phase_base *bpb)
 {
     broad_phase_memory *v1; // [esp+4h] [ebp-4h]
 
-    if ( (bpb->m_flags & 1) == 0
-        && (bpb->m_flags & 2) == 0
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
-                 235,
-                 "bpb->is_bpi() || bpb->is_bpg()",
-                 "") )
-    {
-        __debugbreak();
-    }
+    iassert(bpb->is_bpi() || bpb->is_bpg());
+
     if ( (bpb->m_flags & 0x40) != 0
         && _tlAssert(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
@@ -758,16 +750,8 @@ void __cdecl environment_collision_list_add(broad_phase_base *bpb)
 
 void __cdecl environment_collision_list_remove(broad_phase_base *bpb)
 {
-    if ( (bpb->m_flags & 1) == 0
-        && (bpb->m_flags & 2) == 0
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
-                 247,
-                 "bpb->is_bpi() || bpb->is_bpg()",
-                 "") )
-    {
-        __debugbreak();
-    }
+    iassert(bpb->is_bpi() || bpb->is_bpg());
+
     if ( (bpb->m_flags & 0x40) != 0
         && _tlAssert(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\collision\\phys_broad_phase_inline.h",
@@ -845,7 +829,7 @@ void __cdecl destroy_broad_phase_info(rigid_body *body)
     {
         aasap_list_remove(userData->m_bpb);
         environment_collision_list_remove(userData->m_bpb);
-        if ( (userData->m_bpb->m_flags & 1) != 0 )
+        if ( userData->m_bpb->is_bpi() )
         {
             //bpi = broad_phase_base::get_bpi(userData->m_bpb);
             bpi = userData->m_bpb->get_bpi();
@@ -1774,7 +1758,7 @@ void __cdecl Phys_ObjAddCollFlags(int physObjId, int collFlags)
 
     PhysObjUserData *userData = (PhysObjUserData *)physObjId; // LWSS: yes, convert the int directly to a pointer to a struct. 
 
-    if ((userData->m_bpb->m_flags & 1) != 0)
+    if (userData->m_bpb->is_bpi())
     {
         //bpi = broad_phase_base::get_bpi(userData->m_bpb);
         bpi = userData->m_bpb->get_bpi();
@@ -1806,7 +1790,7 @@ void __cdecl Phys_ObjRemoveCollFlags(int physObjId, int collFlags)
 
     PhysObjUserData *userData = (PhysObjUserData *)physObjId; // LWSS: yes, convert the int directly to a pointer to a struct. 
 
-    if ((userData->m_bpb->m_flags & 1) != 0)
+    if (userData->m_bpb->is_bpi())
     {
         //bpi = broad_phase_base::get_bpi(userData->m_bpb);
         bpi = userData->m_bpb->get_bpi();

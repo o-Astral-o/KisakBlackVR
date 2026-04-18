@@ -1305,7 +1305,7 @@ int __cdecl DynEntCl_CreatePhysObj(
     if ( physId )
     {
         phys_user_data = (PhysObjUserData *)dynEntClient->physObjId;
-        if ( (phys_user_data->m_bpb->m_flags & 1) != 0 )
+        if ( phys_user_data->m_bpb->is_bpi() )
         {
             //bpi = broad_phase_base::get_bpi(phys_user_data->m_bpb);
             bpi = phys_user_data->m_bpb->get_bpi();

@@ -36,7 +36,7 @@ void __cdecl XDoll_SetCollides(XDollBone *bone, bool collides)
     if ( bone->rigidBody )
     {
         userData = (PhysObjUserData *)bone->rigidBody;
-        if ( (userData->m_bpb->m_flags & 1) != 0 )
+        if ( userData->m_bpb->is_bpi() )
         {
             //bpi = broad_phase_base::get_bpi(userData->m_bpb);
             bpi = userData->m_bpb->get_bpi();

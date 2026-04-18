@@ -463,7 +463,7 @@ void    NitrousVehicle::unpause_physics()
             &gjk_geom_list);
         thisa->m_phys_user_data = v2;
         thisa->m_phys_user_data->vehicle = thisa;
-        if ((thisa->m_phys_user_data->m_bpb->m_flags & 1) != 0)
+        if ( thisa->m_phys_user_data->m_bpb->is_bpi() )
         {
             //bpi = broad_phase_base::get_bpi(thisa->m_phys_user_data->m_bpb);
             bpi = thisa->m_phys_user_data->m_bpb->get_bpi();

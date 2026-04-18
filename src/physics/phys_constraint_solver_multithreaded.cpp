@@ -2069,6 +2069,7 @@ double __thiscall pulse_sum_normal::clamp_pulse_sum(float ps)
         this->m_pulse_sum_max = v5;
         this->m_pulse_sum_min = -v5;
     }
+
     if ( this->m_pulse_sum_max < (double)this->m_pulse_sum_min
         && _tlAssert(
                  "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\constraint_solver\\pulse_sum_normal_inline.h",

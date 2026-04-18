@@ -1527,18 +1527,7 @@ void __cdecl gjk_double_sphere_t::destroy(gjk_double_sphere_t *geom)
 {
     if ( geom )
     {
-        if ( (geom->m_flags & 1) != 0 )
-        {
-            if ( _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
-                         254,
-                         "!geom->get_flag( gjk_base_t::FLAG_TEMP_ALLOCATION )",
-                         "") )
-            {
-                __debugbreak();
-            }
-        }
-        //phys_simple_allocator<gjk_double_sphere_t>::free(&double_sphere_pool, geom);
+        iassert(!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION));
         double_sphere_pool.free(geom);
     }
 }
@@ -2215,18 +2204,7 @@ void __cdecl gjk_cylinder_t::destroy(gjk_cylinder_t *geom)
 {
     if ( geom )
     {
-        if ( (geom->m_flags & 1) != 0 )
-        {
-            if ( _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
-                         276,
-                         "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         "") )
-            {
-                __debugbreak();
-            }
-        }
-        //phys_simple_allocator<gjk_cylinder_t>::free(&cylinder_pool, geom);
+        iassert(!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION));
         cylinder_pool.free(geom);
     }
 }
@@ -2436,18 +2414,7 @@ void __cdecl gjk_polygon_cylinder_t::destroy(gjk_polygon_cylinder_t *geom)
 {
     if ( geom )
     {
-        if ( (geom->m_flags & 1) != 0 )
-        {
-            if ( _tlAssert(
-                         "C:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.cpp",
-                         359,
-                         "!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION)",
-                         "") )
-            {
-                __debugbreak();
-            }
-        }
-        //phys_simple_allocator<gjk_polygon_cylinder_t>::free(&polygon_cylinder_pool, geom);
+        iassert(!geom->get_flag(gjk_base_t::FLAG_TEMP_ALLOCATION));
         polygon_cylinder_pool.free(geom);
     }
 }

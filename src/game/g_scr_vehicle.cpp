@@ -1857,7 +1857,7 @@ void __cdecl VEH_SetPlayerVehicle(gentity_s *ent, bool enable)
     {
         if ( enable )
         {
-            if ( (phys_user_data->m_bpb->m_flags & 1) != 0 )
+            if ( phys_user_data->m_bpb->is_bpi() )
             {
                 //bpi = broad_phase_base::get_bpi(phys_user_data->m_bpb);
                 bpi = phys_user_data->m_bpb->get_bpi();
@@ -1875,7 +1875,7 @@ void __cdecl VEH_SetPlayerVehicle(gentity_s *ent, bool enable)
                 }
             }
         }
-        else if ( (phys_user_data->m_bpb->m_flags & 1) != 0 )
+        else if ( phys_user_data->m_bpb->is_bpi() )
         {
             //v3 = broad_phase_base::get_bpi(phys_user_data->m_bpb);
             v3 = phys_user_data->m_bpb->get_bpi();
