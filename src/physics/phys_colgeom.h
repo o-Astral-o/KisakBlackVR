@@ -187,8 +187,7 @@ struct __declspec(align(16)) gjk_aabb_t : gjk_base_t // sizeof=0x80
 
         unsigned int get_type() const
         {
-            iassert(0);
-            return 0;
+            return 1;
         }
 };
 
@@ -407,9 +406,9 @@ struct gjk_double_sphere_t : gjk_base_t // sizeof=0x90
                 int stype,
                 gjk_collision_visitor *allocator);
 
-        unsigned int get_type() const // LWSS: this isnt even a real function?
+        unsigned int get_type() const
         {
-            return 69;
+            return 4;
         }
 
         static void __cdecl destroy(gjk_double_sphere_t *geom);

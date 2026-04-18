@@ -15,77 +15,45 @@ DObjAnimMat * R_UpdateSceneEntBounds(
                 const DObj **pObj,
                 int waitForCullState)
 {
-    float v6; // xmm0_4
-    float radiusSqMaxs; // [esp+24h] [ebp-614h]
-    float radiusSqMins; // [esp+28h] [ebp-610h]
-    float radiusHi; // [esp+2Ch] [ebp-60Ch]
-    float v10; // [esp+34h] [ebp-604h]
-    float *maxs; // [esp+40h] [ebp-5F8h]
-    float *mins; // [esp+44h] [ebp-5F4h]
-    int v13; // [esp+54h] [ebp-5E4h]
-    int v14; // [esp+58h] [ebp-5E0h]
-    int v15; // [esp+5Ch] [ebp-5DCh]
-    int v16; // [esp+60h] [ebp-5D8h]
-    int v17; // [esp+6Ch] [ebp-5CCh]
-    int v18; // [esp+70h] [ebp-5C8h]
-    int v19; // [esp+74h] [ebp-5C4h]
-    __int64 v20; // [esp+78h] [ebp-5C0h]
-    __int64 v21; // [esp+80h] [ebp-5B8h]
-    __int64 v22; // [esp+88h] [ebp-5B0h]
-    __int64 v23; // [esp+90h] [ebp-5A8h]
-    int v24; // [esp+98h] [ebp-5A0h]
-    __int64 v25; // [esp+ACh] [ebp-58Ch]
-    float v26[7]; // [esp+B4h] [ebp-584h]
-    __int64 v27; // [esp+D0h] [ebp-568h]
-    float v28[11]; // [esp+D8h] [ebp-560h]
-    int v29; // [esp+104h] [ebp-534h]
-    int v30; // [esp+108h] [ebp-530h]
-    int v31; // [esp+10Ch] [ebp-52Ch]
-    int v32; // [esp+110h] [ebp-528h]
-    int v33; // [esp+148h] [ebp-4F0h]
-    int v34; // [esp+14Ch] [ebp-4ECh]
-    int v35; // [esp+150h] [ebp-4E8h]
-    int v36; // [esp+154h] [ebp-4E4h]
-    int v37; // [esp+1CCh] [ebp-46Ch]
-    int v38; // [esp+1D0h] [ebp-468h]
-    int v39; // [esp+1D4h] [ebp-464h]
-    int v40; // [esp+204h] [ebp-434h]
-    int v41; // [esp+208h] [ebp-430h]
-    float v42; // [esp+2C8h] [ebp-370h]
-    float v43; // [esp+2CCh] [ebp-36Ch]
-    float v44; // [esp+2D0h] [ebp-368h]
-    float v45; // [esp+2D8h] [ebp-360h]
-    float v46; // [esp+2DCh] [ebp-35Ch]
-    float v47; // [esp+2E0h] [ebp-358h]
-    XBoneInfo *boneInfo; // [esp+2E8h] [ebp-350h]
-    DObjSkelMat boneAxis; // [esp+2ECh] [ebp-34Ch] BYREF
-    DObjAnimMat *bone; // [esp+32Ch] [ebp-30Ch]
-    int boneIndex; // [esp+330h] [ebp-308h]
-    unsigned int animPartBit; // [esp+334h] [ebp-304h]
-    int boneCount; // [esp+338h] [ebp-300h]
-    XBoneInfo *boneInfoArray[160]; // [esp+33Ch] [ebp-2FCh] BYREF
-    float4 *v55; // [esp+5C0h] [ebp-78h]
-    float4 bounds[2]; // [esp+5C4h] [ebp-74h] BYREF
-    DObjAnimMat *boneMatrix; // [esp+5E4h] [ebp-54h]
-    int surfaceCount; // [esp+5E8h] [ebp-50h]
-    int partBits[5]; // [esp+5ECh] [ebp-4Ch] BYREF
-    int v60; // [esp+600h] [ebp-38h]
-    const DpvsPlane *frustumPlanes; // [esp+608h] [ebp-30h]
-    int v63; // [esp+60Ch] [ebp-2Ch]
-    int frustumPlaneCount; // [esp+610h] [ebp-28h]
-    DpvsView *dpvsView; // [esp+614h] [ebp-24h]
-    bool offscreen; // [esp+61Bh] [ebp-1Dh]
-    const DObj *obj; // [esp+61Ch] [ebp-1Ch]
-    GfxSceneEntity *localSceneEnt; // [esp+620h] [ebp-18h]
-    unsigned int state; // [esp+624h] [ebp-14h]
-    //_UNKNOWN *v70; // [esp+62Ch] [ebp-Ch]
-    //GfxSceneEntity *sceneEnta; // [esp+630h] [ebp-8h]
-    //GfxSceneEntity **pLocalSceneEnta; // [esp+634h] [ebp-4h] BYREF
-    //const DObj **pObja; // [esp+638h] [ebp+0h]
-    //
-    //v70 = a1;
-    //sceneEnta = (GfxSceneEntity *)pObja;
-    if (_InterlockedCompareExchange((volatile unsigned __int32 *)&sceneEnt->cull, 1, 0))
+    // aislop!
+    float radiusSqMaxs;
+    float radiusSqMins;
+    float radiusHi;
+    float radiusLo;
+    float *maxs;
+    float *mins;
+    int v_neg[12]; // sign mask temporaries
+    float v42, v43, v44, v45, v46, v47; // bone bounds
+    XBoneInfo *boneInfo;
+    DObjSkelMat boneAxis;
+    DObjAnimMat *bone;
+    int boneIndex;
+    unsigned int animPartBit;
+    int boneCount;
+    XBoneInfo *boneInfoArray[160];
+    float4 minWorld;
+    float4 maxWorld;
+    DObjAnimMat *boneMatrix;
+    int surfaceCount;
+    int partBits[5];
+    int offscreenCull;
+    const DpvsPlane *frustumPlanes;
+    int frustumPlaneIdx;
+    int frustumPlaneCount;
+    DpvsView *dpvsView;
+    bool offscreen;
+    DObj *obj;
+    GfxSceneEntity *localSceneEnt;
+    unsigned int state;
+
+    // Bitmask min/max helpers
+    // selects a or b per-component based on sign mask
+    // min: pick whichever is smaller
+    // max: pick whichever is larger
+    // implemented via integer bitmask trick: (a & mask) | (b & ~mask)
+    // where mask = -1 if condition true, 0 otherwise
+
+    if (InterlockedCompareExchange((volatile LONG *)&sceneEnt->cull, 1, 0))
     {
         *pLocalSceneEnt = 0;
         if (waitForCullState)
@@ -93,19 +61,10 @@ DObjAnimMat * R_UpdateSceneEntBounds(
             do
             {
                 state = sceneEnt->cull.state;
-                if (!state
-                    && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_model_pose.cpp",
-                        201,
-                        0,
-                        "%s\n\t(state) = %i",
-                        "(state >= CULL_STATE_BOUNDED_PENDING)",
-                        0))
-                {
-                    __debugbreak();
-                }
-            } while (state == 1);
-            if (state == 4)
+                iassert(state >= CULL_STATE_BOUNDED_PENDING);
+            } while (state == CULL_STATE_BOUNDED_PENDING);
+
+            if (state == CULL_STATE_DONE)
             {
                 return 0;
             }
@@ -115,11 +74,7 @@ DObjAnimMat * R_UpdateSceneEntBounds(
                 *pLocalSceneEnt = sceneEnt;
                 obj = localSceneEnt->obj;
                 *pObj = obj;
-                if (!obj
-                    && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_model_pose.cpp", 212, 0, "%s", "obj"))
-                {
-                    __debugbreak();
-                }
+                iassert(obj);
                 return I_dmaGetDObjSkel(obj);
             }
         }
@@ -132,59 +87,55 @@ DObjAnimMat * R_UpdateSceneEntBounds(
     {
         localSceneEnt = sceneEnt;
         *pLocalSceneEnt = sceneEnt;
-        if (!localSceneEnt->obj
-            && !Assert_MyHandler(
-                "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_model_pose.cpp",
-                229,
-                0,
-                "%s",
-                "localSceneEnt->obj"))
-        {
-            __debugbreak();
-        }
+        iassert(localSceneEnt->obj);
         obj = localSceneEnt->obj;
         *pObj = obj;
-        if (!obj && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_model_pose.cpp", 232, 0, "%s", "obj"))
-            __debugbreak();
-        offscreen = 0;
-        if (r_offscreenCasterLodScale->current.value > 1.0)
+        iassert(obj);
+
+        // New in this version: offscreen LOD scaling
+        offscreen = false;
+        if (r_offscreenCasterLodScale->current.value > 1.0f)
         {
             dpvsView = dpvsGlob.views[scene.dpvs.localClientNum];
-            if (localSceneEnt->cull.state >= 2)
+            if (localSceneEnt->cull.state >= CULL_STATE_BOUNDED)
             {
                 frustumPlaneCount = dpvsView->frustumPlaneCount;
-                v63 = 0;
+                frustumPlaneIdx = 0;
                 frustumPlanes = dpvsView->frustumPlanes;
-                while (v63 < frustumPlaneCount)
+                offscreenCull = 0;
+                while (frustumPlaneIdx < frustumPlaneCount)
                 {
-                    if (R_DpvsPlaneMaxSignedDistToBox(frustumPlanes, localSceneEnt->cull.mins) <= 0.0)
+                    if (R_DpvsPlaneMaxSignedDistToBox(frustumPlanes, localSceneEnt->cull.mins) <= 0.0f)
                     {
-                        v60 = 1;
-                        goto LABEL_28;
+                        offscreenCull = 1;
+                        break;
                     }
-                    ++v63;
+                    ++frustumPlaneIdx;
                     ++frustumPlanes;
                 }
-                v60 = 0;
-            LABEL_28:
-                if (v60)
-                    offscreen = 1;
+                if (offscreenCull)
+                    offscreen = true;
             }
         }
+
         DObjGetSurfaceData(
             obj,
             localSceneEnt->placement.base.origin,
             localSceneEnt->placement.scale,
             offscreen,
             localSceneEnt->cull.lods);
+
         if (useFastFile->current.enabled || !DObjBad(obj))
         {
             if (obj->localModels)
                 surfaceCount = DObjGetSurfaces(obj, partBits, localSceneEnt->cull.lods);
             else
                 surfaceCount = 0;
+
             if (!surfaceCount)
-                goto LABEL_37;
+                goto LABEL_NODRAW;
+
+            // New in this version: recorded DObj path
             if (DObjIsRecorded(obj) && DObjGetRotTransArray(obj))
             {
                 boneMatrix = I_dmaGetDObjSkel(obj);
@@ -193,33 +144,31 @@ DObjAnimMat * R_UpdateSceneEntBounds(
             }
             else
             {
-                boneMatrix = R_DObjCalcPose(localSceneEnt, (DObj *)obj, partBits);
+                boneMatrix = R_DObjCalcPose(localSceneEnt, obj, partBits);
             }
+
             if (boneMatrix)
             {
-                if (!DObjSkelAreBonesUpToDate(obj, partBits)
-                    && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_model_pose.cpp",
-                        328,
-                        0,
-                        "%s",
-                        "DObjSkelAreBonesUpToDate( obj, partBits )"))
-                {
-                    __debugbreak();
-                }
-                bounds[0] = g_worldMaxs;
-                v55 = &bounds[1];
-                bounds[1] = g_worldMins;
+                iassert(DObjSkelAreBonesUpToDate(obj, partBits));
+
+                // New in this version: use g_worldMaxs/g_worldMins instead of hardcoded 131072
+                minWorld = g_worldMaxs;
+                maxWorld = g_worldMins;
+
                 DObjGetBoneInfo(obj, boneInfoArray);
                 boneCount = DObjNumBones(obj);
                 animPartBit = 0x80000000;
                 boneIndex = 0;
+
                 while (boneIndex < boneCount)
                 {
                     if ((animPartBit & partBits[boneIndex >> 5]) != 0)
                     {
                         bone = &boneMatrix[boneIndex];
+
+                        // New in this version: ConvertQuatToSkelMat instead of manual quat math
                         ConvertQuatToSkelMat(bone, &boneAxis);
+
                         boneInfo = boneInfoArray[boneIndex];
                         v42 = boneInfo->bounds[0][0];
                         v43 = boneInfo->bounds[0][1];
@@ -227,180 +176,98 @@ DObjAnimMat * R_UpdateSceneEntBounds(
                         v45 = boneInfo->bounds[1][0];
                         v46 = boneInfo->bounds[1][1];
                         v47 = boneInfo->bounds[1][2];
-                        if (boneAxis.axis[0][0] >= 0.0)
-                            v41 = 0;
-                        else
-                            v41 = -1;
-                        if (boneAxis.axis[0][1] >= 0.0)
-                            v39 = 0;
-                        else
-                            v39 = -1;
-                        if (boneAxis.axis[0][2] >= 0.0)
-                            v38 = 0;
-                        else
-                            v38 = -1;
-                        if (boneAxis.axis[0][3] >= 0.0)
-                            v37 = 0;
-                        else
-                            v37 = -1;
-                        if (boneAxis.axis[1][0] >= 0.0)
-                            v36 = 0;
-                        else
-                            v36 = -1;
-                        if (boneAxis.axis[1][1] >= 0.0)
-                            v35 = 0;
-                        else
-                            v35 = -1;
-                        if (boneAxis.axis[1][2] >= 0.0)
-                            v34 = 0;
-                        else
-                            v34 = -1;
-                        if (boneAxis.axis[1][3] >= 0.0)
-                            v33 = 0;
-                        else
-                            v33 = -1;
-                        if (boneAxis.axis[2][0] >= 0.0)
-                            v32 = 0;
-                        else
-                            v32 = -1;
-                        if (boneAxis.axis[2][1] >= 0.0)
-                            v31 = 0;
-                        else
-                            v31 = -1;
-                        if (boneAxis.axis[2][2] >= 0.0)
-                            v30 = 0;
-                        else
-                            v30 = -1;
-                        if (boneAxis.axis[2][3] >= 0.0)
-                            v29 = 0;
-                        else
-                            v29 = -1;
-                        v40 = v29;
-                        *(float *)&v27 = (float)(COERCE_FLOAT(LODWORD(v47) & v32 | LODWORD(v44) & ~v32) * boneAxis.axis[2][0])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v46) & v36 | LODWORD(v43) & ~v36) * boneAxis.axis[1][0])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v45) & v41 | LODWORD(v42) & ~v41)
-                                    * boneAxis.axis[0][0])
-                                    + boneAxis.origin[0]));
-                        *((float *)&v27 + 1) = (float)(COERCE_FLOAT(LODWORD(v47) & v31 | LODWORD(v44) & ~v31) * boneAxis.axis[2][1])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v46) & v35 | LODWORD(v43) & ~v35)
-                                * boneAxis.axis[1][1])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v45) & v39 | LODWORD(v42) & ~v39)
-                                    * boneAxis.axis[0][1])
-                                    + boneAxis.origin[1]));
-                        v28[0] = (float)(COERCE_FLOAT(LODWORD(v47) & v30 | LODWORD(v44) & ~v30) * boneAxis.axis[2][2])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v46) & v34 | LODWORD(v43) & ~v34) * boneAxis.axis[1][2])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v45) & v38 | LODWORD(v42) & ~v38) * boneAxis.axis[0][2])
-                                    + boneAxis.origin[2]));
-                        v28[1] = (float)(COERCE_FLOAT(LODWORD(v47) & v40 | LODWORD(v44) & ~v40) * boneAxis.axis[2][3])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v46) & v33 | LODWORD(v43) & ~v33) * boneAxis.axis[1][3])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v45) & v37 | LODWORD(v42) & ~v37) * boneAxis.axis[0][3])
-                                    + boneAxis.origin[3]));
-                        *(float *)&v25 = (float)(COERCE_FLOAT(LODWORD(v44) & v32 | LODWORD(v47) & ~v32) * boneAxis.axis[2][0])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v43) & v36 | LODWORD(v46) & ~v36) * boneAxis.axis[1][0])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v42) & v41 | LODWORD(v45) & ~v41)
-                                    * boneAxis.axis[0][0])
-                                    + boneAxis.origin[0]));
-                        *((float *)&v25 + 1) = (float)(COERCE_FLOAT(LODWORD(v44) & v31 | LODWORD(v47) & ~v31) * boneAxis.axis[2][1])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v43) & v35 | LODWORD(v46) & ~v35)
-                                * boneAxis.axis[1][1])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v42) & v39 | LODWORD(v45) & ~v39)
-                                    * boneAxis.axis[0][1])
-                                    + boneAxis.origin[1]));
-                        v26[0] = (float)(COERCE_FLOAT(LODWORD(v44) & v30 | LODWORD(v47) & ~v30) * boneAxis.axis[2][2])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v43) & v34 | LODWORD(v46) & ~v34) * boneAxis.axis[1][2])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v42) & v38 | LODWORD(v45) & ~v38) * boneAxis.axis[0][2])
-                                    + boneAxis.origin[2]));
-                        v26[1] = (float)(COERCE_FLOAT(LODWORD(v44) & v40 | LODWORD(v47) & ~v40) * boneAxis.axis[2][3])
-                            + (float)((float)(COERCE_FLOAT(LODWORD(v43) & v33 | LODWORD(v46) & ~v33) * boneAxis.axis[1][3])
-                                + (float)((float)(COERCE_FLOAT(LODWORD(v42) & v37 | LODWORD(v45) & ~v37) * boneAxis.axis[0][3])
-                                    + boneAxis.origin[3]));
-                        if (bounds[0].v[0] <= *(float *)&v27)
-                            v24 = 0;
-                        else
-                            v24 = -1;
-                        LODWORD(v20) = v24;
-                        if (bounds[0].v[1] <= *((float *)&v27 + 1))
-                            v19 = 0;
-                        else
-                            v19 = -1;
-                        HIDWORD(v20) = v19;
-                        if (bounds[0].v[2] <= v28[0])
-                            v18 = 0;
-                        else
-                            v18 = -1;
-                        LODWORD(v21) = v18;
-                        if (bounds[0].v[3] <= v28[1])
-                            v17 = 0;
-                        else
-                            v17 = -1;
-                        HIDWORD(v21) = v17;
-                        *(_QWORD *)bounds[0].v = v27 & v20 | *(_QWORD *)bounds[0].v & ~v20;
-                        *(_QWORD *)&bounds[0].unitVec[2].packed = *(_QWORD *)v28 & v21
-                            | *(_QWORD *)&bounds[0].unitVec[2].packed & ~v21;
-                        if (bounds[1].v[0] <= *(float *)&v25)
-                            v16 = 0;
-                        else
-                            v16 = -1;
-                        LODWORD(v22) = v16;
-                        if (bounds[1].v[1] <= *((float *)&v25 + 1))
-                            v15 = 0;
-                        else
-                            v15 = -1;
-                        HIDWORD(v22) = v15;
-                        if (bounds[1].v[2] <= v26[0])
-                            v14 = 0;
-                        else
-                            v14 = -1;
-                        LODWORD(v23) = v14;
-                        if (bounds[1].v[3] <= v26[1])
-                            v13 = 0;
-                        else
-                            v13 = -1;
-                        HIDWORD(v23) = v13;
-                        *(_QWORD *)bounds[1].v = *(_QWORD *)bounds[1].v & v22 | v25 & ~v22;
-                        *(_QWORD *)&bounds[1].unitVec[2].packed = *(_QWORD *)&bounds[1].unitVec[2].packed & v23
-                            | *(_QWORD *)v26 & ~v23;
+
+                        // New in this version: SIMD-style bitmask min/max
+                        // Computes transformed AABB corners using sign-bit selection
+                        // for each axis component, select bounds[0] or bounds[1]
+                        // based on sign of the axis component, then accumulate
+
+                        // maxWorld corner (pick larger bound per axis sign)
+                        float maxX =
+                            (boneAxis.axis[2][0] >= 0.0f ? v47 : v44) * boneAxis.axis[2][0] +
+                            (boneAxis.axis[1][0] >= 0.0f ? v46 : v43) * boneAxis.axis[1][0] +
+                            (boneAxis.axis[0][0] >= 0.0f ? v45 : v42) * boneAxis.axis[0][0] +
+                            boneAxis.origin[0];
+                        float maxY =
+                            (boneAxis.axis[2][1] >= 0.0f ? v47 : v44) * boneAxis.axis[2][1] +
+                            (boneAxis.axis[1][1] >= 0.0f ? v46 : v43) * boneAxis.axis[1][1] +
+                            (boneAxis.axis[0][1] >= 0.0f ? v45 : v42) * boneAxis.axis[0][1] +
+                            boneAxis.origin[1];
+                        float maxZ =
+                            (boneAxis.axis[2][2] >= 0.0f ? v47 : v44) * boneAxis.axis[2][2] +
+                            (boneAxis.axis[1][2] >= 0.0f ? v46 : v43) * boneAxis.axis[1][2] +
+                            (boneAxis.axis[0][2] >= 0.0f ? v45 : v42) * boneAxis.axis[0][2] +
+                            boneAxis.origin[2];
+                        float maxW =
+                            (boneAxis.axis[2][3] >= 0.0f ? v47 : v44) * boneAxis.axis[2][3] +
+                            (boneAxis.axis[1][3] >= 0.0f ? v46 : v43) * boneAxis.axis[1][3] +
+                            (boneAxis.axis[0][3] >= 0.0f ? v45 : v42) * boneAxis.axis[0][3] +
+                            boneAxis.origin[3];
+
+                        // minWorld corner (pick smaller bound per axis sign — swap bounds)
+                        float minX =
+                            (boneAxis.axis[2][0] >= 0.0f ? v44 : v47) * boneAxis.axis[2][0] +
+                            (boneAxis.axis[1][0] >= 0.0f ? v43 : v46) * boneAxis.axis[1][0] +
+                            (boneAxis.axis[0][0] >= 0.0f ? v42 : v45) * boneAxis.axis[0][0] +
+                            boneAxis.origin[0];
+                        float minY =
+                            (boneAxis.axis[2][1] >= 0.0f ? v44 : v47) * boneAxis.axis[2][1] +
+                            (boneAxis.axis[1][1] >= 0.0f ? v43 : v46) * boneAxis.axis[1][1] +
+                            (boneAxis.axis[0][1] >= 0.0f ? v42 : v45) * boneAxis.axis[0][1] +
+                            boneAxis.origin[1];
+                        float minZ =
+                            (boneAxis.axis[2][2] >= 0.0f ? v44 : v47) * boneAxis.axis[2][2] +
+                            (boneAxis.axis[1][2] >= 0.0f ? v43 : v46) * boneAxis.axis[1][2] +
+                            (boneAxis.axis[0][2] >= 0.0f ? v42 : v45) * boneAxis.axis[0][2] +
+                            boneAxis.origin[2];
+                        float minW =
+                            (boneAxis.axis[2][3] >= 0.0f ? v44 : v47) * boneAxis.axis[2][3] +
+                            (boneAxis.axis[1][3] >= 0.0f ? v43 : v46) * boneAxis.axis[1][3] +
+                            (boneAxis.axis[0][3] >= 0.0f ? v42 : v45) * boneAxis.axis[0][3] +
+                            boneAxis.origin[3];
+
+                        if (minX < minWorld.v[0]) minWorld.v[0] = minX;
+                        if (minY < minWorld.v[1]) minWorld.v[1] = minY;
+                        if (minZ < minWorld.v[2]) minWorld.v[2] = minZ;
+                        if (minW < minWorld.v[3]) minWorld.v[3] = minW;
+
+                        if (maxX > maxWorld.v[0]) maxWorld.v[0] = maxX;
+                        if (maxY > maxWorld.v[1]) maxWorld.v[1] = maxY;
+                        if (maxZ > maxWorld.v[2]) maxWorld.v[2] = maxZ;
+                        if (maxW > maxWorld.v[3]) maxWorld.v[3] = maxW;
                     }
                     ++boneIndex;
                     animPartBit = (animPartBit << 31) | (animPartBit >> 1);
                 }
+
                 mins = localSceneEnt->cull.mins;
-                *(_QWORD *)localSceneEnt->cull.mins = *(_QWORD *)bounds[0].v;
-                mins[2] = bounds[0].v[2];
+                mins[0] = minWorld.v[0];
+                mins[1] = minWorld.v[1];
+                mins[2] = minWorld.v[2];
+
                 maxs = localSceneEnt->cull.maxs;
-                localSceneEnt->cull.maxs[0] = bounds[1].v[0];
-                maxs[1] = bounds[1].v[1];
-                maxs[2] = bounds[1].v[2];
-                if (localSceneEnt->cull.state != 1
-                    && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_model_pose.cpp",
-                        353,
-                        0,
-                        "%s\n\t(localSceneEnt->cull.state) = %i",
-                        "(localSceneEnt->cull.state == CULL_STATE_BOUNDED_PENDING)",
-                        localSceneEnt->cull.state))
-                {
-                    __debugbreak();
-                }
-                if ((float)((float)(obj->radius - 16.0) - 0.0) < 0.0)
-                    v10 = 0.0f;
-                else
-                    v10 = obj->radius - 16.0;
-                radiusHi = obj->radius + 16.0;
+                maxs[0] = maxWorld.v[0];
+                maxs[1] = maxWorld.v[1];
+                maxs[2] = maxWorld.v[2];
+
+                iassert(localSceneEnt->cull.state == CULL_STATE_BOUNDED_PENDING);
+
+                // New in this version: radius validation
+                radiusLo = obj->radius - 16.0f;
+                if (radiusLo < 0.0f) radiusLo = 0.0f;
+                radiusHi = obj->radius + 16.0f;
                 radiusSqMins = Vec3DistanceSq(localSceneEnt->placement.base.origin, localSceneEnt->cull.mins);
                 radiusSqMaxs = Vec3DistanceSq(localSceneEnt->placement.base.origin, localSceneEnt->cull.maxs);
-                if ((float)(radiusSqMins - radiusSqMaxs) < 0.0)
-                    v6 = radiusSqMaxs;
-                else
-                    v6 = radiusSqMins;
-                if ((float)(v10 * v10) > v6 || v6 > (float)(radiusHi * radiusHi))
-                    localSceneEnt->obj->radius = sqrtf(v6);
-                localSceneEnt->cull.state = 2;
+                float radiusSqActual = radiusSqMins > radiusSqMaxs ? radiusSqMins : radiusSqMaxs;
+                if ((radiusLo * radiusLo) > radiusSqActual || radiusSqActual > (radiusHi * radiusHi))
+                    localSceneEnt->obj->radius = sqrtf(radiusSqActual);
+
+                localSceneEnt->cull.state = CULL_STATE_BOUNDED;
                 return boneMatrix;
             }
             else
             {
-            LABEL_37:
+            LABEL_NODRAW:
                 R_SetNoDraw(sceneEnt);
                 return 0;
             }

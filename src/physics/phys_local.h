@@ -911,9 +911,14 @@ public:
             iassert(T_i->m_ptr_list_index >= 0 && T_i->m_ptr_list_index < PTR_LIST_SIZE);
             iassert(m_ptr_list[T_i->m_ptr_list_index] == &T_i->m_data);
 
-            //this->m_ptr_list[--this->m_ptr_list_count][1].m_wheel_state[0].m_state = T_i->m_ptr_list_index;
-            this->m_ptr_list[this->m_ptr_list_count] = (T*)T_i->m_ptr_list_index;
             --this->m_ptr_list_count;
+
+            // update the last element's index to point to its new position
+            // (it's being swapped into T_i's old slot)
+            T_internal *last_ti = (T_internal *)((char *)this->m_ptr_list[this->m_ptr_list_count] - offsetof(T_internal, m_data));
+            last_ti->m_ptr_list_index = T_i->m_ptr_list_index;
+
+            // swap last element into removed element's slot
             this->m_ptr_list[T_i->m_ptr_list_index] = this->m_ptr_list[this->m_ptr_list_count];
         }
     }
@@ -927,7 +932,7 @@ public:
         T_internal_base *prev = data->m_prev_T_internal;
         prev->m_next_T_internal = next;
         next->m_prev_T_internal = prev;
-        data->m_data.~T();
+        //data->m_data.~T();
         PMM_FREE((unsigned __int8 *)data, sizeof(T_internal), sizeof(T_internal) % 16 == 0 ? 16 : 4);
     }
 
@@ -953,7 +958,7 @@ public:
             T_internal_base *next = data->m_next_T_internal;
             prev->m_next_T_internal = next;
             next->m_prev_T_internal = prev;
-            data->m_data.~T();
+            //data->m_data.~T();
             PMM_FREE((unsigned __int8 *)data, sizeof(T_internal), sizeof(T_internal) % 16 == 0 ? 16 : 4);
         }
     }

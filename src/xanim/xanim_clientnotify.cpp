@@ -18,7 +18,8 @@ XAnimClientNotifyList::~XAnimClientNotifyList()
     for (iLoop = 0; iLoop < this->m_numNotifies; ++iLoop)
     {
         //XAnimClientNotify::~XAnimClientNotify(pNotify++);
-        delete pNotify++; // might be wrong
+        pNotify->~XAnimClientNotify();
+        pNotify++;
     }
 }
 

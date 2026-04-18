@@ -1985,18 +1985,24 @@ void    do_initial_tunnel_test(
 
 void __cdecl destroy_broad_phase_info(broad_phase_info *bpi)
 {
-    phys_free_list<broad_phase_info> *p_g_list_broad_phase_info; // edi
-
     environment_collision_list_remove(bpi);
-    //axis_aligned_sweep_and_prune::destroy_sap_node(g_axis_aligned_sweep_and_prune, bpi);
     g_axis_aligned_sweep_and_prune->destroy_sap_node(bpi);
-    p_g_list_broad_phase_info = &G_BPM->g_list_broad_phase_info;
-    if ( bpi )
+
+    if (bpi)
     {
-        PMM_VALIDATE((char *)&bpi[-1].m_gjk_geom, 0x90u, 0x10u);
-        //phys_free_list<broad_phase_info>::remove(p_g_list_broad_phase_info, (phys_free_list<broad_phase_info>::T_internal *)&bpi[-1].m_gjk_geom);
-        p_g_list_broad_phase_info->remove((phys_free_list<broad_phase_info>::T_internal *) &bpi[-1].m_gjk_geom);
+        using TI = phys_free_list<broad_phase_info>::T_internal;
+        static_assert(sizeof(TI) == 0x90, "size mismatch");
+        TI *ti = (TI *)((char *)bpi - offsetof(TI, m_data));
+        PMM_VALIDATE((char *)ti, sizeof(TI), 16);
+        G_BPM->g_list_broad_phase_info.remove(ti);
     }
+
+    //if ( bpi )
+    //{
+    //    PMM_VALIDATE((char *)&bpi[-1].m_gjk_geom, 0x90u, 0x10u);
+    //    //phys_free_list<broad_phase_info>::remove(p_g_list_broad_phase_info, (phys_free_list<broad_phase_info>::T_internal *)&bpi[-1].m_gjk_geom);
+    //    G_BPM->g_list_broad_phase_info.remove((phys_free_list<broad_phase_info>::T_internal *) &bpi[-1].m_gjk_geom);
+    //}
 }
 
 void __cdecl destroy_broad_phase_info_list(broad_phase_info *list_bpi)

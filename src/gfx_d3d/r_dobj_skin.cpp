@@ -495,7 +495,7 @@ int    R_PreSkinXSurface(
                 GfxModelRigidSurface *surfPos)
 {
     float origin_[3]; // [esp-8h] [ebp-D8h] OVERLAPPED BYREF
-    float origin[3]; // [esp+4h] [ebp-CCh] BYREF
+    float origin[4]; // [esp+4h] [ebp-CCh] BYREF
     DObjSkelMat skelMat; // [esp+14h] [ebp-BCh] BYREF
     const DObjAnimMat *mat_1; // [esp+60h] [ebp-70h]
     DObjSkelMat invBaseMat; // [esp+64h] [ebp-6Ch] OVERLAPPED BYREF

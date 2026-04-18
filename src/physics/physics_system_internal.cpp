@@ -2711,32 +2711,35 @@ void __cdecl rbint::collision_prolog(rigid_body *const rb, float delta_t)
 void physics_system::validate_member(environment_rigid_body *rb)
 {
     unsigned int m_flags; // edx
-    char *p_m_partition_head; // eax
 
     if ( rb )
     {
         m_flags = rb->m_flags;
         if ( (m_flags & 0x10) != 0 )
         {
-            if ( rb != &this->m_environment_rigid_body )
-            {
-                if ( _tlAssert(
-                             "C:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\physics_system_internal.h",
-                             73,
-                             "rb == &m_environment_rigid_body",
-                             "") )
-                {
-                    __debugbreak();
-                }
-            }
+            iassert(rb == &m_environment_rigid_body);
         }
         else
         {
-            p_m_partition_head = (char *)&rb[-1].m_partition_node.m_partition_head;
-            if ( (m_flags & 0x20) != 0 )
-                PMM_VALIDATE(p_m_partition_head, 0x1D0u, 0x10u);
+            //p_m_partition_head = (char *)&rb[-1].m_partition_node.m_partition_head;
+            if ((m_flags & 0x20) != 0)
+            {
+                using TI = phys_free_list<user_rigid_body>::T_internal;
+                static_assert(sizeof(TI) == 0x1D0, "size mismatch");
+                TI *ti = (TI *)((char *)rb - offsetof(TI, m_data));
+                PMM_VALIDATE((char *)ti, sizeof(TI), 16);
+
+                //PMM_VALIDATE(p_m_partition_head, 0x1D0u, 0x10u);
+            }
             else
-                PMM_VALIDATE(p_m_partition_head, 0x180u, 0x10u);
+            {
+                using TI = phys_free_list<rigid_body>::T_internal;
+                static_assert(sizeof(TI) == 0x180, "size mismatch");
+                TI *ti = (TI *)((char *)rb - offsetof(TI, m_data));
+                PMM_VALIDATE((char *)ti, sizeof(TI), 16);
+
+                //PMM_VALIDATE(p_m_partition_head, 0x180u, 0x10u);
+            }
         }
     }
 }

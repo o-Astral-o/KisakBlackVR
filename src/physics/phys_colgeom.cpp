@@ -2423,25 +2423,25 @@ void __cdecl destroy_gjk_geom(gjk_aabb_t *geom)
 {
     switch ( geom->get_type() )
     {
-        case 1u:
+        case 1:
             gjk_aabb_t::destroy(geom);
             break;
-        case 2u:
+        case 2:
             gjk_brush_t::destroy((gjk_brush_t *)geom);
             break;
-        case 3u:
+        case 3:
             gjk_partition_t::destroy((gjk_partition_t *)geom);
             break;
-        case 4u:
+        case 4:
             gjk_double_sphere_t::destroy((gjk_double_sphere_t *)geom);
             break;
-        case 5u:
+        case 5:
             gjk_cylinder_t::destroy((gjk_cylinder_t *)geom);
             break;
-        case 6u:
+        case 6:
             gjk_obb_t::destroy((gjk_obb_t *)geom);
             break;
-        case 7u:
+        case 7:
             gjk_polygon_cylinder_t::destroy((gjk_polygon_cylinder_t *)geom);
             break;
         default:
