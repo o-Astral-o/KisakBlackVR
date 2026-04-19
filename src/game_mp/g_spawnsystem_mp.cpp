@@ -672,44 +672,18 @@ void __cdecl SpawnSystem_InsertSortedInfluencer(SpawnInfluencer *influencer)
 {
     int low; // [esp+0h] [ebp-4h]
 
-    if ( !influencer
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_spawnsystem_mp.cpp",
-                    1047,
-                    0,
-                    "%s",
-                    "influencer") )
-    {
-        __debugbreak();
-    }
+    iassert(influencer);
+
     for ( low = 0; low < g_sortedSpawnInfluencerCount; ++low )
     {
-        if ( !g_sortedSpawnInfluencers[low]
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_spawnsystem_mp.cpp",
-                        1053,
-                        0,
-                        "%s",
-                        "g_sortedSpawnInfluencers[low]") )
-        {
-            __debugbreak();
-        }
-        if ( influencer == g_sortedSpawnInfluencers[low]
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_spawnsystem_mp.cpp",
-                        1055,
-                        0,
-                        "%s",
-                        "influencer != g_sortedSpawnInfluencers[low]") )
-        {
-            __debugbreak();
-        }
+        iassert(g_sortedSpawnInfluencers[low]);
+        iassert(influencer != g_sortedSpawnInfluencers[low]);
+
         if ( influencer->bounds[0] < g_sortedSpawnInfluencers[low]->bounds[0] )
         {
-            memmove(
-                (unsigned __int8 *)(4 * low + 66227364),
-                (unsigned __int8 *)(4 * low + 66227360),
-                4 * (g_sortedSpawnInfluencerCount - low));
+            memmove(&g_sortedSpawnInfluencers[low + 1],
+                &g_sortedSpawnInfluencers[low],
+                sizeof(SpawnInfluencer *) * (g_sortedSpawnInfluencerCount - low));
             g_sortedSpawnInfluencers[low] = influencer;
             ++g_sortedSpawnInfluencerCount;
             return;
@@ -1160,22 +1134,15 @@ void __cdecl SpawnSystem_RemoveSortedInfluencerByIndex(unsigned int influencer_i
 {
     if ( g_spawnSystemDebugMode == SS_DEBUG_OFF )
     {
-        if ( influencer_index >= g_sortedSpawnInfluencerCount
-            && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\game_mp\\g_spawnsystem_mp.cpp",
-                        1079,
-                        0,
-                        "influencer_index doesn't index g_sortedSpawnInfluencerCount\n\t%i not in [0, %i)",
-                        influencer_index,
-                        g_sortedSpawnInfluencerCount) )
+        bcassert(influencer_index, g_sortedSpawnInfluencerCount);
+        
+        if (influencer_index + 1 != g_sortedSpawnInfluencerCount)
         {
-            __debugbreak();
+            memmove(&g_sortedSpawnInfluencers[influencer_index],
+                &g_sortedSpawnInfluencers[influencer_index + 1],
+                sizeof(SpawnInfluencer *) * (g_sortedSpawnInfluencerCount - influencer_index));
         }
-        if ( influencer_index + 1 != g_sortedSpawnInfluencerCount )
-            memmove(
-                (unsigned __int8 *)(4 * influencer_index + 66227360),
-                (unsigned __int8 *)(4 * influencer_index + 66227364),
-                4 * (g_sortedSpawnInfluencerCount - influencer_index));
+            
         g_sortedSpawnInfluencers[--g_sortedSpawnInfluencerCount] = 0;
     }
 }

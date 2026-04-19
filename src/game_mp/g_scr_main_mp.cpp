@@ -9967,7 +9967,7 @@ void __cdecl GScr_GetNumParts()
 
     String = Scr_GetString(0, SCRIPTINSTANCE_SERVER);
     model = SV_XModelGet(String);
-    v1 = XModelNumBones((const cpose_t *)model);
+    v1 = XModelNumBones(model);
     Scr_AddInt(v1, SCRIPTINSTANCE_SERVER);
 }
 
@@ -9983,7 +9983,7 @@ void __cdecl GScr_GetPartName()
     String = Scr_GetString(0, SCRIPTINSTANCE_SERVER);
     model = SV_XModelGet(String);
     index = Scr_GetInt(1u, SCRIPTINSTANCE_SERVER);
-    numbones = XModelNumBones((const cpose_t *)model);
+    numbones = XModelNumBones(model);
     if ( index >= numbones )
     {
         v1 = va("index out of range (0 - %d)", numbones - 1);
@@ -13743,8 +13743,7 @@ void __cdecl GScr_GetCorpseAnim(scr_entref_t entref)
     ent = GetEntity(entref);
     if ( ent->s.eType == 2 )
     {
-        corpseInfo = (corpseInfo_t *)&g_scr_data.actorXAnimTrees[376 * G_GetPlayerCorpseIndex(ent, "GScr_GetCorpseAnim")
-                                                                                                                     - 1496];
+        corpseInfo = &g_scr_data.playerCorpseInfo[G_GetPlayerCorpseIndex(ent, "GScr_GetCorpseAnim")];
         anim.index = ent->s.animState.state & 0xFBFF;
         treeAnims = XAnimGetAnims(corpseInfo->tree);
         anim.tree = Scr_GetAnimsIndex(treeAnims, SCRIPTINSTANCE_SERVER);

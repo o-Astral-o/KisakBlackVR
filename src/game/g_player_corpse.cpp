@@ -17,17 +17,22 @@ int __cdecl G_GetPlayerCorpseIndex(gentity_s *ent, const char *error_msg)
 
     for ( i = 0; i < 4; ++i )
     {
-        if ( g_scr_data.actorXAnimTrees[376 * i - 1495] == (XAnimTree_s *)ent->s.number )
-            return i;
+        if (g_scr_data.playerCorpseInfo[i].entnum == ent->s.number)
+            return i; 
+        //if ( g_scr_data.actorXAnimTrees[376 * i - 1495] == (XAnimTree_s *)ent->s.number )
+        //    return i;
     }
+
     Com_Printf(14, "Corpse List:\n");
+
     for ( ia = 0; ia < 4; ++ia )
         Com_Printf(
             14,
             "Corpse %i entnum %i %i\n",
             ia,
-            g_scr_data.actorXAnimTrees[376 * ia - 1495],
-            g_scr_data.actorXAnimTrees[376 * ia - 1494]);
+            g_scr_data.playerCorpseInfo[i].entnum,
+            g_scr_data.playerCorpseInfo[i].tree);
+
     EntityTypeName = G_GetEntityTypeName(ent);
     v4 = va(
                  "G_GetPlayerCorpseIndex called for non player corpse from %s entity num: %i type: %s",
@@ -58,9 +63,10 @@ int __cdecl G_GetFreePlayerCorpseIndex()
     playerPos[2] = ent->s.lerp.pos.trBase[2];
     for ( i = 0; i < 4; ++i )
     {
-        if ( g_scr_data.actorXAnimTrees[376 * i - 1495] == (XAnimTree_s *)-1 )
+        //if ( g_scr_data.actorXAnimTrees[376 * i - 1495] == (XAnimTree_s *)-1 )
+        if (g_scr_data.playerCorpseInfo[i].entnum == -1)
             return i;
-        ent = &level.gentities[(int)g_scr_data.actorXAnimTrees[376 * i - 1495]];
+        ent = &level.gentities[g_scr_data.playerCorpseInfo[i].entnum];
         distSq = Vec3DistanceSq(ent->r.currentOrigin, playerPos);
         if ( distSq > bestDistSq )
         {
@@ -72,12 +78,16 @@ int __cdecl G_GetFreePlayerCorpseIndex()
         14,
         "Freeing Corpse Entity %i entnum %i %i %i\n",
         bestIndex,
-        g_scr_data.actorXAnimTrees[376 * bestIndex - 1495],
-        g_scr_data.actorXAnimTrees[376 * bestIndex - 1494],
+        g_scr_data.playerCorpseInfo[i].entnum,
+        g_scr_data.playerCorpseInfo[i].tree,
         level.time);
-    ent = &level.gentities[(int)g_scr_data.actorXAnimTrees[376 * bestIndex - 1495]];
+
+    ent = &level.gentities[g_scr_data.playerCorpseInfo[bestIndex].entnum];
+
     G_FreeEntity(ent);
-    g_scr_data.actorXAnimTrees[376 * bestIndex - 1495] = (XAnimTree_s *)-1;
+
+    g_scr_data.playerCorpseInfo[bestIndex].entnum = -1;
+
     return bestIndex;
 }
 
@@ -86,24 +96,18 @@ void __cdecl PlayerCorpse_Free(gentity_s *ent)
     int playerCorpseIndex; // [esp+0h] [ebp-4h]
 
     playerCorpseIndex = G_GetPlayerCorpseIndex(ent, "PlayerCorpse_Free");
-    if ( g_scr_data.actorXAnimTrees[376 * playerCorpseIndex - 1495] != (XAnimTree_s *)ent->s.number
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\game\\g_player_corpse.cpp",
-                    170,
-                    0,
-                    "%s",
-                    "g_scr_data.playerCorpseInfo[playerCorpseIndex].entnum == ent->s.number") )
-    {
-        __debugbreak();
-    }
+
+    iassert(g_scr_data.playerCorpseInfo[playerCorpseIndex].entnum == ent->s.number);
+
     Com_Printf(
         14,
         "Freeing Corpse %i entnum %i %i %i\n",
         playerCorpseIndex,
-        g_scr_data.actorXAnimTrees[376 * playerCorpseIndex - 1495],
-        g_scr_data.actorXAnimTrees[376 * playerCorpseIndex - 1494],
+        g_scr_data.playerCorpseInfo[playerCorpseIndex].entnum,
+        g_scr_data.playerCorpseInfo[playerCorpseIndex].tree,
         level.time);
-    g_scr_data.actorXAnimTrees[376 * playerCorpseIndex - 1495] = (XAnimTree_s *)-1;
+
+    g_scr_data.playerCorpseInfo[playerCorpseIndex].entnum = -1;
 }
 
 void __cdecl G_RunCorpseMove(gentity_s *ent)
@@ -148,7 +152,8 @@ void __cdecl G_RunCorpseMove(gentity_s *ent)
         __debugbreak();
     }
     corpseIndex = G_GetPlayerCorpseIndex(ent, "G_RunCorpseMove");
-    corpseInfo = (corpseInfo_t *)&g_scr_data.actorXAnimTrees[376 * corpseIndex - 1496];
+    //corpseInfo = (corpseInfo_t *)&g_scr_data.actorXAnimTrees[376 * corpseIndex - 1496];
+    corpseInfo = &g_scr_data.playerCorpseInfo[corpseIndex];
     haveDelta = G_GetAnimDeltaForCorpse(ent, deltaChange);
     v4 = haveDelta
         && (float)((float)((float)(deltaChange[0] * deltaChange[0]) + (float)(deltaChange[1] * deltaChange[1]))
@@ -422,8 +427,8 @@ void __cdecl G_RunCorpseAnimate(gentity_s *ent)
         __debugbreak();
     }
     ServerDObj = Com_GetServerDObj(ent->s.number);
-    BG_UpdatePlayerDObj(-1, ServerDObj, &ent->s, (clientInfo_t *)&g_scr_data.actorXAnimTrees[376 * corpseIndex - 1492], 0);
+    BG_UpdatePlayerDObj(-1, ServerDObj, &ent->s, &g_scr_data.playerCorpseInfo[corpseIndex].ci, 0);
     if ( Com_GetServerDObj(ent->s.number) )
-        BG_PlayerAnimation(-1, &ent->s, (clientInfo_t *)&g_scr_data.actorXAnimTrees[376 * corpseIndex - 1492]);
+        BG_PlayerAnimation(-1, &ent->s, &g_scr_data.playerCorpseInfo[corpseIndex].ci);
 }
 

@@ -131,7 +131,7 @@ unsigned int    R_SkinSceneDObjModels(
     XSurface *surfaces; // [esp-1CACh] [ebp-1CB8h] BYREF
     GfxModelSurfaceInfo targBoneIndexHigh; // [esp-1CA8h] [ebp-1CB4h] BYREF
     int cullLod; // [esp-1C9Ch] [ebp-1CA8h]
-    const cpose_t *model; // [esp-1C98h] [ebp-1CA4h]
+    const XModel *model; // [esp-1C98h] [ebp-1CA4h]
     int modelNumBones; // [esp-1C94h] [ebp-1CA0h]
     unsigned int lod; // [esp-1C90h] [ebp-1C9Ch]
     unsigned int v40[5]; // [esp-1C8Ch] [ebp-1C98h] BYREF
@@ -174,18 +174,18 @@ unsigned int    R_SkinSceneDObjModels(
     lod = 0;
     while (lod < NumModels)
     {
-        model = (const cpose_t *)DObjGetModel(obj, lod);
+        model = DObjGetModel(obj, lod);
         iassert(model);
         modelNumBones = XModelNumBones(model);
         cullLod = sceneEnt->cull.lods[lod];
         if (cullLod >= 0)
         {
             targBoneIndexHigh.boneIndex = boneIndex;
-            targBoneIndexHigh.baseMat = XModelGetBasePose((const XModel *)model);
+            targBoneIndexHigh.baseMat = XModelGetBasePose(model);
             targBoneIndexHigh.boneCount = modelNumBones;
             targBoneIndexHigh.gfxEntIndex = sceneEnt->gfxEntIndex;
             targBoneIndexHigh.lightingHandle = 0;
-            surfaceCount = XModelGetSurfaces((const XModel *)model, &surfaces, cullLod);
+            surfaceCount = XModelGetSurfaces(model, &surfaces, cullLod);
 
             iassert(surfaces);
             iassert(surfaceCount);

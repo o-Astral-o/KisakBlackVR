@@ -1946,22 +1946,23 @@ bool    gjk_slide_move1(
             {
                 if ( gjkcc_in->m_ent_num != -1 )
                 {
-                    m_hit_point = v140->m_hit_point;
-                    v138 = 20.0 * v140->m_hit_normal.x;
-                    v137 = 20.0 * v140->m_hit_normal.y;
-                    v136 = 20.0 * v140->m_hit_normal.z;
-                    v133 = v138;
-                    v134 = v137;
-                    v135 = v136;
-                    p_m_hit_point = &v140->m_hit_point;
-                    v131 = v140->m_hit_point.x + v138;
-                    v130 = v140->m_hit_point.y + v137;
-                    v129 = v140->m_hit_point.z + v136;
-                    v128.x = v131;
-                    v128.y = v130;
-                    v128.z = v129;
-                    Phys_NitrousVecToVec3(&m_hit_point, &v127);
-                    Phys_NitrousVecToVec3(&v128, &v126);
+                    // Dead code
+                    //m_hit_point = v140->m_hit_point;
+                    //v138 = 20.0 * v140->m_hit_normal.x;
+                    //v137 = 20.0 * v140->m_hit_normal.y;
+                    //v136 = 20.0 * v140->m_hit_normal.z;
+                    //v133 = v138;
+                    //v134 = v137;
+                    //v135 = v136;
+                    //p_m_hit_point = &v140->m_hit_point;
+                    //v131 = v140->m_hit_point.x + v138;
+                    //v130 = v140->m_hit_point.y + v137;
+                    //v129 = v140->m_hit_point.z + v136;
+                    //v128.x = v131;
+                    //v128.y = v130;
+                    //v128.z = v129;
+                    //Phys_NitrousVecToVec3(&m_hit_point, &v127);
+                    //Phys_NitrousVecToVec3(&v128, &v126);
                 }
                 if ( no_push_out && v140->m_hit_dist < 0.0 )
                 {

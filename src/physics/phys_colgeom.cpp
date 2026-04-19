@@ -1807,328 +1807,182 @@ float gjk_cylinder_t_c[4] = { 1.0, 0.0, -1.0, 0.0 };
 float gjk_cylinder_t_s[4] = { 0.0, 1.0, 0.0, -1.0 };
 
 
-// NOTE: this was taken from blops2 because the decomp was pissing me off in blops1, probably exactly the same, probably
 void gjk_cylinder_t::get_feature(phys_contact_manifold *cman) const
 {
-    float v4; // eax
-    float x; // xmm6_4
-    float y; // xmm7_4
-    float z; // xmm1_4
-    float v9; // xmm4_4
-    float v10; // xmm2_4
-    float v11; // xmm0_4
-    float w; // xmm3_4
-    float v13; // xmm0_4
-    float v14; // xmm1_4
-    float v15; // xmm2_4
-    float v16; // eax
-    float v17; // xmm3_4
-    float v18; // xmm4_4
-    float v19; // xmm5_4
-    float v20; // xmm2_4
-    float v21; // xmm3_4
-    float v22; // xmm6_4
-    float v23; // xmm0_4
-    float v24; // xmm1_4
-    float v25; // eax
-    float v26; // xmm3_4
-    float v27; // xmm4_4
-    float v28; // xmm5_4
-    float v29; // xmm1_4
-    float v30; // xmm2_4
-    float v31; // xmm6_4
-    float v32; // xmm0_4
-    float v33; // xmm3_4
-    float v34; // xmm0_4
-    float v35; // xmm4_4
-    float v36; // xmm0_4
-    float v37; // xmm3_4
-    float v38; // xmm2_4
-    unsigned int direction; // edi
-    float halfHeight; // xmm1_4
-    unsigned int v41; // edi
-    float radius; // xmm4_4
-    float v43; // xmm1_4
-    float v44; // xmm2_4
-    int v45; // edi
-    float v46; // xmm0_4
-    float v47; // xmm6_4
-    float v48; // xmm3_4
-    float v49; // xmm2_4
-    float v50; // xmm5_4
-    float v51; // xmm0_4
-    float v52; // xmm6_4
-    float v53; // xmm1_4
-    float v54; // xmm7_4
-    float v55; // xmm2_4
-    float v56; // xmm1_4
-    float v57; // xmm4_4
-    float v58; // xmm0_4
-    float v59; // [esp-24h] [ebp-74h]
-    float v60; // [esp-Ch] [ebp-5Ch] BYREF
-    float v61; // [esp-8h] [ebp-58h]
-    float v62; // [esp-4h] [ebp-54h]
-    phys_vec3 hitn; // [esp+0h] [ebp-50h] BYREF
-    phys_vec3 p0; // [esp+10h] [ebp-40h]
-    phys_vec3 res; // [esp+20h] [ebp-30h]
-    float len; // [esp+40h] [ebp-10h]
-    //_UNKNOWN *v67; // [esp+44h] [ebp-Ch]
-    //phys_contact_manifold *cmana; // [esp+48h] [ebp-8h]
-    //int vars0; // [esp+50h] [ebp+0h]
-    //
-    //v67 = a2;
-    //cmana = (phys_contact_manifold *)vars0;
-    if (this->m_geom_radius != 0.0
-        && !Assert_MyHandler(
-            "c:\\t6\\code\\src\\physics\\phys_colgeom.h",
-            583,
-            0,
-            "(m_geom_radius == 0.0f)",
-            ""))
+    const phys_vec3 *v3; // ecx
+    const phys_vec3 *v4; // eax
+    const phys_vec3 *v5; // eax
+    float halfHeight_low; // xmm0_4
+    phys_vec3 *v7; // eax
+    const phys_vec3 *v8; // eax
+    const phys_vec3 *v9; // eax
+    phys_vec3 *v10; // [esp+8h] [ebp-204h]
+    const phys_vec3 *p_w; // [esp+Ch] [ebp-200h]
+    const phys_vec3 *v12; // [esp+Ch] [ebp-200h]
+    phys_vec3 v13; // [esp+10h] [ebp-1FCh] BYREF
+    phys_vec3 v14; // [esp+20h] [ebp-1ECh] OVERLAPPED BYREF
+    phys_vec3 v15; // [esp+30h] [ebp-1DCh] BYREF
+    phys_vec3 v16; // [esp+40h] [ebp-1CCh] BYREF
+    phys_vec3 v17; // [esp+50h] [ebp-1BCh] BYREF
+    int j; // [esp+60h] [ebp-1ACh]
+    int i; // [esp+6Ch] [ebp-1A0h]
+    phys_vec3 v22; // [esp+70h] [ebp-19Ch] OVERLAPPED BYREF
+    phys_vec3 v23; // [esp+80h] [ebp-18Ch] BYREF
+    phys_vec3 v27; // [esp+A0h] [ebp-16Ch] BYREF
+    phys_vec3 v31; // [esp+C0h] [ebp-14Ch] BYREF
+    phys_vec3 *v32; // [esp+DCh] [ebp-130h]
+    phys_vec3 v33; // [esp+E0h] [ebp-12Ch] BYREF
+    float v34; // [esp+FCh] [ebp-110h]
+    phys_vec3 v35; // [esp+100h] [ebp-10Ch] BYREF
+    phys_vec3 v36; // [esp+110h] [ebp-FCh] BYREF
+    unsigned int v38; // [esp+12Ch] [ebp-E0h]
+    phys_vec3 v39; // [esp+130h] [ebp-DCh] BYREF
+    phys_vec3 v40; // [esp+140h] [ebp-CCh] BYREF
+    unsigned int direction; // [esp+15Ch] [ebp-B0h]
+    phys_vec3 v43; // [esp+160h] [ebp-ACh] BYREF
+    float v48; // [esp+180h] [ebp-8Ch]
+    float len_; // [esp+184h] [ebp-88h]
+    float v50; // [esp+188h] [ebp-84h]
+    float sr; // [esp+18Ch] [ebp-80h]
+    phys_vec3 len; // [esp+190h] [ebp-7Ch] BYREF
+    //float x; // [esp+1A0h] [ebp-6Ch] BYREF
+    //float y; // [esp+1A4h] [ebp-68h]
+    //float z; // [esp+1A8h] [ebp-64h]
+    phys_vec3 xyz;
+    const phys_vec3 *v56; // [esp+1BCh] [ebp-50h]
+    phys_vec3 v57; // [esp+1C0h] [ebp-4Ch] BYREF
+    const phys_vec3 *p_z; // [esp+1D8h] [ebp-34h]
+    const phys_vec3 *p_y; // [esp+1DCh] [ebp-30h]
+    phys_vec3 v60; // [esp+1E0h] [ebp-2Ch] BYREF
+    const gjk_cylinder_t *thisa; // [esp+1FCh] [ebp-10h]
+
+    thisa = this;
+
+    iassert(m_geom_radius == 0.0f);
+
+    if (thisa->direction)
     {
-        __debugbreak();
-    }
-    v4 = *(float *)&this->direction;
-    len = v4;
-    if (v4 == 0.0)
-    {
-        x = PHYS_IDENTITY_MATRIX.x.x;
-        y = PHYS_IDENTITY_MATRIX.x.y;
-        z = PHYS_IDENTITY_MATRIX.x.z;
-    }
-    else if (LODWORD(v4) == 1)
-    {
-        x = PHYS_IDENTITY_MATRIX.y.x;
-        y = PHYS_IDENTITY_MATRIX.y.y;
-        z = PHYS_IDENTITY_MATRIX.y.z;
-    }
-    else
-    {
-        x = PHYS_IDENTITY_MATRIX.z.x;
-        y = PHYS_IDENTITY_MATRIX.z.y;
-        z = PHYS_IDENTITY_MATRIX.z.z;
-    }
-    v9 = cman->m_feature_hitn.y;
-    v10 = (float)((float)(this->xform.x.x * cman->m_feature_hitn.x) + (float)(this->xform.x.y * v9))
-        + (float)(this->xform.x.z * cman->m_feature_hitn.z);
-    v11 = (float)((float)(this->xform.y.y * v9) + (float)(this->xform.y.x * cman->m_feature_hitn.x))
-        + (float)(this->xform.y.z * cman->m_feature_hitn.z);
-    w = (float)((float)(this->xform.z.y * v9) + (float)(this->xform.z.x * cman->m_feature_hitn.x))
-        + (float)(this->xform.z.z * cman->m_feature_hitn.z);
-    p0.y = x;
-    p0.z = y;
-    p0.w = z;
-    hitn.y = v10;
-    hitn.z = v11;
-    hitn.w = w;
-    v60 = v10;
-    v61 = v11;
-    v62 = w;
-    res.y = v10;
-    res.z = v11;
-    res.w = w;
-    if (LODWORD(v4) > 2)
-    {
-        if (_tlAssert("c:\\t6\\code\\tl\\physics\\include\\old_phys_math.h", 38, "i >= 0 && i < 3", ""))
-            __debugbreak();
-        v4 = len;
-        x = p0.y;
-        y = p0.z;
-        z = p0.w;
-        v10 = hitn.y;
-        v11 = hitn.z;
-        w = hitn.w;
-    }
-    //LODWORD(v13) = COERCE_UNSIGNED_INT((float)((float)(v11 * y) + (float)(v10 * x)) + (float)(w * z)) & _mask__AbsFloat_;
-    (v13) = fabs((float)((float)(v11 * y) + (float)(v10 * x)) + (float)(w * z));
-    *((_DWORD *)&res.y + LODWORD(v4)) = 0;
-    if (v13 >= 0.70709997)
-    {
-        if (v13 >= 0.99000001)
+        if (thisa->direction == 1)
         {
-            v36 = z;
-            v38 = x;
-            v37 = y;
-            p0.y = y;
-            p0.z = z;
-            p0.w = x;
+            p_y = &PHYS_IDENTITY_MATRIX.y;
+            v60.x = PHYS_IDENTITY_MATRIX.y.x;
+            v60.y = PHYS_IDENTITY_MATRIX.y.y;
+            v3 = &PHYS_IDENTITY_MATRIX.y;
         }
         else
         {
-            v35 = 1.0 / sqrtf((float)((float)(res.y * res.y) + (float)(res.z * res.z)) + (float)(res.w * res.w));
-            v36 = v35 * res.y;
-            v37 = res.w * v35;
-            v38 = res.z * v35;
-            p0.y = (float)((float)(res.z * v35) * z) - (float)((float)(res.w * v35) * y);
-            p0.z = (float)((float)(res.w * v35) * x) - (float)(z * (float)(v35 * res.y));
-            p0.w = (float)((float)(v35 * res.y) * y) - (float)((float)(res.z * v35) * x);
+            p_z = &PHYS_IDENTITY_MATRIX.z;
+            v60.x = PHYS_IDENTITY_MATRIX.z.x;
+            v60.y = PHYS_IDENTITY_MATRIX.z.y;
+            v3 = &PHYS_IDENTITY_MATRIX.z;
         }
-        direction = this->direction;
-        res.w = v37;
-        res.z = v38;
-        res.y = v36;
-        memset(&hitn.y, 0, 12);
-        if (direction > 2)
+        v60.z = v3->z;
+    }
+    else
+    {
+        v60.x = PHYS_IDENTITY_MATRIX.x.x;
+        v60.y = PHYS_IDENTITY_MATRIX.x.y;
+        v60.z = PHYS_IDENTITY_MATRIX.x.z;
+    }
+
+    v56 = phys_inv_multiply(&v57, &thisa->xform, &cman->m_feature_hitn);
+    xyz.x = v56->x;
+    xyz.y = v56->y;
+    xyz.z = v56->z;
+    len.x = xyz.x;
+    len.y = xyz.y;
+    len.z = xyz.z;
+
+    len[this->direction] = 0.0f;
+
+    v50 = (float)((float)(v60.x * xyz.x) + (float)(v60.y * xyz.y)) + (float)(v60.z * xyz.z);
+
+    if (fabs(v50) >= 0.70709997)
+    {
+        if (fabs(v50) >= 0.99000001)
         {
-            if (_tlAssert(
-                "c:\\t6\\code\\tl\\physics\\include\\old_phys_math.h",
-                38,
-                "i >= 0 && i < 3",
-                ""))
-            {
-                __debugbreak();
-            }
-            v36 = res.y;
-            v38 = res.z;
-            v37 = res.w;
+            v27.x = v60[2];
+            v27.y = v60[0];
+            v27.z = v60[1];
+            len = v27;
+            //phys_vec3::operator=(&len, &v27);
+            v23.x = v60[1];
+            v23.y = v60[2];
+            v23.z = v60[0];
+            v31 = v23;
+            //phys_vec3::operator=(&v31, &v23);
         }
-        halfHeight = this->halfHeight;
-        if (*(&v60 + direction) > 0.0)
+        else
         {
-            //LODWORD(halfHeight) ^= _mask__NegFloat_;
-            (halfHeight) = -(halfHeight);
+            v34 = 1.0 / Abs(&len.x);
+            len.x = len.x * v34;
+            len.y = len.y * v34;
+            len.z = len.z * v34;
+            v32 = phys_cross(&v33, &len, &v60);
+            v31.x = v32->x;
+            v31.y = v32->y;
+            v31.z = v32->z;
         }
-        v41 = this->direction;
-        len = halfHeight;
-        if (v41 > 2)
+        memset(&v22, 0, 12);
+
+        if (xyz[this->direction] <= 0.0f)
+            halfHeight_low = this->halfHeight;
+        else
+            halfHeight_low = -this->halfHeight;
+
+        i = halfHeight_low;
+        v22[this->direction] = halfHeight_low;
+        len.x = len.x * this->radius;
+        len.y = len.y * this->radius;
+        len.z = len.z * this->radius;
+
+        v31.x = v31.x * this->radius;
+        v31.y = v31.y * this->radius;
+        v31.z = v31.z * this->radius;
+
+        for (j = 0; j < 4; ++j)
         {
-            if (_tlAssert(
-                "c:\\t6\\code\\tl\\physics\\include\\old_phys_math.h",
-                38,
-                "i >= 0 && i < 3",
-                ""))
-            {
-                __debugbreak();
-            }
-            v36 = res.y;
-            v38 = res.z;
-            v37 = res.w;
-            halfHeight = len;
-        }
-        radius = this->radius;
-        *(&hitn.y + v41) = halfHeight;
-        res.w = v37 * radius;
-        v43 = radius * v36;
-        res.z = v38 * radius;
-        p0.z = p0.z * radius;
-        v44 = radius * p0.y;
-        res.y = radius * v36;
-        p0.y = radius * p0.y;
-        p0.w = p0.w * radius;
-        v45 = 0;
-        while (1)
-        {
-            //v46 = `gjk_cylinder_t::get_feature'::`18'::s[v45];
-            v46 = gjk_cylinder_t_s[v45];
-            //v47 = `gjk_cylinder_t::get_feature'::`18'::c[v45];
-            v47 = gjk_cylinder_t_c[v45];
-            v48 = v46 * v44;
-            v49 = (float)((float)(res.w * v47) + (float)(p0.w * v46)) + hitn.w;
-            v50 = (float)((float)(v47 * v43) + v48) + hitn.y;
-            v51 = (float)((float)(res.z * v47) + (float)(p0.z * v46)) + hitn.z;
-            v52 = v49 * this->xform.z.x;
-            v53 = v49 * this->xform.z.z;
-            v54 = v49 * this->xform.z.y;
-            v55 = this->xform.x.x;
-            v59 = v53;
-            v56 = v51 * this->xform.y.x;
-            v57 = (float)((float)(this->xform.x.z * v50) + (float)(v51 * this->xform.y.z)) + v59;
-            v61 = this->xform.w.y + (float)((float)((float)(this->xform.x.y * v50) + (float)(v51 * this->xform.y.y)) + v54);
-            v58 = this->xform.w.z + v57;
-            v60 = (float)((float)((float)(v55 * v50) + v56) + v52) + this->xform.w.x;
-            v62 = v58;
-            //phys_contact_manifold::add_feature_point(cman, (const phys_vec3 *)&v60);
-            cman->add_feature_point((const phys_vec3 *)&v60);
-            if (++v45 >= 4)
-                break;
-            v44 = p0.y;
-            v43 = res.y;
+            v17 = v31 * gjk_cylinder_t_s[j];
+            //v10 = operator*(&v17, `gjk_cylinder_t::get_feature'::`18'::s[j], &v31);
+            //v7 = operator*(&v16, `gjk_cylinder_t::get_feature'::`18'::c[j], &len);
+            v16 = len * gjk_cylinder_t_c[j];
+            //v8 = operator+(&v15, v7, v10);
+            v15 = v16 + v17;
+            //operator+(&v14, v8, &v22);
+            v14 = v15 + v22;
+            v9 = phys_full_multiply(&v13, &thisa->xform, &v14);
+            cman->add_feature_point(v9);
         }
     }
     else
     {
-        v14 = res.z;
-        v15 = res.w;
-        len = sqrtf((float)((float)(res.y * res.y) + (float)(v14 * v14)) + (float)(v15 * v15));
-        if (len <= 0.0000099999997)
+        len_ = Abs(&len.x);
+        if (len_ <= 0.0000099999997
+            && !Assert_MyHandler("c:\\projects_pc\\cod\\codsrc\\src\\physics\\phys_colgeom.h", 604, 0, "%s", "len > 0.00001f"))
         {
-            if (!Assert_MyHandler(
-                "c:\\t6\\code\\src\\physics\\phys_colgeom.h",
-                603,
-                0,
-                "(len > 0.00001f)",
-                ""))
-                __debugbreak();
-            v14 = res.z;
-            v15 = res.w;
+            __debugbreak();
         }
-        v16 = *(float *)&this->direction;
-        //LODWORD(v17) = COERCE_UNSIGNED_INT(this->radius / len) ^ _mask__NegFloat_;
-        (v17) = -(this->radius / len);
-        p0.y = v17 * res.y;
-        p0.z = v14 * v17;
-        p0.w = v15 * v17;
-        len = v16;
-        if (LODWORD(v16) > 2)
-        {
-            if (_tlAssert(
-                "c:\\t6\\code\\tl\\physics\\include\\old_phys_math.h",
-                38,
-                "i >= 0 && i < 3",
-                ""))
-            {
-                __debugbreak();
-            }
-            v16 = len;
-        }
-        v18 = this->xform.z.y;
-        v19 = this->xform.z.z;
-        *(&p0.y + LODWORD(v16)) = this->halfHeight;
-        v20 = this->xform.x.z;
-        v21 = p0.w * this->xform.z.x;
-        v22 = p0.z * this->xform.y.x;
-        hitn.z = this->xform.y.y * p0.z;
-        v23 = this->xform.x.x * p0.y;
-        hitn.w = this->xform.y.z * p0.z;
-        v24 = this->xform.x.y;
-        hitn.y = (float)((float)(v23 + v22) + v21) + this->xform.w.x;
-        hitn.z = this->xform.w.y + (float)((float)((float)(v24 * p0.y) + hitn.z) + (float)(v18 * p0.w));
-        hitn.w = this->xform.w.z + (float)((float)((float)(v20 * p0.y) + hitn.w) + (float)(v19 * p0.w));
-        //phys_contact_manifold::add_feature_point(cman, (phys_vec3 *)&hitn.y);
-        cman->add_feature_point((phys_vec3 *)&hitn.y);
-        v25 = *(float *)&this->direction;
-        len = v25;
-        if (LODWORD(v25) > 2)
-        {
-            if (_tlAssert(
-                "c:\\t6\\code\\tl\\physics\\include\\old_phys_math.h",
-                38,
-                "i >= 0 && i < 3",
-                ""))
-            {
-                __debugbreak();
-            }
-            v25 = len;
-        }
-        v26 = this->xform.z.x;
-        v27 = this->xform.z.y;
-        v28 = this->xform.z.z;
-        v29 = this->xform.y.y;
-        v30 = this->xform.x.z;
-        //*((_DWORD *)&p0.y + LODWORD(v25)) = LODWORD(this->halfHeight) ^ _mask__NegFloat_;
-        *((_DWORD *)&p0.y + LODWORD(v25)) = -(this->halfHeight);
-        v31 = p0.z * this->xform.y.x;
-        hitn.z = v29 * p0.z;
-        v32 = this->xform.x.x * p0.y;
-        hitn.w = this->xform.y.z * p0.z;
-        v33 = this->xform.w.x + (float)((float)(v32 + v31) + (float)(v26 * p0.w));
-        hitn.z = this->xform.w.y
-            + (float)((float)((float)(this->xform.x.y * p0.y) + (float)(v29 * p0.z)) + (float)(v27 * p0.w));
-        v34 = this->xform.w.z + (float)((float)((float)(v30 * p0.y) + hitn.w) + (float)(v28 * p0.w));
-        hitn.y = v33;
-        hitn.w = v34;
-        //phys_contact_manifold::add_feature_point(cman, (phys_vec3 *)&hitn.y);
-        cman->add_feature_point((phys_vec3 *)&hitn.y);
+
+        v48 = thisa->radius / len_;
+        v43.x = (-(v48)) * len.x;
+        v43.y = (-(v48)) * len.y;
+        v43.z = (-(v48)) * len.z;
+
+        v43[this->direction] = this->halfHeight;
+
+        p_w = &thisa->xform.w;
+        v4 = phys_multiply(&v40, &thisa->xform, &v43);
+        //operator+(&v39, v4, p_w);
+        v39 = *v4 + *p_w;
+        cman->add_feature_point(&v39);
+
+        v43[this->direction] = -this->halfHeight;
+
+        v12 = &thisa->xform.w;
+        v5 = phys_multiply(&v36, &thisa->xform, &v43);
+        //operator+(&v35, v5, v12);
+        v35 = *v5 + *v12;
+        cman->add_feature_point(&v35);
     }
 }
 

@@ -2732,7 +2732,7 @@ void    FX_GenerateMarkVertsForMark_MatrixFromAnim(
     for ( i = 0; i != model; i = (XModel *)((char *)i + 1) )
     {
         v11 = DObjGetModel(dobj, (int)i);
-        v13 += XModelNumBones((const cpose_t *)v11);
+        v13 += XModelNumBones(v11);
     }
     ConvertQuatToSkelMat(&boneMtxList[dObjModelIndexIter + v13], (DObjSkelMat *)bonePoseMatrix[3]);
     DObjSkelMatToMatrix43((const DObjSkelMat *)bonePoseMatrix[3], (float (*)[3])v9);

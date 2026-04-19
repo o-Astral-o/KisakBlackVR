@@ -656,8 +656,6 @@ unsigned __int16 __cdecl G_GetWeaponAttachBone(clientInfo_t *ci, weapType_t weap
 void G_FreeAnimTreeInstances()
 {
     int i; // [esp+0h] [ebp-4h]
-    int ia; // [esp+0h] [ebp-4h]
-    int ib; // [esp+0h] [ebp-4h]
 
     for ( i = 0; i < com_maxclients->current.integer; ++i )
     {
@@ -667,20 +665,20 @@ void G_FreeAnimTreeInstances()
             level_bgs.clientinfo[i].pXAnimTree = 0;
         }
     }
-    for ( ia = 0; ia < 4; ++ia )
+    for ( i = 0; i < 4; ++i )
     {
-        if ( g_scr_data.actorXAnimTrees[376 * ia - 1496] )
+        if (g_scr_data.playerCorpseInfo[i].tree)
         {
-            XAnimFreeTree(g_scr_data.actorXAnimTrees[376 * ia - 1496], 0, SCRIPTINSTANCE_SERVER);
-            g_scr_data.actorXAnimTrees[376 * ia - 1496] = 0;
+            XAnimFreeTree(g_scr_data.playerCorpseInfo[i].tree, 0, SCRIPTINSTANCE_SERVER);
+            g_scr_data.playerCorpseInfo[i].tree = NULL;
         }
     }
-    for ( ib = 0; ib < 8; ++ib )
+    for ( i = 0; i < 8; ++i )
     {
-        if ( *(unsigned int *)&g_scr_data.actorCorpseInfo[1504 * ib + 32] )
+        if (g_scr_data.actorCorpseInfo[i].tree)
         {
-            XAnimFreeTree(*(XAnimTree_s **)&g_scr_data.actorCorpseInfo[1504 * ib + 32], 0, SCRIPTINSTANCE_SERVER);
-            *(unsigned int *)&g_scr_data.actorCorpseInfo[1504 * ib + 32] = 0;
+            XAnimFreeTree(g_scr_data.actorCorpseInfo[i].tree, 0, SCRIPTINSTANCE_SERVER);
+            g_scr_data.actorCorpseInfo[i].tree = NULL;
         }
     }
 }

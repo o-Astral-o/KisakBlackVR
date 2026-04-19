@@ -2262,81 +2262,31 @@ bool gjk_aabb_t::is_walkable(
     float v12; // [esp-18h] [ebp-7Ch]
     float v13; // [esp-14h] [ebp-78h]
     float v14; // [esp-10h] [ebp-74h]
-    int j; // [esp-Ch] [ebp-70h]
-    float v16; // [esp-8h] [ebp-6Ch]
-    float v17; // [esp-4h] [ebp-68h]
-    int i; // [esp+0h] [ebp-64h]
-    float v19; // [esp+14h] [ebp-50h]
-    float v20; // [esp+18h] [ebp-4Ch]
-    float v21; // [esp+1Ch] [ebp-48h]
-    phys_vec3 *v22; // [esp+20h] [ebp-44h]
-    const phys_vec3 *v23; // [esp+24h] [ebp-40h]
+    int i; // [esp-Ch] [ebp-70h]
     phys_vec3 aabb_min; // [esp+28h] [ebp-3Ch]
-    float v25; // [esp+38h] [ebp-2Ch]
-    float v26; // [esp+3Ch] [ebp-28h]
-    float v27; // [esp+40h] [ebp-24h]
-    phys_vec3 *p_m_center_local; // [esp+44h] [ebp-20h]
-    const phys_vec3 *p_m_dims; // [esp+48h] [ebp-1Ch]
+    phys_vec3 aabb_max;
     float furthest_walk_normal; // [esp+4Ch] [ebp-18h]
     float furthest_dist; // [esp+50h] [ebp-14h]
-    const gjk_aabb_t *thisa; // [esp+54h] [ebp-10h]
-    //_UNKNOWN *v33; // [esp+58h] [ebp-Ch]
-    //const phys_vec3 *hit_pointa; // [esp+5Ch] [ebp-8h]
-    //int vars0; // [esp+64h] [ebp+0h]
-    //
-    //v33 = a2;
-    //hit_pointa = (const phys_vec3 *)vars0;
-    thisa = this;
+
     furthest_dist = -100000.0;
     furthest_walk_normal = 0.0f;
-    p_m_dims = &this->m_dims;
-    p_m_center_local = &this->m_center_local;
-    v27 = this->m_center_local.x - this->m_dims.x;
-    v26 = this->m_center_local.y - this->m_dims.y;
-    v25 = this->m_center_local.z - this->m_dims.z;
-    aabb_min.x = v27;
-    aabb_min.y = v26;
-    aabb_min.z = v25;
-    v23 = &this->m_dims;
-    v22 = &this->m_center_local;
-    v21 = this->m_center_local.x + this->m_dims.x;
-    v20 = this->m_center_local.y + this->m_dims.y;
-    v19 = this->m_center_local.z + this->m_dims.z;
-    v16 = v21;
-    v17 = v20;
-    i = LODWORD(v19);
-    for (j = 0; j < 3; ++j)
+
+    aabb_min.x = this->m_center_local.x - this->m_dims.x;
+    aabb_min.y = this->m_center_local.y - this->m_dims.y;
+    aabb_min.z = this->m_center_local.z - this->m_dims.z;
+
+    aabb_max.x = this->m_center_local.x + this->m_dims.x;
+    aabb_max.y = this->m_center_local.y + this->m_dims.y;
+    aabb_max.z = this->m_center_local.z + this->m_dims.z;
+
+    for (i = 0; i < 3; ++i)
     {
-        if (j < 0
-            && _tlAssert(
-                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                32,
-                "i >= 0 && i < 3",
-                ""))
-        {
-            __debugbreak();
-        }
-        if (j < 0
-            && _tlAssert(
-                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                32,
-                "i >= 0 && i < 3",
-                ""))
-        {
-            __debugbreak();
-        }
-        if (j < 0
-            && _tlAssert(
-                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                32,
-                "i >= 0 && i < 3",
-                ""))
-        {
-            __debugbreak();
-        }
-        (v14) = -*((int *)&hit_point->x + j);
-        (v13) = -*((int *)&aabb_min.x + j);
-        (v12) = -*((int *)&up->x + j);
+        iassert(i >= 0 && i < 3);
+
+        v14 = -hit_point->operator[](i);
+        v13 = -aabb_min[i];
+        v12 = -up->operator[](i);
+
         v11 = v14 >= (float)(0.99900001 * v13) || (float)(0.99900001 * v14) >= v13;
         if (v11 && v12 >= 0.69999999)
         {
@@ -2353,36 +2303,13 @@ bool gjk_aabb_t::is_walkable(
         }
         if (v10)
             return 1;
-        if (j < 0
-            && _tlAssert(
-                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                32,
-                "i >= 0 && i < 3",
-                ""))
-        {
-            __debugbreak();
-        }
-        if (j < 0
-            && _tlAssert(
-                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                32,
-                "i >= 0 && i < 3",
-                ""))
-        {
-            __debugbreak();
-        }
-        if (j < 0
-            && _tlAssert(
-                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\old_phys_math.h",
-                32,
-                "i >= 0 && i < 3",
-                ""))
-        {
-            __debugbreak();
-        }
-        v9 = *(&hit_point->x + j);
-        v8 = *(&v16 + j);
-        v7 = *(&up->x + j);
+
+        iassert(i >= 0 && i < 3);
+
+        v9 = hit_point->operator[](i);
+        v8 = aabb_max[i];
+        v7 = up->operator[](i);
+
         v6 = v9 >= (float)(0.99900001 * v8) || (float)(0.99900001 * v9) >= v8;
         if (v6 && v7 >= 0.69999999)
         {

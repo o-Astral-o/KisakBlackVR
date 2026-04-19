@@ -10482,32 +10482,17 @@ void __cdecl CG_DoTouchTriggers(centity_s *ent, int localClientNum)
     const DObj *dobj; // [esp+14h] [ebp-1878h]
     int entityList[1537]; // [esp+1Ch] [ebp-1870h] BYREF
     int contentMask; // [esp+1820h] [ebp-6Ch]
-    float maxs; // [esp+1824h] [ebp-68h] BYREF
-    float v6; // [esp+1828h] [ebp-64h]
-    float v7; // [esp+182Ch] [ebp-60h]
-    float v8; // [esp+1830h] [ebp-5Ch]
-    float v9; // [esp+1834h] [ebp-58h]
-    float v10; // [esp+1838h] [ebp-54h]
+    float maxs[3]; // [esp+1824h] [ebp-68h] BYREF
     int team; // [esp+183Ch] [ebp-50h]
-    float v12; // [esp+1840h] [ebp-4Ch] BYREF
-    float v13; // [esp+1844h] [ebp-48h]
-    float v14; // [esp+1848h] [ebp-44h]
-    float absMaxs; // [esp+184Ch] [ebp-40h] BYREF
-    float v16; // [esp+1850h] [ebp-3Ch]
-    float v17; // [esp+1854h] [ebp-38h]
+    float areaMins[3]; // [esp+1840h] [ebp-4Ch] BYREF
+    float absMaxs[3]; // [esp+184Ch] [ebp-40h] BYREF
     cg_s *LocalClientGlobals; // [esp+1858h] [ebp-34h]
     centity_s *other; // [esp+185Ch] [ebp-30h]
-    float v20; // [esp+1860h] [ebp-2Ch] BYREF
-    float v21; // [esp+1864h] [ebp-28h]
-    float v22; // [esp+1868h] [ebp-24h]
+    float areaMaxs[3]; // [esp+1860h] [ebp-2Ch] BYREF
     int v23; // [esp+186Ch] [ebp-20h]
     int i; // [esp+1870h] [ebp-1Ch]
-    float mins; // [esp+1874h] [ebp-18h] BYREF
-    float v26; // [esp+1878h] [ebp-14h]
-    float v27; // [esp+187Ch] [ebp-10h]
-    float absMins; // [esp+1880h] [ebp-Ch] BYREF
-    float v29; // [esp+1884h] [ebp-8h]
-    float v30; // [esp+1888h] [ebp-4h]
+    float mins[3]; // [esp+1874h] [ebp-18h] BYREF
+    float absMins[3]; // [esp+1880h] [ebp-Ch] BYREF
 
     LocalClientGlobals = CG_GetLocalClientGlobals(localClientNum);
     team = 0;
@@ -10545,49 +10530,46 @@ void __cdecl CG_DoTouchTriggers(centity_s *ent, int localClientNum)
         }
         if ( ent->nextState.eType == 1 || ent->nextState.eType == 17 )
         {
-            mins = -15.0f;
-            v26 = -15.0f;
-            v27 = 0.0f;
-            maxs = 15.0f;
-            v6 = 15.0f;
-            v7 = 70.0f;
-            absMins = ent->pose.origin[0] + -15.0;
-            v29 = ent->pose.origin[1] + -15.0;
-            v30 = ent->pose.origin[2] + 0.0;
-            absMaxs = ent->pose.origin[0] + 15.0;
-            v16 = ent->pose.origin[1] + 15.0;
-            v17 = ent->pose.origin[2] + 70.0;
+            mins[0] = -15.0f;
+            mins[1] = -15.0f;
+            mins[2] = 0.0f;
+            maxs[0] = 15.0f;
+            maxs[1] = 15.0f;
+            maxs[2] = 70.0f;
+            absMins[0] = ent->pose.origin[0] + -15.0;
+            absMins[1] = ent->pose.origin[1] + -15.0;
+            absMins[2] = ent->pose.origin[2] + 0.0;
+            absMaxs[0] = ent->pose.origin[0] + 15.0;
+            absMaxs[1] = ent->pose.origin[1] + 15.0;
+            absMaxs[2] = ent->pose.origin[2] + 70.0;
         }
         else
         {
             dobj = Com_GetClientDObj(ent->nextState.number, localClientNum);
             if ( !dobj )
                 return;
-            CG_GetEntityDobjBounds(ent, dobj, &mins, &maxs, &absMins, &absMaxs);
+            CG_GetEntityDobjBounds(ent, dobj, mins, maxs, absMins, absMaxs);
         }
-        v12 = absMins - 20.0;
-        v13 = v29 - 20.0;
-        v14 = v30 - 20.0;
-        v20 = absMaxs + 20.0;
-        v21 = v16 + 20.0;
-        v22 = v17 + 20.0;
-        v23 = CG_AreaEntities(&v12, &v20, entityList, 1536, contentMask);
-        v8 = ent->currentState.pos.trBase[0];
-        v9 = ent->currentState.pos.trBase[1];
-        v10 = ent->currentState.pos.trBase[2];
-        v12 = v8 + mins;
-        v13 = v9 + v26;
-        v14 = v10 + v27;
-        v20 = v8 + maxs;
-        v21 = v9 + v6;
-        v22 = v10 + v7;
-        ExpandBoundsToWidth(&v12, &v20);
+        areaMins[0] = absMins[0] - 20.0;
+        areaMins[1] = absMins[1] - 20.0;
+        areaMins[2] = absMins[2] - 20.0;
+        areaMaxs[0] = absMaxs[0] + 20.0;
+        areaMaxs[1] = absMaxs[1] + 20.0;
+        areaMaxs[2] = absMaxs[2] + 20.0;
+        v23 = CG_AreaEntities(areaMins, areaMaxs, entityList, 1536, contentMask);
+        areaMins[0] = ent->currentState.pos.trBase[0] + mins[0];
+        areaMins[1] = ent->currentState.pos.trBase[1] + mins[1];
+        areaMins[2] = ent->currentState.pos.trBase[2] + mins[2];
+        areaMaxs[0] = ent->currentState.pos.trBase[0] + maxs[0];
+        areaMaxs[1] = ent->currentState.pos.trBase[1] + maxs[1];
+        areaMaxs[2] = ent->currentState.pos.trBase[2] + maxs[2];
+        ExpandBoundsToWidth(areaMins, areaMaxs);
         for ( i = 0; i < v23; ++i )
         {
             other = CG_GetEntity(localClientNum, entityList[i]);
             if ( ((*((unsigned int *)other + 201) >> 15) & 1) != 0
                 && (contentMask & other->pose.fx.triggerTime) != 0
-                && CG_EntityContact(&v12, &v20, other) )
+                && CG_EntityContact(areaMins, areaMaxs, other) )
             {
                 if ( Scr_IsSystemActive(1u, SCRIPTINSTANCE_CLIENT) )
                 {

@@ -58,7 +58,7 @@ int __cdecl DObjGetSurfaces(const DObj *obj, int *partBits, const char *lods)
     }
     models = obj->localModels;
     model = *models;
-    numBones = XModelNumBones((const cpose_t *)*models);
+    numBones = XModelNumBones(*models);
     lod = *lods;
     if ( lod < 0 )
     {
@@ -78,7 +78,7 @@ int __cdecl DObjGetSurfaces(const DObj *obj, int *partBits, const char *lods)
     for ( j = 1; j < numModels; ++j )
     {
         modela = models[j];
-        numBonesa = XModelNumBones((const cpose_t *)modela);
+        numBonesa = XModelNumBones(modela);
         loda = lods[j];
         if ( loda >= 0 )
         {

@@ -596,7 +596,6 @@ XAnimTree_s *__cdecl SV_DObjGetTree(gentity_s *ent)
 
 void __cdecl SV_XModelDebugBoxes(gentity_s *ent, const float *color, int *partBits, int duration)
 {
-    const cpose_t *Model; // eax
     DObjAnimMat *boneMatrix; // [esp+58h] [ebp-330h]
     unsigned int j; // [esp+5Ch] [ebp-32Ch]
     XBoneInfo *boneInfoArray[160]; // [esp+60h] [ebp-328h] BYREF
@@ -637,8 +636,7 @@ void __cdecl SV_XModelDebugBoxes(gentity_s *ent, const float *color, int *partBi
     boneIndex = 0;
     for ( modelIndex = 0; modelIndex < modelCount; ++modelIndex )
     {
-        Model = (const cpose_t *)DObjGetModel(obj, modelIndex);
-        size = XModelNumBones(Model);
+        size = XModelNumBones(DObjGetModel(obj, modelIndex));
         if ( DObjIgnoreCollision(obj, modelIndex) )
         {
             boneIndex += size;

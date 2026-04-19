@@ -2,6 +2,8 @@
 
 #include <qcommon/bitarray.h>
 
+#define NO_BONEINDEX 255
+
 struct SavedDObjModel // sizeof=0x2
 {                                       // XREF: SavedDObj/r
     unsigned __int16 boneName;

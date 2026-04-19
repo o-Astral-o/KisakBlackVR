@@ -6,7 +6,7 @@ struct Material;
 struct PhysGeomList;
 struct cpose_t;
 
-int __cdecl XModelNumBones(const cpose_t *pose);
+int __cdecl XModelNumBones(const XModel *model);
 const char *__cdecl XModelGetName(const XModel *model);
 int __cdecl XModelGetSurfaces(const XModel *model, XSurface **surfaces, int submodel);
 XSurface *__cdecl XModelGetSurface(const XModel *model, int lod, int surfIndex);

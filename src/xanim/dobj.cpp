@@ -60,7 +60,7 @@ void __cdecl DObjDumpInfo(const DObj *obj)
         {
             model = models[j];
             Com_Printf(19, "%d: '%s'\n", boneIndex, model->name);
-            boneIndex += XModelNumBones((const cpose_t *)model);
+            boneIndex += XModelNumBones(model);
         }
         Com_Printf(19, "\nBones:\n");
         numBones = obj->numBones;
@@ -296,251 +296,171 @@ void __cdecl DObjCreate(
 
 void __cdecl DObjCreateDuplicateParts(DObj *obj, DObjModel_s *dobjModels, unsigned int numModels)
 {
-    int v3; // eax
-    char *v4; // eax
-    char *v5; // eax
-    const char *v6; // [esp-8h] [ebp-6C4h]
-    const char *name; // [esp-4h] [ebp-6C0h]
-    const char *v8; // [esp-4h] [ebp-6C0h]
-    int localClientNum; // [esp+0h] [ebp-6BCh]
-    unsigned __int8 index[32]; // [esp+4h] [ebp-6B8h] BYREF
-    unsigned int v11; // [esp+28h] [ebp-694h]
-    DObjModel_s *v12; // [esp+2Ch] [ebp-690h]
-    char *v13; // [esp+30h] [ebp-68Ch]
-    char v14; // [esp+37h] [ebp-685h]
-    int v15; // [esp+38h] [ebp-684h]
-    cpose_t *pose; // [esp+3Ch] [ebp-680h]
-    unsigned int v17; // [esp+40h] [ebp-67Ch]
-    unsigned int stringValue; // [esp+44h] [ebp-678h]
-    int v19; // [esp+48h] [ebp-674h]
-    int v20; // [esp+4Ch] [ebp-670h]
-    unsigned __int8 v21; // [esp+53h] [ebp-669h] BYREF
-    int j; // [esp+54h] [ebp-668h]
-    int v23; // [esp+58h] [ebp-664h]
-    char str[4]; // [esp+5Ch] [ebp-660h] BYREF
-    int v25; // [esp+60h] [ebp-65Ch]
-    int v26; // [esp+64h] [ebp-658h]
-    int v27; // [esp+68h] [ebp-654h]
-    int v28; // [esp+6Ch] [ebp-650h]
-    char v29; // [esp+70h] [ebp-64Ch] BYREF
-    unsigned int offset[32]; // [esp+5B4h] [ebp-108h]
-    XModel *model[32]; // [esp+634h] [ebp-88h] BYREF
-    int i; // [esp+6B4h] [ebp-8h]
-    unsigned __int16 *cullIn; // [esp+6B8h] [ebp-4h]
+    int numBones; // [esp+0h] [ebp-6BCh]
+    unsigned __int8 modelParents[32]; // [esp+4h] [ebp-6B8h] BYREF
+    int boneIndex; // [esp+28h] [ebp-694h]
+    DObjModel_s *dobjModel; // [esp+2Ch] [ebp-690h]
+    unsigned __int8 *duplicateParts; // [esp+30h] [ebp-68Ch]
+    bool bRootMeld; // [esp+37h] [ebp-685h]
+    int boneCount; // [esp+38h] [ebp-684h]
+    XModel *model; // [esp+3Ch] [ebp-680h]
+    unsigned int currNumModels; // [esp+40h] [ebp-67Ch]
+    unsigned int name; // [esp+44h] [ebp-678h]
+    int len; // [esp+48h] [ebp-674h]
+    unsigned int size; // [esp+4Ch] [ebp-670h]
+    unsigned __int8 parentIndex; // [esp+53h] [ebp-669h] BYREF
+    int localBoneIndex; // [esp+54h] [ebp-668h]
+    int index; // [esp+58h] [ebp-664h]
+    int duplicatePartBits[341]; // [esp+5Ch] [ebp-660h] BYREF
+    int matOffset[32]; // [esp+5B4h] [ebp-108h]
+    XModel *models[32]; // [esp+634h] [ebp-88h] BYREF
+    int modelIndex; // [esp+6B4h] [ebp-8h]
+    unsigned __int16 *boneNames; // [esp+6B8h] [ebp-4h]
 
-    v13 = &v29;
-    *(unsigned int *)str = 0;
-    v25 = 0;
-    v26 = 0;
-    v27 = 0;
-    v28 = 0;
-    v19 = 0;
-    v15 = 0;
-    v12 = dobjModels;
-    v17 = 0;
-    while ( v17 < numModels )
+    duplicateParts = (unsigned __int8 *)&duplicatePartBits[5];
+    memset(duplicatePartBits, 0, 20);
+    len = 0;
+    boneCount = 0;
+    dobjModel = dobjModels;
+    currNumModels = 0;
+    while (currNumModels < numModels)
     {
-        v11 = v15;
-        pose = (cpose_t *)v12->model;
-        if ( !pose && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 256, 0, "%s", "model") )
-            __debugbreak();
-        v3 = XModelNumBones(pose);
-        v15 += v3;
-        if ( v15 > 160 )
+        boneIndex = boneCount;
+        model = dobjModel->model;
+        iassert(model);
+        boneCount += XModelNumBones(model);
+        if (boneCount > 160)
         {
-            if ( !v17
-                && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 264, 0, "%s", "currNumModels") )
-            {
-                __debugbreak();
-            }
+            iassert(currNumModels);
             DObjDumpCreationInfo(dobjModels, numModels);
-            Com_Error(ERR_DROP, "dobj for xmodel '%s' has more than %d bones (see console for details)", model[0]->name, 160);
+            Com_Error(ERR_DROP, "dobj for xmodel ',27h,'%s',27h,' has more than %d bones (see console for details)", models[0]->name, 160);
         }
-        model[v17] = (XModel *)pose;
-        index[v17] = -1;
-        offset[v17] = v11;
-        if ( v12->ignoreCollision )
-            obj->ignoreCollision |= 1 << v17;
-        if ( v17 )
+        models[currNumModels] = model;
+        modelParents[currNumModels] = -1;
+        matOffset[currNumModels] = boneIndex;
+        if (dobjModel->ignoreCollision)
+            obj->ignoreCollision |= 1 << currNumModels;
+        if (currNumModels)
         {
-            stringValue = v12->boneName;
-            if ( stringValue && *SL_ConvertToString(stringValue, SCRIPTINSTANCE_SERVER) )
+            name = dobjModel->boneName;
+            if (name && *SL_ConvertToString(name, SCRIPTINSTANCE_SERVER))
             {
-                for ( i = v17 - 1; i >= 0; --i )
+                for (modelIndex = currNumModels - 1; modelIndex >= 0; --modelIndex)
                 {
-                    if ( XModelGetBoneIndex(model[i], stringValue, offset[i], &index[v17]) )
+                    if (XModelGetBoneIndex(models[modelIndex], name, matOffset[modelIndex], &modelParents[currNumModels]))
                         goto LABEL_2;
                 }
-                if ( !v17
-                    && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 307, 0, "%s", "currNumModels") )
-                {
-                    __debugbreak();
-                }
-                name = model[0]->name;
-                v4 = SL_ConvertToString(stringValue, SCRIPTINSTANCE_SERVER);
-                Com_PrintWarning(19, "WARNING: Part '%s' not found in model '%s' or any of its descendants\n", v4, name);
-                if ( index[v17] != 255
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                                309,
-                                0,
-                                "%s",
-                                "modelParents[currNumModels] == NO_BONEINDEX") )
-                {
-                    __debugbreak();
-                }
+
+                iassert(currNumModels);
+                Com_PrintWarning(19, "WARNING: Part '%s' not found in model '%s' or any of its descendants\n", SL_ConvertToString(name, SCRIPTINSTANCE_SERVER), models[0]->name);
+                iassert(modelParents[currNumModels] == NO_BONEINDEX);
             }
             else
             {
-                localClientNum = pose->localClientNum;
-                cullIn = (unsigned __int16 *)pose->cullIn;
-                v14 = 0;
-                for ( j = 0; j < localClientNum; ++j )
+                numBones = model->numBones;
+                boneNames = model->localBoneNames;
+                bRootMeld = 0;
+                for (localBoneIndex = 0; localBoneIndex < numBones; ++localBoneIndex)
                 {
-                    stringValue = cullIn[j];
-                    for ( i = v17 - 1; i >= 0; --i )
+                    name = boneNames[localBoneIndex];
+                    for (modelIndex = currNumModels - 1; modelIndex >= 0; --modelIndex)
                     {
-                        if ( XModelGetBoneIndex(model[i], stringValue, offset[i], &v21) )
+                        if (XModelGetBoneIndex(models[modelIndex], name, matOffset[modelIndex], &parentIndex))
                         {
-                            if ( v21 == 255
-                                && !Assert_MyHandler(
-                                            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                                            348,
-                                            0,
-                                            "%s\n\t(parentIndex) = %i",
-                                            "(parentIndex != 255)",
-                                            v21) )
-                            {
-                                __debugbreak();
-                            }
-                            if ( v21 == 254
-                                && !Assert_MyHandler(
-                                            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                                            349,
-                                            0,
-                                            "%s\n\t(parentIndex) = %i",
-                                            "(parentIndex != 254)",
-                                            v21) )
-                            {
-                                __debugbreak();
-                            }
-                            if ( v21 >= (int)(j + v11)
-                                && !Assert_MyHandler(
-                                            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                                            352,
-                                            0,
-                                            "%s",
-                                            "parentIndex < boneIndex + localBoneIndex") )
-                            {
-                                __debugbreak();
-                            }
-                            if ( !j )
-                                v14 = 1;
-                            v23 = j + v11;
-                            v13[v19] = j + v11 + 1;
-                            *(unsigned int *)&str[4 * (v23 >> 5)] |= 0x80000000 >> (v23 & 0x1F);
-                            if ( !v13[v19]
-                                && !Assert_MyHandler(
-                                            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                                            375,
-                                            0,
-                                            "%s",
-                                            "duplicateParts[len]") )
-                            {
-                                __debugbreak();
-                            }
-                            v13[++v19] = v21 + 1;
-                            if ( !v13[v19]
-                                && !Assert_MyHandler(
-                                            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                                            378,
-                                            0,
-                                            "%s",
-                                            "duplicateParts[len]") )
-                            {
-                                __debugbreak();
-                            }
-                            ++v19;
+                            iassert(parentIndex != 255);
+                            iassert(parentIndex != 254);
+                            iassert(parentIndex < boneIndex + localBoneIndex);
+     
+                            if (!localBoneIndex)
+                                bRootMeld = 1;
+                            index = localBoneIndex + boneIndex;
+                            duplicateParts[len] = localBoneIndex + boneIndex + 1;
+                            duplicatePartBits[index >> 5] |= 0x80000000 >> (index & 0x1F);
+                            iassert(duplicateParts[len]);
+                   
+                            duplicateParts[++len] = parentIndex + 1;
+
+                            iassert(duplicateParts[len]);
+            
+                            ++len;
                             break;
                         }
                     }
                 }
-                if ( !v14 )
+                if (!bRootMeld)
                 {
-                    if ( !v17
-                        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 387, 0, "%s", "currNumModels") )
-                    {
-                        __debugbreak();
-                    }
-                    v8 = model[0]->name;
-                    v6 = *(const char **)&pose->lightingHandle;
-                    v5 = SL_ConvertToString(*cullIn, SCRIPTINSTANCE_SERVER);
+                    iassert(currNumModels);
                     Com_PrintWarning(
                         19,
                         "WARNING: Attempting to meld model, but root part '%s' of model '%s' not found in model '%s' or any of its descendants\n",
-                        v5,
-                        v6,
-                        v8);
+                        SL_ConvertToString(*boneNames, SCRIPTINSTANCE_SERVER),
+                        model->name,
+                        models[0]->name);
                 }
             }
         }
-LABEL_2:
-        ++v17;
-        ++v12;
+    LABEL_2:
+        ++currNumModels;
+        ++dobjModel;
     }
-    if ( v15 != (unsigned __int8)v15
+    if (boneCount != (unsigned __int8)boneCount
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                    395,
-                    0,
-                    "%s",
-                    "boneCount == (byte)boneCount") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
+            395,
+            0,
+            "%s",
+            "boneCount == (byte)boneCount"))
     {
         __debugbreak();
     }
-    obj->numBones = v15;
-    if ( !numModels
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 398, 0, "%s", "numModels > 0") )
+    obj->numBones = boneCount;
+    if (!numModels
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 398, 0, "%s", "numModels > 0"))
     {
         __debugbreak();
     }
     obj->localModels = (XModel **)MT_Alloc(5 * numModels, 13, SCRIPTINSTANCE_SERVER);
-    memcpy((unsigned __int8 *)obj->localModels, (unsigned __int8 *)model, 4 * numModels);
-    memcpy((unsigned __int8 *)&obj->localModels[numModels], index, numModels);
-    if ( numModels != (unsigned __int8)numModels
+    memcpy((unsigned __int8 *)obj->localModels, (unsigned __int8 *)models, 4 * numModels);
+    memcpy((unsigned __int8 *)&obj->localModels[numModels], modelParents, numModels);
+    if (numModels != (unsigned __int8)numModels
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                    410,
-                    0,
-                    "%s",
-                    "numModels == (byte)numModels") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
+            410,
+            0,
+            "%s",
+            "numModels == (byte)numModels"))
     {
         __debugbreak();
     }
     obj->numModels = numModels;
-    if ( !g_empty && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 419, 0, "%s", "g_empty") )
+    if (!g_empty && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 419, 0, "%s", "g_empty"))
         __debugbreak();
-    if ( obj->duplicateParts
-        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 420, 0, "%s", "!obj->duplicateParts") )
+    if (obj->duplicateParts
+        && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp", 420, 0, "%s", "!obj->duplicateParts"))
     {
         __debugbreak();
     }
-    if ( v19 )
+    if (len)
     {
-        v13[v19] = 0;
-        v20 = ++v19 + 20;
-        obj->duplicatePartsSize = v19 + 20;
-        if ( obj->duplicatePartsSize != v20
+        duplicateParts[len] = 0;
+        size = ++len + 20;
+        obj->duplicatePartsSize = len + 20;
+        if (obj->duplicatePartsSize != size
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
-                        434,
-                        0,
-                        "%s",
-                        "obj->duplicatePartsSize == size") )
+                "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
+                434,
+                0,
+                "%s",
+                "obj->duplicatePartsSize == size"))
         {
             __debugbreak();
         }
-        obj->duplicateParts = SL_GetStringOfSize(SCRIPTINSTANCE_SERVER, str, 0, obj->duplicatePartsSize, 12);
+        obj->duplicateParts = SL_GetStringOfSize(
+            SCRIPTINSTANCE_SERVER,
+            (char *)duplicatePartBits,
+            0,
+            obj->duplicatePartsSize,
+            12);
     }
     else
     {
@@ -565,7 +485,7 @@ void __cdecl DObjDumpCreationInfo(DObjModel_s *dobjModels, unsigned int numModel
         model = dobjModels[j].model;
         Name = XModelGetName(model);
         Com_Printf(19, "Model '%s':\n", Name);
-        numBones = XModelNumBones((const cpose_t *)model);
+        numBones = XModelNumBones(model);
         for ( i = 0; i < numBones; ++i )
         {
             v3 = SL_ConvertToString(model->localBoneNames[i], SCRIPTINSTANCE_SERVER);
@@ -735,7 +655,7 @@ void __cdecl DObjGetCreateParms(
     {
         model = models[modelIndex];
         matOffset[modelIndex] = startBoneIndex;
-        startBoneIndex += XModelNumBones((const cpose_t *)model);
+        startBoneIndex += XModelNumBones(model);
         dobjModel->model = models[modelIndex];
         dobjModel->boneName = 0;
         dobjModel->ignoreCollision = (obj->ignoreCollision & (1 << modelIndex)) != 0;
@@ -746,7 +666,7 @@ void __cdecl DObjGetCreateParms(
                 if ( modelParents[modelIndex] >= matOffset[parentModelIndex] )
                 {
                     boneIndex = modelParents[modelIndex] - matOffset[parentModelIndex];
-                    if ( boneIndex >= XModelNumBones((const cpose_t *)models[parentModelIndex])
+                    if ( boneIndex >= XModelNumBones(models[parentModelIndex])
                         && !Assert_MyHandler(
                                     "C:\\projects_pc\\cod\\codsrc\\src\\xanim\\dobj.cpp",
                                     999,

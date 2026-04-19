@@ -709,7 +709,6 @@ void __cdecl CG_XModelDebugBoxes(
                 int *partBits,
                 int duration)
 {
-    const cpose_t *Model; // eax
     DObjAnimMat *boneMatrix; // [esp+50h] [ebp-330h]
     unsigned int j; // [esp+54h] [ebp-32Ch]
     XBoneInfo *boneInfoArray[160]; // [esp+58h] [ebp-328h] BYREF
@@ -750,8 +749,7 @@ void __cdecl CG_XModelDebugBoxes(
     boneIndex = 0;
     for ( modelIndex = 0; modelIndex < modelCount; ++modelIndex )
     {
-        Model = (const cpose_t *)DObjGetModel(obj, modelIndex);
-        size = XModelNumBones(Model);
+        size = XModelNumBones(DObjGetModel(obj, modelIndex));
         if ( DObjIgnoreCollision(obj, modelIndex) )
         {
             boneIndex += size;

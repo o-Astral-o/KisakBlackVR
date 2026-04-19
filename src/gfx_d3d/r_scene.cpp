@@ -1631,7 +1631,6 @@ void __cdecl R_AddDObjSurfacesCamera(
                 char visLightsMask,
                 bool isMissileCamera)
 {
-    const cpose_t *v7; // eax
     int packed_high; // ecx
     unsigned __int64 v9; // rax
     unsigned __int64 v10; // rax
@@ -1737,8 +1736,7 @@ void __cdecl R_AddDObjSurfacesCamera(
                 lod = sceneEnt->cull.lods[modelIndex];
                 if ( lod < 0 )
                 {
-                    v7 = (const cpose_t *)DObjGetModel(obj, modelIndex);
-                    boneMatrix += XModelNumBones(v7);
+                    boneMatrix += XModelNumBones(DObjGetModel(obj, modelIndex));
                     continue;
                 }
                 model = DObjGetModel(obj, modelIndex);
@@ -1885,7 +1883,7 @@ LABEL_34:
                 v22 = Vec3Distance(boneMatrix->trans, rg.lodParms.origin);
                 val = I_fres(sceneEnt->placement.scale) * v22;
                 ShodLodInfo(boneMatrix->trans, lod, model->numLods, val, lodDist, lodDist_4);
-                boneMatrix += XModelNumBones((const cpose_t *)model);
+                boneMatrix += XModelNumBones(model);
                 totalSurfCount += numsurfs;
             }
         }
@@ -1898,7 +1896,6 @@ GfxDrawSurf *__cdecl R_AddDObjSurfaces(
                 GfxDrawSurf *drawSurf,
                 GfxDrawSurf *lastDrawSurf)
 {
-    int v5; // eax
     int packed_high; // ecx
     unsigned __int64 v7; // rax
     bool v8; // [esp+7h] [ebp-6Dh]
@@ -1928,8 +1925,7 @@ GfxDrawSurf *__cdecl R_AddDObjSurfaces(
     modelSurf = sceneEnt->cull.skinnedSurfs.firstSurf;
     if ( !modelSurf )
         return drawSurf;
-    v5 = XModelNumBones(sceneEnt->info.pose);
-    obj = Com_GetClientDObj(sceneEnt->entnum, v5);
+    obj = Com_GetClientDObj(sceneEnt->entnum, sceneEnt->info.pose->localClientNum);
     if ( !obj && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_scene.cpp", 1695, 0, "%s", "obj") )
         __debugbreak();
     modelCount = DObjGetNumModels(obj);

@@ -3,7 +3,7 @@
 #include <clientscript/cscr_animtree.h>
 #include <bgame/bg_local.h>
 
-#define ANIM_TOGGLEBIT (1 << 11)
+#define ANIM_TOGGLEBIT (1 << 10)
 
 enum aistateEnum_t : __int32
 {                                       // XREF: ?BG_AnimScriptAnimation@@YAHPAUpmove_t@@W4aistateEnum_t@@W4scriptAnimMoveTypes_t@@H@Z/r

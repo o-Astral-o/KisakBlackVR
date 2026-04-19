@@ -23,9 +23,9 @@ TestLod g_testLods[4] =
     { false, -1.0f },
 };
 
-int __cdecl XModelNumBones(const cpose_t *pose)
+int __cdecl XModelNumBones(const XModel *model)
 {
-    return pose->localClientNum;
+    return model->numBones;
 }
 
 const char *__cdecl XModelGetName(const XModel *model)

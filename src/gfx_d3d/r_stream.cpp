@@ -534,7 +534,7 @@ char __cdecl R_StreamTouchDObjAndCheck(const DObj *obj, int level)
         if (!model && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_stream.cpp", 1719, 0, "%s", "model"))
             __debugbreak();
         materials = XModelGetSkins(model, 0);
-        boneCount = XModelNumBones((const cpose_t *)model);
+        boneCount = XModelNumBones(model);
         surfaceCount = XModelGetSurfaces(model, &surfaces, 0);
         if (!surfaces
             && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_stream.cpp", 1726, 0, "%s", "surfaces"))

@@ -5218,7 +5218,7 @@ void __cdecl PlayerCmd_ClonePlayer(scr_entref_t entref)
     Com_Printf(14, "Cloning Player entnum %i %i\n", body->s.clientNum, level.time);
     body->item[0].ammoCount = level.time;
     corpseIndex = G_GetFreePlayerCorpseIndex();
-    corpseInfo = (corpseInfo_t *)&g_scr_data.actorXAnimTrees[376 * corpseIndex - 1496];
+    corpseInfo = &g_scr_data.playerCorpseInfo[G_GetFreePlayerCorpseIndex()];
     corpseInfo->entnum = body->s.number;
     corpseInfo->time = level.time;
     corpseInfo->falling = 1;
