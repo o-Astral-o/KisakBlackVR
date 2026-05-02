@@ -6,51 +6,6 @@
 phys_assert_info pai_create_rbc_contact = { 0, 2, true };
 
 
-
-rigid_body_pair_key::rigid_body_pair_key(
-                rigid_body *const b1,
-                rigid_body *const b2)
-{
-    if ( b1 == b2
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
-                 232,
-                 "b1 != b2",
-                 "") )
-    {
-        __debugbreak();
-    }
-    if ( !b1
-        && _tlAssert(
-                 "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
-                 233,
-                 "b1",
-                 "") )
-    {
-        __debugbreak();
-    }
-    if ( !b2 )
-    {
-        if ( _tlAssert(
-                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\rbc_defs\\rbc_def_contact.h",
-                     234,
-                     "b2",
-                     "") )
-        {
-            __debugbreak();
-        }
-        goto LABEL_10;
-    }
-    if ( b1 >= b2 )
-    {
-LABEL_10:
-        this->m_b2 = b1;
-        this->m_b1 = b2;
-    }
-    this->m_b1 = b1;
-    this->m_b2 = b2;
-}
-
 environment_rigid_body *__cdecl phys_sys::get_environment_rigid_body()
 {
     return &g_physics_system->m_environment_rigid_body;
@@ -548,10 +503,8 @@ rigid_body_constraint_custom_orientation *__cdecl phys_sys::create_rbc_custom_or
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_custom_orientation> *p_m_list_rbc_custom_orientation; // esi
     rigid_body_constraint_custom_orientation *result; // eax
 
-    p_m_list_rbc_custom_orientation = &g_physics_system->m_list_rbc_custom_orientation;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
 
@@ -560,7 +513,7 @@ rigid_body_constraint_custom_orientation *__cdecl phys_sys::create_rbc_custom_or
     //                     no_error,
     //                     "OUT_OF_MEMORY, rbc_custom_orientation, INCREASE phys_mem_info::m_num_rbc_custom_orientation.");
 
-    result = p_m_list_rbc_custom_orientation->add(no_error, "OUT_OF_MEMORY, rbc_custom_orientation, INCREASE phys_mem_info::m_num_rbc_custom_orientation.");
+    result = g_physics_system->m_list_rbc_custom_orientation.add(no_error, "OUT_OF_MEMORY, rbc_custom_orientation, INCREASE phys_mem_info::m_num_rbc_custom_orientation.");
 
     if ( result )
     {
@@ -868,14 +821,11 @@ rigid_body_constraint_hinge *__cdecl phys_sys::create_rbc_hinge(
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_hinge> *p_m_list_rbc_hinge; // esi
     rigid_body_constraint_hinge *result; // eax
 
-    p_m_list_rbc_hinge = &g_physics_system->m_list_rbc_hinge;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_hinge>::add(
-                         p_m_list_rbc_hinge->add(
+    result = g_physics_system->m_list_rbc_hinge.add(
                          no_error,
                          "OUT_OF_MEMORY, rbc_hinge, INCREASE phys_mem_info::m_num_rbc_hinge.");
     if ( result )
@@ -891,16 +841,11 @@ rigid_body_constraint_distance *__cdecl phys_sys::create_rbc_dist(
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_distance> *p_m_list_rbc_dist; // esi
     rigid_body_constraint_distance *result; // eax
 
-    p_m_list_rbc_dist = &g_physics_system->m_list_rbc_dist;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_distance>::add(
-                         p_m_list_rbc_dist->add(
-                         no_error,
-                         "OUT_OF_MEMORY, rbc_dist, INCREASE phys_mem_info::m_num_rbc_dist.");
+    result = g_physics_system->m_list_rbc_dist.add(no_error, "OUT_OF_MEMORY, rbc_dist, INCREASE phys_mem_info::m_num_rbc_dist.");
     if ( result )
     {
         result->b1 = b1;
@@ -914,16 +859,11 @@ rigid_body_constraint_ragdoll *__cdecl phys_sys::create_rbc_ragdoll(
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_ragdoll> *p_m_list_rbc_ragdoll; // esi
     rigid_body_constraint_ragdoll *result; // eax
 
-    p_m_list_rbc_ragdoll = &g_physics_system->m_list_rbc_ragdoll;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_ragdoll>::add(
-                         p_m_list_rbc_ragdoll->add(
-                         no_error,
-                         "OUT_OF_MEMORY, rbc_ragdoll, INCREASE phys_mem_info::m_num_rbc_ragdoll.");
+    result = g_physics_system->m_list_rbc_ragdoll.add(no_error, "OUT_OF_MEMORY, rbc_ragdoll, INCREASE phys_mem_info::m_num_rbc_ragdoll.");
     if ( result )
     {
         result->b1 = b1;
@@ -937,16 +877,12 @@ rigid_body_constraint_wheel *__cdecl phys_sys::create_rbc_wheel(
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_wheel> *p_m_list_rbc_wheel; // esi
     rigid_body_constraint_wheel *result; // eax
 
-    p_m_list_rbc_wheel = &g_physics_system->m_list_rbc_wheel;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_wheel>::add(
-                         p_m_list_rbc_wheel->add(
-                         no_error,
-                         "OUT_OF_MEMORY, rbc_wheel, INCREASE phys_mem_info::m_num_rbc_wheel.");
+
+    result = g_physics_system->m_list_rbc_wheel.add(no_error, "OUT_OF_MEMORY, rbc_wheel, INCREASE phys_mem_info::m_num_rbc_wheel.");
     if ( result )
     {
         result->b1 = b1;
@@ -960,16 +896,11 @@ rigid_body_constraint_angular_actuator *__cdecl phys_sys::create_rbc_angular_act
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_angular_actuator> *p_m_list_rbc_angular_actuator; // esi
     rigid_body_constraint_angular_actuator *result; // eax
 
-    p_m_list_rbc_angular_actuator = &g_physics_system->m_list_rbc_angular_actuator;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_angular_actuator>::add(
-                         p_m_list_rbc_angular_actuator->add(
-                         no_error,
-                         "OUT_OF_MEMORY, rbc_angular_actuator, INCREASE phys_mem_info::m_num_rbc_angular_actuator.");
+    result = g_physics_system->m_list_rbc_angular_actuator.add(no_error, "OUT_OF_MEMORY, rbc_angular_actuator, INCREASE phys_mem_info::m_num_rbc_angular_actuator.");
     if ( result )
     {
         result->b1 = b1;
@@ -983,16 +914,11 @@ rigid_body_constraint_upright *__cdecl phys_sys::create_rbc_upright(
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_upright> *p_m_list_rbc_upright; // esi
     rigid_body_constraint_upright *result; // eax
 
-    p_m_list_rbc_upright = &g_physics_system->m_list_rbc_upright;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_upright>::add(
-                         p_m_list_rbc_upright->add(
-                         no_error,
-                         "OUT_OF_MEMORY, rbc_upright, INCREASE phys_mem_info::m_num_rbc_upright.");
+    result = g_physics_system->m_list_rbc_upright.add(no_error, "OUT_OF_MEMORY, rbc_upright, INCREASE phys_mem_info::m_num_rbc_upright.");
     if ( result )
     {
         result->b1 = b1;
@@ -1006,16 +932,11 @@ rigid_body_constraint_custom_path *__cdecl phys_sys::create_rbc_custom_path(
                 environment_rigid_body *b2,
                 int no_error)
 {
-    phys_free_list<rigid_body_constraint_custom_path> *p_m_list_rbc_custom_path; // esi
     rigid_body_constraint_custom_path *result; // eax
 
-    p_m_list_rbc_custom_path = &g_physics_system->m_list_rbc_custom_path;
     g_physics_system->validate_member(b1);
     g_physics_system->validate_member(b2);
-    result = //phys_free_list<rigid_body_constraint_custom_path>::add(
-                         p_m_list_rbc_custom_path->add(
-                         no_error,
-                         "OUT_OF_MEMORY, rbc_custom_path, INCREASE phys_mem_info::m_num_rbc_custom_path.");
+    result = g_physics_system->m_list_rbc_custom_path.add(no_error, "OUT_OF_MEMORY, rbc_custom_path, INCREASE phys_mem_info::m_num_rbc_custom_path.");
     if ( result )
     {
         result->b1 = b1;
@@ -2499,828 +2420,6 @@ void __cdecl phys_sys::destroy_all_constraint_with_user_rigid_body(rigid_body *c
     }
 }
 
-#if 0
-rigid_body_constraint_contact *__thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::find(
-                phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor> *this,
-                const rigid_body_pair_key *key)
-{
-    rigid_body_constraint_contact *result; // eax
-    rigid_body *m_b1; // edx
-    rigid_body *v4; // ecx
-    bool v5; // cf
-
-    result = this->m_tree_root;
-    if ( this->m_tree_root )
-    {
-        m_b1 = key->m_b1;
-        do
-        {
-            if ( m_b1 == result->m_avl_key.m_b1 && key->m_b2 == result->m_avl_key.m_b2 )
-                break;
-            v4 = result->m_avl_key.m_b1;
-            v5 = m_b1 < v4;
-            if ( m_b1 == v4 )
-                v5 = key->m_b2 < result->m_avl_key.m_b2;
-            result = v5 ? result->m_avl_tree_node.m_left : result->m_avl_tree_node.m_right;
-        }
-        while ( result );
-    }
-    return result;
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_point>::debug_add(
-                phys_free_list<rigid_body_constraint_point> *this,
-                phys_free_list<rigid_body_constraint_point>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_ragdoll>::debug_add(
-                phys_free_list<rigid_body_constraint_ragdoll> *this,
-                phys_free_list<rigid_body_constraint_ragdoll>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_hinge>::debug_add(
-                phys_free_list<rigid_body_constraint_wheel> *this,
-                phys_free_list<rigid_body_constraint_wheel>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_custom_orientation>::debug_add(
-                phys_free_list<rigid_body_constraint_custom_orientation> *this,
-                phys_free_list<rigid_body_constraint_custom_orientation>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_custom_path>::debug_add(
-                phys_free_list<rigid_body_constraint_custom_path> *this,
-                phys_free_list<rigid_body_constraint_custom_path>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_angular_actuator>::debug_add(
-                phys_free_list<rigid_body_constraint_angular_actuator> *this,
-                phys_free_list<rigid_body_constraint_angular_actuator>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_upright>::debug_add(
-                phys_free_list<rigid_body_constraint_upright> *this,
-                phys_free_list<rigid_body_constraint_upright>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<user_rigid_body>::debug_add(
-                phys_free_list<user_rigid_body> *this,
-                phys_free_list<user_rigid_body>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body>::debug_add(
-                phys_free_list<rigid_body> *this,
-                phys_free_list<rigid_body>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-void __thiscall phys_free_list<rigid_body_constraint_contact>::debug_add(
-                phys_free_list<rigid_body_constraint_contact> *this,
-                phys_free_list<rigid_body_constraint_contact>::T_internal *T_i)
-{
-    int m_list_count_high_water; // eax
-    int m_ptr_list_count; // eax
-
-    m_list_count_high_water = this->m_list_count_high_water;
-    if ( m_list_count_high_water <= this->m_list_count )
-        m_list_count_high_water = this->m_list_count;
-    this->m_list_count_high_water = m_list_count_high_water;
-    m_ptr_list_count = this->m_ptr_list_count;
-    if ( m_ptr_list_count >= 256 )
-    {
-        T_i->m_ptr_list_index = -1;
-    }
-    else
-    {
-        T_i->m_ptr_list_index = m_ptr_list_count;
-        this->m_ptr_list[this->m_ptr_list_count++] = &T_i->m_data;
-    }
-}
-
-rigid_body_constraint_point *__thiscall phys_free_list<rigid_body_constraint_point>::add(
-                phys_free_list<rigid_body_constraint_point> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_point>::T_internal *v4; // eax
-    rigid_body_constraint_point *p_m_data; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_point>::T_internal *)PMM_ALLOC(0x70u, 0x10u);
-    if ( v4 )
-    {
-        v4->m_data.m_ps_cache_list[0].m_pulse_sum = 0.0;
-        p_m_data = &v4->m_data;
-        v4->m_data.m_ps_cache_list[1].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[2].m_pulse_sum = 0.0;
-        v4->m_data.m_stress = 0.0;
-        v4->m_data.m_spring_enabled = 0;
-        v4->m_data.m_spring_k = 0.0;
-        v4->m_data.m_damp_k = 0.0;
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_point>::debug_add(this, v4);
-        return p_m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_custom_orientation *__thiscall phys_free_list<rigid_body_constraint_custom_orientation>::add(
-                phys_free_list<rigid_body_constraint_custom_orientation> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_custom_orientation>::T_internal *v4; // eax
-    rigid_body_constraint_custom_orientation *p_m_data; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_custom_orientation>::T_internal *)PMM_ALLOC(0x3Cu, 4u);
-    if ( v4 )
-    {
-        v4->m_data.m_ps_cache_list[0].m_pulse_sum = 0.0;
-        p_m_data = &v4->m_data;
-        v4->m_data.m_ps_cache_list[1].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[2].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[3].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[4].m_pulse_sum = 0.0;
-        v4->m_data.m_active = 0;
-        v4->m_data.m_torque_resistance_pitch_roll = 50.0;
-        v4->m_data.m_no_orientation_correction = 0;
-        v4->m_data.m_torque_resistance_yaw = 10.0;
-        v4->m_data.m_upright_strength = 50.0;
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_custom_orientation>::debug_add(this, v4);
-        return p_m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-void __thiscall phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::add(
-                phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor> *this,
-                const rigid_body_pair_key *key,
-                rigid_body_constraint_contact *data)
-{
-    bool v3; // zf
-    phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::stack_item *v4; // ebx
-    rigid_body_constraint_contact *v5; // esi
-    rigid_body *m_b1; // ecx
-    rigid_body *v7; // eax
-    bool v8; // cf
-    rigid_body_constraint_contact **p_m_left; // esi
-    rigid_body *v10; // eax
-    bool v11; // cf
-    rigid_body_constraint_contact **m_node; // esi
-    rigid_body_constraint_contact *v13; // eax
-    int m_balance; // ecx
-    int v15; // eax
-    rigid_body_constraint_contact *v16; // ecx
-    rigid_body_constraint_contact *m_left; // eax
-    rigid_body_constraint_contact *m_right; // eax
-    int v19; // edi
-    rigid_body_constraint_contact *v20; // eax
-    int v21; // edi
-    char v22; // al
-    int v23; // eax
-    rigid_body_constraint_contact *v24; // ecx
-    rigid_body_constraint_contact *v25; // edx
-    rigid_body_constraint_contact *v26; // eax
-    rigid_body_constraint_contact *v27; // eax
-    int v28; // edi
-    phys_inplace_avl_tree<rigid_body_pair_key,rigid_body_constraint_contact,rigid_body_constraint_contact::avl_tree_accessor>::stack_item the_stack[32]; // [esp+Ch] [ebp-100h] BYREF
-
-    v3 = this->m_tree_root == 0;
-    v4 = the_stack;
-    for ( the_stack[0].m_node = &this->m_tree_root; !v3; ++v4 )
-    {
-        v5 = *v4->m_node;
-        if ( (int)(((char *)v4 - (char *)the_stack + 8) & 0xFFFFFFF8) >= 256
-            && _tlAssert(
-                     "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                     103,
-                     "cur_item + 1 - the_stack < 32",
-                     "") )
-        {
-            __debugbreak();
-        }
-        m_b1 = key->m_b1;
-        v7 = v5->m_avl_key.m_b1;
-        v8 = key->m_b1 < v7;
-        if ( key->m_b1 == v7 )
-            v8 = key->m_b2 < v5->m_avl_key.m_b2;
-        if ( v8 )
-        {
-            v4->m_child = -1;
-            p_m_left = &v5->m_avl_tree_node.m_left;
-        }
-        else
-        {
-            v10 = v5->m_avl_key.m_b1;
-            v11 = v10 < m_b1;
-            if ( v10 == m_b1 )
-                v11 = v5->m_avl_key.m_b2 < key->m_b2;
-            if ( !v11
-                && _tlAssert(
-                         "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                         112,
-                         "key > accessor::get_avl_key(root)",
-                         "") )
-            {
-                __debugbreak();
-            }
-            v4->m_child = 1;
-            p_m_left = &v5->m_avl_tree_node.m_right;
-        }
-        v3 = *p_m_left == 0;
-        v4[1].m_node = p_m_left;
-    }
-    *v4->m_node = data;
-    data->m_avl_tree_node.m_left = 0;
-    data->m_avl_tree_node.m_right = 0;
-    data->m_avl_tree_node.m_balance = 0;
-    data->m_avl_key = *key;
-    if ( v4 > the_stack )
-    {
-        do
-        {
-            m_node = v4[-1].m_node;
-            (*m_node)->m_avl_tree_node.m_balance += v4[-1].m_child;
-            v13 = *m_node;
-            m_balance = (*m_node)->m_avl_tree_node.m_balance;
-            --v4;
-            if ( m_balance == -2 )
-            {
-                v15 = v13->m_avl_tree_node.m_left->m_avl_tree_node.m_balance;
-                if ( v15 != -1
-                    && v15 != 1
-                    && _tlAssert(
-                             "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                             130,
-                             "accessor::get_avl_node(accessor::get_avl_node(root)->m_left)->m_balance == -1 || accessor::get_avl_node(a"
-                             "ccessor::get_avl_node(root)->m_left)->m_balance == 1",
-                             "") )
-                {
-                    __debugbreak();
-                }
-                v16 = *m_node;
-                m_left = (*m_node)->m_avl_tree_node.m_left;
-                if ( m_left->m_avl_tree_node.m_balance == 1 )
-                {
-                    m_right = m_left->m_avl_tree_node.m_right;
-                    (*m_node)->m_avl_tree_node.m_left->m_avl_tree_node.m_right = m_right->m_avl_tree_node.m_left;
-                    m_right->m_avl_tree_node.m_left = v16->m_avl_tree_node.m_left;
-                    v16->m_avl_tree_node.m_left->m_avl_tree_node.m_balance += m_right->m_avl_tree_node.m_balance <= 0
-                                                                                                                                    ? 1
-                                                                                                                                    : m_right->m_avl_tree_node.m_balance - -1;
-                    v19 = -v16->m_avl_tree_node.m_left->m_avl_tree_node.m_balance;
-                    m_right->m_avl_tree_node.m_balance += v19 < 0 || v16->m_avl_tree_node.m_left->m_avl_tree_node.m_balance == 0
-                                                                                            ? 1
-                                                                                            : v19 - -1;
-                    v16->m_avl_tree_node.m_left = m_right;
-                }
-                v20 = (*m_node)->m_avl_tree_node.m_left;
-                (*m_node)->m_avl_tree_node.m_left = v20->m_avl_tree_node.m_right;
-                v21 = v20->m_avl_tree_node.m_balance;
-                v20->m_avl_tree_node.m_right = *m_node;
-                (*m_node)->m_avl_tree_node.m_balance += (-v21 & ((v21 >= 0) - 1)) + 1;
-                v20->m_avl_tree_node.m_balance += (*m_node)->m_avl_tree_node.m_balance <= 0
-                                                                                ? 1
-                                                                                : (*m_node)->m_avl_tree_node.m_balance + 1;
-                *m_node = v20;
-                if ( !v20->m_avl_tree_node.m_balance )
-                    continue;
-                v22 = _tlAssert(
-                                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                                134,
-                                "accessor::get_avl_node(root)->m_balance == 0",
-                                "");
-            }
-            else
-            {
-                if ( m_balance != 2 )
-                    continue;
-                v23 = v13->m_avl_tree_node.m_right->m_avl_tree_node.m_balance;
-                if ( v23 != -1
-                    && v23 != 1
-                    && _tlAssert(
-                             "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                             138,
-                             "accessor::get_avl_node(accessor::get_avl_node(root)->m_right)->m_balance == -1 || accessor::get_avl_node("
-                             "accessor::get_avl_node(root)->m_right)->m_balance == 1",
-                             "") )
-                {
-                    __debugbreak();
-                }
-                v24 = *m_node;
-                v25 = (*m_node)->m_avl_tree_node.m_right;
-                if ( v25->m_avl_tree_node.m_balance == -1 )
-                {
-                    v26 = v25->m_avl_tree_node.m_left;
-                    v25->m_avl_tree_node.m_left = v26->m_avl_tree_node.m_right;
-                    v26->m_avl_tree_node.m_right = v24->m_avl_tree_node.m_right;
-                    v24->m_avl_tree_node.m_right->m_avl_tree_node.m_balance += -v26->m_avl_tree_node.m_balance < 0
-                                                                                                                                    || v26->m_avl_tree_node.m_balance == 0
-                                                                                                                                     ? 1
-                                                                                                                                     : -v26->m_avl_tree_node.m_balance + 1;
-                    v26->m_avl_tree_node.m_balance += v24->m_avl_tree_node.m_right->m_avl_tree_node.m_balance <= 0
-                                                                                    ? 1
-                                                                                    : v24->m_avl_tree_node.m_right->m_avl_tree_node.m_balance + 1;
-                    v24->m_avl_tree_node.m_right = v26;
-                }
-                v27 = (*m_node)->m_avl_tree_node.m_right;
-                (*m_node)->m_avl_tree_node.m_right = v27->m_avl_tree_node.m_left;
-                v28 = v27->m_avl_tree_node.m_balance;
-                v27->m_avl_tree_node.m_left = *m_node;
-                (*m_node)->m_avl_tree_node.m_balance += v28 <= 0 ? 1 : v28 - -1;
-                v27->m_avl_tree_node.m_balance += -(*m_node)->m_avl_tree_node.m_balance < 0
-                                                                             || (*m_node)->m_avl_tree_node.m_balance == 0
-                                                                                ? 1
-                                                                                : -(*m_node)->m_avl_tree_node.m_balance - -1;
-                *m_node = v27;
-                if ( !v27->m_avl_tree_node.m_balance )
-                    continue;
-                v22 = _tlAssert(
-                                "c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_avl_tree.h",
-                                142,
-                                "accessor::get_avl_node(root)->m_balance == 0",
-                                "");
-            }
-            if ( v22 )
-                __debugbreak();
-        }
-        while ( (*m_node)->m_avl_tree_node.m_balance && v4 > the_stack );
-    }
-}
-
-rigid_body *__thiscall phys_free_list<rigid_body>::add(
-                phys_free_list<rigid_body> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body>::T_internal *v4; // eax
-    phys_free_list<rigid_body>::T_internal *v5; // esi
-
-    v4 = (phys_free_list<rigid_body>::T_internal *)PMM_ALLOC(0x180u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body>::debug_add(this, v4);
-        return &v5->m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_hinge *__thiscall phys_free_list<rigid_body_constraint_hinge>::add(
-                phys_free_list<rigid_body_constraint_hinge> *this,
-                int no_error,
-                const char *error_msg)
-{
-    char *v4; // eax
-    char *v5; // esi
-
-    v4 = PMM_ALLOC(0xF0u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        *(unsigned int *)v4 = this;
-        *((float *)v4 + 46) = 0.0;
-        *((float *)v4 + 47) = 0.0;
-        *((float *)v4 + 48) = 0.0;
-        *((float *)v4 + 49) = 0.0;
-        *((float *)v4 + 50) = 0.0;
-        *((float *)v4 + 51) = 0.0;
-        *((float *)v4 + 52) = 0.0;
-        *((float *)v4 + 53) = 0.0;
-        *((unsigned int *)v4 + 1) = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = (phys_free_list<rigid_body_constraint_hinge>::T_internal_base *)v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = (phys_free_list<rigid_body_constraint_hinge>::T_internal_base *)v4;
-        phys_free_list<rigid_body_constraint_hinge>::debug_add(
-            (phys_free_list<rigid_body_constraint_wheel> *)this,
-            (phys_free_list<rigid_body_constraint_wheel>::T_internal *)v4);
-        return (rigid_body_constraint_hinge *)(v5 + 16);
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_distance *__thiscall phys_free_list<rigid_body_constraint_distance>::add(
-                phys_free_list<rigid_body_constraint_distance> *this,
-                int no_error,
-                const char *error_msg)
-{
-    char *v4; // eax
-    char *v5; // esi
-
-    v4 = PMM_ALLOC(0x80u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        *(unsigned int *)v4 = this;
-        *((float *)v4 + 22) = 0.0;
-        *((float *)v4 + 23) = 0.0;
-        *((float *)v4 + 24) = 0.0;
-        *((unsigned int *)v4 + 1) = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = (phys_free_list<rigid_body_constraint_distance>::T_internal_base *)v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = (phys_free_list<rigid_body_constraint_distance>::T_internal_base *)v4;
-        phys_free_list<broad_phase_group>::debug_add(
-            (phys_free_list<broad_phase_group> *)this,
-            (phys_free_list<broad_phase_group>::T_internal *)v4);
-        return (rigid_body_constraint_distance *)(v5 + 16);
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_ragdoll *__thiscall phys_free_list<rigid_body_constraint_ragdoll>::add(
-                phys_free_list<rigid_body_constraint_ragdoll> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_ragdoll>::T_internal *v4; // eax
-    rigid_body_constraint_ragdoll *p_m_data; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_ragdoll>::T_internal *)PMM_ALLOC(0x140u, 0x10u);
-    if ( v4 )
-    {
-        p_m_data = &v4->m_data;
-        v4->m_data.m_ps_cache_list[0].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[1].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[2].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[3].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[4].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[5].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[6].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[7].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[8].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[9].m_pulse_sum = 0.0;
-        v4->m_data.m_flags = 0;
-        v4->m_data.m_joint_limits_count = 0;
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_ragdoll>::debug_add(this, v4);
-        return p_m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_wheel *__thiscall phys_free_list<rigid_body_constraint_wheel>::add(
-                phys_free_list<rigid_body_constraint_wheel> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_wheel>::T_internal *v4; // eax
-    phys_free_list<rigid_body_constraint_wheel>::T_internal *v5; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_wheel>::T_internal *)PMM_ALLOC(0xF0u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_data.m_ps_cache_list[0].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[1].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[2].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[3].m_pulse_sum = 0.0;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_hinge>::debug_add(this, v4);
-        return &v5->m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_custom_path *__thiscall phys_free_list<rigid_body_constraint_custom_path>::add(
-                phys_free_list<rigid_body_constraint_custom_path> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_custom_path>::T_internal *v4; // eax
-    phys_free_list<rigid_body_constraint_custom_path>::T_internal *v5; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_custom_path>::T_internal *)PMM_ALLOC(0xA0u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_data.m_list_psc[0].m_pulse_sum = 0.0;
-        v4->m_data.m_list_psc[1].m_pulse_sum = 0.0;
-        v4->m_data.m_list_psc[2].m_pulse_sum = 0.0;
-        v4->m_data.m_list_psc[3].m_pulse_sum = 0.0;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_custom_path>::debug_add(this, v4);
-        return &v5->m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_angular_actuator *__thiscall phys_free_list<rigid_body_constraint_angular_actuator>::add(
-                phys_free_list<rigid_body_constraint_angular_actuator> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_angular_actuator>::T_internal *v4; // eax
-    phys_free_list<rigid_body_constraint_angular_actuator>::T_internal *v5; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_angular_actuator>::T_internal *)PMM_ALLOC(0xE0u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_data.m_ps_cache_list[0].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[1].m_pulse_sum = 0.0;
-        v4->m_data.m_ps_cache_list[2].m_pulse_sum = 0.0;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_angular_actuator>::debug_add(this, v4);
-        return &v5->m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-rigid_body_constraint_upright *__thiscall phys_free_list<rigid_body_constraint_upright>::add(
-                phys_free_list<rigid_body_constraint_upright> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<rigid_body_constraint_upright>::T_internal *v4; // eax
-    phys_free_list<rigid_body_constraint_upright>::T_internal *v5; // esi
-
-    v4 = (phys_free_list<rigid_body_constraint_upright>::T_internal *)PMM_ALLOC(0xD0u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_data.m_ps_cache_list[0].m_pulse_sum = 0.0;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<rigid_body_constraint_upright>::debug_add(this, v4);
-        return &v5->m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-#endif
-
 rigid_body_constraint_contact *__cdecl create(
                 phys_free_list<rigid_body_constraint_contact> *__formal,
                 rigid_body_constraint_contact *a2,
@@ -3392,37 +2491,3 @@ rigid_body_constraint_contact *__cdecl create(
     _InterlockedExchangeAdd(&pai_create_rbc_contact.m_hits_frame_count, 1u);
     return p_m_data;
 }
-
-#if 0
-user_rigid_body *__thiscall phys_free_list<user_rigid_body>::add(
-                phys_free_list<user_rigid_body> *this,
-                int no_error,
-                const char *error_msg)
-{
-    phys_free_list<user_rigid_body>::T_internal *v4; // eax
-    phys_free_list<user_rigid_body>::T_internal *v5; // esi
-
-    v4 = (phys_free_list<user_rigid_body>::T_internal *)PMM_ALLOC(0x1D0u, 0x10u);
-    v5 = v4;
-    if ( v4 )
-    {
-        v4->m_prev_T_internal = &this->m_dummy_head;
-        v4->m_next_T_internal = this->m_dummy_head.m_next_T_internal;
-        this->m_dummy_head.m_next_T_internal->m_prev_T_internal = v4;
-        ++this->m_list_count;
-        this->m_dummy_head.m_next_T_internal = v4;
-        phys_free_list<user_rigid_body>::debug_add(this, v4);
-        return &v5->m_data;
-    }
-    else
-    {
-        if ( !no_error )
-        {
-            if ( _tlAssert("c:\\projects_pc\\cod\\codsrc\\tl\\physics\\include\\phys_mem.h", 470, "no_error", error_msg) )
-                __debugbreak();
-        }
-        return 0;
-    }
-}
-
-#endif

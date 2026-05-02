@@ -502,7 +502,20 @@ struct    __declspec(align(16)) rigid_body_constraint_custom_path : rigid_body_c
 
 struct rigid_body_pair_key // sizeof=0x8
 {                                                                             // XREF: rigid_body_constraint_contact/r
-    rigid_body_pair_key(rigid_body *const b1,rigid_body *const b2);
+    rigid_body_pair_key(rigid_body *const b1, rigid_body *const b2)
+    {
+        iassert(b1 != b2);
+        iassert(b1);
+        iassert(b2);
+
+        if (b1 >= b2)
+        {
+            this->m_b2 = b1;
+            this->m_b1 = b2;
+        }
+        this->m_b1 = b1;
+        this->m_b2 = b2;
+    }
 
     bool operator<(const rigid_body_pair_key &other) const
     {
