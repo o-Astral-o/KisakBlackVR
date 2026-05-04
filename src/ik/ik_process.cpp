@@ -244,15 +244,15 @@ void    IK_Process(IKState *ikState, bool isLocalBones)
     ikState->bHasActiveLayers = 1;
     if ( ikState->cacheActive )
     {
-        memset(ikState->matArrayCache, 0, sizeof(ikState->matArrayCache));
+        memset(ikState->matArrayCache, 0, sizeof(matArrayCache));
         ikState->cacheActive = 0;
     }
-    memset(ikState->matArrayCachePre, 0, sizeof(ikState->matArrayCachePre));
+    memset(ikState->matArrayCachePre, 0, sizeof(matArrayCachePre));
     if ( IK_HasAnimatedBones(ikState) )
     {
         ikState->modifiedIKBones = 0;
         IK_GeneratePreIKMatrices(ikState, isLocalBones);
-        memcpy(ikState->matArrayPostIK, ikState->matArrayPreIK, sizeof(ikState->matArrayPostIK));
+        memcpy(ikState->matArrayPostIK, ikState->matArrayPreIK, sizeof(matArrayPostIK));
         if ( !ikState->bJointVarsValid )
             IK_GetJointVars(ikState);
         IKImport_Profiler(ikState);

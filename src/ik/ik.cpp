@@ -329,88 +329,62 @@ IKState *__cdecl IK_FindFreeIKState(int entityNum, unsigned __int8 *model)
     return 0;
 }
 
+// aislop
 void    IK_GetJointVars(IKState *ikState)
 {
-    float v2; // [esp-8h] [ebp-138h]
-    float footHeightFromGround; // [esp+0h] [ebp-130h]
-    _BYTE posParent_4[76]; // [esp+24h] [ebp-10Ch] OVERLAPPED BYREF
-    _BYTE posJoint[80]; // [esp+70h] [ebp-C0h] OVERLAPPED BYREF
-    _BYTE posChild[64]; // [esp+C0h] [ebp-70h] OVERLAPPED BYREF
-    IKJointVars *v8; // [esp+114h] [ebp-1Ch]
-    int *joints; // [esp+118h] [ebp-18h]
-    int v10; // [esp+11Ch] [ebp-14h]
-    IKJointVars *jointVars; // [esp+120h] [ebp-10h]
-    //IKJointBones *joint; // [esp+124h] [ebp-Ch]
-    //int i; // [esp+128h] [ebp-8h]
-    //int retaddr; // [esp+130h] [ebp+0h]
+    bool allValid = true;
+    IKJointBones *joint = ikState->localIkSystem->joints;
+    IKJointVars *jointVars = ikState->jointVars;
 
-    //joint = a1;
-    //i = retaddr;
-    HIBYTE(jointVars) = 1;
-    v10 = 0;
-    joints = (int *)ikState->localIkSystem->joints;
-    v8 = ikState->jointVars;
-    while ( v10 < 4 )
+    for (int i = 0; i < 4; i++, joint++, jointVars++)
     {
-        if ( !v8->bValid && *joints )
+        if (jointVars->bValid || joint->childBone == 0)
+            continue;
+
+        if (ikState->ikBoneToObjBone[joint->childBone] == 161)
         {
-            if ( ikState->ikBoneToObjBone[*joints] != 161 )
-            {
-                ikCalcBoneModelMatrix(ikState, *joints, (*ikState->matArrayPostIK)[0], (float (*)[4])&posChild[4]);
-                *(unsigned int *)posChild = (unsigned int)&posChild[52];
-                *(_QWORD *)&posJoint[68] = *(_QWORD *)&posChild[52];
-                *(unsigned int *)&posJoint[76] = *(unsigned int *)&posChild[60];
-                ikCalcBoneModelMatrix(ikState, joints[1], (*ikState->matArrayPostIK)[0], (float (*)[4])&posJoint[4]);
-                *(unsigned int *)posJoint = (unsigned int)&posJoint[52];
-                *(_QWORD *)&posParent_4[64] = *(_QWORD *)&posJoint[52];
-                *(unsigned int *)&posParent_4[72] = *(unsigned int *)&posJoint[60];
-                ikCalcBoneModelMatrix(ikState, joints[2], (*ikState->matArrayPostIK)[0], (float (*)[4])posParent_4);
-                footHeightFromGround = sqrtf(
-                                                                 (float)((float)((float)(*(float *)&posJoint[68] - *(float *)&posParent_4[64])
-                                                                                             * (float)(*(float *)&posJoint[68] - *(float *)&posParent_4[64]))
-                                                                             + (float)((float)(*(float *)&posJoint[72] - *(float *)&posParent_4[68])
-                                                                                             * (float)(*(float *)&posJoint[72] - *(float *)&posParent_4[68])))
-                                                             + (float)((float)(*(float *)&posJoint[76] - *(float *)&posParent_4[72])
-                                                                             * (float)(*(float *)&posJoint[76] - *(float *)&posParent_4[72])));
-                v2 = sqrtf(
-                             (float)((float)((float)(*(float *)&posParent_4[64] - *(float *)&posParent_4[48])
-                                                         * (float)(*(float *)&posParent_4[64] - *(float *)&posParent_4[48]))
-                                         + (float)((float)(*(float *)&posParent_4[68] - *(float *)&posParent_4[52])
-                                                         * (float)(*(float *)&posParent_4[68] - *(float *)&posParent_4[52])))
-                         + (float)((float)(*(float *)&posParent_4[72] - *(float *)&posParent_4[56])
-                                         * (float)(*(float *)&posParent_4[72] - *(float *)&posParent_4[56])));
-                if ( v10 < 2 || (float)(v2 + footHeightFromGround) <= 40.0 && (float)(v2 + footHeightFromGround) >= 18.0 )
-                {
-                    v8->UpperLength = v2;
-                    v8->UpperIKc = 1.0 / (float)(2.0 * v2);
-                    v8->UpperIKInvc = (float)((float)(v2 * v2) - (float)(footHeightFromGround * footHeightFromGround))
-                                                    / (float)(2.0 * v2);
-                    v8->LowerLength = footHeightFromGround;
-                    v8->LowerIKc = 1.0 / (float)(2.0 * footHeightFromGround);
-                    v8->LowerIKInvc = (float)((float)(footHeightFromGround * footHeightFromGround) - (float)(v2 * v2))
-                                                    / (float)(2.0 * footHeightFromGround);
-                    if (v10 >= 2)
-                    {
-                        //ikState->footHeightFromGround = FLOAT_5_8000002;
-                        ikState->footHeightFromGround = 5.8f;
-                    }
-                    v8->bValid = 1;
-                }
-                else
-                {
-                    HIBYTE(jointVars) = 0;
-                }
-            }
-            else
-            {
-                HIBYTE(jointVars) = 0;
-            }
+            allValid = false;
+            continue;
         }
-        ++v10;
-        joints += 4;
-        ++v8;
+
+        float childMat[4][4];
+        float jointMat[4][4];
+        float parentMat[4][4];
+
+        ikCalcBoneModelMatrix(ikState, joint->childBone, (*ikState->matArrayPostIK)[0], childMat);
+        ikCalcBoneModelMatrix(ikState, joint->jointBone, (*ikState->matArrayPostIK)[0], jointMat);
+        ikCalcBoneModelMatrix(ikState, joint->parentBone, (*ikState->matArrayPostIK)[0], parentMat);
+
+        float lowerLength = sqrtf(
+            (childMat[3][0] - jointMat[3][0]) * (childMat[3][0] - jointMat[3][0])
+          + (childMat[3][1] - jointMat[3][1]) * (childMat[3][1] - jointMat[3][1])
+          + (childMat[3][2] - jointMat[3][2]) * (childMat[3][2] - jointMat[3][2]));
+
+        float upperLength = sqrtf(
+            (jointMat[3][0] - parentMat[3][0]) * (jointMat[3][0] - parentMat[3][0])
+          + (jointMat[3][1] - parentMat[3][1]) * (jointMat[3][1] - parentMat[3][1])
+          + (jointMat[3][2] - parentMat[3][2]) * (jointMat[3][2] - parentMat[3][2]));
+
+        if (i >= 2 && ((upperLength + lowerLength) > 40.0f || (upperLength + lowerLength) < 18.0f))
+        {
+            allValid = false;
+            continue;
+        }
+
+        jointVars->UpperLength = upperLength;
+        jointVars->UpperIKc = 1.0f / (2.0f * upperLength);
+        jointVars->UpperIKInvc = (upperLength * upperLength - lowerLength * lowerLength) / (2.0f * upperLength);
+        jointVars->LowerLength = lowerLength;
+        jointVars->LowerIKc = 1.0f / (2.0f * lowerLength);
+        jointVars->LowerIKInvc = (lowerLength * lowerLength - upperLength * upperLength) / (2.0f * lowerLength);
+
+        if (i >= 2)
+            ikState->footHeightFromGround = 5.8f;
+
+        jointVars->bValid = 1;
     }
-    if ( HIBYTE(jointVars) )
+
+    if (allValid)
         ikState->bJointVarsValid = 1;
 }
 

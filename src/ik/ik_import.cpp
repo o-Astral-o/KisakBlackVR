@@ -590,242 +590,102 @@ void __cdecl IKImport_ApplyIKToSkeletonModelBones()
         __debugbreak();
 }
 
-// local variable allocation has failed, the output may be wrong!
+// aislop
 void    IKImport_ApplyIKToSkeletonLocalBones(IKState *ikState)
 {
-    float v2; // [esp-Ch] [ebp-24Ch] BYREF
-    float v3; // [esp-8h] [ebp-248h]
-    float v4; // [esp-4h] [ebp-244h]
-    float resMat[4][4]; // [esp+0h] [ebp-240h]
-    float v6; // [esp+40h] [ebp-200h]
-    float v7; // [esp+44h] [ebp-1FCh]
-    float v8; // [esp+48h] [ebp-1F8h]
-    float v9; // [esp+4Ch] [ebp-1F4h]
-    float v10; // [esp+50h] [ebp-1F0h]
-    float v11; // [esp+54h] [ebp-1ECh]
-    float v12; // [esp+58h] [ebp-1E8h]
-    float v13; // [esp+5Ch] [ebp-1E4h]
-    float v14; // [esp+60h] [ebp-1E0h]
-    float v15; // [esp+64h] [ebp-1DCh]
-    float v16; // [esp+68h] [ebp-1D8h]
-    float v17; // [esp+6Ch] [ebp-1D4h]
-    float v18; // [esp+70h] [ebp-1D0h]
-    float v19; // [esp+74h] [ebp-1CCh]
-    float v20; // [esp+78h] [ebp-1C8h]
-    float *v21; // [esp+80h] [ebp-1C0h]
-    float *v22; // [esp+84h] [ebp-1BCh]
-    float *v23; // [esp+88h] [ebp-1B8h]
-    __int64 v24; // [esp+8Ch] [ebp-1B4h]
-    __int64 v25; // [esp+94h] [ebp-1ACh]
-    __int64 v26; // [esp+9Ch] [ebp-1A4h]
-    __int64 v27; // [esp+A4h] [ebp-19Ch]
-    __int64 v28; // [esp+ACh] [ebp-194h]
-    __int64 v29; // [esp+B4h] [ebp-18Ch]
-    __int64 v30; // [esp+BCh] [ebp-184h]
-    __int64 v31; // [esp+C4h] [ebp-17Ch]
-    float *v32; // [esp+CCh] [ebp-174h]
-    float *v33; // [esp+D0h] [ebp-170h]
-    float *v34; // [esp+D4h] [ebp-16Ch]
-    float *v35; // [esp+D8h] [ebp-168h]
-    __int64 v36; // [esp+DCh] [ebp-164h]
-    __int64 v37; // [esp+E4h] [ebp-15Ch]
-    __int64 v38; // [esp+ECh] [ebp-154h]
-    __int64 v39; // [esp+F4h] [ebp-14Ch]
-    __int64 v40; // [esp+FCh] [ebp-144h]
-    __int64 v41; // [esp+104h] [ebp-13Ch]
-    __int64 v42; // [esp+10Ch] [ebp-134h]
-    __int64 v43; // [esp+114h] [ebp-12Ch]
-    float *v44; // [esp+120h] [ebp-120h]
-    float ikMat[4][4]; // [esp+124h] [ebp-11Ch] BYREF
-    float rootMat[4][4]; // [esp+164h] [ebp-DCh] BYREF
-    float *v47; // [esp+1A8h] [ebp-98h]
-    float *v48; // [esp+1ACh] [ebp-94h]
-    float *trans; // [esp+1B0h] [ebp-90h]
-    float v50; // [esp+1B4h] [ebp-8Ch]
-    float v51; // [esp+1B8h] [ebp-88h]
-    float *v52; // [esp+1BCh] [ebp-84h]
-    float *v53; // [esp+1C0h] [ebp-80h]
-    float *v54; // [esp+1C4h] [ebp-7Ch]
-    float *v55; // [esp+1C8h] [ebp-78h]
-    float axis[3][3]; // [esp+1CCh] [ebp-74h] BYREF
-    DObjAnimMat *thisMat; // [esp+1F0h] [ebp-50h]
-    int v58; // [esp+1F4h] [ebp-4Ch]
-    int objBoneIndex; // [esp+1F8h] [ebp-48h]
-    float (*thisIKMat)[4][4]; // [esp+1FCh] [ebp-44h]
-    unsigned __int8 *boneLookup; // [esp+200h] [ebp-40h]
-    int i; // [esp+204h] [ebp-3Ch]
-    DObjAnimMat animMatXform; // [esp+208h] [ebp-38h] BYREF
-    DObjAnimMat *matArray; // [esp+228h] [ebp-18h]
-    DObj *obj; // [esp+22Ch] [ebp-14h]
-    //_UNKNOWN *v66; // [esp+234h] [ebp-Ch]
-    //IKState *ikStatea; // [esp+238h] [ebp-8h]
-    //int vars0; // [esp+240h] [ebp+0h]
-    //
-    //v66 = a1;
-    //ikStatea = (IKState *)vars0;
-    obj = (DObj *)ikState->model;
+    DObj *obj = (DObj *)ikState->model;
     if (!obj && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ik\\ik_import.cpp", 915, 0, "%s", "obj"))
         __debugbreak();
-    matArray = obj->skel.mat;
+
+    DObjAnimMat *matArray = obj->skel.mat;
     if (!matArray && !Assert_MyHandler("C:\\projects_pc\\cod\\codsrc\\src\\ik\\ik_import.cpp", 918, 0, "%s", "matArray"))
         __debugbreak();
+
+    DObjAnimMat animMatXform;
     memset(animMatXform.trans, 0, sizeof(animMatXform.trans));
+
     if (ikState->bHasActiveLayers)
     {
-        i = 0;
-        boneLookup = ikState->ikBoneToObjBone;
-        thisIKMat = ikState->matArrayXforms;
-        while (i < 23)
+        unsigned __int8 *boneLookup = ikState->ikBoneToObjBone;
+        float (*thisIKMat)[4][4] = ikState->matArrayXforms;
+
+        for (int i = 0; i < 23; i++, boneLookup++, thisIKMat++)
         {
-            objBoneIndex = *boneLookup;
-            HIBYTE(v58) = ikState->ikBoneToObjBone[i] != 161;
-            if (HIBYTE(v58) && (ikState->modifiedIKBones & (1 << i)) != 0)
+            int objBoneIndex = *boneLookup;
+
+            if (ikState->ikBoneToObjBone[i] == 161)
+                continue;
+            if ((ikState->modifiedIKBones & (1 << i)) == 0)
+                continue;
+
+            DObjAnimMat *thisMat = &matArray[objBoneIndex];
+
+            if (i > 0)
             {
-                thisMat = &matArray[objBoneIndex];
-                if (i > 0)
+                float axis[3][3];
+                axis[0][0] = (*thisIKMat)[0][0];
+                axis[0][1] = (*thisIKMat)[0][1];
+                axis[0][2] = (*thisIKMat)[0][2];
+                axis[1][0] = (*thisIKMat)[1][0];
+                axis[1][1] = (*thisIKMat)[1][1];
+                axis[1][2] = (*thisIKMat)[1][2];
+                axis[2][0] = (*thisIKMat)[2][0];
+                axis[2][1] = (*thisIKMat)[2][1];
+                axis[2][2] = (*thisIKMat)[2][2];
+
+                ikAxisToQuat(axis, animMatXform.quat);
+
+                float lenSq = Vec4LengthSq(animMatXform.quat);
+                if (lenSq == 0.0f)
                 {
-                    *(_QWORD *)&axis[0][0] = *(_QWORD *)thisIKMat;
-                    axis[0][2] = (*thisIKMat)[0][2];
-                    v55 = axis[1];
-                    v54 = (*thisIKMat)[1];
-                    axis[1][0] = (*thisIKMat)[1][0];
-                    axis[1][1] = (*thisIKMat)[1][1];
-                    axis[1][2] = (*thisIKMat)[1][2];
-                    v53 = axis[2];
-                    v52 = (*thisIKMat)[2];
-                    axis[2][0] = (*thisIKMat)[2][0];
-                    axis[2][1] = (*thisIKMat)[2][1];
-                    axis[2][2] = (*thisIKMat)[2][2];
-                    ikAxisToQuat(axis, animMatXform.quat);
-                    v51 = Vec4LengthSq(animMatXform.quat);
-                    if (v51 == 0.0)
-                    {
-                        animMatXform.quat[3] = 1.0f;
-                        animMatXform.transWeight = 2.0f;
-                    }
-                    else
-                    {
-                        animMatXform.transWeight = 2.0 / v51;
-                    }
-                    QuatMultiplyEquals(thisMat->quat, animMatXform.quat);
-                    thisMat->quat[0] = animMatXform.quat[0];
-                    thisMat->quat[1] = animMatXform.quat[1];
-                    thisMat->quat[2] = animMatXform.quat[2];
-                    thisMat->quat[3] = animMatXform.quat[3];
-                    v50 = Vec4LengthSq(thisMat->quat);
-                    if (v50 == 0.0)
-                    {
-                        thisMat->quat[3] = 1.0f;
-                        thisMat->transWeight = 2.0f;
-                    }
-                    else
-                    {
-                        thisMat->transWeight = 2.0 / v50;
-                    }
+                    animMatXform.quat[3] = 1.0f;
+                    animMatXform.transWeight = 2.0f;
                 }
-                trans = thisMat->trans;
-                v48 = (*thisIKMat)[3];
-                v47 = thisMat->trans;
-                thisMat->trans[0] = thisMat->trans[0] + (*thisIKMat)[3][0];
-                trans[1] = v47[1] + v48[1];
-                trans[2] = v47[2] + v48[2];
+                else
+                {
+                    animMatXform.transWeight = 2.0f / lenSq;
+                }
+
+                QuatMultiplyEquals(thisMat->quat, animMatXform.quat);
+                thisMat->quat[0] = animMatXform.quat[0];
+                thisMat->quat[1] = animMatXform.quat[1];
+                thisMat->quat[2] = animMatXform.quat[2];
+                thisMat->quat[3] = animMatXform.quat[3];
+
+                float matLenSq = Vec4LengthSq(thisMat->quat);
+                if (matLenSq == 0.0f)
+                {
+                    thisMat->quat[3] = 1.0f;
+                    thisMat->transWeight = 2.0f;
+                }
+                else
+                {
+                    thisMat->transWeight = 2.0f / matLenSq;
+                }
             }
-            ++i;
-            ++boneLookup;
-            ++thisIKMat;
+
+            thisMat->trans[0] += (*thisIKMat)[3][0];
+            thisMat->trans[1] += (*thisIKMat)[3][1];
+            thisMat->trans[2] += (*thisIKMat)[3][2];
         }
     }
+
+    // Apply root transform: resMat = ikMat * rootMat
+    float rootMat[4][4];
+    float ikMat[4][4];
+    float resMat[4][4];
+
     ikQuatTransToMatrix44(ikState->rootQuat, ikState->rootOffset, rootMat);
     ikQuatTransToMatrix44(matArray->quat, matArray->trans, ikMat);
-    v44 = ikMat[0];
-    v36 = *(_QWORD *)&ikMat[0][0];
-    v37 = *(_QWORD *)&ikMat[0][2];
-    v35 = ikMat[1];
-    v38 = *(_QWORD *)&ikMat[1][0];
-    v39 = *(_QWORD *)&ikMat[1][2];
-    v34 = ikMat[2];
-    v40 = *(_QWORD *)&ikMat[2][0];
-    v41 = *(_QWORD *)&ikMat[2][2];
-    v33 = ikMat[3];
-    v42 = *(_QWORD *)&ikMat[3][0];
-    v43 = *(_QWORD *)&ikMat[3][2];
-    v32 = rootMat[0];
-    v24 = *(_QWORD *)&rootMat[0][0];
-    v25 = *(_QWORD *)&rootMat[0][2];
-    v23 = rootMat[1];
-    v26 = *(_QWORD *)&rootMat[1][0];
-    v27 = *(_QWORD *)&rootMat[1][2];
-    v22 = rootMat[2];
-    v28 = *(_QWORD *)&rootMat[2][0];
-    v29 = *(_QWORD *)&rootMat[2][2];
-    v21 = rootMat[3];
-    v30 = *(_QWORD *)&rootMat[3][0];
-    v31 = *(_QWORD *)&rootMat[3][2];
-    resMat[3][3] = (float)((float)((float)(ikMat[0][0] * rootMat[0][0]) + (float)(ikMat[0][1] * rootMat[1][0]))
-        + (float)(ikMat[0][2] * rootMat[2][0]))
-        + (float)(ikMat[0][3] * rootMat[3][0]);
-    v6 = (float)((float)((float)(ikMat[0][0] * rootMat[0][1]) + (float)(ikMat[0][1] * rootMat[1][1]))
-        + (float)(ikMat[0][2] * rootMat[2][1]))
-        + (float)(ikMat[0][3] * rootMat[3][1]);
-    v7 = (float)((float)((float)(ikMat[0][0] * rootMat[0][2]) + (float)(ikMat[0][1] * rootMat[1][2]))
-        + (float)(ikMat[0][2] * rootMat[2][2]))
-        + (float)(ikMat[0][3] * rootMat[3][2]);
-    v8 = (float)((float)((float)(ikMat[0][0] * rootMat[0][3]) + (float)(ikMat[0][1] * rootMat[1][3]))
-        + (float)(ikMat[0][2] * rootMat[2][3]))
-        + (float)(ikMat[0][3] * rootMat[3][3]);
-    v9 = (float)((float)((float)(ikMat[1][0] * rootMat[0][0]) + (float)(ikMat[1][1] * rootMat[1][0]))
-        + (float)(ikMat[1][2] * rootMat[2][0]))
-        + (float)(ikMat[1][3] * rootMat[3][0]);
-    v10 = (float)((float)((float)(ikMat[1][0] * rootMat[0][1]) + (float)(ikMat[1][1] * rootMat[1][1]))
-        + (float)(ikMat[1][2] * rootMat[2][1]))
-        + (float)(ikMat[1][3] * rootMat[3][1]);
-    v11 = (float)((float)((float)(ikMat[1][0] * rootMat[0][2]) + (float)(ikMat[1][1] * rootMat[1][2]))
-        + (float)(ikMat[1][2] * rootMat[2][2]))
-        + (float)(ikMat[1][3] * rootMat[3][2]);
-    v12 = (float)((float)((float)(ikMat[1][0] * rootMat[0][3]) + (float)(ikMat[1][1] * rootMat[1][3]))
-        + (float)(ikMat[1][2] * rootMat[2][3]))
-        + (float)(ikMat[1][3] * rootMat[3][3]);
-    v13 = (float)((float)((float)(ikMat[2][0] * rootMat[0][0]) + (float)(ikMat[2][1] * rootMat[1][0]))
-        + (float)(ikMat[2][2] * rootMat[2][0]))
-        + (float)(ikMat[2][3] * rootMat[3][0]);
-    v14 = (float)((float)((float)(ikMat[2][0] * rootMat[0][1]) + (float)(ikMat[2][1] * rootMat[1][1]))
-        + (float)(ikMat[2][2] * rootMat[2][1]))
-        + (float)(ikMat[2][3] * rootMat[3][1]);
-    v15 = (float)((float)((float)(ikMat[2][0] * rootMat[0][2]) + (float)(ikMat[2][1] * rootMat[1][2]))
-        + (float)(ikMat[2][2] * rootMat[2][2]))
-        + (float)(ikMat[2][3] * rootMat[3][2]);
-    v16 = (float)((float)((float)(ikMat[2][0] * rootMat[0][3]) + (float)(ikMat[2][1] * rootMat[1][3]))
-        + (float)(ikMat[2][2] * rootMat[2][3]))
-        + (float)(ikMat[2][3] * rootMat[3][3]);
-    v17 = (float)((float)((float)(ikMat[3][0] * rootMat[0][0]) + (float)(ikMat[3][1] * rootMat[1][0]))
-        + (float)(ikMat[3][2] * rootMat[2][0]))
-        + (float)(ikMat[3][3] * rootMat[3][0]);
-    v18 = (float)((float)((float)(ikMat[3][0] * rootMat[0][1]) + (float)(ikMat[3][1] * rootMat[1][1]))
-        + (float)(ikMat[3][2] * rootMat[2][1]))
-        + (float)(ikMat[3][3] * rootMat[3][1]);
-    v19 = (float)((float)((float)(ikMat[3][0] * rootMat[0][2]) + (float)(ikMat[3][1] * rootMat[1][2]))
-        + (float)(ikMat[3][2] * rootMat[2][2]))
-        + (float)(ikMat[3][3] * rootMat[3][2]);
-    v20 = (float)((float)((float)(ikMat[3][0] * rootMat[0][3]) + (float)(ikMat[3][1] * rootMat[1][3]))
-        + (float)(ikMat[3][2] * rootMat[2][3]))
-        + (float)(ikMat[3][3] * rootMat[3][3]);
-    v2 = resMat[3][3];
-    v3 = v6;
-    v4 = v7;
-    resMat[0][0] = v8;
-    resMat[0][1] = v9;
-    resMat[0][2] = v10;
-    resMat[0][3] = v11;
-    resMat[1][0] = v12;
-    resMat[1][1] = v13;
-    resMat[1][2] = v14;
-    resMat[1][3] = v15;
-    resMat[2][0] = v16;
-    resMat[2][1] = v17;
-    resMat[2][2] = v18;
-    resMat[2][3] = v19;
-    resMat[3][0] = v20;
-    ikMatrix44ToQuatTrans((float (*)[4]) & v2, matArray->quat, matArray->trans);
+
+    for (int r = 0; r < 4; r++)
+        for (int c = 0; c < 4; c++)
+            resMat[r][c] = (float)((float)(ikMat[r][0] * rootMat[0][c])
+                + (float)(ikMat[r][1] * rootMat[1][c]))
+                + (float)((float)(ikMat[r][2] * rootMat[2][c])
+                + (float)(ikMat[r][3] * rootMat[3][c]));
+
+    ikMatrix44ToQuatTrans(resMat, matArray->quat, matArray->trans);
 }
 
 void __cdecl IKImport_ApplyIKToSkeleton(IKState *ikState, bool isLocalBones)
@@ -2687,47 +2547,52 @@ void __cdecl IKImport_GetPitchWeaponOffset(IKState *ikState, bool bIsPitchDirect
     float fraction;
     IKWeaponOffsetType offsetType;
 
-    /* down idle */
-    weapOfsDnIdle[0][0][0] = -3.0f;
-    weapOfsDnIdle[0][0][2] = -2.0f;
-    weapOfsDnIdle[0][1][1] = 10.0f;
-    weapOfsDnIdle[0][1][2] = -5.0f;
+    /* down idle -- decoded from __PAIR64__ in IDA */
+    weapOfsDnIdle[0][0][0] =  0.0f;
+    weapOfsDnIdle[0][0][1] = -3.0f;
+    weapOfsDnIdle[0][0][2] =  7.0f;
+    weapOfsDnIdle[0][1][0] = -2.0f;
+    weapOfsDnIdle[0][1][1] = -5.0f;
+    weapOfsDnIdle[0][1][2] = 10.0f;
 
-    weapOfsDnIdle[1][0][2] = -5.0f;
-    weapOfsDnIdle[1][1][1] = 5.0f;
-    weapOfsDnIdle[1][1][2] = -5.0f;
+    weapOfsDnIdle[1][1][0] = -5.0f;
+    weapOfsDnIdle[1][1][1] = -5.0f;
+    weapOfsDnIdle[1][1][2] =  5.0f;
 
-    weapOfsDnIdle[3][0][0] = -6.0f;
-    weapOfsDnIdle[3][0][1] = 6.0f;
-    weapOfsDnIdle[3][0][2] = 4.0f;
-    weapOfsDnIdle[3][1][1] = 4.0f;
-    weapOfsDnIdle[3][1][2] = -8.0f;
+    weapOfsDnIdle[3][0][0] =  6.0f;
+    weapOfsDnIdle[3][0][1] = -6.0f;
+    weapOfsDnIdle[3][0][2] = 10.0f;
+    weapOfsDnIdle[3][1][0] =  4.0f;
+    weapOfsDnIdle[3][1][1] = -8.0f;
+    weapOfsDnIdle[3][1][2] =  4.0f;
 
     /* up idle */
-    weapOfsUpIdle[0][0][1] = -4.0f;
-    weapOfsUpIdle[0][0][2] = -7.0f;
-    weapOfsUpIdle[0][1][1] = -4.0f;
+    weapOfsUpIdle[0][0][0] = -4.0f;
+    weapOfsUpIdle[0][0][2] = -2.0f;
+    weapOfsUpIdle[0][1][0] = -7.0f;
+    weapOfsUpIdle[0][1][2] = -4.0f;
 
-    weapOfsUpIdle[1][0][1] = -3.0f;
-    weapOfsUpIdle[1][0][2] = -7.0f;
-    weapOfsUpIdle[1][1][1] = -4.0f;
+    weapOfsUpIdle[1][0][0] = -3.0f;
+    weapOfsUpIdle[1][0][2] = -2.0f;
+    weapOfsUpIdle[1][1][0] = -7.0f;
+    weapOfsUpIdle[1][1][2] = -4.0f;
 
     /* down moving */
-    weapOfsDnMoving[0][1][1] = 8.0f;
+    weapOfsDnMoving[0][1][2] = 8.0f;
 
-    weapOfsDnMoving[2][0][1] = 4.0f;
-    weapOfsDnMoving[2][0][2] = 4.0f;
+    weapOfsDnMoving[2][0][0] = 4.0f;
+    weapOfsDnMoving[2][1][0] = 4.0f;
 
-    weapOfsDnMoving[3][0][0] = -2.0f;
-    weapOfsDnMoving[3][0][2] = 8.0f;
-    weapOfsDnMoving[3][1][2] = -4.0f;
+    weapOfsDnMoving[3][0][1] = -2.0f;
+    weapOfsDnMoving[3][1][0] =  8.0f;
+    weapOfsDnMoving[3][1][1] = -4.0f;
 
     /* up moving */
-    weapOfsUpMoving[1][0][1] = -3.0f;
+    weapOfsUpMoving[1][0][0] = -3.0f;
     weapOfsUpMoving[1][0][2] = -2.0f;
 
-    weapOfsUpMoving[2][0][1] = 4.0f;
-    weapOfsUpMoving[2][0][2] = 4.0f;
+    weapOfsUpMoving[2][0][0] = 4.0f;
+    weapOfsUpMoving[2][1][0] = 4.0f;
 
     offsetType = ikState->weaponOffsetType;
 
