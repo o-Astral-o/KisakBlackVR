@@ -174,24 +174,24 @@ unsigned int __cdecl R_TessCodeMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     drawSurfCount = info->drawSurfCount - listArgs->firstDrawSurfIndex;
     drawSurfList = &info->drawSurfs[listArgs->firstDrawSurfIndex];
     drawSurf.fields = drawSurfList->fields;
-    if ( !R_SetVertexDeclTypeNormal_Safe(context.state, VERTDECL_PACKED) )
+    if (!R_SetVertexDeclTypeNormal_Safe(context.state, VERTDECL_PACKED))
         return 1;
     R_SetupPassCriticalPixelShaderArgs(context);
-    if ( prepassContext.state
+    if (prepassContext.state
         && context.source != prepassContext.source
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                    325,
-                    0,
-                    "%s",
-                    "prepassContext.local.state == NULL || context.local.source == prepassContext.local.source") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+            325,
+            0,
+            "%s",
+            "prepassContext.local.state == NULL || context.local.source == prepassContext.local.source"))
     {
         __debugbreak();
     }
     R_SetObjectIdentityPlacement(context.source);
-    R_ChangeDepthHackNearClip(context.source, 0.0);
-    depthRangeType = (GfxDepthRangeType)((context.source->scissorViewport.y != 0) - 1);
-    if ( depthRangeType != context.state->depthRangeType )
+    R_ChangeDepthHackNearClip(context.source, 0);
+    depthRangeType = (GfxDepthRangeType)((context.source->cameraView != 0) - 1);
+    if (depthRangeType != context.state->depthRangeType)
         R_ChangeDepthRange(context.state, depthRangeType);
     data = context.source->input.data;
     R_SetMeshStream(context.state, data->codeMeshPtr);
@@ -206,22 +206,22 @@ unsigned int __cdecl R_TessCodeMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     do
     {
         codeMesh = &data->codeMeshes[LOWORD(drawSurf.packed)];
-        if ( !codeMesh->triCount
+        if (!codeMesh->triCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                        364,
-                        0,
-                        "%s\n\t(codeMesh->triCount) = %i",
-                        "(codeMesh->triCount > 0)",
-                        codeMesh->triCount) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                364,
+                0,
+                "%s\n\t(codeMesh->triCount) = %i",
+                "(codeMesh->triCount > 0)",
+                codeMesh->triCount))
         {
             __debugbreak();
         }
-        if ( argCount
+        if (argCount
             || data->codeMeshes[LOWORD(drawSurf.packed)].argCount
-            || &indices[6 * args.triCount] != (unsigned __int8 *)data->codeMeshes[LOWORD(drawSurf.packed)].indices )
+            || &indices[6 * args.triCount] != (unsigned __int8 *)data->codeMeshes[LOWORD(drawSurf.packed)].indices)
         {
-            if ( args.triCount )
+            if (args.triCount)
             {
                 args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
                 R_DrawIndexedPrimitive(&context.state->prim, &args);
@@ -235,13 +235,11 @@ unsigned int __cdecl R_TessCodeMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
         argCount = data->codeMeshes[LOWORD(drawSurf.packed)].argCount;
         args.triCount += codeMesh->triCount;
         context.state->prim.frameStats.fxIndexCount += 3 * codeMesh->triCount;
-        if ( ++drawSurfIndex == drawSurfCount )
+        if (++drawSurfIndex == drawSurfCount)
             break;
-        //drawSurf.fields = (GfxDrawSurfFields)drawSurfList[drawSurfIndex];
-        drawSurf.packed = drawSurfList[drawSurfIndex].packed;
-    }
-    while ( (drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey );
-    if ( args.triCount )
+        drawSurf = drawSurfList[drawSurfIndex];
+    } while ((drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey);
+    if (args.triCount)
     {
         args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
         R_DrawIndexedPrimitive(&context.state->prim, &args);
@@ -293,7 +291,7 @@ void __cdecl R_TessCodeMeshList_AddCodeMeshArgs(
 
 unsigned int __cdecl R_TessRopeMeshList(const GfxDrawSurfListArgs *listArgs, GfxCmdBufContext prepassContext)
 {
-    const char *v3; // eax
+    char *v4; // eax
     GfxDepthRangeType depthRangeType; // [esp+8h] [ebp-6Ch]
     GfxCmdBufContext context; // [esp+14h] [ebp-60h]
     const GfxDrawSurfListInfo *info; // [esp+20h] [ebp-54h]
@@ -312,25 +310,25 @@ unsigned int __cdecl R_TessRopeMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     info = listArgs->info;
     drawSurfCount = info->drawSurfCount - listArgs->firstDrawSurfIndex;
     drawSurfList = &info->drawSurfs[listArgs->firstDrawSurfIndex];
-    if ( !R_SetVertexDeclTypeNormal_Safe(context.state, VERTDECL_PACKED) )
+    if (!R_SetVertexDeclTypeNormal_Safe(context.state, VERTDECL_PACKED))
         return 1;
     R_SetupPassCriticalPixelShaderArgs(context);
-    if ( prepassContext.state
+    if (prepassContext.state
         && context.source != prepassContext.source
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                    482,
-                    0,
-                    "%s",
-                    "prepassContext.local.state == NULL || commonSource == prepassContext.local.source") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+            482,
+            0,
+            "%s",
+            "prepassContext.local.state == NULL || commonSource == prepassContext.local.source"))
     {
         __debugbreak();
     }
     drawSurf.fields = drawSurfList->fields;
     R_SetObjectIdentityPlacement(context.source);
-    R_ChangeDepthHackNearClip(context.source, 0.0);
-    depthRangeType = (GfxDepthRangeType)((context.source->scissorViewport.y != 0) - 1);
-    if ( depthRangeType != context.state->depthRangeType )
+    R_ChangeDepthHackNearClip(context.source, 0);
+    depthRangeType = (GfxDepthRangeType)((context.source->cameraView != 0) - 1);
+    if (depthRangeType != context.state->depthRangeType)
         R_ChangeDepthRange(context.state, depthRangeType);
     data = context.source->input.data;
     R_SetMeshStream(context.state, data->codeMeshPtr);
@@ -345,42 +343,42 @@ unsigned int __cdecl R_TessRopeMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     do
     {
         codeMesh = &data->codeMeshes[LOWORD(drawSurf.packed)];
-        if ( !codeMesh->triCount
+        if (!codeMesh->triCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                        527,
-                        0,
-                        "%s\n\t(codeMesh->triCount) = %i",
-                        "(codeMesh->triCount > 0)",
-                        codeMesh->triCount) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                527,
+                0,
+                "%s\n\t(codeMesh->triCount) = %i",
+                "(codeMesh->triCount > 0)",
+                codeMesh->triCount))
         {
             __debugbreak();
         }
-        if ( data->codeMeshes[LOWORD(drawSurf.packed)].indices < data->codeMeshPtr->indices
-            || &data->codeMeshes[LOWORD(drawSurf.packed)].indices[3 * data->codeMeshes[LOWORD(drawSurf.packed)].triCount] > data->codeMeshPtr->indices + 61440 )
+        if (data->codeMeshes[LOWORD(drawSurf.packed)].indices < data->codeMeshPtr->indices
+            || &data->codeMeshes[LOWORD(drawSurf.packed)].indices[3 * data->codeMeshes[LOWORD(drawSurf.packed)].triCount] > data->codeMeshPtr->indices + 61440)
         {
-            v3 = va(
-                         "0x%08x 0x%08x %i %i %s",
-                         data->codeMeshes[LOWORD(drawSurf.packed)].indices,
-                         data->codeMeshPtr->indices,
-                         3 * data->codeMeshes[LOWORD(drawSurf.packed)].triCount,
-                         61440,
-                         context.state->material->info.name);
-            if ( !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                            531,
-                            0,
-                            "%s\n\t%s",
-                            "&codeMesh->indices[0] >= &data->codeMeshPtr->indices[0] && &codeMesh->indices[codeMesh->triCount * 3] <= &"
-                            "data->codeMeshPtr->indices[GFX_CODE_MESH_INDEX_LIMIT]",
-                            v3) )
+            v4 = va(
+                "0x%08x 0x%08x %i %i %s",
+                data->codeMeshes[LOWORD(drawSurf.packed)].indices,
+                data->codeMeshPtr->indices,
+                3 * data->codeMeshes[LOWORD(drawSurf.packed)].triCount,
+                61440,
+                context.state->material->info.name);
+            if (!Assert_MyHandler(
+                "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                531,
+                0,
+                "%s\n\t%s",
+                "&codeMesh->indices[0] >= &data->codeMeshPtr->indices[0] && &codeMesh->indices[codeMesh->triCount * 3] <= &"
+                "data->codeMeshPtr->indices[GFX_CODE_MESH_INDEX_LIMIT]",
+                v4))
                 __debugbreak();
         }
-        if ( argCount
+        if (argCount
             || data->codeMeshes[LOWORD(drawSurf.packed)].argCount
-            || &indices[6 * args.triCount] != (unsigned __int8 *)data->codeMeshes[LOWORD(drawSurf.packed)].indices )
+            || &indices[6 * args.triCount] != (unsigned __int8 *)data->codeMeshes[LOWORD(drawSurf.packed)].indices)
         {
-            if ( args.triCount )
+            if (args.triCount)
             {
                 args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
                 R_DrawIndexedPrimitive(&context.state->prim, &args);
@@ -396,13 +394,11 @@ unsigned int __cdecl R_TessRopeMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
         argCount = data->codeMeshes[LOWORD(drawSurf.packed)].argCount;
         args.triCount += codeMesh->triCount;
         context.state->prim.frameStats.fxIndexCount += 3 * codeMesh->triCount;
-        if ( ++drawSurfIndex == drawSurfCount )
+        if (++drawSurfIndex == drawSurfCount)
             break;
-        //drawSurf.fields = (GfxDrawSurfFields)drawSurfList[drawSurfIndex];
-        drawSurf.packed = drawSurfList[drawSurfIndex].packed;
-    }
-    while ( (drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey );
-    if ( args.triCount )
+        drawSurf = drawSurfList[drawSurfIndex];
+    } while ((drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey);
+    if (args.triCount)
     {
         args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
         R_DrawIndexedPrimitive(&context.state->prim, &args);
@@ -431,25 +427,25 @@ unsigned int __cdecl R_TessGlassMeshList(const GfxDrawSurfListArgs *listArgs, Gf
     info = listArgs->info;
     drawSurfCount = info->drawSurfCount - listArgs->firstDrawSurfIndex;
     drawSurfList = &info->drawSurfs[listArgs->firstDrawSurfIndex];
-    if ( !R_SetVertexDeclTypeNormal_Safe(context.state, VERTDECL_PACKED) )
+    if (!R_SetVertexDeclTypeNormal_Safe(context.state, VERTDECL_PACKED))
         return 1;
     R_SetupPassCriticalPixelShaderArgs(context);
-    if ( prepassContext.state
+    if (prepassContext.state
         && context.source != prepassContext.source
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                    657,
-                    0,
-                    "%s",
-                    "prepassContext.local.state == NULL || commonSource == prepassContext.local.source") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+            657,
+            0,
+            "%s",
+            "prepassContext.local.state == NULL || commonSource == prepassContext.local.source"))
     {
         __debugbreak();
     }
     drawSurf.fields = drawSurfList->fields;
     R_SetObjectIdentityPlacement(context.source);
-    R_ChangeDepthHackNearClip(context.source, 0.0);
-    depthRangeType = (GfxDepthRangeType)((context.source->scissorViewport.y != 0) - 1);
-    if ( depthRangeType != context.state->depthRangeType )
+    R_ChangeDepthHackNearClip(context.source, 0);
+    depthRangeType = (GfxDepthRangeType)((context.source->cameraView != 0) - 1);
+    if (depthRangeType != context.state->depthRangeType)
         R_ChangeDepthRange(context.state, depthRangeType);
     data = context.source->input.data;
     R_SetMeshStream(context.state, data->codeMeshPtr);
@@ -464,21 +460,21 @@ unsigned int __cdecl R_TessGlassMeshList(const GfxDrawSurfListArgs *listArgs, Gf
     do
     {
         codeMesh = &data->codeMeshes[LOWORD(drawSurf.packed)];
-        if ( !codeMesh->triCount
+        if (!codeMesh->triCount
             && !Assert_MyHandler(
-                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                        705,
-                        0,
-                        "%s\n\t(codeMesh->triCount) = %i",
-                        "(codeMesh->triCount > 0)",
-                        codeMesh->triCount) )
+                "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                705,
+                0,
+                "%s\n\t(codeMesh->triCount) = %i",
+                "(codeMesh->triCount > 0)",
+                codeMesh->triCount))
         {
             __debugbreak();
         }
-        if ( lightHandle != data->codeMeshes[LOWORD(drawSurf.packed)].lightHandle
-            || &indices[6 * args.triCount] != (unsigned __int8 *)data->codeMeshes[LOWORD(drawSurf.packed)].indices )
+        if (lightHandle != data->codeMeshes[LOWORD(drawSurf.packed)].lightHandle
+            || &indices[6 * args.triCount] != (unsigned __int8 *)data->codeMeshes[LOWORD(drawSurf.packed)].indices)
         {
-            if ( args.triCount )
+            if (args.triCount)
             {
                 args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
                 R_DrawIndexedPrimitive(&context.state->prim, &args);
@@ -493,13 +489,11 @@ unsigned int __cdecl R_TessGlassMeshList(const GfxDrawSurfListArgs *listArgs, Gf
         }
         args.triCount += codeMesh->triCount;
         context.state->prim.frameStats.fxIndexCount += 3 * codeMesh->triCount;
-        if ( ++drawSurfIndex == drawSurfCount )
+        if (++drawSurfIndex == drawSurfCount)
             break;
-        //drawSurf.fields = (GfxDrawSurfFields)drawSurfList[drawSurfIndex];
-        drawSurf.packed = drawSurfList[drawSurfIndex].packed;
-    }
-    while ( (drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey );
-    if ( args.triCount )
+        drawSurf= drawSurfList[drawSurfIndex];
+    } while ((drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey);
+    if (args.triCount)
     {
         args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
         R_DrawIndexedPrimitive(&context.state->prim, &args);
@@ -512,15 +506,15 @@ float g_ftDecalFadePower = 2.0f;
 unsigned int __cdecl R_TessMarkMeshList(const GfxDrawSurfListArgs *listArgs, GfxCmdBufContext prepassContext)
 {
     int packed_low; // eax
-    int v3; // eax
-    bool v5; // [esp+10h] [ebp-E4h]
-    bool v6; // [esp+14h] [ebp-E0h]
-    bool v7; // [esp+18h] [ebp-DCh]
-    bool v8; // [esp+20h] [ebp-D4h]
-    bool v9; // [esp+24h] [ebp-D0h]
-    float v10; // [esp+34h] [ebp-C0h]
-    float v11; // [esp+4Ch] [ebp-A8h]
-    GfxDepthRangeType v12; // [esp+58h] [ebp-9Ch]
+    int v4; // eax
+    BOOL v6; // [esp+10h] [ebp-E4h]
+    BOOL v7; // [esp+14h] [ebp-E0h]
+    bool v8; // [esp+18h] [ebp-DCh]
+    bool v9; // [esp+20h] [ebp-D4h]
+    bool v10; // [esp+24h] [ebp-D0h]
+    float v11; // [esp+34h] [ebp-C0h]
+    float v12; // [esp+4Ch] [ebp-A8h]
+    GfxDepthRangeType v13; // [esp+58h] [ebp-9Ch]
     GfxDepthRangeType depthRangeType; // [esp+5Ch] [ebp-98h]
     GfxCmdBufContext context; // [esp+64h] [ebp-90h]
     GfxMeshData *meshData; // [esp+6Ch] [ebp-88h]
@@ -559,37 +553,37 @@ unsigned int __cdecl R_TessMarkMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     drawSurfCount = info->drawSurfCount - listArgs->firstDrawSurfIndex;
     drawSurfList = &info->drawSurfs[listArgs->firstDrawSurfIndex];
     R_SetupPassCriticalPixelShaderArgs(context);
-    if ( prepassContext.state
+    if (prepassContext.state
         && context.source != prepassContext.source
         && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                    873,
-                    0,
-                    "%s",
-                    "prepassContext.local.state == NULL || commonSource == prepassContext.local.source") )
+            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+            873,
+            0,
+            "%s",
+            "prepassContext.local.state == NULL || commonSource == prepassContext.local.source"))
     {
         __debugbreak();
     }
     baseTechType = info->baseTechType;
     drawSurf.fields = drawSurfList->fields;
     R_SetObjectIdentityPlacement(context.source);
-    R_ChangeDepthHackNearClip(context.source, 0.0);
+    R_ChangeDepthHackNearClip(context.source, 0);
     data = context.source->input.data;
     meshData = (GfxMeshData*)&data->markMesh;
     markType = data->markMeshes[LOWORD(drawSurf.packed)].modelTypeAndSurf & 0xC0;
-    v9 = markType == 64 || markType == 192;
-    declType = (MaterialVertexDeclType)(2 - v9);
+    v10 = markType == 64 || markType == 192;
+    declType = (MaterialVertexDeclType)(2 - v10);
     R_SetVertexDeclTypeNormal(context.state, declType);
-    depthRangeType = (GfxDepthRangeType)((context.source->scissorViewport.y != 0) - 1);
-    if ( depthRangeType != context.state->depthRangeType )
+    depthRangeType = (GfxDepthRangeType)((context.source->cameraView != 0) - 1);
+    if (depthRangeType != context.state->depthRangeType)
         R_ChangeDepthRange(context.state, depthRangeType);
     R_SetMeshStream(context.state, meshData);
-    if ( prepassContext.state )
+    if (prepassContext.state)
     {
         R_SetVertexDeclTypeNormal(prepassContext.state, declType);
-        v12 = (GfxDepthRangeType)((context.source->scissorViewport.y != 0) - 1);
-        if ( v12 != prepassContext.state->depthRangeType )
-            R_ChangeDepthRange(prepassContext.state, v12);
+        v13 = (GfxDepthRangeType)((context.source->cameraView != 0) - 1);
+        if (v13 != prepassContext.state->depthRangeType)
+            R_ChangeDepthRange(prepassContext.state, v13);
         R_SetMeshStream(prepassContext.state, meshData);
     }
     indices = 0;
@@ -597,11 +591,11 @@ unsigned int __cdecl R_TessMarkMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     args.vertexCount = 6144;
     args.triCount = 0;
     drawSurfSubMask.packed = -65536;
-    if ( baseTechType != 10 )
+    if (baseTechType != 10)
     {
-        *(unsigned int *)&drawSurfSubMask.fields = -267452416;
+        *(_DWORD *)&drawSurfSubMask.fields = -267452416;
         R_SetupPassPerObjectArgs(context);
-        if ( prepassContext.state )
+        if (prepassContext.state)
             R_SetupPassPerObjectArgs(prepassContext);
     }
     drawSurfKey = drawSurf.packed & 0xFFFFFFFFF00F0000uLL;
@@ -609,14 +603,14 @@ unsigned int __cdecl R_TessMarkMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
     drawSurfIndex = 0;
     do
     {
-        if ( baseTechType == 10 )
+        if (baseTechType == 10)
         {
-            if ( args.triCount )
+            if (args.triCount)
             {
                 R_SetupPassPerPrimArgs(context);
                 args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
                 R_DrawIndexedPrimitive(&context.state->prim, &args);
-                if ( prepassContext.state )
+                if (prepassContext.state)
                 {
                     R_SetupPassPerPrimArgs(prepassContext);
                     args.baseIndex = R_SetIndexData(&prepassContext.state->prim, indices, args.triCount);
@@ -628,49 +622,49 @@ unsigned int __cdecl R_TessMarkMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
             packed_low = LOWORD(drawSurf.packed);
             markMesh = &data->markMeshes[packed_low];
             markTypea = data->markMeshes[packed_low].modelTypeAndSurf & 0xC0;
-            v8 = markTypea == 64 || markTypea == 192;
-            if ( declType != 2 - v8
+            v9 = markTypea == 64 || markTypea == 192;
+            if (declType != 2 - v9
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                            974,
-                            0,
-                            "%s\n\t(markType) = %i",
-                            "(declType == R_Tess_DeclForMarkType( markType ))",
-                            markTypea) )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                    974,
+                    0,
+                    "%s\n\t(markType) = %i",
+                    "(declType == R_Tess_DeclForMarkType( markType ))",
+                    markTypea))
             {
                 __debugbreak();
             }
-            if ( needsMarksHitNormal )
+            if (needsMarksHitNormal)
             {
                 curNormal = markMesh->normal[0];
                 curNormal_4 = markMesh->normal[1];
                 curNormal_8 = markMesh->normal[2];
-                v11 = g_ftDecalFadePower;
-                context.source->input.consts[120][0] = curNormal;
-                context.source->input.consts[120][1] = curNormal_4;
-                context.source->input.consts[120][2] = curNormal_8;
-                context.source->input.consts[120][3] = v11;
+                v12 = g_ftDecalFadePower;
+                context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][0] = curNormal;
+                context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][1] = curNormal_4;
+                context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][2] = curNormal_8;
+                context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][3] = v12;
                 R_DirtyCodeConstant(context.source, CONST_SRC_CODE_MARKS_HIT_NORMAL);
             }
-            if ( markTypea == 64 )
+            if (markTypea == 64)
             {
                 R_SetStaticModelLightingCoordsForSource(markMesh->modelIndex, context.source);
             }
-            else if ( markTypea == 192 )
+            else if (markTypea == 192)
             {
                 R_SetModelLightingCoordsForSource(markMesh->modelIndex, context.source);
             }
             else
             {
-                if ( markTypea
+                if (markTypea
                     && markTypea != 128
                     && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                                997,
-                                0,
-                                "%s\n\t(markType) = %i",
-                                "((markType == MARK_MODEL_TYPE_WORLD_BRUSH) || (markType == MARK_MODEL_TYPE_ENT_BRUSH))",
-                                markTypea) )
+                        "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                        997,
+                        0,
+                        "%s\n\t(markType) = %i",
+                        "((markType == MARK_MODEL_TYPE_WORLD_BRUSH) || (markType == MARK_MODEL_TYPE_ENT_BRUSH))",
+                        markTypea))
                 {
                     __debugbreak();
                 }
@@ -678,106 +672,103 @@ unsigned int __cdecl R_TessMarkMeshList(const GfxDrawSurfListArgs *listArgs, Gfx
             }
             R_SetReflectionProbe(context, (drawSurf.packed >> 25) & 7);
             R_SetupPassPerObjectArgs(context);
-            if ( prepassContext.state )
+            if (prepassContext.state)
                 R_SetupPassPerObjectArgs(prepassContext);
         }
         drawSurfSubKey = drawSurfSubMask.packed & drawSurf.packed;
         do
         {
-            v3 = LOWORD(drawSurf.packed);
-            markMesha = &data->markMeshes[v3];
-            markTypeb = data->markMeshes[v3].modelTypeAndSurf & 0xC0;
-            v7 = markTypeb == 64 || markTypeb == 192;
-            if ( declType != 2 - v7
+            v4 = LOWORD(drawSurf.packed);
+            markMesha = &data->markMeshes[v4];
+            markTypeb = data->markMeshes[v4].modelTypeAndSurf & 0xC0;
+            v8 = markTypeb == 64 || markTypeb == 192;
+            if (declType != 2 - v8
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                            1014,
-                            0,
-                            "%s\n\t(markType) = %i",
-                            "(declType == R_Tess_DeclForMarkType( markType ))",
-                            markTypeb) )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                    1014,
+                    0,
+                    "%s\n\t(markType) = %i",
+                    "(declType == R_Tess_DeclForMarkType( markType ))",
+                    markTypeb))
             {
                 __debugbreak();
             }
-            if ( !markMesha->triCount
+            if (!markMesha->triCount
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                            1015,
-                            0,
-                            "%s\n\t(markMesh->triCount) = %i",
-                            "(markMesh->triCount > 0)",
-                            markMesha->triCount) )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                    1015,
+                    0,
+                    "%s\n\t(markMesh->triCount) = %i",
+                    "(markMesh->triCount > 0)",
+                    markMesha->triCount))
             {
                 __debugbreak();
             }
             newNormal = markMesha->normal[0];
             newNormal_4 = markMesha->normal[1];
             newNormal_8 = markMesha->normal[2];
-            if ( (markMesha->indices < data->markMesh.indices
-                 || &markMesha->indices[3 * markMesha->triCount] > data->markMesh.indices + 9216)
+            if ((markMesha->indices < data->markMesh.indices
+                || &markMesha->indices[3 * markMesha->triCount] > data->markMesh.indices + 9216)
                 && !Assert_MyHandler(
-                            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
-                            1020,
-                            0,
-                            "%s",
-                            "&markMesh->indices[0] >= &data->markMesh.indices[0] && &markMesh->indices[markMesh->triCount * 3] <= &data"
-                            "->markMesh.indices[GFX_MARK_MESH_INDEX_LIMIT]") )
+                    "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\rb_tess.cpp",
+                    1020,
+                    0,
+                    "%s",
+                    "&markMesh->indices[0] >= &data->markMesh.indices[0] && &markMesh->indices[markMesh->triCount * 3] <= &data"
+                    "->markMesh.indices[GFX_MARK_MESH_INDEX_LIMIT]"))
             {
                 __debugbreak();
             }
-            if ( needsMarksHitNormal )
+            if (needsMarksHitNormal)
             {
-                v6 = curNormal == newNormal && curNormal_4 == newNormal_4 && curNormal_8 == newNormal_8;
-                v5 = !v6;
+                v7 = curNormal == newNormal && curNormal_4 == newNormal_4 && curNormal_8 == newNormal_8;
+                v6 = !v7;
             }
             else
             {
-                v5 = 0;
+                v6 = 0;
             }
-            if ( v5 || &indices[6 * args.triCount] != (unsigned __int8 *)markMesha->indices )
+            if (v6 || &indices[6 * args.triCount] != (unsigned __int8 *)markMesha->indices)
             {
-                if ( args.triCount )
+                if (args.triCount)
                 {
                     R_SetupPassPerPrimArgs(context);
                     args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
                     R_DrawIndexedPrimitive(&context.state->prim, &args);
-                    if ( prepassContext.state )
+                    if (prepassContext.state)
                     {
                         R_SetupPassPerPrimArgs(prepassContext);
                         R_DrawIndexedPrimitive(&prepassContext.state->prim, &args);
                     }
                     args.triCount = 0;
                 }
-                if ( v5 )
+                if (v6)
                 {
                     curNormal = newNormal;
                     curNormal_4 = newNormal_4;
                     curNormal_8 = newNormal_8;
-                    v10 = g_ftDecalFadePower;
-                    context.source->input.consts[120][0] = newNormal;
-                    context.source->input.consts[120][1] = newNormal_4;
-                    context.source->input.consts[120][2] = newNormal_8;
-                    context.source->input.consts[120][3] = v10;
+                    v11 = g_ftDecalFadePower;
+                    context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][0] = newNormal;
+                    context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][1] = newNormal_4;
+                    context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][2] = newNormal_8;
+                    context.source->input.consts[CONST_SRC_CODE_MARKS_HIT_NORMAL][3] = v11;
                     R_DirtyCodeConstant(context.source, CONST_SRC_CODE_MARKS_HIT_NORMAL);
                 }
                 indices = (unsigned __int8 *)markMesha->indices;
             }
             args.triCount += markMesha->triCount;
             context.state->prim.frameStats.fxIndexCount += 3 * markMesha->triCount;
-            if ( ++drawSurfIndex == drawSurfCount )
+            if (++drawSurfIndex == drawSurfCount)
                 break;
-            //drawSurf.fields = (GfxDrawSurfFields)drawSurfList[drawSurfIndex];
-            drawSurf.packed = drawSurfList[drawSurfIndex].packed;
-        }
-        while ( __PAIR64__(HIDWORD(drawSurf.packed), *(unsigned int *)&drawSurfSubMask.fields & *(unsigned int *)&drawSurf.fields) == drawSurfSubKey );
-    }
-    while ( drawSurfIndex != drawSurfCount && (drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey );
-    if ( args.triCount )
+            drawSurf = drawSurfList[drawSurfIndex];
+        } while (__PAIR64__(HIDWORD(drawSurf.packed), *(_DWORD *)&drawSurfSubMask.fields & *(_DWORD *)&drawSurf.fields) == drawSurfSubKey);
+    } while (drawSurfIndex != drawSurfCount && (drawSurf.packed & 0xFFFFFFFFF00F0000uLL) == drawSurfKey);
+    if (args.triCount)
     {
         R_SetupPassPerPrimArgs(context);
         args.baseIndex = R_SetIndexData(&context.state->prim, indices, args.triCount);
         R_DrawIndexedPrimitive(&context.state->prim, &args);
-        if ( prepassContext.state )
+        if (prepassContext.state)
         {
             R_SetupPassPerPrimArgs(prepassContext);
             args.baseIndex = R_SetIndexData(&prepassContext.state->prim, indices, args.triCount);

@@ -3348,9 +3348,7 @@ void __thiscall GlassShard::GenerateVerts(
 
     // Mesh data pointer — indexes into positions/normals/uvs arrays
     // Each mesh vertex entry is 2 bytes: [positionIndex, normalIndex]
-    const unsigned char *meshVerts = (const unsigned char *)
-        ((char *)&clGlasses->renderer->maxNumGroupChanges
-         + this->outline.numVerts * sizeof(int)); // KISAKTODO: fix this pointer
+    const unsigned char *meshVerts = (const unsigned char *)clGlasses->renderer->vertexList[this->outline.numVerts - 1];
 
     int numVerts = highLod ? this->mesh.numVerts : this->mesh.numVertsLow;
 
@@ -4193,9 +4191,9 @@ char __thiscall GlassShard::InitPhysics(
     float v19; // [esp+58h] [ebp-60h]
     float v20; // [esp+5Ch] [ebp-5Ch]
     float v21; // [esp+60h] [ebp-58h]
-    float v; // [esp+70h] [ebp-48h] BYREF
-    float v23; // [esp+74h] [ebp-44h]
-    float v24; // [esp+78h] [ebp-40h]
+    float v[3]; // [esp+70h] [ebp-48h] BYREF
+    //float v23; // [esp+74h] [ebp-44h]
+    //float v24; // [esp+78h] [ebp-40h]
     float dist; // [esp+7Ch] [ebp-3Ch]
     float distAtten; // [esp+80h] [ebp-38h]
     float dir[3]; // [esp+84h] [ebp-34h] BYREF
@@ -4237,14 +4235,14 @@ char __thiscall GlassShard::InitPhysics(
                     {
                         __debugbreak();
                     }
-                    v = this->origin[0] - *hitPos;
-                    v23 = this->origin[1] - hitPos[1];
-                    v24 = this->origin[2] - hitPos[2];
-                    dist = Vec3Normalize(&v);
+                    v[0] = this->origin[0] - *hitPos;
+                    v[1] = this->origin[1] - hitPos[1];
+                    v[2] = this->origin[2] - hitPos[2];
+                    dist = Vec3Normalize(v);
                     value = clGlasses->renderer->forceOriginMult->current.value;
-                    v = (float)(value * v) + *hitDir;
-                    v23 = (float)(value * v23) + hitDir[1];
-                    v24 = (float)(value * v24) + hitDir[2];
+                    v[0] = (float)(value * v[0]) + *hitDir;
+                    v[1] = (float)(value * v[1]) + hitDir[1];
+                    v[2] = (float)(value * v[2]) + hitDir[2];
                     v13 = (float)(clGlasses->renderer->forceAttenuation->current.value * dist) / glassSize;
                     if ( (float)(v13 - 1.0) < 0.0 )
                         v14 = (float)(clGlasses->renderer->forceAttenuation->current.value * dist) / glassSize;
@@ -4255,13 +4253,13 @@ char __thiscall GlassShard::InitPhysics(
                     else
                         v7 = 0.25f;
                     distAtten = 1.0 - v7;
-                    v = (float)(1.0 - v7) * v;
-                    v23 = (float)(1.0 - v7) * v23;
-                    v24 = (float)(1.0 - v7) * v24;
+                    v[0] = (float)(1.0 - v7) * v[0];
+                    v[1] = (float)(1.0 - v7) * v[1];
+                    v[2] = (float)(1.0 - v7) * v[2];
                     v12 = clGlasses->renderer->forceMultiplier->current.value;
-                    velocity[0] = v12 * v;
-                    velocity[1] = v12 * v23;
-                    velocity[2] = v12 * v24;
+                    velocity[0] = v12 * v[0];
+                    velocity[1] = v12 * v[1];
+                    velocity[2] = v12 * v[2];
                 }
                 else
                 {

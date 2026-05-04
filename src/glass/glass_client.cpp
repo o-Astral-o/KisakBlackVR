@@ -65,21 +65,8 @@ GlassesClient::GlassesClient(const Glasses *glss)
                                                                      12 * this->numGlasses,
                                                                      "C:\\projects_pc\\cod\\codsrc\\src\\glass\\glass_client.cpp",
                                                                      80);
-    //v5 = (GlassRenderer *)GlassRenderer::operator new(0x4DF8u);
-    v5 = (GlassRenderer *)GlassesClient::Allocate(sizeof(GlassRenderer), "C:\\projects_pc\\cod\\codsrc\\src\\glass\\glass_renderer.cpp", 59);
-    if (v5)
-    {
-        //v3 = GlassRenderer::GlassRenderer(v5, glss);
-        //new (v5) GlassRenderer(glss);
-        this->renderer = new GlassRenderer(glss);
-    }
-    else
-    {
-        //v3 = 0;
-        this->renderer = NULL;
-    }
 
-    //this->renderer = v3;
+    this->renderer = new GlassRenderer(glss); // Calls custom allocator in class
     this->lastPreShatter = 0;
     for (i = 0; i < this->numGlasses; ++i)
     {
@@ -90,16 +77,12 @@ GlassesClient::GlassesClient(const Glasses *glss)
 
 GlassesClient::~GlassesClient()
 {
-    GlassRenderer *renderer; // [esp+Ch] [ebp-4h]
-
     GlassesClient::Free((char *)this->glasses);
-    renderer = this->renderer;
-    if ( renderer )
+    if (this->renderer)
     {
         //GlassRenderer::~GlassRenderer(renderer);
-        renderer->~GlassRenderer();
         //GlassesClient::operator delete((char *)renderer);
-        GlassesClient::Free((char*)renderer);
+        delete this->renderer;
     }
 }
 
@@ -616,7 +599,7 @@ void __thiscall GlassClient::Shatter(const float *pos, const float *dir)
                 //GlassShard::Remove(shard, (GlassShard::RemoveReason)8, 0);
                 shard->Remove(GlassShard::RemoveReason::KISAK_I_HAVE_NO_CLUE_WHY, 0);
                 //GlassRenderer::FreeShardMemory(clGlasses->renderer, &this->outlines->numOutlines);
-                clGlasses->renderer->FreeShardMemory((unsigned int*)&this->outlines);
+                clGlasses->renderer->FreeShardMemory((unsigned int*)this->outlines);
                 this->outlines = 0;
                 if (numNewShards > 0)
                 {
@@ -839,21 +822,7 @@ void __cdecl GlassCl_AllocateMemory()
             if ( glasses->numGlasses )
             {
                 GlassesClient::InitAllocator(glasses);
-
-                //v1 = (GlassesClient *)GlassesClient::operator new(0x10u);
-                v1 = (GlassesClient *)GlassesClient::Allocate(sizeof(GlassesClient), "C:\\projects_pc\\cod\\codsrc\\src\\glass\\glass_client.cpp", 69);
-
-                if (v1)
-                {
-                    //v0 = GlassesClient::GlassesClient(v1, glasses);
-                    //v0 = new (v1) GlassesClient(glasses);
-                    v0 = new GlassesClient(glasses);
-                }
-                else
-                {
-                    v0 = 0;
-                }
-                clGlasses = v0;
+                clGlasses = new GlassesClient(glasses); // Calls Custom allocator in class
             }
         }
     }
@@ -861,15 +830,11 @@ void __cdecl GlassCl_AllocateMemory()
 
 void __cdecl GlassCl_FreeMemory()
 {
-    GlassesClient *v0; // [esp+8h] [ebp-4h]
-
     if ( clGlasses )
     {
-        v0 = clGlasses;
+        delete clGlasses; // Custom delete
         //GlassesClient::~GlassesClient(clGlasses);
-        clGlasses->~GlassesClient();
         //GlassesClient::operator delete((char *)v0);
-        GlassesClient::Free((char *)v0);
         clGlasses = 0;
     }
 }

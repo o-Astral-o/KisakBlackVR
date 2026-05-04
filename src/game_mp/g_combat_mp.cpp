@@ -1420,9 +1420,9 @@ int __cdecl G_RadiusDamage(
                 unsigned int weapon)
 {
     int j; // [esp+2Ch] [ebp-1054h]
-    float v13; // [esp+30h] [ebp-1050h]
-    float dir[2]; // [esp+34h] [ebp-104Ch] BYREF
-    float v15; // [esp+3Ch] [ebp-1044h]
+    float damage; // [esp+30h] [ebp-1050h]
+    float dir[3]; // [esp+34h] [ebp-104Ch] BYREF
+    //float v15; // [esp+3Ch] [ebp-1044h]
     float v16; // [esp+40h] [ebp-1040h]
     float mins[3]; // [esp+44h] [ebp-103Ch] BYREF
     float v18; // [esp+50h] [ebp-1030h]
@@ -1460,14 +1460,14 @@ int __cdecl G_RadiusDamage(
             if ( RadiusDamageDistanceSquared < v18 )
             {
                 v16 = sqrtf(RadiusDamageDistanceSquared);
-                v13 = (float)((float)(fInnerDamage - fOuterDamage) * (float)(1.0 - (float)(v16 / radius))) + fOuterDamage;
+                damage = (float)((float)(fInnerDamage - fOuterDamage) * (float)(1.0 - (float)(v16 / radius))) + fOuterDamage;
                 if ( ent->scr_vehicle )
                 {
                     Scr_VehicleRadiusDamage(
                         ent,
                         inflictor,
                         attacker,
-                        (int)v13,
+                        (int)damage,
                         fInnerDamage,
                         fOuterDamage,
                         dflags,
@@ -1488,17 +1488,17 @@ int __cdecl G_RadiusDamage(
                             v28 = 1;
                         dir[0] = ent->r.currentOrigin[0] - *origin;
                         dir[1] = ent->r.currentOrigin[1] - origin[1];
-                        v15 = ent->r.currentOrigin[2] - origin[2];
-                        v15 = v15 + 24.0;
+                        dir[2] = ent->r.currentOrigin[2] - origin[2];
+                        dir[2] += 24.0;
                         if ( ent->destructible )
-                            v13 = DestructibleRadiusDamage(ent, origin, fInnerDamage, fOuterDamage, radius, mod, attacker);
+                            damage = DestructibleRadiusDamage(ent, origin, fInnerDamage, fOuterDamage, radius, mod, attacker);
                         G_Damage(
                             ent,
                             inflictor,
                             attacker,
                             dir,
                             origin,
-                            (int)(float)(v13 * v23),
+                            (int)(float)(damage * v23),
                             dflags,
                             mod,
                             weapon,

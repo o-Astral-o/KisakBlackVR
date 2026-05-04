@@ -373,7 +373,7 @@ void __cdecl R_Set2D(GfxCmdBufSourceState *source)
 {
     GfxViewport viewport; // [esp+10h] [ebp-10h] BYREF
 
-    if ( source->scissorViewport.width != 2 )
+    if (source->viewMode != VIEW_MODE_2D)
     {
         PROF_SCOPED("R_Set2D");
         source->viewMode = VIEW_MODE_2D;
