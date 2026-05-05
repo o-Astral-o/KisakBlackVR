@@ -332,18 +332,19 @@ void __cdecl DynEntCl_LinkModel(unsigned __int16 dynEntId)
 
 const DynEntityDef *__cdecl DynEnt_GetEntityDef(unsigned __int16 dynEntId, DynEntityDrawType drawType)
 {
-    if ( dynEntId >= (unsigned int)cm.dynEntCount[drawType]
-        && !Assert_MyHandler(
-                    "c:\\projects_pc\\cod\\codsrc\\src\\dynentity\\DynEntity_load_obj.h",
-                    60,
-                    0,
-                    "dynEntId doesn't index cm.dynEntCount[DynEntGetClientCollType( drawType )]\n\t%i not in [0, %i)",
-                    dynEntId,
-                    cm.dynEntCount[drawType]) )
-    {
-        __debugbreak();
-    }
-    return (const DynEntityDef *)((char *)cm.dynEntPoseList[drawType - 2] + 84 * dynEntId);
+    //if ( dynEntId >= (unsigned int)cm.dynEntCount[drawType]
+    //    && !Assert_MyHandler(
+    //                "c:\\projects_pc\\cod\\codsrc\\src\\dynentity\\DynEntity_load_obj.h",
+    //                60,
+    //                0,
+    //                "dynEntId doesn't index cm.dynEntCount[DynEntGetClientCollType( drawType )]\n\t%i not in [0, %i)",
+    //                dynEntId,
+    //                cm.dynEntCount[drawType]) )
+    //{
+    //    __debugbreak();
+    //}
+    bcassert(dynEntId, (unsigned int)cm.dynEntCount[drawType]);
+    return &cm.dynEntDefList[drawType][dynEntId];
 }
 
 void __cdecl DynEntCl_LinkBrush(unsigned __int16 dynEntId)
@@ -2745,8 +2746,8 @@ void __cdecl DynEntCl_ExplosionEvent(
     DynEntityPose *pose; // [esp+40h] [ebp-2074h]
     float CylindricalRadiusDistSqr; // [esp+44h] [ebp-2070h]
     unsigned int ClosestEntities; // [esp+48h] [ebp-206Ch]
-    float radiusMaxs[2]; // [esp+4Ch] [ebp-2068h] BYREF
-    float v20; // [esp+54h] [ebp-2060h]
+    float radiusMaxs[3]; // [esp+4Ch] [ebp-2068h] BYREF
+    //float v20; // [esp+54h] [ebp-2060h]
     float v; // [esp+58h] [ebp-205Ch] BYREF
     float v22; // [esp+5Ch] [ebp-2058h]
     float v23; // [esp+60h] [ebp-2054h]
@@ -2761,8 +2762,8 @@ void __cdecl DynEntCl_ExplosionEvent(
     unsigned __int16 hitEnts[4096]; // [esp+8Ch] [ebp-2028h] BYREF
     float v33; // [esp+2090h] [ebp-24h]
     unsigned int i; // [esp+2094h] [ebp-20h]
-    float radiusMins[2]; // [esp+2098h] [ebp-1Ch] BYREF
-    float v36; // [esp+20A0h] [ebp-14h]
+    float radiusMins[3]; // [esp+2098h] [ebp-1Ch] BYREF
+    //float v36; // [esp+20A0h] [ebp-14h]
     float v37; // [esp+20A4h] [ebp-10h]
     float v38; // [esp+20A8h] [ebp-Ch]
     DynEntityColl *dynEntColl; // [esp+20ACh] [ebp-8h]
@@ -2828,14 +2829,14 @@ void __cdecl DynEntCl_ExplosionEvent(
         v14 = -(1.4142135 * outerRadius);
         radiusMins[0] = *origin + v14;
         radiusMins[1] = origin[1] + v14;
-        v36 = origin[2] + v14;
+        radiusMins[2] = origin[2] + v14;
         radiusMaxs[0] = *origin + (float)(1.4142135 * outerRadius);
         radiusMaxs[1] = origin[1] + (float)(1.4142135 * outerRadius);
-        v20 = origin[2] + (float)(1.4142135 * outerRadius);
+        radiusMaxs[2] = origin[2] + (float)(1.4142135 * outerRadius);
         if ( isCylinder )
         {
-            v36 = -FLT_MAX;
-            v20 = FLT_MAX;
+            radiusMins[2] = -FLT_MAX;
+            radiusMaxs[2] = FLT_MAX;
         }
         for ( drawType = DYNENT_DRAW_MODEL; (unsigned int)drawType < DYNENT_DRAW_COUNT; ++drawType )
         {

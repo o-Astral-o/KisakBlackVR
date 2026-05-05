@@ -1246,7 +1246,7 @@ unsigned int __cdecl R_TessXModelSkinnedDrawSurfList(
             else
             {
                 //LODWORD(y) = LODWORD(curWetness) & _mask__AbsFloat_;
-                y = -curWetness;
+                y = fabs(curWetness);
             }
             if (curWetness >= 0.0)
                 z = 0.0f;

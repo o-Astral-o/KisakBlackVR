@@ -2217,15 +2217,15 @@ void __cdecl XAnimNormalizeRotScaleTransArray(
 {
     float v4; // [esp+8h] [ebp-28h]
     float v5; // [esp+10h] [ebp-20h]
-    int r; // [esp+28h] [ebp-8h]
+    float r; // [esp+28h] [ebp-8h]
     signed int i; // [esp+2Ch] [ebp-4h]
 
     for ( i = 0; i < numBones; ++i )
     {
         if ( !info->ignorePartBits.testBit(i) )
         {
-            *(float *)&r = Vec4LengthSq(rotTransArray->quat);
-            if ( *(float *)&r != 0.0 )
+            r = Vec4LengthSq(rotTransArray->quat);
+            if ( r != 0.0 )
             {
                 v5 = I_rsqrt(r) * weightScale;
                 rotTransArray->quat[0] = v5 * rotTransArray->quat[0];
@@ -2255,7 +2255,7 @@ void __cdecl XAnimMadRotTransArray(
 {
     float v5; // [esp+Ch] [ebp-3Ch]
     float v6; // [esp+14h] [ebp-34h]
-    int r; // [esp+2Ch] [ebp-1Ch]
+    float r; // [esp+2Ch] [ebp-1Ch]
     signed int i; // [esp+30h] [ebp-18h]
     float addQuat; // [esp+38h] [ebp-10h]
     float addQuat_4; // [esp+3Ch] [ebp-Ch]
@@ -2283,8 +2283,8 @@ void __cdecl XAnimMadRotTransArray(
                 addQuat_8 = -rotTrans->quat[2];
                 addQuat_12 = -rotTrans->quat[3];
             }
-            *(float *)&r = Vec4LengthSq(rotTrans->quat);
-            if ( *(float *)&r != 0.0 )
+            r = Vec4LengthSq(rotTrans->quat);
+            if ( r != 0.0 )
             {
                 v6 = I_rsqrt(r) * weightScale;
                 totalRotTrans->quat[0] = (float)(v6 * addQuat) + totalRotTrans->quat[0];

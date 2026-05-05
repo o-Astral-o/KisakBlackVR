@@ -2177,17 +2177,17 @@ void __cdecl BG_LerpOffset(float *offset_goal, float maxOffsetChange, float *off
     float diff; // [esp+18h] [ebp-10h]
     float diff_4; // [esp+1Ch] [ebp-Ch]
     float diff_8; // [esp+20h] [ebp-8h]
-    int error; // [esp+24h] [ebp-4h]
-    float errora; // [esp+24h] [ebp-4h]
+    float error; // [esp+24h] [ebp-4h]
 
     diff = *offset_goal - *offset;
     diff_4 = offset_goal[1] - offset[1];
     diff_8 = offset_goal[2] - offset[2];
-    *(float *)&error = (float)((float)(diff * diff) + (float)(diff_4 * diff_4)) + (float)(diff_8 * diff_8);
-    if ( *(float *)&error != 0.0 )
+
+    error = (float)((float)(diff * diff) + (float)(diff_4 * diff_4)) + (float)(diff_8 * diff_8);
+    if ( error != 0.0 )
     {
-        errora = I_rsqrt(error) * maxOffsetChange;
-        if ( errora >= 1.0 )
+        error = I_rsqrt(error) * maxOffsetChange;
+        if ( error >= 1.0 )
         {
             *offset = *offset_goal;
             offset[1] = offset_goal[1];
@@ -2195,9 +2195,9 @@ void __cdecl BG_LerpOffset(float *offset_goal, float maxOffsetChange, float *off
         }
         else
         {
-            *offset = (float)(errora * diff) + *offset;
-            offset[1] = (float)(errora * diff_4) + offset[1];
-            offset[2] = (float)(errora * diff_8) + offset[2];
+            *offset = (float)(error * diff) + *offset;
+            offset[1] = (float)(error * diff_4) + offset[1];
+            offset[2] = (float)(error * diff_8) + offset[2];
         }
     }
 }
@@ -2269,9 +2269,9 @@ LABEL_7:
         {
             lean_direction = fLeanFrac > 0.0;
             if ( (es->lerp.eFlags & 4) != 0 )
-                v3 = (float)(fabs(fLeanFrac) * player_lean_shift_crouch->current.vector[lean_direction]) + 0.0;
+                v3 = (float)((-fLeanFrac) * player_lean_shift_crouch->current.vector[lean_direction]) + 0.0;
             else
-                v3 = (float)(fabs(fLeanFrac) * player_lean_shift->current.vector[lean_direction]) + 0.0;
+                v3 = (float)((-fLeanFrac) * player_lean_shift->current.vector[lean_direction]) + 0.0;
             tag_origin_offset_4 = v3;
         }
         if ( (es->lerp.eFlags & 0x40000) == 0 )
@@ -2288,7 +2288,7 @@ LABEL_7:
             tag_origin_offset = (float)((float)(1.0 - c) * 0.0) + 0.0;
             tag_origin_offset_4 = (float)(s * 0.0) + tag_origin_offset_4;
             if ( (float)(fLeanFrac * s) > 0.0 )
-                tag_origin_offset_4 = (float)((float)(fabs(fLeanFrac) * (float)(1.0 - c)) * 16.0) + tag_origin_offset_4;
+                tag_origin_offset_4 = (float)((float)((-fLeanFrac) * (float)(1.0 - c)) * 16.0) + tag_origin_offset_4;
             angles[0][0] = 0.0f;
             angles[0][1] = (float)(vTorsoAngles[1] * 0.30000001) + (float)(vTorsoAngles[2] * -1.2);
             angles[0][2] = vTorsoAngles[2] * 0.30000001;
@@ -2404,7 +2404,7 @@ void __cdecl BG_LerpAngles(float *angles_goal, float maxAngleChange, float *angl
         diff = angles_goal[i] - angles[i];
         if ( diff <= maxAngleChange )
         {
-            if ( fabs(maxAngleChange) <= diff )
+            if ( (-maxAngleChange) <= diff )
                 angles[i] = angles_goal[i];
             else
                 angles[i] = angles[i] - maxAngleChange;
@@ -3091,7 +3091,7 @@ void __cdecl BG_SwingAngles(
     if ( !*swinging )
     {
         swing = AngleNormalize180(*angle - destination);
-        if ( swing > swingTolerance || fabs(swingTolerance) > swing )
+        if ( swing > swingTolerance || -swingTolerance > swing )
             *swinging = 1;
     }
     if ( *swinging )
@@ -3102,7 +3102,7 @@ void __cdecl BG_SwingAngles(
             scale = 0.5f;
         if ( swinga < 0.0 )
         {
-            move = (float)((float)bgs->frametime * scale) * fabs(speed);
+            move = (float)((float)bgs->frametime * scale) * (-speed);
             if ( swinga < move )
             {
                 *swinging = 1;
@@ -3130,7 +3130,7 @@ void __cdecl BG_SwingAngles(
         swingb = AngleNormalize180(destination - *angle);
         if ( swingb <= clampTolerance )
         {
-            if ( fabs(clampTolerance) > swingb)
+            if ( -clampTolerance > swingb)
                 *angle = AngleNormalize360(destination + clampTolerance);
         }
         else

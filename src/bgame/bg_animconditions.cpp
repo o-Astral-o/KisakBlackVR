@@ -173,17 +173,17 @@ void __cdecl BG_LocalEvalDirection(pmove_t *pm)
     {
         t = moveVec[0];
         moveVec[0] = moveVec[1];
-        moveVec[1] = fabs(t);
+        moveVec[1] = -(t);
         yaw = vectoyaw(moveVec);
         deltaYaw = AngleDelta(yaw, pm->ps->viewangles[1]);
         YawVectors(deltaYaw, temp, 0);
-        moveVec[0] = fabs(temp[1]);
+        moveVec[0] = -(temp[1]);
         moveVec[1] = temp[0];
     }
     if ( moveVec[1] <= player_strafeAnimCosAngle->current.value )
     {
         //if ( COERCE_FLOAT(player_strafeAnimCosAngle->current.integer ^ _mask__NegFloat_) <= moveVec[1] )
-        if ( fabs(player_strafeAnimCosAngle->current.value) <= moveVec[1] )
+        if ( -player_strafeAnimCosAngle->current.value <= moveVec[1] )
         {
             if ( moveVec[0] <= 0.0 )
                 directionState = ANIM_DIRECTION_LEFT;
@@ -416,7 +416,7 @@ void __cdecl BG_LocalEvalSlope(pmove_t *pm)
     {
         if ( pm->averagePitch <= player_slopeAnimAngle->current.value )
         {
-            if ( fabs(player_slopeAnimAngle->current.value) <= pm->averagePitch )
+            if ( (-player_slopeAnimAngle->current.value) <= pm->averagePitch )
                 slopeState = ANIM_SLOPE_NONE;
             else
                 slopeState = ANIM_SLOPE_DOWN;

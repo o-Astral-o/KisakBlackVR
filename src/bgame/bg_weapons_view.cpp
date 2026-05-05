@@ -42,7 +42,7 @@ double __cdecl BG_CalculateWeaponMovement_VerticalBobFactor(const playerState_s 
     if (amplitude > bg_weaponBobMax->current.value)
         amplitude = bg_weaponBobMax->current.value;
 
-    float sinA = sinf(cycle * 4.0f);
+    float sinA = sinf(cycle * 2.0f);
     float sinB = sinf(cycle * 4.0f + 1.5707964f);
 
     return (sinA + sinB * 0.2f) * 0.75f * amplitude;
@@ -1199,7 +1199,7 @@ double __cdecl BG_CalculateViewMovement_VerticalBobFactor(const playerState_s *p
     if (amplitude > bg_viewBobMax->current.value)
         amplitude = bg_viewBobMax->current.value;
 
-    const float sinA = sinf(cycle * 4.0f);
+    const float sinA = sinf(cycle * 2.0f);
     const float sinB = sinf(cycle * 4.0f + 1.5707964f);
 
     return (sinA + sinB * 0.2f) * 0.75f * amplitude;

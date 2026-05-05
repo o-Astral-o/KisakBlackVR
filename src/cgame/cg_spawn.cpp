@@ -477,7 +477,7 @@ void __cdecl CG_CallSpawn(int localClientNum, SpawnVar *spawnVar)
     int v9; // [esp+D8h] [ebp-78h] BYREF
     int v10; // [esp+DCh] [ebp-74h] BYREF
     float force[3]; // [esp+E0h] [ebp-70h] BYREF
-    int fmag; // [esp+ECh] [ebp-64h]
+    float fmag; // [esp+ECh] [ebp-64h]
     char *v13; // [esp+F0h] [ebp-60h] BYREF
     const char *forceString; // [esp+F4h] [ebp-5Ch] BYREF
     int v15; // [esp+F8h] [ebp-58h]
@@ -677,10 +677,10 @@ LABEL_55:
                             if ( *forceString )
                                 sscanf(forceString, "%f %f %f", force, &force[1], &force[2]);
                         }
-                        *(float *)&fmag = Abs(force);
+                        fmag = Abs(force);
                         v2 = undertow_forces[num_undertow_volumes];
-                        v3 = 1.0 / *(float *)&fmag;
-                        *v2 = (float)(1.0 / *(float *)&fmag) * force[0];
+                        v3 = 1.0 / fmag;
+                        *v2 = (float)(1.0 / fmag) * force[0];
                         v2[1] = v3 * force[1];
                         v2[2] = v3 * force[2];
                         undertow_forces[num_undertow_volumes++][3] = fmag;

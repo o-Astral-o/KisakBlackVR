@@ -3291,10 +3291,10 @@ float __cdecl Vec3LengthSq(const float* v)
 
 void __cdecl Vec3NormalizeFast(float *v)
 {
-    int number; // [esp+0h] [ebp-1Ch]
+    float number; // [esp+0h] [ebp-1Ch]
     float invLength; // [esp+18h] [ebp-4h]
 
-    *(float *)&number = Vec3LengthSq(v);
+    number = Vec3LengthSq(v);
     invLength = I_rsqrt(number);
     v[0] = v[0] * invLength;
     v[1] = v[1] * invLength;
@@ -3620,10 +3620,10 @@ void __cdecl Vec3Copy(const float *from, float *to)
 
 void __cdecl Vec2NormalizeFast(float *v)
 {
-    int number; // [esp+18h] [ebp-8h]
+    float number; // [esp+18h] [ebp-8h]
     float invLength; // [esp+1Ch] [ebp-4h]
 
-    *(float *)&number = *v * *v + v[1] * v[1];
+    number = *v * *v + v[1] * v[1];
     invLength = I_rsqrt(number);
     *v = *v * invLength;
     v[1] = v[1] * invLength;

@@ -413,7 +413,7 @@ void __fastcall Actor_UpdateSight(actor_s *self)
     float v2; // [esp+4h] [ebp-208h]
     int v4; // [esp+38h] [ebp-1D4h]
     float *currentOrigin; // [esp+40h] [ebp-1CCh]
-    int fDistSqrd; // [esp+58h] [ebp-1B4h]
+    float fDistSqrd; // [esp+58h] [ebp-1B4h]
     int iOldTraceCount; // [esp+64h] [ebp-1A8h]
     sentient_s *sentient; // [esp+6Ch] [ebp-1A0h]
     int iTeamFlags; // [esp+70h] [ebp-19Ch]
@@ -450,18 +450,9 @@ void __fastcall Actor_UpdateSight(actor_s *self)
                 v[0] = v[0] - *currentOrigin;
                 v[1] = v[1] - currentOrigin[1];
                 v[2] = v[2] - currentOrigin[2];
-                *(float *)&fDistSqrd = (float)((float)(v[0] * v[0]) + (float)(v[1] * v[1])) + (float)(v[2] * v[2]);
-                if ( (fDistSqrd & 0x7F800000) == 0x7F800000
-                    && !Assert_MyHandler(
-                                "C:\\projects_pc\\cod\\codsrc\\src\\game\\actor_senses.cpp",
-                                728,
-                                0,
-                                "%s",
-                                "!IS_NAN(fDistSqrd)") )
-                {
-                    __debugbreak();
-                }
-                if ( *(float *)&fDistSqrd != 0.0 )
+                fDistSqrd = (float)((float)(v[0] * v[0]) + (float)(v[1] * v[1])) + (float)(v[2] * v[2]);
+                iassert(!IS_NAN(fDistSqrd));
+                if ( fDistSqrd != 0.0 )
                 {
                     v4 = level.time - self->sentientInfo[sentient - level.sentients].VisCache.iLastUpdateTime - 100;
                     v2 = (float)(v4 & ~(v4 >> 31));

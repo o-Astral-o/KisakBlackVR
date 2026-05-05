@@ -1887,35 +1887,30 @@ const DynEntityProps *__cdecl DynEnt_GetEntityProps(DynEntityType dynEntType)
     {
         __debugbreak();
     }
-    return (const DynEntityProps *)(8 * dynEntType + 13277220);
+    //return (const DynEntityProps *)(8 * dynEntType + 13277220);
+    return &dynEntProps[dynEntType];
 }
 
 unsigned __int16 __cdecl DynEnt_GetId(const DynEntityDef *dynEntDef, DynEntityDrawType drawType)
 {
     unsigned __int16 dynEntId; // [esp+0h] [ebp-4h]
 
-    if ( !dynEntDef
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\DynEntity\\DynEntity_load_obj.cpp",
-                    1390,
-                    0,
-                    "%s",
-                    "dynEntDef") )
-    {
-        __debugbreak();
-    }
-    dynEntId = ((char *)dynEntDef - (char *)cm.dynEntPoseList[drawType - 2]) / 84;
-    if ( dynEntId >= (unsigned int)cm.dynEntCount[drawType]
-        && !Assert_MyHandler(
-                    "C:\\projects_pc\\cod\\codsrc\\src\\DynEntity\\DynEntity_load_obj.cpp",
-                    1394,
-                    1,
-                    "dynEntId doesn't index cm.dynEntCount[DynEntGetClientCollType( drawType )]\n\t%i not in [0, %i)",
-                    dynEntId,
-                    cm.dynEntCount[drawType]) )
-    {
-        __debugbreak();
-    }
+    iassert(dynEntDef);
+
+    dynEntId = dynEntDef - cm.dynEntDefList[drawType];
+
+    bcassert(dynEntId, (unsigned int)cm.dynEntCount[drawType]);
+    //if ( dynEntId >= (unsigned int)cm.dynEntCount[drawType]
+    //    && !Assert_MyHandler(
+    //                "C:\\projects_pc\\cod\\codsrc\\src\\DynEntity\\DynEntity_load_obj.cpp",
+    //                1394,
+    //                1,
+    //                "dynEntId doesn't index cm.dynEntCount[DynEntGetClientCollType( drawType )]\n\t%i not in [0, %i)",
+    //                dynEntId,
+    //                cm.dynEntCount[drawType]) )
+    //{
+    //    __debugbreak();
+    //}
     return dynEntId;
 }
 
@@ -2089,7 +2084,7 @@ int __cdecl DynEnt_GetXModelUsageCount(const XModel *xModel)
     {
         for ( dynEntId = 0; dynEntId < (int)cm.dynEntCount[drawType]; ++dynEntId )
         {
-            if ( (const XModel *)LODWORD(cm.dynEntPoseList[drawType - 2][1].pose.quat[21 * dynEntId]) == xModel )
+            if (cm.dynEntDefList[drawType][dynEntId].xModel == xModel)
                 ++count;
         }
     }

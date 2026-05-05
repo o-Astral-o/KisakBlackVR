@@ -2647,8 +2647,11 @@ void CG_OffsetThirdPersonView(int localClientNum)
     cg_s *cgameGlob;
     float forward[3];
     float focusPoint[3];
+    float focusDir[3];
     float view[3];
+    float camTarget[3];
     float focusAngles[3];
+    float viewAngles[3];
     float corpseCent[3];
     float tagMtx[3][3];
     float focusDist;
@@ -2656,7 +2659,6 @@ void CG_OffsetThirdPersonView(int localClientNum)
 
     cgameGlob = CG_GetLocalClientGlobals(localClientNum);
 
-    /* dev third person override */
     if (cg_thirdPersonMode->current.integer == 2)
     {
         AnglesToAxis(devSavedAngles, cgameGlob->refdef.viewaxis);
@@ -2664,7 +2666,6 @@ void CG_OffsetThirdPersonView(int localClientNum)
         return;
     }
 
-    /* normal head tag positioning */
     if (!(cgameGlob->predictedPlayerState.eFlags & 0x300))
     {
         DObj *obj = Com_GetClientDObj(cgameGlob->predictedPlayerState.clientNum, localClientNum);
@@ -2682,14 +2683,13 @@ void CG_OffsetThirdPersonView(int localClientNum)
         Vec3Copy(corpseCent, cgameGlob->refdef.vieworg);
     }
 
-    /* corpse camera override */
     if (cgameGlob->predictedPlayerState.pm_type >= 9 &&
         cgameGlob->predictedPlayerState.corpseIndex >= 0)
     {
         if (cgameGlob->predictedPlayerState.corpseIndex >= 4)
         {
             if (!Assert_MyHandler(
-                "cg_view_mp.cpp",
+                "C:\\projects_pc\\cod\\codsrc\\src\\cgame_mp\\cg_view_mp.cpp",
                 743,
                 0,
                 "cgameGlob->predictedPlayerState.corpseIndex doesn't index MAX_CLIENT_CORPSES\n\t%i not in [0, %i)",
@@ -2706,8 +2706,7 @@ void CG_OffsetThirdPersonView(int localClientNum)
                 CG_GetEntity(localClientNum,
                     cgameGlob->predictedPlayerState.corpseIndex + 32);
 
-            //if ((cent->flags >> 1) & 1)
-            if (cent->currentState.eFlags & 2)
+            if (((*((_DWORD *)cent + 201) >> 1) & 1) != 0)
             {
                 DObj *obj = Com_GetClientDObj(cent->nextState.number, localClientNum);
                 if (obj)
@@ -2722,7 +2721,6 @@ void CG_OffsetThirdPersonView(int localClientNum)
         }
     }
 
-    /* chase cam */
     if ((cgameGlob->predictedPlayerState.otherFlags & 2) ||
         Demo_IsThirdPersonCamera())
     {
@@ -2730,55 +2728,59 @@ void CG_OffsetThirdPersonView(int localClientNum)
         return;
     }
 
-    /* base focus angles */
     Vec3Copy(cgameGlob->refdefViewAngles, focusAngles);
+    Vec3Copy(cgameGlob->refdefViewAngles, viewAngles);
 
     if (cg_thirdPerson->current.integer == 2)
     {
+        viewAngles[PITCH] = 0.0f;
         focusAngles[PITCH] = 0.0f;
-        focusAngles[YAW] = 0.0f;
     }
 
     if (cgameGlob->predictedPlayerState.pm_type >= 9)
     {
+        viewAngles[YAW] = (float)cgameGlob->predictedPlayerState.stats[STAT_DEAD_YAW];
         focusAngles[YAW] = (float)cgameGlob->predictedPlayerState.stats[STAT_DEAD_YAW];
-        focusAngles[PITCH] = (float)cgameGlob->predictedPlayerState.stats[STAT_DEAD_YAW];
     }
 
-    if (focusAngles[PITCH] > 45.0f)
-        focusAngles[PITCH] = 45.0f;
+    if (viewAngles[PITCH] > 45.0f)
+        viewAngles[PITCH] = 45.0f;
 
-    AngleVectors(focusAngles, forward, NULL, NULL);
+    AngleVectors(viewAngles, focusDir, NULL, NULL);
 
-    /* desired camera target */
-    Vec3Mad(cgameGlob->refdef.vieworg, 512.0f, forward, view);
+    view[0] = (float)(512.0f * focusDir[0]) + cgameGlob->refdef.vieworg[0];
+    view[1] = (float)(512.0f * focusDir[1]) + cgameGlob->refdef.vieworg[1];
+    view[2] = (float)(512.0f * focusDir[2]) + cgameGlob->refdef.vieworg[2];
 
-    view[2] += 8.0f;
+    camTarget[0] = cgameGlob->refdef.vieworg[0];
+    camTarget[1] = cgameGlob->refdef.vieworg[1];
+    camTarget[2] = cgameGlob->refdef.vieworg[2] + 8.0f;
 
-    /* adjust angles */
     focusAngles[PITCH] *= 0.5f;
     focusAngles[YAW] -= cg_thirdPersonAngle->current.value;
 
-    AngleVectors(focusAngles, forward, NULL, NULL);
+    AngleVectors(focusAngles, focusDir, NULL, NULL);
 
     focusDist = -cg_thirdPersonRange->current.value;
 
-    Vec3Mad(cgameGlob->refdef.vieworg, focusDist, forward, view);
+    camTarget[0] = (float)(focusDist * focusDir[0]) + camTarget[0];
+    camTarget[1] = (float)(focusDist * focusDir[1]) + camTarget[1];
+    camTarget[2] = (float)(focusDist * focusDir[2]) + camTarget[2];
 
-    /* trace */
     ThirdPersonViewTrace(
         cgameGlob,
         cgameGlob->refdef.vieworg,
-        view,
-        0x800811,//CONTENTS_SOLID,
+        camTarget,
+        0x800811,
         cgameGlob->refdef.vieworg,
         true,
         true);
 
-    /* compute view angles from delta */
-    Vec3Sub(view, cgameGlob->refdef.vieworg, view);
+    view[0] = view[0] - cgameGlob->refdef.vieworg[0];
+    view[1] = view[1] - cgameGlob->refdef.vieworg[1];
+    view[2] = view[2] - cgameGlob->refdef.vieworg[2];
 
-    dist = sqrtf(view[0] * view[0] + view[1] * view[1]);
+    dist = sqrtf((float)(view[0] * view[0]) + (float)(view[1] * view[1]));
     if (dist < 1.0f)
         dist = 1.0f;
 

@@ -11,6 +11,7 @@
 #include <cgame_mp/cg_local_mp.h>
 #include <clientscript/cscr_vm.h>
 #include <database/db_registry.h>
+#include <gfx_d3d/r_rendercmds.h>
 
 XAnimInfo g_xAnimInfo[4096];
 unsigned int g_endNotetrackName;
@@ -2985,8 +2986,7 @@ void __cdecl XAnimCalcDeltaTree(
     float v13; // [esp+5Ch] [ebp-68h]
     float v14; // [esp+78h] [ebp-4Ch]
     unsigned int infoIndex1; // [esp+84h] [ebp-40h]
-    int r; // [esp+8Ch] [ebp-38h]
-    int ra; // [esp+8Ch] [ebp-38h]
+    float r; // [esp+8Ch] [ebp-38h]
     XAnimInfo *info; // [esp+90h] [ebp-34h]
     XAnimInfo *infoa; // [esp+90h] [ebp-34h]
     XAnimInfo *infob; // [esp+90h] [ebp-34h]
@@ -3155,8 +3155,8 @@ void __cdecl XAnimCalcDeltaTree(
         {
             if ( deltaInfo.bClear )
             {
-                *(float *)&r = (float)(rotPos->rot[0] * rotPos->rot[0]) + (float)(rotPos->rot[1] * rotPos->rot[1]);
-                if ( *(float *)&r != 0.0 )
+                r = (float)(rotPos->rot[0] * rotPos->rot[0]) + (float)(rotPos->rot[1] * rotPos->rot[1]);
+                if ( r != 0.0 )
                 {
                     v13 = I_rsqrt(r) * weightScale;
                     rotPos->rot[0] = v13 * rotPos->rot[0];
@@ -3173,10 +3173,10 @@ void __cdecl XAnimCalcDeltaTree(
             }
             else
             {
-                *(float *)&ra = (float)(rotPos2->rot[0] * rotPos2->rot[0]) + (float)(rotPos2->rot[1] * rotPos2->rot[1]);
-                if ( *(float *)&ra != 0.0 )
+                r = (float)(rotPos2->rot[0] * rotPos2->rot[0]) + (float)(rotPos2->rot[1] * rotPos2->rot[1]);
+                if ( r != 0.0 )
                 {
-                    v11 = I_rsqrt(ra) * weightScale;
+                    v11 = I_rsqrt(r) * weightScale;
                     rotPos->rot[0] = (float)(v11 * rotPos2->rot[0]) + rotPos->rot[0];
                     rotPos->rot[1] = (float)(v11 * rotPos2->rot[1]) + rotPos->rot[1];
                 }

@@ -805,7 +805,7 @@ bool __cdecl DynEnt_EntityInArea(
     }
     if ( (contentMask & DynEnt_GetContents(dynEntDef)) == 0 )
         return 0;
-    if ( dynEntColl->linkMins[0] > *maxs || dynEntColl->linkMins[1] > maxs[1] || dynEntColl->linkMins[2] > maxs[2] )
+    if ( dynEntColl->linkMins[0] > maxs[0] || dynEntColl->linkMins[1] > maxs[1] || dynEntColl->linkMins[2] > maxs[2] )
         return 0;
     return *mins <= dynEntColl->linkMaxs[0] && mins[1] <= dynEntColl->linkMaxs[1] && mins[2] <= dynEntColl->linkMaxs[2];
 }
