@@ -232,6 +232,7 @@ struct MaterialTechniqueSet // sizeof=0x210
         unsigned __int16 techsetFlags;
         MaterialTechnique *techniques[130];
 };
+static_assert(sizeof(MaterialTechniqueSet) == 528);
 
 struct __declspec(align(4)) GfxImageLoadDef // sizeof=0x10
 {

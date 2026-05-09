@@ -24,6 +24,7 @@ set_source_files_properties(
 target_compile_definitions(KisakBlack PUBLIC
     WIN32
     _CONSOLE
+    KISAK_MP
     _CRT_SECURE_NO_WARNINGS
     _WINSOCK_NO_DEPRECATED_NO_WARNINGS
 )

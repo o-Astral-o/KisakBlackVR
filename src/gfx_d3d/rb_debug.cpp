@@ -516,7 +516,7 @@ void __cdecl RB_DrawDebugSphere(trDebugSphere_t *sphere)
             v2[1] = v3[1];
         }
         tess.vertexCount += vertexCount;
-        memcpy((unsigned __int8 *)(2 * tess.indexCount + 182461768), src, 2 * indexCount);
+        memcpy((unsigned __int8 *)&tess.indices[tess.indexCount], src, 2 * indexCount);
         tess.indexCount += indexCount;
         RB_EndTessSurface();
     }

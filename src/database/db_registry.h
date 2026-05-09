@@ -170,7 +170,7 @@ void __cdecl Mark_XAnimPartsAsset(XAnimParts *parts);
 void __cdecl Load_XModelAsset(XAssetHeader *model);
 void __cdecl Mark_XModelAsset(XModel *model);
 void __cdecl DB_RemoveXModel(XAssetHeader header);
-void __cdecl Load_MaterialAsset(XAssetHeader *material);
+void __cdecl Load_MaterialAsset(Material **material);
 void __cdecl Mark_MaterialAsset(Material *material);
 void __cdecl Load_MaterialTechniqueSetAsset(XAssetHeader *techniqueSet);
 void __cdecl Mark_MaterialTechniqueSetAsset(MaterialTechniqueSet *techniqueSet);

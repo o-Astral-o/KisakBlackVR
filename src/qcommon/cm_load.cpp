@@ -50,6 +50,7 @@ void CM_InitAllThreadData()
     CM_InitThreadData(THREAD_CONTEXT_OCCLUSION);
 }
 
+PhysGeomList *g_geoms[12];
 void __cdecl CM_InitThreadData(unsigned int threadContext)
 {
     TraceThreadInfo *traceThreadInfo; // [esp+8h] [ebp-4h]
@@ -72,7 +73,7 @@ void __cdecl CM_InitThreadData(unsigned int threadContext)
     memcpy((void *)traceThreadInfo->box_brush, cm.box_brush, sizeof(cbrush_t));
     traceThreadInfo->box_model = &g_box_model[threadContext];
     memcpy(traceThreadInfo->box_model, &cm.box_model, sizeof(cmodel_t));
-    traceThreadInfo->geoms = (PhysGeomList **)(4 * threadContext + 66312524);
+    traceThreadInfo->geoms = &g_geoms[threadContext];
     *traceThreadInfo->geoms = 0;
 }
 

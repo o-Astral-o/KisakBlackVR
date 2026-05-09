@@ -594,9 +594,11 @@ void __cdecl DB_RemoveXModel(XAssetHeader header)
     XModelReleaseResources(header.model);
 }
 
-void __cdecl Load_MaterialAsset(XAssetHeader *material)
+void __cdecl Load_MaterialAsset(Material **material)
 {
-    material->xmodelPieces = DB_AddXAsset(ASSET_TYPE_MATERIAL, (XAssetHeader)material->xmodelPieces).xmodelPieces;
+    XAssetHeader asset;
+    asset.material = *material;
+    *material = DB_AddXAsset(ASSET_TYPE_MATERIAL, asset).material;
 }
 
 void __cdecl Mark_MaterialAsset(Material *material)

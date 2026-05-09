@@ -221,10 +221,10 @@ int __cdecl SND_StartAliasStream(SndStartAliasInfo *startAliasInfo, unsigned int
     {
         primeSize = 0;
         primeData = 0;
-        if ((alias->flags & 0xC000) >> 14 == 3 && alias->soundFile->u.loadSnd->sound.version)
+        if ((alias->flags & 0xC000) >> 14 == 3 && alias->soundFile->u.streamSnd->primeSnd)
         {
-            primeData = alias->soundFile->u.loadSnd->sound.data;
-            primeSize = alias->soundFile->u.loadSnd->sound.data_size;
+            primeData = alias->soundFile->u.streamSnd->primeSnd->buffer;
+            primeSize = alias->soundFile->u.streamSnd->primeSnd->size;
         }
         Snd_StreamOpen(streamVoice, filename2, (alias->flags & 1) != 0, primeSize, primeData);
         SND_SetVoiceStartInfo(voiceIndex, startAliasInfo);

@@ -2758,6 +2758,8 @@ void __cdecl Com_ResetFrametime()
 
 void __cdecl Com_CheckSyncFrame()
 {
+    PROF_SCOPED("Com_CheckSyncFrame"); // LWSS ADD
+
     Scr_UpdateRemoteDebugger(SCRIPTINSTANCE_SERVER);
     DB_Update();
     UI_ViewerCheckStreamer();
@@ -2793,7 +2795,7 @@ void __cdecl Com_Frame()
     }
     else
     {
-        Sys_LeaveCriticalSection(CRITSECT_COM_ERROR);
+    Sys_LeaveCriticalSection(CRITSECT_COM_ERROR);
     }
 }
 

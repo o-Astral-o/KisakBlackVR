@@ -1711,7 +1711,7 @@ void __cdecl jqTempWorkerLoop(jqWorker *Worker, jqBatchGroup *GroupID, bool (__c
         if ( !ret)
           goto LABEL_15;
         _InterlockedExchangeAdd(&jqPool.group.QueuedBatchCount, 1u);
-        _InterlockedExchangeAdd(&CurBatch.GroupID->QueuedBatchCount, 1u);
+        _InterlockedExchangeAdd(&CurBatch.Module->Group.QueuedBatchCount, 1u);
         _InterlockedExchangeAdd(&jqCurQueue->QueuedBatchCount, 1u);
         if ( CurBatch.GroupID )
           _InterlockedExchangeAdd(&CurBatch.GroupID->QueuedBatchCount, 1u);

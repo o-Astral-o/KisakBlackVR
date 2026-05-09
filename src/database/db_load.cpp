@@ -2408,7 +2408,8 @@ void __cdecl Load_MaterialTechniquePtrArray(bool atStreamStart, int count)
 
 void __cdecl Load_MaterialTechniqueSet(bool atStreamStart)
 {
-    Load_Stream(atStreamStart, (unsigned __int8 *)varMaterialTechniqueSet, 528);
+    static_assert(sizeof(MaterialTechniqueSet) == 528);
+    Load_Stream(atStreamStart, (unsigned __int8 *)varMaterialTechniqueSet, sizeof(MaterialTechniqueSet));
     DB_PushStreamPos(4u);
     varXString = &varMaterialTechniqueSet->name;
     Load_XString(0);
@@ -2517,7 +2518,7 @@ void __cdecl Load_MaterialHandle(bool atStreamStart)
             else
                 inserted = 0;
             Load_Material(1);
-            Load_MaterialAsset((XAssetHeader *)varMaterialHandle);
+            Load_MaterialAsset(varMaterialHandle);
             if ( inserted )
                 *inserted = *varMaterialHandle;
         }

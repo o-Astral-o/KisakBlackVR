@@ -916,7 +916,7 @@ int __stdcall WinMain(HINSTANCE__ *hInstance, HINSTANCE__ *hPrevInstance, char *
             {
                 // if not running as a game client, sleep a bit
 #ifdef KISAK_MP
-                if (g_wv.isMinimized || (com_dedicated && com_dedicated->current.integer))
+                if (g_wv.isMinimized || IsDedicatedServer())
 #elif KISAK_SP
                 if (g_wv.isMinimized)
 #endif

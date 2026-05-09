@@ -41,6 +41,8 @@ int __cdecl R_AcquireDXDeviceOwnership(void (__cdecl *pumpfunc)())
 
 int __cdecl R_ReleaseDXDeviceOwnership()
 {
+    PROF_SCOPED("R_ReleaseDXDeviceOwnership");
+
     Sys_EnterCriticalSection(CRITSECT_DXDEVICE_GLOB);
     if ( g_DXDeviceThread == GetCurrentThreadId() )
     {

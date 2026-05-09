@@ -169,7 +169,7 @@ char __cdecl UI_LoadModArenas()
             {
                 FS_Read(buffer, len, file);
                 FS_FCloseFile(file);
-                ui_numArenas = UI_ParseInfos((const char *)buffer, 128 - ui_numArenas, (char **)(4 * ui_numArenas + 160058192));
+                ui_numArenas = UI_ParseInfos((const char *)buffer, 128 - ui_numArenas, &ui_arenaInfos[ui_numArenas]);
                 return 1;
             }
             else

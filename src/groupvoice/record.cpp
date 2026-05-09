@@ -103,7 +103,7 @@ int __cdecl Record_QueueAudioDataForEncoding(audioSample_t *sample)
                     if ( sample->sampleOffset < sample->lengthInSamples )
                     {
                         memcpy(
-                            (unsigned __int8 *)(2 * samples_in_partial_audio_buffer + 66301904),
+                            (unsigned __int8 *)&partial_audio_buffer[samples_in_partial_audio_buffer],
                             &sample->buffer[sample->bytesPerSample * sample->sampleOffset],
                             sample->bytesPerSample * (sample->lengthInSamples - sample->sampleOffset));
                         samples_in_partial_audio_buffer += sample->lengthInSamples - sample->sampleOffset;
