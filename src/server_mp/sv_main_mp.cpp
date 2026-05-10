@@ -33,6 +33,7 @@
 #include <universal/com_memory.h>
 #include <clientscript/cscr_vm.h>
 #include <setjmp.h>
+#include <win32/win_steam.h>
 
 serverStatic_t svs;
 serverStaticHeader_t svsHeader;
@@ -1293,6 +1294,13 @@ void __cdecl SV_PostFrame()
     Scr_UpdateDebugger(SCRIPTINSTANCE_SERVER);
     SV_CheckTimeouts();
     SV_SendClientMessages();
+
+    // LWSS ADD: Steam Periodic Auth Check
+    if (IsDedicatedServer())
+    {
+        Steam_CheckClients();
+    }
+    // LWSS END
 }
 
 void SV_RunEventLoop()

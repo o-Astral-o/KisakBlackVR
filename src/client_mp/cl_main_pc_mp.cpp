@@ -36,6 +36,7 @@
 #include <qcommon/legacyhacks.h>
 #include <qcommon/md4.h>
 #include <DW/MatchMakingQueries_win32.h>
+#include <win32/win_steam.h>
 
 
 const dvar_t *cl_quickmatch_resultspercent;
@@ -338,6 +339,16 @@ void __cdecl CL_ConnectHackDW()
     Cbuf_AddText(0, v0);
 }
 
+bool __cdecl CL_CDKeyValidate(netadr_t addr)
+{
+#ifdef WIN32
+    return Steam_UpdateClientAuthTicket(addr);
+#else
+#error Steam Auth for Arch
+    return false;
+#endif
+}
+
 void __cdecl CL_Connect_f()
 {
     int ControllerIndex; // eax
@@ -379,7 +390,7 @@ void __cdecl CL_Connect_f()
                 clc->serverAddress.ip[2],
                 clc->serverAddress.ip[3],
                 v1);
-            if ( NET_IsLocalAddress(clc->serverAddress) || CL_LocalClient_GetActiveCount() )
+            if ( NET_IsLocalAddress(clc->serverAddress) || CL_CDKeyValidate(clc->serverAddress) ) // LWSS ADD CDKey for steam
             {
                 if ( Sys_IsLANAddress(clc->serverAddress) 
 #ifdef KISAK_DW

@@ -64,6 +64,7 @@ struct __declspec(align(4)) challenge_t // sizeof=0x70
                                         // SV_DirectConnect(netadr_t)+3E7/w ...
     int connected;                      // XREF: SV_DirectConnect(netadr_t)+446/w
     int guid;                           // XREF: SV_DirectConnect(netadr_t)+333/r
+    uint64_t steamID64; // LWSS ADD 
     char PBguid[33];                    // XREF: SV_DirectConnect(netadr_t)+344/o
     char clientPBguid[33];              // XREF: SV_DirectConnect(netadr_t)+362/o
     // padding byte

@@ -2578,6 +2578,8 @@ set(UI_MP_FILES
 
 # ----- src/universal -----
 set(SRC_UNIVERSAL
+	"${SRC_DIR}/universal/base64.cpp"
+	"${SRC_DIR}/universal/base64.h"
 	"${SRC_DIR}/universal/CurveManager.cpp"
 	"${SRC_DIR}/universal/CurveManager.h"
 	"${SRC_DIR}/universal/UserInfo.cpp"
@@ -2721,6 +2723,8 @@ set(SRC_WIN32
 	"${SRC_DIR}/win32/win_splash.h"
 	"${SRC_DIR}/win32/win_stream.cpp"
 	"${SRC_DIR}/win32/win_stream.h"
+	"${SRC_DIR}/win32/win_steam.cpp"
+	"${SRC_DIR}/win32/win_steam.h"
 	"${SRC_DIR}/win32/win_syscon.cpp"
 	"${SRC_DIR}/win32/win_syscon.h"
 	"${SRC_DIR}/win32/win_tasks.cpp"

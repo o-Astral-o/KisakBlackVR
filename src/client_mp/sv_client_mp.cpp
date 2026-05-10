@@ -40,6 +40,8 @@
 #include <server/sv_game.h>
 #include <bgame/bg_weapons.h>
 #include <game_mp/g_active_mp.h>
+#include <universal/base64.h>
+#include <win32/win_steam.h>
 
 struct ucmd_t // sizeof=0xC
 {                                       // XREF: .data:ucmds/r
@@ -152,8 +154,63 @@ void __cdecl SV_GetChallenge(netadr_t from)
         challenge->time = time;
         challenge->connected = 0;
     }
-    challenge->pingTime = svs.time;
-    NET_OutOfBandPrint(NS_SERVER, from, va("challengeResponse %i", challenge->challenge));
+
+
+    //challenge->pingTime = svs.time;
+    //NET_OutOfBandPrint(NS_SERVER, from, va("challengeResponse %i", challenge->challenge));
+    
+    // LWSS ADD - all new below here
+    char *clientSteamTicketBase64 = (char *)SV_Cmd_Argv(2);
+    char *clientSteamID64 = (char *)SV_Cmd_Argv(3);
+    unsigned char decodedSteamTicket[1024 + 128]{ 0 };
+
+    if (!clientSteamTicketBase64[0] || !clientSteamID64[0])
+    {
+        iassert(0); // guy didn't send enough information
+        return;
+    }
+
+    if (strlen(clientSteamTicketBase64) > sizeof(decodedSteamTicket))
+    {
+        iassert(0);
+        return;
+    }
+
+    uint32 decodedLen = b64_decode((unsigned char *)clientSteamTicketBase64, strlen(clientSteamTicketBase64), decodedSteamTicket);
+
+    char *endptr;
+    uint64_t steamID64 = strtoull(clientSteamID64, &endptr, 10);
+
+    //if (SV_IsBannedGuid(guid)) 
+    //{
+    //    Com_Printf(15, "rejected connection from permanently banned GUID \"%s\"\n", clientSteamID64);
+    //    NET_OutOfBandPrint(NS_SERVER, svs.challenges[i].adr, "error\xA\x15You are permanently banned from this server");
+    //    memset(&svs.challenges[i], 0, sizeof(svs.challenges[i]));
+    //    return;
+    //}
+    //if (SV_IsTempBannedGuid(guid)) 
+    //{
+    //    Com_Printf(15, "rejected connection from temporarily banned GUID \"%s\"\n", clientSteamID64);
+    //    NET_OutOfBandPrint(NS_SERVER, svs.challenges[i].adr, "error\xA\x15You are temporarily banned from this server");
+    //    memset(&svs.challenges[i], 0, sizeof(svs.challenges[i]));
+    //    return;
+    //}
+
+    challenge->steamID64 = steamID64;
+
+    if (Steam_CheckClientTicket(decodedSteamTicket, decodedLen, steamID64))
+    {
+        challenge->pingTime = svs.time;
+        NET_OutOfBandPrint(NS_SERVER, from, va("challengeResponse %i", challenge->challenge));
+        return;
+    }
+    else
+    {
+        Com_Printf(15, "rejected connection from invalid Steam GUID \"%s\"\n", clientSteamID64);
+        NET_OutOfBandPrint(NS_SERVER, challenge->adr, "error\xA\x15Your Steam Client Ticket was Invalid");
+        memset(challenge, 0, sizeof(challenge_t));
+        return;
+    }
 }
 
 void __cdecl SV_CacheClientStatChange(unsigned int clientNum, ddlState_t *searchState)
@@ -737,6 +794,8 @@ void __cdecl SV_DirectConnect(netadr_t from)
     int qport; // [esp+4ACh] [ebp-2Ch]
     char clientPBguid[36]; // [esp+4B0h] [ebp-28h] BYREF
 
+    uint64_t steamID64 = 0; // lwss add
+
     memset(authSvPBguid, 0, 33);
     memset(clientPBguid, 0, 33);
     Com_DPrintf(15, "SV_DirectConnect()\n");
@@ -779,6 +838,7 @@ void __cdecl SV_DirectConnect(netadr_t from)
             if (NET_CompareAdr(from, svs.challenges[i].adr) && challenge == svs.challenges[i].challenge)
             {
                 guid = svs.challenges[i].guid;
+                steamID64 = svs.challenges[i].steamID64; // LWSS ADD
                 I_strncpyz(authSvPBguid, svs.challenges[i].PBguid, 33);
                 I_strncpyz(clientPBguid, svs.challenges[i].clientPBguid, 33);
                 break;
@@ -999,10 +1059,13 @@ void __cdecl SV_DirectConnect(netadr_t from)
         if (!clients->guid)
             Com_Printf(15, "Connecting player #%i has a zero GUID\n", clientNum);
         steamIDStr = Info_ValueForKey(userinfo, "steamid");
-        newcl->steamAuthorized = 0;
-        newcl->steamAuthFailCount = 0;
-        v20 = StringToInt64(steamIDStr);
-        newcl->steamID = v20;
+
+        // LWSS: removed this because my steam auth re-uses the same steamID field and this zeroes it
+        //newcl->steamAuthorized = 0;
+        //newcl->steamAuthFailCount = 0;
+        //v20 = StringToInt64(steamIDStr);
+        //newcl->steamID = v20;
+        
         Netchan_Setup(
             NS_SERVER,
             &newcl->header.netchan,
@@ -1039,6 +1102,12 @@ void __cdecl SV_DirectConnect(netadr_t from)
             newcl->lastConnectTime = svs.time;
             I_strncpyz(newcl->PBguid, authSvPBguid, 33);
             I_strncpyz(newcl->clientPBguid, clientPBguid, 33);
+
+            // LWSS ADD - for steam auth
+            iassert(steamID64 || newcl->bIsDemoClient || !IsDedicatedServer());
+            newcl->steamID = steamID64;
+            // LWSS END
+
             SV_UserinfoChanged(newcl);
             svs.challenges[i].firstPing = 0;
             NET_OutOfBandPrint(NS_SERVER, from, va("connectResponse %s", fs_gameDirVar->current.string));
@@ -1199,6 +1268,12 @@ void __cdecl SV_DropClient(client_t *drop, const char *reason, bool tellThem, bo
         if (onlinegame->current.enabled && com_sv_running->current.enabled)
             MatchRecordPlayerDetails(&level.clients[clientNum], reason);
 #endif
+        // LWSS ADD
+        if (IsDedicatedServer() && !drop->bIsDemoClient)
+        {
+            Steam_OnClientDropped(drop->steamID);
+        }
+        // LWSS END
         LiveSteam_Server_ClientSteamDisconnect(drop->steamID);
         SV_FreeClient(drop);
         Com_DPrintf(15, "Going to CS_ZOMBIE from %i for %s due to %s\n", dropState, droppedClientName, reason);

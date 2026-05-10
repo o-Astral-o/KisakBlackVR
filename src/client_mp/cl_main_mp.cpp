@@ -90,6 +90,8 @@
 #include <database/db_file_load.h>
 #include <live/live_pcache_profile.h>
 #include <client/cl_debugdata.h>
+#include <win32/win_steam.h>
+#include <universal/base64.h>
 
 const dvar_t *cl_noprint;
 const dvar_t *playlist;
@@ -1436,6 +1438,11 @@ void __cdecl CL_Disconnect(unsigned int localClientNum, bool deactivateClient)
             v6 = Com_LocalClient_GetControllerIndex(localClientNum);
             CL_UpdateProfileAfterGame(v6);
         }
+
+        // LWSS ADD
+        Steam_CancelClientTicket();
+        // LWSS END
+
         if ( CL_AllLocalClientsDisconnected() )
         {
             Dvar_SetBool((dvar_s *)sv_disableClientConsole, 0);
@@ -1957,7 +1964,6 @@ void __cdecl CL_InitDownloads(int localClientNum)
 
 void __cdecl CL_CheckForResend(int localClientNum)
 {
-    netsrc_t NetworkID; // eax
     __int64 Uid; // rax
     const char *v6; // eax
     unsigned int RandomUInt; // eax
@@ -1968,7 +1974,6 @@ void __cdecl CL_CheckForResend(int localClientNum)
     unsigned int v10; // eax
     netsrc_t v11; // eax
     netadr_t v12; // [esp-18h] [ebp-D68h]
-    netadr_t serverAddress; // [esp-14h] [ebp-D64h]
     int v15; // [esp-4h] [ebp-D54h]
     unsigned __int64 ourUserID; // [esp+D8h] [ebp-C78h] BYREF
     char clientSteamIDStr[32]; // [esp+E4h] [ebp-C6Ch] BYREF
@@ -1980,6 +1985,15 @@ void __cdecl CL_CheckForResend(int localClientNum)
     unsigned int infoLen; // [esp+938h] [ebp-418h]
     clientConnection_t *clc; // [esp+93Ch] [ebp-414h]
     char pkt[1036]; // [esp+940h] [ebp-410h] BYREF
+
+    unsigned char *pSteamClientTicket = NULL;
+    uint32 steamClientTicketSize = 0;
+    char steamIDbuf[25];
+    unsigned char steamTicketBase64[2048]{ 0 };
+
+#ifdef _DEBUG
+    unsigned char steamTicketDecodeBuf[1024]{ 0 };
+#endif
 
     connstate = CL_GetLocalClientConnectionState(localClientNum);
     if ( connstate == CA_CONNECTING || connstate == CA_CHALLENGING || connstate == CA_SENDINGSTATS )
@@ -2004,22 +2018,31 @@ void __cdecl CL_CheckForResend(int localClientNum)
                 if ( dwGetAddrHandleConnectionTaskStatus(clc->serverAddress.addrHandleIndex) )
 #endif
                 {
-                    if (net_lanauthorize->current.enabled || !Sys_IsLANAddress(clc->serverAddress))
-                    {
-                        //BLOPS_NULLSUB();
-                        // IN COD4: CL_RequestAuthorization(localClientNum);
-                    }
-                    strcpy(pkt, "getchallenge");
-                    pktlen = &pkt[strlen(pkt) + 1] - &pkt[1];
+                    //if (net_lanauthorize->current.enabled || !Sys_IsLANAddress(clc->serverAddress))
+                    //{
+                    //    //BLOPS_NULLSUB();
+                    //    // IN COD4: CL_RequestAuthorization(localClientNum);
+                    //}
+                    
+                    //strcpy(pkt, "getchallenge");
+                    //pktlen = &pkt[strlen(pkt) + 1] - &pkt[1];
                     //PbClientConnecting(1, pkt, &pktlen);
                     //CL_BuildMd5StrFromCDKey(md5Str);
-                    serverAddress = clc->serverAddress;
-                    NetworkID = Com_LocalClient_GetNetworkID(localClientNum);
+
+
                     // NOTE: In Black Ops, the server does not give 2 shits about the CD Key.
                     // Go look at SV_GetChallenge(), it's not even read. This is a leftover.
-                    const char *dummy = "abc";
-                    //NET_OutOfBandPrint(NetworkID, serverAddress, va("getchallenge 0 \"%s\"", md5Str));
-                    NET_OutOfBandPrint(NetworkID, serverAddress, va("getchallenge 0 \"%s\"", dummy));
+                    //const char *dummy = "abc";
+                    //NET_OutOfBandPrint(Com_LocalClient_GetNetworkID(localClientNum), serverAddress, va("getchallenge 0 \"%s\"", md5Str));
+                    //NET_OutOfBandPrint(Com_LocalClient_GetNetworkID(localClientNum), clc->serverAddress, va("getchallenge 0 \"%s\"", dummy));
+
+                    bool got = Steam_GetRawClientTicket(&pSteamClientTicket, &steamClientTicketSize);
+                    iassert(got);
+                    b64_encode(pSteamClientTicket, steamClientTicketSize, steamTicketBase64);
+                    iassert(b64_decode(steamTicketBase64, strlen((char *)steamTicketBase64), steamTicketDecodeBuf) == steamClientTicketSize);
+
+                    NET_OutOfBandPrint(Com_LocalClient_GetNetworkID(localClientNum), clc->serverAddress, va("getchallenge 0 \"%s\" \"%llu\"", steamTicketBase64, Steam_GetClientSteamID64()));
+
                     *(&clc->nonce + 1) = 0;
                     clc->nonce = 0;
                 }

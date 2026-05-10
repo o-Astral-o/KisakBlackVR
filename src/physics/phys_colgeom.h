@@ -54,9 +54,11 @@ struct phys_gjk_geom // sizeof=0x4
     {
         return 0.0f;
     }
+
     virtual void calc_aabb(const phys_mat44 *, phys_vec3 *, phys_vec3 *) const = 0;
     // ray_cast() seems to be a weird leftover (unused)
     virtual bool ray_cast(const phys_vec3 *, const phys_vec3 *, const float, float *, phys_vec3 *) const;
+    // false for rounded shapes (cylinder, capsule)
     virtual bool is_polyhedron() = 0;
 
     const phys_vec3 *support_only(const phys_vec3 *result, const phys_mat44 *xform, const phys_vec3 *v) const;

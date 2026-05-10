@@ -30,6 +30,7 @@
 #include <qcommon/tl_support.h>
 #include "win_configure.h"
 #include <direct.h>
+#include "win_steam.h"
 
 const dvar_t *sys_configureGHz;
 const dvar_t *sys_sysMB;
@@ -901,6 +902,11 @@ int __stdcall WinMain(HINSTANCE__ *hInstance, HINSTANCE__ *hPrevInstance, char *
             {
                 __debugbreak();
             }
+
+            // LWSS ADD: Steam Init
+            Steam_Init();
+            // LWSS END
+
             Com_Init(sys_cmdline);
 
             if (!IsDedicatedServer())
