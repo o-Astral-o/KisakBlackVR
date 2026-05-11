@@ -286,7 +286,7 @@ void __cdecl Actor_GetBodyPlantAngles(
     fHeight = Actor_SetBodyPlantAngle(iEntNum, iClipMask, vOrigin, vOrigin, vForward, pfPitch);
     if ( pfRoll )
     {
-        if ( fabs(*(unsigned int *)pfPitch) >= 30.0 )
+        if ( fabs(*pfPitch) >= 30.0 )
         {
             *pfRoll = 0.0f;
         }

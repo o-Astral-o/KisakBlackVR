@@ -349,7 +349,7 @@ void __cdecl CM_PickProjectionAxes(const float *normal, int *i, int *j)
 {
     int k; // [esp+18h] [ebp-4h]
 
-    k = fabs((unsigned int)normal[1]) > fabs(*(unsigned int *)normal);
+    k = fabs((unsigned int)normal[1]) > fabs(*normal);
     if ( fabs((unsigned int)normal[2]) > fabs(normal[k]) )
         LOBYTE(k) = 2;
     *i = (k & 1) == 0;

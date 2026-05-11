@@ -2623,7 +2623,7 @@ void __cdecl MissileLandAngles(gentity_s *ent, trace_t *trace, float *vAngles, i
             *vAngles = AngleNormalize180(*vAngles);
             if ( bForceAlign || fAbsAngDelta < 45.0 )
             {
-                if ( fabs(*(unsigned int *)vAngles) <= 90.0 )
+                if ( fabs(*vAngles) <= 90.0 )
                     v5 = AngleNormalize360(fSurfacePitch);
                 else
                     v5 = AngleNormalize360(fSurfacePitch + 180.0);
