@@ -213,23 +213,18 @@ void __cdecl R_ReleaseForShutdownOrReset()
                 1374);
         } while (alwaysfails);
     }
+
     R_ShutdownRenderTargets();
     R_ShutdownModelLightingImage();
     R_ShutdownStaticModelCache();
     R_DestroyDynamicBuffers();
     R_DestroyParticleCloudBuffer();
+
     if (!g_allocateMinimalResources)
         R_ShutdownRenderBuffers();
-    if (gfxBuf.smodelCacheVb
-        && !Assert_MyHandler(
-            "C:\\projects_pc\\cod\\codsrc\\src\\gfx_d3d\\r_init.cpp",
-            1388,
-            0,
-            "%s",
-            "!gfxBuf.smodelCacheVb"))
-    {
-        __debugbreak();
-    }
+
+    iassert(!gfxBuf.smodelCacheVb);
+
     if (dx.flushGpuQuery)
     {
         do

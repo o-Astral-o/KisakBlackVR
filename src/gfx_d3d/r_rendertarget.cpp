@@ -1149,7 +1149,7 @@ void __cdecl R_ShutdownRenderTargets()
 
     for ( renderTargetId = 0; renderTargetId < 44; ++renderTargetId )
         R_ShutDownSingleRenderTarget(&gfxRenderTargets[renderTargetId]);
-    *(unsigned int *)&dx.inScene = 0;
+    dx.singleSampleDepthStencilSurface = 0;
 }
 
 void __cdecl R_ShutDownSingleRenderTarget(GfxRenderTarget *rt)

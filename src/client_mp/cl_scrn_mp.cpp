@@ -438,15 +438,14 @@ void    SCR_UpdateScreen()
     if ( !updateScreenCalled && !SCR_ShouldSkipUpdateScreen() )
     {
 #ifdef KISAK_DW
-        int semaphore; // [esp+10h] [ebp-Ch]
-        semaphore = R_AcquireDXDeviceOwnership(r_PumpDemonware);
+        int semaphore = R_AcquireDXDeviceOwnership(r_PumpDemonware);
+#else
+        int semaphore = R_AcquireDXDeviceOwnership(NULL);
 #endif 
         if ( Sys_QueryD3DDeviceOKEvent() )
         {
-#ifdef KISAK_DW
             if ( semaphore )
                 R_ReleaseDXDeviceOwnership();
-#endif
             if ( CL_GetLocalClientConnectionState(0) == 8 )
                 Sys_LoadingKeepAlive();
             shouldSkipRender = com_errorEntered;
@@ -464,12 +463,10 @@ void    SCR_UpdateScreen()
                 updateScreenCalled = 0;
             }
         }
-#ifdef KISAK_DW
         else if ( semaphore )
         {
             R_ReleaseDXDeviceOwnership();
         }
-#endif
     }
 }
 
