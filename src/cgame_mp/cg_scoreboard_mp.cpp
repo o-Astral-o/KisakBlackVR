@@ -143,21 +143,22 @@ void __cdecl CG_UpdateMatchScoreboard(int localClientNum)
     }
     if (Flame_GetLocalClientSourceRange())
     {
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_RANK_ICON, 0.07, "", 1, SB_TYPE_INVALID);
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_STATUS_ICON, 0.050000001, "", 1, SB_TYPE_INVALID);
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_NAME, 0.2, "", 0, SB_TYPE_INVALID);
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_TALKING_ICON, 0.050000001, "", 0, SB_TYPE_INVALID);
-        currentScoreboardWidthUsed = (float)((float)((float)(0.0 + 0.07) + 0.050000001) + 0.2) + 0.050000001;
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_RANK_ICON, 0.07f, "", 1, SB_TYPE_INVALID);
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_STATUS_ICON, 0.050000001f, "", 1, SB_TYPE_INVALID);
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_NAME, 0.2f, "", 0, SB_TYPE_INVALID);
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_TALKING_ICON, 0.050000001f, "", 0, SB_TYPE_INVALID);
+        currentScoreboardWidthUsed = (float)((float)((float)(0.0 + 0.07f) + 0.050000001f) + 0.2f) + 0.050000001f;
     }
     else
     {
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_NAME, 0.44999999, "", 0, SB_TYPE_INVALID);
-        currentScoreboardWidthUsed = 0.0 + 0.44999999;
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_NAME, 0.44999999f, "", 0, SB_TYPE_INVALID);
+        currentScoreboardWidthUsed = 0.0f + 0.44999999f;
     }
-    CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_SCORE, 0.1, "CGAME_SB_SCORE", 2, SB_TYPE_INVALID);
-    currentScoreboardWidthUseda = currentScoreboardWidthUsed + 0.1;
+    CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_SCORE, 0.1f, "CGAME_SB_SCORE", 2, SB_TYPE_INVALID);
+    currentScoreboardWidthUseda = currentScoreboardWidthUsed + 0.1f;
     if (cg_scoreboardPingText->current.enabled)
-        currentScoreboardWidthUseda = currentScoreboardWidthUseda + 0.1;
+        currentScoreboardWidthUseda = currentScoreboardWidthUseda + 0.1f;
+
     for (j = 0; j < 4; ++j)
     {
         matchScoreBoardData[localClientNum].scoreboardColumnTypes[j] = cgameGlob->scoreboardColumnTypes[j];
@@ -196,13 +197,13 @@ void __cdecl CG_UpdateMatchScoreboard(int localClientNum)
         }
     }
     if (cg_scoreboardPingText->current.enabled)
-        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_PING, 0.1, "CGAME_SB_PING", 2, SB_TYPE_INVALID);
+        CG_AddSBColumnToMatchScoreBoard(localClientNum, LCT_PING, 0.1f, "CGAME_SB_PING", 2, SB_TYPE_INVALID);
 }
 
 void __cdecl CG_AddSBColumnToMatchScoreBoard(
     int localClientNum,
     listColumnTypes_t columnType,
-    int columnWidth,
+    float columnWidth,
     const char *columnName,
     int alignment,
     scoreboardColumnType_t sbColumnType)

@@ -114,7 +114,7 @@ void __cdecl CG_UpdateMatchScoreboard(int localClientNum);
 void __cdecl CG_AddSBColumnToMatchScoreBoard(
                 int localClientNum,
                 listColumnTypes_t columnType,
-                int columnWidth,
+                float columnWidth,
                 const char *columnName,
                 int alignment,
                 scoreboardColumnType_t sbColumnType);
