@@ -6412,7 +6412,6 @@ void Scr_BulletTrace()
     pIgnoreEnt = 0;
     iIgnoreEntNum = 1023;
     iClipMask = 0x280E033;
-    memset(&trace, 0, 16);
     Scr_GetVector(0, vStart, SCRIPTINSTANCE_SERVER);
     Scr_GetVector(1u, vEnd, SCRIPTINSTANCE_SERVER);
     if ( !Scr_GetInt(2u, SCRIPTINSTANCE_SERVER) )
@@ -6548,7 +6547,6 @@ void Scr_PhysicsTrace()
     int iSurfaceTypeIndex; // [esp+D8h] [ebp-8h]
     unsigned __int16 hitEntId; // [esp+DCh] [ebp-4h]
 
-    memset(&trace, 0, 16);
     maskType = 1;
     pIgnoreEnt = 0;
     iIgnoreEntNum = 1023;
@@ -6643,7 +6641,6 @@ void Scr_PlayerPhysicsTrace()
     float endpos[3]; // [esp+48h] [ebp-48h] BYREF
     trace_t trace; // [esp+54h] [ebp-3Ch] BYREF
 
-    memset(&trace, 0, 16);
     Scr_GetVector(0, start, SCRIPTINSTANCE_SERVER);
     Scr_GetVector(1u, end, SCRIPTINSTANCE_SERVER);
     //col_context_t::col_context_t(&context);
@@ -8162,7 +8159,6 @@ void Scr_GrenadeExplosionEffect()
     gentity_s *pEnt; // [esp+88h] [ebp-10h]
     float vPos[3]; // [esp+8Ch] [ebp-Ch] BYREF
 
-    memset(&trace, 0, 16);
     //col_context_t::col_context_t(&context);
     Scr_GetVector(0, vOrg, SCRIPTINSTANCE_SERVER);
     vPos[0] = vOrg[0];
@@ -10340,7 +10336,6 @@ void __cdecl GScr_PlaceSpawnPoint(scr_entref_t entref)
     gentity_s *pEnt; // [esp+80h] [ebp-10h]
     float vStart[3]; // [esp+84h] [ebp-Ch] BYREF
 
-    memset(&trace, 0, 16);
     //col_context_t::col_context_t(&context);
     pEnt = GetEntity(entref);
     vStart[0] = pEnt->r.currentOrigin[0];
@@ -10463,7 +10458,6 @@ void GScr_TestSpawnPoint()
     trace_t trace; // [esp+28h] [ebp-48h] BYREF
     float point[3]; // [esp+64h] [ebp-Ch] BYREF
 
-    memset(&trace, 0, 16);
     //col_context_t::col_context_t(&context);
     Scr_GetVector(0, point, SCRIPTINSTANCE_SERVER);
     G_TraceCapsule(&trace, point, playerMins, playerMaxs, point, 1023, (int)0x810011, &context);

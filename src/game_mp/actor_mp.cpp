@@ -159,7 +159,6 @@ int __cdecl Actor_droptofloor(gentity_s *ent)
     trace_t trace; // [esp+4Ch] [ebp-48h] BYREF
     float dropMaxs[3]; // [esp+88h] [ebp-Ch] BYREF
 
-    memset(&trace, 0, 16);
     //col_context_t::col_context_t(&context);
     vEnd[0] = ent->r.currentOrigin[0];
     vEnd[1] = ent->r.currentOrigin[1];

@@ -2647,7 +2647,6 @@ void __cdecl ShowEntityInfo()
     int v0; // [esp+0h] [ebp-A4h]
     int integer; // [esp+4h] [ebp-A0h]
     float vEnd[3]; // [esp+Ch] [ebp-98h] BYREF
-    trace_t trace; // [esp+18h] [ebp-8Ch] BYREF
     float vForward[3]; // [esp+54h] [ebp-50h] BYREF
     unsigned __int16 hitEntId; // [esp+60h] [ebp-44h]
     void (__cdecl *entinfo)(gentity_s *, float *); // [esp+64h] [ebp-40h]
@@ -2667,7 +2666,7 @@ void __cdecl ShowEntityInfo()
             || g_entinfo->current.integer == 5
             || g_entinfo->current.integer == 7 )
         {
-            memset(&trace, 0, 16);
+            trace_t trace; // [esp+18h] [ebp-8Ch] BYREF
             CL_GetDebugViewForward(vForward);
             vEnd[0] = (float)(16000.0 * vForward[0]) + vStart[0];
             vEnd[1] = (float)(16000.0 * vForward[1]) + vStart[1];
