@@ -41,7 +41,7 @@ bool __cdecl QuitOnError();
 
 bool Assert_MyHandler(const char *filename, int line, int type, const char *fmt, ...);
 
-#define IS_NAN(x) (isnan(x))
+#define IS_NAN(x) (std::isnan((float)(x)))
 
 #ifdef _DEBUG 
 #define iassert(expression) (void)(                                                                                                             \

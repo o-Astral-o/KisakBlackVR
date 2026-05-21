@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include "r_dvars.h"
+#include <vr/vr_main.h>
 #include "r_warn.h"
 #include "r_stream.h"
 #include <universal/com_math_anglevectors.h>
@@ -2983,6 +2984,8 @@ void __cdecl R_SetViewParmsForScene(const refdef_s *refdef, GfxViewParms *viewPa
     viewParms->zNear = v2;
     R_SetupProjection(refdef->tanHalfFovX, refdef->tanHalfFovY, viewParms);
     R_SetupViewProjectionMatrices(viewParms, 1);
+    // Inject per-eye asymmetric projection center offset when in a VR stereo pass.
+    VR_OverrideViewParmProjection(viewParms);
 }
 
 void __cdecl R_SetupProjection(float tanHalfFovX, float tanHalfFovY, GfxViewParms *viewParms)
@@ -5516,7 +5519,13 @@ void __cdecl R_SetSceneParms(const refdef_s *refdef, GfxSceneParms *sceneParms)
 
 void __cdecl R_CorrectLodScale(const refdef_s *refdef)
 {
-    R_UpdateLodParms(refdef, &rg.correctedLodParms[refdef->localClientNum]);
+    // correctedLodParms is indexed by viewInfoIndex in R_AddAllStaticModelSurfaces*.
+    // viewInfoIndex is assigned as rg.viewInfoCount inside R_GenerateSortedDrawSurfs
+    // (after R_CorrectLodScale runs in R_RenderScene).  In single-player / non-VR
+    // rg.viewInfoCount == refdef->localClientNum so both approaches are equivalent.
+    // For VR stereo both eyes have localClientNum==0 but occupy viewInfoIndex 0 and 1
+    // respectively — use rg.viewInfoCount so each eye populates the right slot.
+    R_UpdateLodParms(refdef, &rg.correctedLodParms[rg.viewInfoCount]);
 }
 
 void __cdecl R_RenderMissileCam(const refdef_s *refdef, int frameTime)

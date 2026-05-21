@@ -3,6 +3,8 @@
 #include "cl_main_mp.h"
 #include <qcommon/common.h>
 #include <cstring>
+#include <vr/vr_main.h>
+#include <gfx_d3d/r_scene.h>   // R_RenderScene
 #include <cgame_mp/cg_local_mp.h>
 #include <qcommon/statmonitor.h>
 #include <demo/demo_playback.h>
@@ -719,7 +721,21 @@ void __cdecl CL_RenderScene(refdef_s *fd, int frameTime)
     Vec3Copy(fd->vieworg, cls.debugRenderPos);
     Vec3Copy(fd->viewaxis[0], cls.debugRenderForward);
 
-    R_RenderScene(fd, frameTime);
+    if (VR_IsEnabled())
+    {
+        // Phase 3: two-pass stereo render – left eye then right eye,ld be?
+        
+        // each into its own D3D9 render target, with correct IPD offset
+        // and per-eye asymmetric projection.
+        VR_RenderStereoScene(fd, frameTime, [](refdef_s* eyeFd, int ft)
+        {
+            R_RenderScene(eyeFd, ft);
+        });
+    }
+    else
+    {
+        R_RenderScene(fd, frameTime);
+    }
 }
 
 void __cdecl CL_RenderMissileCam(const refdef_s *fd, int frameTime)

@@ -1,5 +1,6 @@
 #include "rb_backend.h"
 #include "rb_stats.h"
+#include <vr/vr_main.h>
 #include "r_image.h"
 #include "rb_shade.h"
 #include "r_state_utils.h"
@@ -4807,6 +4808,9 @@ void RB_SwapBuffers()
     {
         PROF_SCOPED("Present()");
 
+        // Submit the rendered frame to the SteamVR compositor before Present.
+        VR_SubmitFrame(dx.device);
+
         if (rg.renderHiResShot || dx.resizeWindow)
             hr = 0;
         else
@@ -5124,11 +5128,31 @@ void __cdecl RB_Draw3D()
         }
         else
         {
-            v0 = va("RB_Draw3D c=%d v=%d/%d", viewInfo->localClientNum, data->viewInfoIndex, data->viewInfoCount);
+            // VR stereo: render each eye's full 3D scene separately, capturing
+            // the scene render target immediately after each so they don't
+            // overwrite each other.  The front-end populated viewInfo[0] (left)
+            // and viewInfo[1] (right) with their own draw lists and viewParms.
+            if (VR_IsEnabled() && data->viewInfoCount >= 2)
             {
-                PROF_SCOPED_RUNTIME_NAME(v0);
-                RB_ResetStatTracking(data->viewInfoIndex);
-                RB_Draw3DInternal((GfxViewInfo *)viewInfo);
+                for (int vrEye = 0; vrEye < 2; ++vrEye)
+                {
+                    v0 = va("RB_Draw3D VR eye=%d", vrEye);
+                    {
+                        PROF_SCOPED_RUNTIME_NAME(v0);
+                        RB_ResetStatTracking(vrEye);
+                        RB_Draw3DInternal((GfxViewInfo *)&data->viewInfo[vrEye]);
+                    }
+                    VR_CaptureEye(vrEye, dx.device);
+                }
+            }
+            else
+            {
+                v0 = va("RB_Draw3D c=%d v=%d/%d", viewInfo->localClientNum, data->viewInfoIndex, data->viewInfoCount);
+                {
+                    PROF_SCOPED_RUNTIME_NAME(v0);
+                    RB_ResetStatTracking(data->viewInfoIndex);
+                    RB_Draw3DInternal((GfxViewInfo *)viewInfo);
+                }
             }
         }
     }

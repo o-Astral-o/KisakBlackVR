@@ -25,6 +25,7 @@
 #include "r_wind.h"
 #include "rb_postfx.h"
 #include "r_extracam.h"
+#include "vr/vr_main.h"
 
 float r_cloudArea[4] = { 0.0, 0.0, 1.0e7, 0.0 };
 
@@ -1501,6 +1502,15 @@ void RB_StandardDrawCommandsCommon()
     {
         return;
     }
+
+    // VR stereo: viewInfo[1]->cmds is null (hasCmdBuf=false for viewInfoIndex>0).
+    // Copy viewInfo[0]->cmds so both eyes run the same render pipeline with
+    // their own view matrices (applied by R_BeginView per viewInfo).
+    if (VR_IsEnabled() && data->viewInfoCount >= 2 && data->viewInfo[0].cmds && !data->viewInfo[1].cmds)
+    {
+        const_cast<GfxViewInfo*>(&data->viewInfo[1])->cmds = data->viewInfo[0].cmds;
+    }
+
     for (viewInfoIndex = 0; viewInfoIndex < data->viewInfoCount; ++viewInfoIndex)
     {
         viewInfo = &data->viewInfo[viewInfoIndex];

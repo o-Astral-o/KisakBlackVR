@@ -1,6 +1,7 @@
 #include "cl_input_mp.h"
 #include "cl_main_mp.h"
 #include <client/client.h>
+#include <vr/vr_main.h>
 #include <devgui/devgui.h>
 #include <devgui/devgui_input.h>
 #include <cgame_mp/cg_newDraw_mp.h>
@@ -476,6 +477,18 @@ usercmd_s *__cdecl CL_CreateCmd(usercmd_s *result, int localClientNum)
             if ( LocalClientGlobals->viewangles[0] > 180.0 )
                 LocalClientGlobals->viewangles[0] = LocalClientGlobals->viewangles[0] - 360.0;
             CL_ClampViewAngle(localClientNum, 0, -90.0, 90.0);
+        }
+
+        // VR: add the HMD head-rotation delta on top of all other input so
+        // that mouse and gamepad still contribute while HMD rotation drives
+        // the primary aim direction.
+        {
+            float hmdDeltaPitch, hmdDeltaYaw;
+            if (VR_GetHMDAngleDelta(&hmdDeltaPitch, &hmdDeltaYaw))
+            {
+                LocalClientGlobals->viewangles[0] += hmdDeltaPitch;
+                LocalClientGlobals->viewangles[1] += hmdDeltaYaw;
+            }
         }
     }
     CL_FinishMove(localClientNum, &cmd);

@@ -1,5 +1,6 @@
 #include "cg_view_mp.h"
 #include "universal/q_shared.h"
+#include <vr/vr_main.h>
 #include "cg_local_mp.h"
 #include "cg_main_mp.h"
 #include <EffectsCore/fx_system.h>
@@ -2286,6 +2287,12 @@ void __cdecl CG_CalcViewValues(int localClientNum)
             CG_ExtraCamDebug_SaveView(localClientNum);
         }
     }
+
+    // Update the HMD pose cache (WaitGetPoses) so stereo rendering has valid
+    // eye positions and projections this frame.  The HMD orientation does NOT
+    // affect the camera direction at all - all view control is driven purely
+    // by player mouse/keyboard/gamepad input.
+    VR_ApplyHMDPoseToRefdef(&cgameGlob->refdef);
 }
 
 void __cdecl CG_DevSaveCamera(float *angles, float *origin)

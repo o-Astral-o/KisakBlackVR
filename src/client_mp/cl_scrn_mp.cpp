@@ -3,6 +3,7 @@
 #include <gfx_d3d/r_rendercmds.h>
 #include "cl_main_mp.h"
 #include <client/client.h>
+#include <vr/vr_main.h>
 #include <cgame/cg_draw_debug.h>
 #include <cgame_mp/cg_main_mp.h>
 #include <client/cl_console.h>

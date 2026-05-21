@@ -394,7 +394,7 @@ float Q_fabs(float f);
 #define I_rsqrt Q_rsqrt
 #define I_fabs Q_fabs
 
-#define IS_NAN(x) (isnan(x))
+#define IS_NAN(x) (std::isnan((float)(x)))
 
 constexpr float vec2_origin[2] = { 0.0, 0.0 };
 constexpr float vec3_origin[3] = { 0.0, 0.0, 0.0 };
