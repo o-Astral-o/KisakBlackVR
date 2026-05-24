@@ -54,6 +54,8 @@
 static constexpr float VR_METRES_TO_UNITS = 39.37f;
 static constexpr bool  VR_SWAP_SUBMIT_EYES = false;
 
+static constexpr bool  VR_CENTER_CAMERA_ON_RIGHT_EYE = true;
+
 // ---------------------------------------------------------------------------
 // Module state
 // ---------------------------------------------------------------------------
@@ -453,6 +455,16 @@ void VR_RenderStereoScene(refdef_s* refdef, int frameTime, VR_RenderFn renderFn)
 
     float centerAxis[3][3], centerPos[3];
     OVRMatrixToCoD(s_hmdCenter, centerAxis, centerPos);
+    
+    const int centerEye = VR_CENTER_CAMERA_ON_RIGHT_EYE ? 1 : 0;
+    vr::HmdMatrix34_t centerEyeWorld = OVRMul34(s_hmdCenter, s_eyeToHead[centerEye]);
+    float centerEyeAxis[3][3], centerEyePos[3];
+    OVRMatrixToCoD(centerEyeWorld, centerEyeAxis, centerEyePos);
+
+    const float centerEyeX = centerEyePos[0]-centerPos[0];
+    const float centerEyeY = centerEyePos[1]-centerPos[1];
+    const float centerEyeZ = centerEyePos[2]-centerPos[2];
+    const float centerEyeIpdDist = centerEyeX*centerAxis[1][0] + centerEyeY*centerAxis[1][1] + centerEyeZ*centerAxis[1][2];
 
     for (int eye = 0; eye < 2; ++eye)
     {
@@ -464,7 +476,7 @@ void VR_RenderStereoScene(refdef_s* refdef, int frameTime, VR_RenderFn renderFn)
         OVRMatrixToCoD(eyeWorld, eyeAxis, eyePos);
 
         const float ipdX = eyePos[0]-centerPos[0], ipdY = eyePos[1]-centerPos[1], ipdZ = eyePos[2]-centerPos[2];
-        const float ipdDist = ipdX*centerAxis[1][0] + ipdY*centerAxis[1][1] + ipdZ*centerAxis[1][2];
+        const float ipdDist = (ipdX*centerAxis[1][0] + ipdY*centerAxis[1][1] + ipdZ*centerAxis[1][2]) - centerEyeIpdDist;
 
         for (int i = 0; i < 3; ++i)
         {
@@ -495,6 +507,15 @@ void VR_RenderStereoScene(refdef_s* refdef, int frameTime, VR_RenderFn renderFn)
         renderFn(&eyeRefdef, frameTime);
         s_submitEye = -1;
         s_currentRenderEye = -1;
+        
+        // R_RenderScene updates refdef exposure in-place for auto-exposure.
+        // Stereo renders use temporary per-eye copies, so preserve the updated
+        // value from the eye that represents the gameplay camera.
+        if (eye == centerEye)
+        {
+            refdef->exposure = eyeRefdef.exposure;
+            refdef->exposureValue = eyeRefdef.exposureValue;
+        }
     }
 
     s_stereoRendered = true;

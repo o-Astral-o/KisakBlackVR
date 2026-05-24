@@ -948,18 +948,21 @@ char __cdecl R_PreCreateWindow()
     else
     {
         Com_Printf(8, "Getting Direct3D 9 interface...\n");
-        // Prefer IDirect3D9Ex. On WDDM (Vista+) any device created from an Ex
-        // factory also implements IDirect3DDevice9Ex via QueryInterface, which
-        // lets VR open D3D11 shared textures as D3D9 render targets for a
-        // GPU-to-GPU zero-copy submission path.  Falls back to plain D3D9 if
-        // Direct3DCreate9Ex is unavailable (pre-Vista / non-WDDM driver).
-        {
-            IDirect3D9Ex* d3d9ex = nullptr;
-            if (SUCCEEDED(Direct3DCreate9Ex(0x20u, &d3d9ex)) && d3d9ex)
-                dx.d3d9 = d3d9ex;
-            else
-                dx.d3d9 = Direct3DCreate9(0x20u);
-        }
+        
+        // // Prefer IDirect3D9Ex. On WDDM (Vista+) any device created from an Ex
+        // // factory also implements IDirect3DDevice9Ex via QueryInterface, which
+        // // lets VR open D3D11 shared textures as D3D9 render targets for a
+        // // GPU-to-GPU zero-copy submission path.  Falls back to plain D3D9 if
+        // // Direct3DCreate9Ex is unavailable (pre-Vista / non-WDDM driver).
+        // {
+        //     IDirect3D9Ex* d3d9ex = nullptr;
+        //     if (SUCCEEDED(Direct3DCreate9Ex(0x20u, &d3d9ex)) && d3d9ex)
+        //         dx.d3d9 = d3d9ex;
+        //     else
+        //         dx.d3d9 = Direct3DCreate9(0x20u);
+        // }
+        dx.d3d9 = Direct3DCreate9(0x20u);
+        
         if ( !dx.d3d9 )
         {
             Com_Printf(8, "Direct3D 9 failed to initialize\n");
