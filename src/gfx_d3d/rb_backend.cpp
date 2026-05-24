@@ -5134,16 +5134,19 @@ void __cdecl RB_Draw3D()
             // and viewInfo[1] (right) with their own draw lists and viewParms.
             if (VR_IsEnabled() && data->viewInfoCount >= 2)
             {
+                GfxSunShadow savedSunShadow = data->sunShadow;
                 for (int vrEye = 0; vrEye < 2; ++vrEye)
                 {
                     v0 = va("RB_Draw3D VR eye=%d", vrEye);
                     {
                         PROF_SCOPED_RUNTIME_NAME(v0);
                         RB_ResetStatTracking(vrEye);
+                        const_cast<GfxBackEndData *>(data)->sunShadow = data->sunShadowForView[vrEye];
                         RB_Draw3DInternal((GfxViewInfo *)&data->viewInfo[vrEye]);
                     }
                     VR_CaptureEye(vrEye, dx.device);
                 }
+                const_cast<GfxBackEndData *>(data)->sunShadow = savedSunShadow;
             }
             else
             {

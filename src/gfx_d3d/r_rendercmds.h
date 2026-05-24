@@ -684,6 +684,7 @@ const struct __declspec(align(32)) GfxBackEndData // sizeof=0x186300
     // padding byte
     // padding byte
     GfxSunShadow sunShadow;
+    GfxSunShadow sunShadowForView[4];
     unsigned int spotShadowCount;
     // padding byte
     // padding byte

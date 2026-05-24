@@ -3698,6 +3698,7 @@ void __cdecl R_GenerateSortedDrawSurfs(
             {
                 rg.drawSunShadow = 1;
                 R_SetupSunShadowMaps(viewParmsDpvs, &frontEndDataOut->sunShadow);
+                frontEndDataOut->sunShadowForView[viewInfoIndex] = frontEndDataOut->sunShadow;
                 R_SetSunShadowConstants(&viewInfo->input, &frontEndDataOut->sunShadow.sunProj);
                 R_SunShadowMaps();
             }
