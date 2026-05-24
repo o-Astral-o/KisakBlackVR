@@ -48,6 +48,7 @@
 #include <gfx_d3d/r_stream.h>
 #include <gfx_d3d/r_gfx.h>
 #include <universal/com_math.h>
+#include <universal/dvar.h>
 #include "vr_main.h"
 
 // ---------------------------------------------------------------------------
@@ -62,8 +63,11 @@ static constexpr bool  VR_CENTER_CAMERA_ON_RIGHT_EYE = true;
 static vr::IVRSystem*           s_pVRSystem  = nullptr;
 static bool                     s_vrEnabled  = false;
 static vr::TrackedDevicePose_t  s_poses[vr::k_unMaxTrackedDeviceCount];
+static uint32_t s_recommendedEyeWidth  = 0;
+static uint32_t s_recommendedEyeHeight = 0;
 static uint32_t s_eyeWidth  = 0;
 static uint32_t s_eyeHeight = 0;
+static float    s_activeHmdResolutionScale = 1.0f;
 
 // Per-eye transforms – static for the session, cached once in VR_Init.
 static vr::HmdMatrix34_t s_eyeToHead[2];
@@ -101,12 +105,53 @@ static int   s_submitEye            = -1;
 static bool  s_stereoRendered       = false;
 static bool  s_eyeCaptured[2]       = {};
 
+static const dvar_t* vr_hmdResolutionScale = nullptr;
+
 // ---------------------------------------------------------------------------
 // Forward declarations
 // ---------------------------------------------------------------------------
 static void VR_ReleaseD3DResources();
+static void VR_ReleaseEyeResources();
 static bool VR_CreateD3DResources(IDirect3DDevice9* dev);
 static bool VR_UploadEyeToD3D11(int eye);
+
+static float VR_GetHmdResolutionScale()
+{
+    float scale = vr_hmdResolutionScale ? vr_hmdResolutionScale->current.value : 1.0f;
+    if (scale < 0.25f) scale = 0.25f;
+    if (scale > 1.5f) scale = 1.5f;
+    return scale;
+}
+
+static uint32_t VR_ScaleDimension(uint32_t value, float scale)
+{
+    const uint32_t scaled = (uint32_t)((float)value * scale + 0.5f);
+    return scaled > 1 ? scaled : 1;
+}
+
+static void VR_UpdateEyeResolution()
+{
+    s_activeHmdResolutionScale = VR_GetHmdResolutionScale();
+    s_eyeWidth = VR_ScaleDimension(s_recommendedEyeWidth, s_activeHmdResolutionScale);
+    s_eyeHeight = VR_ScaleDimension(s_recommendedEyeHeight, s_activeHmdResolutionScale);
+}
+
+static bool VR_HasEyeResources()
+{
+    return s_eyeTexture[0] || s_d3d9EyeSharedSurf[0] || s_d3d9EyeRT[0];
+}
+
+static void VR_RecreateEyeResourcesIfScaleChanged()
+{
+    const float scale = VR_GetHmdResolutionScale();
+    if (fabsf(scale - s_activeHmdResolutionScale) <= 0.001f)
+        return;
+
+    VR_ReleaseEyeResources();
+    VR_UpdateEyeResolution();
+    Com_Printf(8, "[VR] HMD eye resolution scale %.2f -> %u x %u\n",
+        s_activeHmdResolutionScale, s_eyeWidth, s_eyeHeight);
+}
 
 // ---------------------------------------------------------------------------
 // Coordinate helpers
@@ -194,8 +239,18 @@ bool VR_Init()
         vr::VR_Shutdown(); s_pVRSystem = nullptr; return false;
     }
 
-    s_pVRSystem->GetRecommendedRenderTargetSize(&s_eyeWidth, &s_eyeHeight);
-    Com_Printf(8, "[VR] Recommended eye resolution: %u x %u\n", s_eyeWidth, s_eyeHeight);
+    vr_hmdResolutionScale = _Dvar_RegisterFloat(
+        "vr_hmdResolutionScale",
+        1.0f,
+        0.25f,
+        1.5f,
+        1u,
+        "Scales the SteamVR eye texture size. Values below 1 improve VR compositor transfer cost.");
+
+    s_pVRSystem->GetRecommendedRenderTargetSize(&s_recommendedEyeWidth, &s_recommendedEyeHeight);
+    VR_UpdateEyeResolution();
+    Com_Printf(8, "[VR] Recommended eye resolution: %u x %u, HMD scale %.2f -> %u x %u\n",
+        s_recommendedEyeWidth, s_recommendedEyeHeight, s_activeHmdResolutionScale, s_eyeWidth, s_eyeHeight);
 
     for (int eye = 0; eye < 2; ++eye)
         s_eyeToHead[eye] = s_pVRSystem->GetEyeToHeadTransform(
@@ -318,7 +373,7 @@ static bool VR_CreateD3DResources(IDirect3DDevice9* dev)
 }
 
 // ---------------------------------------------------------------------------
-static void VR_ReleaseD3DResources()
+static void VR_ReleaseEyeResources()
 {
     for (int i = 0; i < 2; ++i)
     {
@@ -329,10 +384,15 @@ static void VR_ReleaseD3DResources()
             if (s_d3d9EyeStaging[i][b]) { s_d3d9EyeStaging[i][b]->Release(); s_d3d9EyeStaging[i][b]=nullptr; }
         if (s_eyeTexture[i]) { s_eyeTexture[i]->Release(); s_eyeTexture[i]=nullptr; }
     }
-    if (s_d3d11Context) { s_d3d11Context->Release(); s_d3d11Context=nullptr; }
-    if (s_d3d11Device)  { s_d3d11Device->Release();  s_d3d11Device =nullptr; }
     s_d3d9ExDevice = nullptr;
     s_stagingPrimed = false;
+}
+
+static void VR_ReleaseD3DResources()
+{
+    VR_ReleaseEyeResources();
+    if (s_d3d11Context) { s_d3d11Context->Release(); s_d3d11Context=nullptr; }
+    if (s_d3d11Device)  { s_d3d11Device->Release();  s_d3d11Device =nullptr; }
 }
 
 // ---------------------------------------------------------------------------
@@ -441,6 +501,9 @@ void VR_RenderStereoScene(refdef_s* refdef, int frameTime, VR_RenderFn renderFn)
 {
     if (!s_vrEnabled || !s_pVRSystem || !refdef || !renderFn) { renderFn(refdef, frameTime); return; }
     if (!s_hmdPoseValid) { renderFn(refdef, frameTime); return; }
+
+    if (VR_HasEyeResources())
+        VR_RecreateEyeResourcesIfScaleChanged();
 
     if (!s_d3d9EyeRT[0] && !s_d3d9EyeSharedSurf[0])
     {

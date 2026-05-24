@@ -4047,6 +4047,12 @@ void __cdecl R_SetDepthOfField(GfxViewInfo *viewInfo, const GfxSceneParms *scene
     float x; // [esp+238h] [ebp-8h]
     float y; // [esp+23Ch] [ebp-4h]
 
+    if ( VR_IsEnabled() )
+    {
+        memset(&viewInfo->dof, 0, sizeof(viewInfo->dof));
+        return;
+    }
+
     if ( r_dof_tweak->current.enabled )
     {
         if ( r_dof_nearBlur->current.value < 4.0
