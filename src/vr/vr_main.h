@@ -11,6 +11,7 @@
 
 struct refdef_s;
 struct IDirect3DDevice9;
+struct IDirect3DSurface9;
 struct GfxViewParms;
 
 // ---- Lifecycle ---------------------------------------------------------
@@ -62,3 +63,10 @@ void VR_CaptureEye(int eyeIndex, IDirect3DDevice9* device);
 // Phase 2: Submit the two pre-rendered eye RTs to the SteamVR compositor.
 // Call in RB_SwapBuffers BEFORE Present().
 void VR_SubmitFrame(IDirect3DDevice9* device);
+
+// Standalone SteamVR overlay test panel. This is intentionally independent
+// from game UI rendering so we can validate a non-head-locked window first.
+void VR_UpdateTestPanel();
+bool VR_PrepareUIPanelRenderTarget(IDirect3DDevice9* device, int* width, int* height);
+IDirect3DSurface9* VR_GetUIPanelSurface();
+void VR_SubmitUIPanel();

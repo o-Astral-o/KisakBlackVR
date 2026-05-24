@@ -97,6 +97,23 @@ static ID3D11Device*        s_d3d11Device  = nullptr;
 static ID3D11DeviceContext* s_d3d11Context = nullptr;
 static ID3D11Texture2D*     s_eyeTexture[2] = {};
 
+// --- Standalone SteamVR overlay test panel ---
+static vr::VROverlayHandle_t s_testPanelOverlay = vr::k_ulOverlayHandleInvalid;
+static ID3D11Texture2D*      s_testPanelTexture = nullptr;
+static ID3D11Texture2D*      s_uiPanelTexture = nullptr;
+static IDirect3DTexture9*    s_d3d9UIPanelTexture = nullptr;
+static IDirect3DSurface9*    s_d3d9UIPanelSurface = nullptr;
+static IDirect3DSurface9*    s_d3d9UIPanelStaging = nullptr;
+static unsigned int          s_uiPanelWidth = 0;
+static unsigned int          s_uiPanelHeight = 0;
+static bool                  s_uiPanelSubmittedThisFrame = false;
+static bool                  s_testPanelTransformSet = false;
+static const dvar_t*         vr_testPanelEnable = nullptr;
+static const dvar_t*         vr_testPanelDistance = nullptr;
+static const dvar_t*         vr_testPanelWidth = nullptr;
+static const dvar_t*         vr_uiPanelWidth = nullptr;
+static const dvar_t*         vr_uiPanelHeight = nullptr;
+
 // --- Per-frame stereo state ---
 static float s_eyeProjOffsetXCur[2] = {};
 static float s_eyeProjOffsetYCur[2] = {};
@@ -112,6 +129,7 @@ static const dvar_t* vr_hmdResolutionScale = nullptr;
 // ---------------------------------------------------------------------------
 static void VR_ReleaseD3DResources();
 static void VR_ReleaseEyeResources();
+static void VR_ReleaseTestPanelResources();
 static bool VR_CreateD3DResources(IDirect3DDevice9* dev);
 static bool VR_UploadEyeToD3D11(int eye);
 
@@ -246,6 +264,39 @@ bool VR_Init()
         1.5f,
         1u,
         "Scales the SteamVR eye texture size. Values below 1 improve VR compositor transfer cost.");
+    vr_testPanelEnable = _Dvar_RegisterBool(
+        "vr_testPanelEnable",
+        1,
+        1u,
+        "Show a standalone SteamVR overlay test panel in front of the HMD.");
+    vr_testPanelDistance = _Dvar_RegisterFloat(
+        "vr_testPanelDistance",
+        1.5f,
+        0.25f,
+        5.0f,
+        1u,
+        "Distance of the standalone SteamVR overlay test panel, in meters.");
+    vr_testPanelWidth = _Dvar_RegisterFloat(
+        "vr_testPanelWidth",
+        1.25f,
+        0.25f,
+        3.0f,
+        1u,
+        "Width of the standalone SteamVR overlay test panel, in meters.");
+    vr_uiPanelWidth = _Dvar_RegisterInt(
+        "vr_uiPanelWidth",
+        1920,
+        640,
+        3840,
+        1u,
+        "Width of the SteamVR UI/menu panel render texture.");
+    vr_uiPanelHeight = _Dvar_RegisterInt(
+        "vr_uiPanelHeight",
+        1080,
+        360,
+        2160,
+        1u,
+        "Height of the SteamVR UI/menu panel render texture.");
 
     s_pVRSystem->GetRecommendedRenderTargetSize(&s_recommendedEyeWidth, &s_recommendedEyeHeight);
     VR_UpdateEyeResolution();
@@ -388,8 +439,47 @@ static void VR_ReleaseEyeResources()
     s_stagingPrimed = false;
 }
 
+static void VR_ReleaseTestPanelResources()
+{
+    if (s_testPanelOverlay != vr::k_ulOverlayHandleInvalid && vr::VROverlay())
+    {
+        vr::VROverlay()->DestroyOverlay(s_testPanelOverlay);
+        s_testPanelOverlay = vr::k_ulOverlayHandleInvalid;
+    }
+    if (s_d3d9UIPanelSurface)
+    {
+        s_d3d9UIPanelSurface->Release();
+        s_d3d9UIPanelSurface = nullptr;
+    }
+    if (s_d3d9UIPanelStaging)
+    {
+        s_d3d9UIPanelStaging->Release();
+        s_d3d9UIPanelStaging = nullptr;
+    }
+    if (s_d3d9UIPanelTexture)
+    {
+        s_d3d9UIPanelTexture->Release();
+        s_d3d9UIPanelTexture = nullptr;
+    }
+    if (s_uiPanelTexture)
+    {
+        s_uiPanelTexture->Release();
+        s_uiPanelTexture = nullptr;
+    }
+    if (s_testPanelTexture)
+    {
+        s_testPanelTexture->Release();
+        s_testPanelTexture = nullptr;
+    }
+    s_uiPanelWidth = 0;
+    s_uiPanelHeight = 0;
+    s_uiPanelSubmittedThisFrame = false;
+    s_testPanelTransformSet = false;
+}
+
 static void VR_ReleaseD3DResources()
 {
+    VR_ReleaseTestPanelResources();
     VR_ReleaseEyeResources();
     if (s_d3d11Context) { s_d3d11Context->Release(); s_d3d11Context=nullptr; }
     if (s_d3d11Device)  { s_d3d11Device->Release();  s_d3d11Device =nullptr; }
@@ -424,6 +514,347 @@ void VR_Shutdown()
 }
 
 bool VR_IsEnabled() { return s_vrEnabled; }
+
+static bool VR_CreateTestPanelTexture()
+{
+    if (s_testPanelTexture)
+        return true;
+    if (!s_d3d11Device)
+        return false;
+
+    static const unsigned int PANEL_WIDTH = 1024;
+    static const unsigned int PANEL_HEIGHT = 576;
+    unsigned int* pixels = new unsigned int[PANEL_WIDTH * PANEL_HEIGHT];
+    for (unsigned int y = 0; y < PANEL_HEIGHT; ++y)
+    {
+        for (unsigned int x = 0; x < PANEL_WIDTH; ++x)
+        {
+            const bool border = x < 24 || y < 24 || x >= PANEL_WIDTH - 24 || y >= PANEL_HEIGHT - 24;
+            const bool centerLine = (x >= PANEL_WIDTH / 2 - 4 && x <= PANEL_WIDTH / 2 + 4)
+                || (y >= PANEL_HEIGHT / 2 - 4 && y <= PANEL_HEIGHT / 2 + 4);
+            const bool checker = (((x / 64) ^ (y / 64)) & 1) != 0;
+            unsigned int color = checker ? 0xFF303038u : 0xFF181820u;
+            if (border)
+                color = 0xFF20B0FFu;
+            if (centerLine)
+                color = 0xFFFFD040u;
+            pixels[y * PANEL_WIDTH + x] = color;
+        }
+    }
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = PANEL_WIDTH;
+    desc.Height = PANEL_HEIGHT;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = pixels;
+    initData.SysMemPitch = PANEL_WIDTH * sizeof(unsigned int);
+
+    HRESULT hr = s_d3d11Device->CreateTexture2D(&desc, &initData, &s_testPanelTexture);
+    delete[] pixels;
+
+    if (FAILED(hr))
+    {
+        Com_Printf(8, "[VR] Create test panel texture failed: 0x%08X\n", (unsigned)hr);
+        return false;
+    }
+
+    return true;
+}
+
+static bool VR_CreateTestPanelOverlay()
+{
+    if (s_testPanelOverlay != vr::k_ulOverlayHandleInvalid)
+        return true;
+    if (!vr::VROverlay())
+        return false;
+
+    vr::EVROverlayError err = vr::VROverlay()->CreateOverlay(
+        "kisakblackvr.test_panel",
+        "KisakBlackVR Test Panel",
+        &s_testPanelOverlay);
+    if (err != vr::VROverlayError_None)
+    {
+        Com_Printf(8, "[VR] Create test panel overlay failed: %d\n", (int)err);
+        s_testPanelOverlay = vr::k_ulOverlayHandleInvalid;
+        return false;
+    }
+
+    vr::VROverlay()->SetOverlayInputMethod(s_testPanelOverlay, vr::VROverlayInputMethod_None);
+    return true;
+}
+
+static unsigned int VR_GetUIPanelWidth()
+{
+    int width = vr_uiPanelWidth ? vr_uiPanelWidth->current.integer : 1920;
+    if (width < 640) width = 640;
+    if (width > 3840) width = 3840;
+    return (unsigned int)width;
+}
+
+static unsigned int VR_GetUIPanelHeight()
+{
+    int height = vr_uiPanelHeight ? vr_uiPanelHeight->current.integer : 1080;
+    if (height < 360) height = 360;
+    if (height > 2160) height = 2160;
+    return (unsigned int)height;
+}
+
+static bool VR_CreateUIPanelRenderTexture(IDirect3DDevice9* device)
+{
+    if (!device || !s_d3d11Device)
+        return false;
+
+    const unsigned int wantedWidth = VR_GetUIPanelWidth();
+    const unsigned int wantedHeight = VR_GetUIPanelHeight();
+    if (s_uiPanelTexture && s_d3d9UIPanelSurface && s_uiPanelWidth == wantedWidth && s_uiPanelHeight == wantedHeight)
+        return true;
+
+    if (s_d3d9UIPanelSurface)
+    {
+        s_d3d9UIPanelSurface->Release();
+        s_d3d9UIPanelSurface = nullptr;
+    }
+    if (s_d3d9UIPanelStaging)
+    {
+        s_d3d9UIPanelStaging->Release();
+        s_d3d9UIPanelStaging = nullptr;
+    }
+    if (s_d3d9UIPanelTexture)
+    {
+        s_d3d9UIPanelTexture->Release();
+        s_d3d9UIPanelTexture = nullptr;
+    }
+    if (s_uiPanelTexture)
+    {
+        s_uiPanelTexture->Release();
+        s_uiPanelTexture = nullptr;
+    }
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = wantedWidth;
+    desc.Height = wantedHeight;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    HRESULT hr = s_d3d11Device->CreateTexture2D(&desc, nullptr, &s_uiPanelTexture);
+    if (FAILED(hr))
+    {
+        Com_Printf(8, "[VR] Create UI panel D3D11 texture failed: 0x%08X\n", (unsigned)hr);
+        return false;
+    }
+
+    hr = device->CreateTexture(
+        wantedWidth,
+        wantedHeight,
+        1,
+        D3DUSAGE_RENDERTARGET,
+        D3DFMT_A8R8G8B8,
+        D3DPOOL_DEFAULT,
+        &s_d3d9UIPanelTexture,
+        nullptr);
+
+    if (FAILED(hr) || !s_d3d9UIPanelTexture)
+    {
+        Com_Printf(8, "[VR] Create UI panel D3D9 texture failed: 0x%08X\n", (unsigned)hr);
+        return false;
+    }
+
+    s_d3d9UIPanelTexture->GetSurfaceLevel(0, &s_d3d9UIPanelSurface);
+    if (!s_d3d9UIPanelSurface)
+        return false;
+
+    hr = device->CreateOffscreenPlainSurface(
+        wantedWidth,
+        wantedHeight,
+        D3DFMT_A8R8G8B8,
+        D3DPOOL_SYSTEMMEM,
+        &s_d3d9UIPanelStaging,
+        nullptr);
+    if (FAILED(hr) || !s_d3d9UIPanelStaging)
+    {
+        Com_Printf(8, "[VR] Create UI panel staging surface failed: 0x%08X\n", (unsigned)hr);
+        return false;
+    }
+
+    s_uiPanelWidth = wantedWidth;
+    s_uiPanelHeight = wantedHeight;
+    return true;
+}
+
+static void VR_UpdateHMDPoseForOverlay()
+{
+    if (!s_vrEnabled || !s_pVRSystem)
+        return;
+
+    if (vr::VRCompositor())
+    {
+        vr::VRCompositor()->WaitGetPoses(s_poses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
+        const vr::TrackedDevicePose_t& hmdPose = s_poses[vr::k_unTrackedDeviceIndex_Hmd];
+        if (hmdPose.bPoseIsValid)
+        {
+            s_hmdCenter = hmdPose.mDeviceToAbsoluteTracking;
+            s_hmdPoseValid = true;
+        }
+    }
+}
+
+static void VR_SetTestPanelTransform()
+{
+    if (s_testPanelTransformSet || s_testPanelOverlay == vr::k_ulOverlayHandleInvalid || !vr::VROverlay())
+        return;
+
+    VR_UpdateHMDPoseForOverlay();
+    if (!s_hmdPoseValid)
+        return;
+
+    vr::HmdMatrix34_t panelTransform = s_hmdCenter;
+    // float forward[3] = { -s_hmdCenter.m[0][2], -s_hmdCenter.m[1][2], -s_hmdCenter.m[2][2] };
+    // const float forwardLen = sqrtf(forward[0] * forward[0] + forward[1] * forward[1] + forward[2] * forward[2]);
+    // if (forwardLen <= 0.001f)
+    //     return;
+    // forward[0] /= forwardLen;
+    // forward[1] /= forwardLen;
+    // forward[2] /= forwardLen;
+    //
+    // const float worldUp[3] = { 0.0f, 1.0f, 0.0f };
+    // float right[3] =
+    // {
+    //     worldUp[1] * forward[2] - worldUp[2] * forward[1],
+    //     worldUp[2] * forward[0] - worldUp[0] * forward[2],
+    //     worldUp[0] * forward[1] - worldUp[1] * forward[0]
+    // };
+    // float rightLen = sqrtf(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
+    // if (rightLen <= 0.001f)
+    // {
+    //     right[0] = 1.0f;
+    //     right[1] = 0.0f;
+    //     right[2] = 0.0f;
+    //     rightLen = 1.0f;
+    // }
+    // right[0] /= rightLen;
+    // right[1] /= rightLen;
+    // right[2] /= rightLen;
+    //
+    // float up[3] =
+    // {
+    //     forward[1] * right[2] - forward[2] * right[1],
+    //     forward[2] * right[0] - forward[0] * right[2],
+    //     forward[0] * right[1] - forward[1] * right[0]
+    // };
+    //
+    // vr::HmdMatrix34_t panelTransform = {};
+    // for (int row = 0; row < 3; ++row)
+    // {
+    //     panelTransform.m[row][0] = right[row];
+    //     panelTransform.m[row][1] = up[row];
+    //     panelTransform.m[row][2] = -forward[row];
+    //     panelTransform.m[row][3] = s_hmdCenter.m[row][3];
+    // }
+    const float distance = vr_testPanelDistance ? vr_testPanelDistance->current.value : 1.5f;
+    for (int row = 0; row < 3; ++row)
+        panelTransform.m[row][3] -= panelTransform.m[row][2] * distance;
+
+    vr::VROverlay()->SetOverlayWidthInMeters(
+        s_testPanelOverlay,
+        vr_testPanelWidth ? vr_testPanelWidth->current.value : 1.25f);
+    vr::VROverlay()->SetOverlayTransformAbsolute(
+        s_testPanelOverlay,
+        vr::TrackingUniverseStanding,
+        &panelTransform);
+    s_testPanelTransformSet = true;
+}
+
+void VR_UpdateTestPanel()
+{
+    if (!s_vrEnabled || !vr::VROverlay())
+        return;
+    if (s_uiPanelSubmittedThisFrame)
+        return;
+    if (vr_testPanelEnable && !vr_testPanelEnable->current.enabled)
+    {
+        if (s_testPanelOverlay != vr::k_ulOverlayHandleInvalid)
+            vr::VROverlay()->HideOverlay(s_testPanelOverlay);
+        return;
+    }
+    if (!VR_CreateTestPanelTexture() || !VR_CreateTestPanelOverlay())
+        return;
+
+    VR_SetTestPanelTransform();
+
+    vr::Texture_t texture = { s_testPanelTexture, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+    vr::EVROverlayError err = vr::VROverlay()->SetOverlayTexture(s_testPanelOverlay, &texture);
+    if (err != vr::VROverlayError_None)
+        Com_Printf(8, "[VR] Set test panel texture failed: %d\n", (int)err);
+    vr::VROverlay()->ShowOverlay(s_testPanelOverlay);
+}
+
+bool VR_PrepareUIPanelRenderTarget(IDirect3DDevice9* device, int* width, int* height)
+{
+    if (!s_vrEnabled || !device || !vr::VROverlay())
+        return false;
+    if (!VR_CreateTestPanelOverlay() || !VR_CreateUIPanelRenderTexture(device))
+        return false;
+
+    VR_SetTestPanelTransform();
+
+    if (width)
+        *width = (int)s_uiPanelWidth;
+    if (height)
+        *height = (int)s_uiPanelHeight;
+    return s_d3d9UIPanelSurface != nullptr;
+}
+
+IDirect3DSurface9* VR_GetUIPanelSurface()
+{
+    return s_d3d9UIPanelSurface;
+}
+
+void VR_SubmitUIPanel()
+{
+    if (!s_vrEnabled || !s_uiPanelTexture || s_testPanelOverlay == vr::k_ulOverlayHandleInvalid || !vr::VROverlay())
+        return;
+
+    if (s_d3d9UIPanelSurface && s_d3d9UIPanelStaging && dx.device)
+    {
+        HRESULT hr = dx.device->GetRenderTargetData(s_d3d9UIPanelSurface, s_d3d9UIPanelStaging);
+        if (FAILED(hr))
+        {
+            Com_Printf(8, "[VR] UI panel GetRenderTargetData failed: 0x%08X\n", (unsigned)hr);
+            return;
+        }
+
+        D3DLOCKED_RECT lockedRect = {};
+        hr = s_d3d9UIPanelStaging->LockRect(&lockedRect, nullptr, D3DLOCK_READONLY);
+        if (FAILED(hr))
+        {
+            Com_Printf(8, "[VR] UI panel LockRect failed: 0x%08X\n", (unsigned)hr);
+            return;
+        }
+        s_d3d11Context->UpdateSubresource(s_uiPanelTexture, 0, nullptr, lockedRect.pBits, (UINT)lockedRect.Pitch, 0);
+        s_d3d9UIPanelStaging->UnlockRect();
+    }
+
+    if (s_d3d11Context)
+        s_d3d11Context->Flush();
+
+    vr::Texture_t texture = { s_uiPanelTexture, vr::TextureType_DirectX, vr::ColorSpace_Auto };
+    vr::EVROverlayError err = vr::VROverlay()->SetOverlayTexture(s_testPanelOverlay, &texture);
+    if (err != vr::VROverlayError_None)
+        Com_Printf(8, "[VR] Set UI panel texture failed: %d\n", (int)err);
+    vr::VROverlay()->ShowOverlay(s_testPanelOverlay);
+    s_uiPanelSubmittedThisFrame = true;
+}
 
 // ---------------------------------------------------------------------------
 // HMD angle helpers
@@ -640,9 +1071,15 @@ void VR_SubmitFrame(IDirect3DDevice9* device)
 {
     if (!s_vrEnabled || !s_pVRSystem || !device) return;
 
+    VR_UpdateTestPanel();
+
     const bool hasFast = s_d3d9EyeSharedSurf[0] != nullptr;
     const bool hasSlow = s_d3d9EyeRT[0] != nullptr;
-    if (!hasFast && !hasSlow) return;
+    if (!hasFast && !hasSlow)
+    {
+        s_uiPanelSubmittedThisFrame = false;
+        return;
+    }
 
     if (hasFast)
     {
@@ -679,6 +1116,7 @@ void VR_SubmitFrame(IDirect3DDevice9* device)
     if (eR != vr::VRCompositorError_None) Com_Printf(8,"[VR] Submit Right failed: %d\n",(int)eR);
 
     s_stereoRendered = false;
+    s_uiPanelSubmittedThisFrame = false;
 }
 
 int VR_GetCurrentRenderEye() { return s_currentRenderEye; }

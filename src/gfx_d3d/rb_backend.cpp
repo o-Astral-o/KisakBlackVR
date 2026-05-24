@@ -5085,6 +5085,133 @@ void __cdecl RB_ExecuteRenderCommandsLoop(const void *cmds, int *ui3dTextureWind
     //    D3DPERF_EndEvent();
 }
 
+static bool RB_VR_UIPanelShouldReplayCommand(const GfxCmdHeader *header)
+{
+    switch (header->id)
+    {
+    case RC_SET_VIEWPORT:
+    case RC_SET_SCISSOR:
+        return false;
+    default:
+        return true;
+    }
+}
+
+static void RB_VR_ScaleUIPanelVerts(unsigned int firstVert, float scaleX, float scaleY)
+{
+    for (unsigned int vertIndex = firstVert; vertIndex < (unsigned int)tess.vertexCount; ++vertIndex)
+    {
+        tess.verts[vertIndex].xyzw[0] *= scaleX;
+        tess.verts[vertIndex].xyzw[1] *= scaleY;
+    }
+}
+
+static void RB_VR_ExecuteUIPanelCommands(const void *cmds, float scaleX, float scaleY)
+{
+    GfxRenderCommandExecState execState;
+    const void *prevCmd;
+
+    if (!cmds)
+        return;
+
+    execState.cmd = cmds;
+    prevCmd = cmds;
+    while (1)
+    {
+        const GfxCmdHeader *header = (const GfxCmdHeader *)execState.cmd;
+        if (!header->id)
+            break;
+
+        if ((header->ui3d & 0x80) == 0 && RB_VR_UIPanelShouldReplayCommand(header))
+        {
+            if (header->id >= sizeof(RB_RenderCommandTable) / sizeof(RB_RenderCommandTable[0]) || !RB_RenderCommandTable[header->id])
+                break;
+
+            const unsigned int firstVert = tess.vertexCount;
+            R_Set2D(&gfxCmdBufSourceState);
+            RB_RenderCommandTable[header->id](&execState);
+            RB_VR_ScaleUIPanelVerts(firstVert, scaleX, scaleY);
+        }
+        else
+        {
+            execState.cmd = (char *)execState.cmd + header->byteCount;
+        }
+
+        if (execState.cmd == prevCmd)
+            break;
+        prevCmd = execState.cmd;
+    }
+
+    if (tess.indexCount)
+        RB_EndTessSurface();
+}
+
+static void RB_VR_RenderCommandsToUIPanel(const void *cmds)
+{
+    IDirect3DSurface9 *oldRenderTarget = nullptr;
+    IDirect3DSurface9 *oldDepthStencil = nullptr;
+    IDirect3DSurface9 *panelSurface;
+    int panelWidth = 0;
+    int panelHeight = 0;
+
+    if (!cmds || !VR_PrepareUIPanelRenderTarget(dx.device, &panelWidth, &panelHeight))
+        return;
+
+    panelSurface = VR_GetUIPanelSurface();
+    if (!panelSurface || panelWidth <= 0 || panelHeight <= 0 || !gfxRenderTargets[R_RENDERTARGET_UI3D].surface.color)
+        return;
+
+    dx.device->GetRenderTarget(0, &oldRenderTarget);
+    dx.device->GetDepthStencilSurface(&oldDepthStencil);
+
+    R_InitCmdBufSourceState(&gfxCmdBufSourceState, &gfxCmdBufInput, 0);
+    gfxCmdBufSourceState.input.data = backEndData;
+    R_InitLocalCmdBufState(&gfxCmdBufState);
+    R_SetRenderTargetSize(&gfxCmdBufSourceState, R_RENDERTARGET_UI3D);
+    R_SetRenderTarget(gfxCmdBufContext, R_RENDERTARGET_UI3D);
+
+    GfxViewport viewport;
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = gfxRenderTargets[R_RENDERTARGET_UI3D].width;
+    viewport.height = gfxRenderTargets[R_RENDERTARGET_UI3D].height;
+    float clearColor[4] = {};
+    R_ClearScreen(gfxCmdBufState.prim.device, 1u, clearColor, 1.0f, 0, &viewport);
+    R_SetViewportStruct(&gfxCmdBufSourceState, &viewport);
+    R_SetViewport(&gfxCmdBufState, &viewport);
+    R_Set2D(&gfxCmdBufSourceState);
+    R_HW_DisableScissor(gfxCmdBufContext.state->prim.device);
+
+    if (rgp.heatMapImage)
+        R_SetCodeImageTexture(&gfxCmdBufSourceState, 0x2Au, rgp.heatMapImage);
+    else
+        R_SetCodeImageTexture(&gfxCmdBufSourceState, 0x2Au, rgp.whiteImage);
+    RB_SetUI3DSamplerAndConstants(&gfxCmdBufSourceState, &backEndData->rbUI3D);
+
+    RB_ExecuteRenderCommandsLoop(cmds, 0);
+    if (tess.indexCount)
+        RB_EndTessSurface();
+    R_HW_DisableScissor(gfxCmdBufContext.state->prim.device);
+
+    dx.device->SetRenderTarget(0, panelSurface);
+    dx.device->SetDepthStencilSurface(nullptr);
+    dx.device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+    dx.device->StretchRect(gfxRenderTargets[R_RENDERTARGET_UI3D].surface.color, nullptr, panelSurface, nullptr, D3DTEXF_LINEAR);
+
+    if (oldRenderTarget)
+    {
+        dx.device->SetRenderTarget(0, oldRenderTarget);
+        oldRenderTarget->Release();
+    }
+    if (oldDepthStencil)
+    {
+        dx.device->SetDepthStencilSurface(oldDepthStencil);
+        oldDepthStencil->Release();
+    }
+
+    VR_SubmitUIPanel();
+}
+
 void __cdecl RB_Draw3D()
 {
     char *v0; // [esp+8h] [ebp-28h]
@@ -5231,6 +5358,8 @@ void __cdecl RB_CallExecuteRenderCommands()
       RB_DrawPrimHistogramOverlay();
     if ( tess.indexCount )
       RB_EndTessSurface();
+    if ( VR_IsEnabled() ) // && !backEndData->viewInfoCount )
+      RB_VR_RenderCommandsToUIPanel(backEndData->cmds);
     memcpy(gfxCmdBufState.refSamplerState, gfxCmdBufState.refSamplerState, sizeof(gfxCmdBufState));
     if ( gfxCmdBufState.prim.indexBuffer )
       R_ChangeIndices(&gfxCmdBufState.prim, 0);
