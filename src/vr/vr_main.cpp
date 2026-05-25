@@ -41,6 +41,7 @@
 
 #include <cgame_mp/cg_local_mp.h>
 #include <qcommon/common.h>
+#include <qcommon/cmd.h>
 #include <gfx_d3d/rb_backend.h>
 #include <gfx_d3d/rb_state.h>
 #include <gfx_d3d/r_init.h>
@@ -113,6 +114,7 @@ static const dvar_t*         vr_testPanelDistance = nullptr;
 static const dvar_t*         vr_testPanelWidth = nullptr;
 static const dvar_t*         vr_uiPanelWidth = nullptr;
 static const dvar_t*         vr_uiPanelHeight = nullptr;
+static cmd_function_s        VR_RecenterPanel_f_VAR;
 
 // --- Per-frame stereo state ---
 static float s_eyeProjOffsetXCur[2] = {};
@@ -132,6 +134,19 @@ static void VR_ReleaseEyeResources();
 static void VR_ReleaseTestPanelResources();
 static bool VR_CreateD3DResources(IDirect3DDevice9* dev);
 static bool VR_UploadEyeToD3D11(int eye);
+
+static void __cdecl VR_RecenterPanel_f()
+{
+    if (!s_vrEnabled)
+    {
+        Com_Printf(8, "[VR] Cannot recenter UI panel because VR is not enabled.\n");
+        return;
+    }
+
+    s_testPanelTransformSet = false;
+    s_hmdPoseValid = false;
+    Com_Printf(8, "[VR] UI panel recentered.\n");
+}
 
 static float VR_GetHmdResolutionScale()
 {
@@ -278,7 +293,7 @@ bool VR_Init()
         "Distance of the standalone SteamVR overlay test panel, in meters.");
     vr_testPanelWidth = _Dvar_RegisterFloat(
         "vr_testPanelWidth",
-        1.25f,
+        1.875f,
         0.25f,
         3.0f,
         1u,
@@ -343,6 +358,7 @@ bool VR_Init()
     }
 
     s_vrEnabled = true;
+    Cmd_AddCommandInternal("vr_recenter_panel", VR_RecenterPanel_f, &VR_RecenterPanel_f_VAR);
     return true;
 }
 
@@ -506,6 +522,7 @@ static bool VR_UploadEyeToD3D11(int eye)
 void VR_Shutdown()
 {
     if (!s_vrEnabled) return;
+    Cmd_RemoveCommand("vr_recenter_panel");
     VR_ReleaseD3DResources();
     vr::VR_Shutdown();
     s_pVRSystem = nullptr;
@@ -767,7 +784,7 @@ static void VR_SetTestPanelTransform()
 
     vr::VROverlay()->SetOverlayWidthInMeters(
         s_testPanelOverlay,
-        vr_testPanelWidth ? vr_testPanelWidth->current.value : 1.25f);
+        vr_testPanelWidth ? vr_testPanelWidth->current.value : 1.875f);
     vr::VROverlay()->SetOverlayTransformAbsolute(
         s_testPanelOverlay,
         vr::TrackingUniverseStanding,
