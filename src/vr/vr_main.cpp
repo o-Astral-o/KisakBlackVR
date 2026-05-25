@@ -719,48 +719,48 @@ static void VR_SetTestPanelTransform()
         return;
 
     vr::HmdMatrix34_t panelTransform = s_hmdCenter;
-    // float forward[3] = { -s_hmdCenter.m[0][2], -s_hmdCenter.m[1][2], -s_hmdCenter.m[2][2] };
-    // const float forwardLen = sqrtf(forward[0] * forward[0] + forward[1] * forward[1] + forward[2] * forward[2]);
-    // if (forwardLen <= 0.001f)
-    //     return;
-    // forward[0] /= forwardLen;
-    // forward[1] /= forwardLen;
-    // forward[2] /= forwardLen;
-    //
-    // const float worldUp[3] = { 0.0f, 1.0f, 0.0f };
-    // float right[3] =
-    // {
-    //     worldUp[1] * forward[2] - worldUp[2] * forward[1],
-    //     worldUp[2] * forward[0] - worldUp[0] * forward[2],
-    //     worldUp[0] * forward[1] - worldUp[1] * forward[0]
-    // };
-    // float rightLen = sqrtf(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
-    // if (rightLen <= 0.001f)
-    // {
-    //     right[0] = 1.0f;
-    //     right[1] = 0.0f;
-    //     right[2] = 0.0f;
-    //     rightLen = 1.0f;
-    // }
-    // right[0] /= rightLen;
-    // right[1] /= rightLen;
-    // right[2] /= rightLen;
-    //
-    // float up[3] =
-    // {
-    //     forward[1] * right[2] - forward[2] * right[1],
-    //     forward[2] * right[0] - forward[0] * right[2],
-    //     forward[0] * right[1] - forward[1] * right[0]
-    // };
-    //
-    // vr::HmdMatrix34_t panelTransform = {};
-    // for (int row = 0; row < 3; ++row)
-    // {
-    //     panelTransform.m[row][0] = right[row];
-    //     panelTransform.m[row][1] = up[row];
-    //     panelTransform.m[row][2] = -forward[row];
-    //     panelTransform.m[row][3] = s_hmdCenter.m[row][3];
-    // }
+    float zAxis[3] = { s_hmdCenter.m[0][2], s_hmdCenter.m[1][2], s_hmdCenter.m[2][2] };
+    float zLen = sqrtf(zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]);
+    if (zLen <= 0.001f)
+        return;
+    zAxis[0] /= zLen;
+    zAxis[1] /= zLen;
+    zAxis[2] /= zLen;
+
+    const float worldUp[3] = { 0.0f, 1.0f, 0.0f };
+    float right[3] =
+    {
+        worldUp[1] * zAxis[2] - worldUp[2] * zAxis[1],
+        worldUp[2] * zAxis[0] - worldUp[0] * zAxis[2],
+        worldUp[0] * zAxis[1] - worldUp[1] * zAxis[0]
+    };
+    float rightLen = sqrtf(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
+    if (rightLen <= 0.001f)
+    {
+        right[0] = s_hmdCenter.m[0][0];
+        right[1] = s_hmdCenter.m[1][0];
+        right[2] = s_hmdCenter.m[2][0];
+        rightLen = sqrtf(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
+        if (rightLen <= 0.001f)
+            return;
+    }
+    right[0] /= rightLen;
+    right[1] /= rightLen;
+    right[2] /= rightLen;
+
+    float up[3] =
+    {
+        zAxis[1] * right[2] - zAxis[2] * right[1],
+        zAxis[2] * right[0] - zAxis[0] * right[2],
+        zAxis[0] * right[1] - zAxis[1] * right[0]
+    };
+
+    for (int row = 0; row < 3; ++row)
+    {
+        panelTransform.m[row][0] = right[row];
+        panelTransform.m[row][1] = up[row];
+        panelTransform.m[row][2] = zAxis[row];
+    }
     const float distance = vr_testPanelDistance ? vr_testPanelDistance->current.value : 1.5f;
     for (int row = 0; row < 3; ++row)
         panelTransform.m[row][3] -= panelTransform.m[row][2] * distance;

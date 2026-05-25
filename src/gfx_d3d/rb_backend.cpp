@@ -5307,6 +5307,49 @@ static void RB_VR_RenderCommandsToUIPanel(const void *cmds, bool preservePanelVi
     VR_SubmitUIPanel();
 }
 
+static void RB_VR_CopyFramebufferToUIPanel()
+{
+    IDirect3DSurface9 *framebufferSurface = nullptr;
+    IDirect3DSurface9 *oldRenderTarget = nullptr;
+    IDirect3DSurface9 *oldDepthStencil = nullptr;
+    IDirect3DSurface9 *panelSurface;
+    int panelWidth = 0;
+    int panelHeight = 0;
+
+    if (!VR_PrepareUIPanelRenderTarget(dx.device, &panelWidth, &panelHeight))
+        return;
+
+    panelSurface = VR_GetUIPanelSurface();
+    if (!panelSurface || panelWidth <= 0 || panelHeight <= 0)
+        return;
+
+    dx.device->GetRenderTarget(0, &framebufferSurface);
+    if (!framebufferSurface)
+        return;
+
+    dx.device->GetRenderTarget(0, &oldRenderTarget);
+    dx.device->GetDepthStencilSurface(&oldDepthStencil);
+
+    dx.device->SetRenderTarget(0, panelSurface);
+    dx.device->SetDepthStencilSurface(nullptr);
+    dx.device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+    dx.device->StretchRect(framebufferSurface, nullptr, panelSurface, nullptr, D3DTEXF_LINEAR);
+
+    if (oldRenderTarget)
+    {
+        dx.device->SetRenderTarget(0, oldRenderTarget);
+        oldRenderTarget->Release();
+    }
+    if (oldDepthStencil)
+    {
+        dx.device->SetDepthStencilSurface(oldDepthStencil);
+        oldDepthStencil->Release();
+    }
+
+    framebufferSurface->Release();
+    VR_SubmitUIPanel();
+}
+
 void __cdecl RB_Draw3D()
 {
     char *v0; // [esp+8h] [ebp-28h]
@@ -5456,7 +5499,7 @@ void __cdecl RB_CallExecuteRenderCommands()
     if ( tess.indexCount )
       RB_EndTessSurface();
     if ( VR_IsEnabled() && !backEndData->viewInfoCount )
-      RB_VR_RenderCommandsToUIPanel(backEndData->cmds, false, nullptr);
+      RB_VR_CopyFramebufferToUIPanel();
     memcpy(gfxCmdBufState.refSamplerState, gfxCmdBufState.refSamplerState, sizeof(gfxCmdBufState));
     if ( gfxCmdBufState.prim.indexBuffer )
       R_ChangeIndices(&gfxCmdBufState.prim, 0);
