@@ -5146,7 +5146,7 @@ static void RB_VR_ExecuteUIPanelCommands(const void *cmds, float scaleX, float s
         RB_EndTessSurface();
 }
 
-static void RB_VR_RenderCommandsToUIPanel(const void *cmds)
+static void RB_VR_RenderCommandsToUIPanel(const void *cmds, bool preservePanelViewport)
 {
     IDirect3DSurface9 *oldRenderTarget = nullptr;
     IDirect3DSurface9 *oldDepthStencil = nullptr;
@@ -5158,7 +5158,9 @@ static void RB_VR_RenderCommandsToUIPanel(const void *cmds)
         return;
 
     panelSurface = VR_GetUIPanelSurface();
-    if (!panelSurface || panelWidth <= 0 || panelHeight <= 0 || !gfxRenderTargets[R_RENDERTARGET_UI3D].surface.color)
+    if (!panelSurface || panelWidth <= 0 || panelHeight <= 0)
+        return;
+    if (!preservePanelViewport && !gfxRenderTargets[R_RENDERTARGET_UI3D].surface.color)
         return;
 
     dx.device->GetRenderTarget(0, &oldRenderTarget);
@@ -5167,16 +5169,33 @@ static void RB_VR_RenderCommandsToUIPanel(const void *cmds)
     R_InitCmdBufSourceState(&gfxCmdBufSourceState, &gfxCmdBufInput, 0);
     gfxCmdBufSourceState.input.data = backEndData;
     R_InitLocalCmdBufState(&gfxCmdBufState);
-    R_SetRenderTargetSize(&gfxCmdBufSourceState, R_RENDERTARGET_UI3D);
-    R_SetRenderTarget(gfxCmdBufContext, R_RENDERTARGET_UI3D);
 
     GfxViewport viewport;
-    viewport.x = 0;
-    viewport.y = 0;
-    viewport.width = gfxRenderTargets[R_RENDERTARGET_UI3D].width;
-    viewport.height = gfxRenderTargets[R_RENDERTARGET_UI3D].height;
     float clearColor[4] = {};
-    R_ClearScreen(gfxCmdBufState.prim.device, 1u, clearColor, 1.0f, 0, &viewport);
+    if (preservePanelViewport)
+    {
+        dx.device->SetRenderTarget(0, panelSurface);
+        dx.device->SetDepthStencilSurface(nullptr);
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = panelWidth;
+        viewport.height = panelHeight;
+        dx.device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);
+        gfxCmdBufSourceState.viewportBehavior = GFX_USE_VIEWPORT_FULL;
+        gfxCmdBufSourceState.renderTargetWidth = panelWidth;
+        gfxCmdBufSourceState.renderTargetHeight = panelHeight;
+    }
+    else
+    {
+        R_SetRenderTargetSize(&gfxCmdBufSourceState, R_RENDERTARGET_UI3D);
+        R_SetRenderTarget(gfxCmdBufContext, R_RENDERTARGET_UI3D);
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = gfxRenderTargets[R_RENDERTARGET_UI3D].width;
+        viewport.height = gfxRenderTargets[R_RENDERTARGET_UI3D].height;
+        R_ClearScreen(gfxCmdBufState.prim.device, 1u, clearColor, 1.0f, 0, &viewport);
+    }
+
     R_SetViewportStruct(&gfxCmdBufSourceState, &viewport);
     R_SetViewport(&gfxCmdBufState, &viewport);
     R_Set2D(&gfxCmdBufSourceState);
@@ -5188,15 +5207,27 @@ static void RB_VR_RenderCommandsToUIPanel(const void *cmds)
         R_SetCodeImageTexture(&gfxCmdBufSourceState, 0x2Au, rgp.whiteImage);
     RB_SetUI3DSamplerAndConstants(&gfxCmdBufSourceState, &backEndData->rbUI3D);
 
-    RB_ExecuteRenderCommandsLoop(cmds, 0);
+    if (preservePanelViewport)
+    {
+        const float scaleX = vidConfig.displayWidth > 0 ? (float)panelWidth / (float)vidConfig.displayWidth : 1.0f;
+        const float scaleY = vidConfig.displayHeight > 0 ? (float)panelHeight / (float)vidConfig.displayHeight : 1.0f;
+        RB_VR_ExecuteUIPanelCommands(cmds, scaleX, scaleY);
+    }
+    else
+    {
+        RB_ExecuteRenderCommandsLoop(cmds, 0);
+    }
     if (tess.indexCount)
         RB_EndTessSurface();
     R_HW_DisableScissor(gfxCmdBufContext.state->prim.device);
 
-    dx.device->SetRenderTarget(0, panelSurface);
-    dx.device->SetDepthStencilSurface(nullptr);
-    dx.device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-    dx.device->StretchRect(gfxRenderTargets[R_RENDERTARGET_UI3D].surface.color, nullptr, panelSurface, nullptr, D3DTEXF_LINEAR);
+    if (!preservePanelViewport)
+    {
+        dx.device->SetRenderTarget(0, panelSurface);
+        dx.device->SetDepthStencilSurface(nullptr);
+        dx.device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+        dx.device->StretchRect(gfxRenderTargets[R_RENDERTARGET_UI3D].surface.color, nullptr, panelSurface, nullptr, D3DTEXF_LINEAR);
+    }
 
     if (oldRenderTarget)
     {
@@ -5273,6 +5304,8 @@ void __cdecl RB_Draw3D()
                     }
                     VR_CaptureEye(vrEye, dx.device);
                 }
+                if (data->viewInfo[0].cmds)
+                    RB_VR_RenderCommandsToUIPanel(data->viewInfo[0].cmds, true);
                 const_cast<GfxBackEndData *>(data)->sunShadow = savedSunShadow;
             }
             else
@@ -5358,8 +5391,8 @@ void __cdecl RB_CallExecuteRenderCommands()
       RB_DrawPrimHistogramOverlay();
     if ( tess.indexCount )
       RB_EndTessSurface();
-    if ( VR_IsEnabled() ) // && !backEndData->viewInfoCount )
-      RB_VR_RenderCommandsToUIPanel(backEndData->cmds);
+    if ( VR_IsEnabled() && !backEndData->viewInfoCount )
+      RB_VR_RenderCommandsToUIPanel(backEndData->cmds, false);
     memcpy(gfxCmdBufState.refSamplerState, gfxCmdBufState.refSamplerState, sizeof(gfxCmdBufState));
     if ( gfxCmdBufState.prim.indexBuffer )
       R_ChangeIndices(&gfxCmdBufState.prim, 0);

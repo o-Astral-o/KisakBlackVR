@@ -1048,6 +1048,22 @@ void VR_CaptureEye(int eye, IDirect3DDevice9* device)
     // Fast path: GPU→GPU blit, zero CPU involvement.
     if (s_d3d9EyeSharedSurf[eye])
     {
+        D3DVIEWPORT9 vp = {};
+        device->GetViewport(&vp);
+
+        BOOL scissorEnabled = FALSE;
+        device->GetRenderState(D3DRS_SCISSORTESTENABLE, (DWORD*)&scissorEnabled);
+
+        RECT scissor = {};
+        device->GetScissorRect(&scissor);
+
+        Com_Printf(8,
+            "[VR CaptureEye %d] VP X=%lu Y=%lu W=%lu H=%lu Scissor=%d Rect=(%ld,%ld,%ld,%ld)\n",
+            eye,
+            vp.X, vp.Y, vp.Width, vp.Height,
+            scissorEnabled,
+            scissor.left, scissor.top, scissor.right, scissor.bottom);
+        
         HRESULT hr = device->StretchRect(sceneSurf, nullptr, s_d3d9EyeSharedSurf[eye], nullptr, D3DTEXF_LINEAR);
         if (SUCCEEDED(hr)) s_eyeCaptured[eye] = true;
         else Com_Printf(8,"[VR] CaptureEye(%d) fast StretchRect failed 0x%08X\n",eye,(unsigned)hr);
