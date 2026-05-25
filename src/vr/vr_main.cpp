@@ -69,6 +69,9 @@ static uint32_t s_recommendedEyeHeight = 0;
 static uint32_t s_eyeWidth  = 0;
 static uint32_t s_eyeHeight = 0;
 static float    s_activeHmdResolutionScale = 1.0f;
+static bool     s_customGameResolutionEnabled = true;
+static int      s_customGameResolutionWidth = 1440;
+static int      s_customGameResolutionHeight = 1440;
 
 // Per-eye transforms – static for the session, cached once in VR_Init.
 static vr::HmdMatrix34_t s_eyeToHead[2];
@@ -125,6 +128,18 @@ static bool  s_stereoRendered       = false;
 static bool  s_eyeCaptured[2]       = {};
 
 static const dvar_t* vr_hmdResolutionScale = nullptr;
+
+bool VR_GetCustomGameResolution(int* width, int* height)
+{
+    if (!s_customGameResolutionEnabled || !width || !height)
+        return false;
+    if (s_customGameResolutionWidth <= 0 || s_customGameResolutionHeight <= 0)
+        return false;
+
+    *width = s_customGameResolutionWidth;
+    *height = s_customGameResolutionHeight;
+    return true;
+}
 
 // ---------------------------------------------------------------------------
 // Forward declarations
@@ -876,7 +891,7 @@ void VR_SubmitUIPanel()
 // ---------------------------------------------------------------------------
 // HMD angle helpers
 // ---------------------------------------------------------------------------
-static float s_prevHmdPitch = 0.0f, s_prevHmdYaw = 0.0f;
+static float s_prevHmdPitch = 0.0f, s_prevHmdYaw = 0.0f, s_prevHmdRoll = 0.0f;
 static bool  s_hmdAnglesInitialized = false;
 
 static inline float VR_AngleNorm180(float a)
@@ -887,40 +902,41 @@ static inline float VR_AngleNorm180(float a)
     return a;
 }
 
-static bool VR_ComputeHMDAngles(float& outPitch, float& outYaw)
+static bool VR_ComputeHMDAngles(float* outAngles)
 {
-    if (!s_vrEnabled || !s_hmdPoseValid) return false;
+    if (!s_vrEnabled || !s_hmdPoseValid || !outAngles) return false;
     float axis[3][3], pos[3];
     OVRMatrixToCoD(s_hmdCenter, axis, pos);
-    const float fX = axis[0][0], fY = axis[0][1], fZ = axis[0][2];
-    const float xyLen = sqrtf(fX*fX + fY*fY);
-    const float R2D = 180.0f / 3.14159265358979f;
-    outYaw   =  atan2f(fY, fX) * R2D;
-    outPitch = -(atan2f(fZ, xyLen) * R2D);
+    AxisToAngles(axis, outAngles);
     return true;
 }
 
 bool VR_GetHMDViewAngles(float* pitch, float* yaw)
 {
     if (!pitch || !yaw) return false;
-    return VR_ComputeHMDAngles(*pitch, *yaw);
+    float angles[3];
+    if (!VR_ComputeHMDAngles(angles)) return false;
+    *pitch = angles[0];
+    *yaw = angles[1];
+    return true;
 }
 
-bool VR_GetHMDAngleDelta(float* deltaPitch, float* deltaYaw)
+bool VR_GetHMDAngleDelta(float* deltaPitch, float* deltaYaw, float* deltaRoll)
 {
-    if (!deltaPitch || !deltaYaw) return false;
-    float cp, cy;
-    if (!VR_ComputeHMDAngles(cp, cy)) { s_hmdAnglesInitialized = false; return false; }
+    if (!deltaPitch || !deltaYaw || !deltaRoll) return false;
+    float angles[3];
+    if (!VR_ComputeHMDAngles(angles)) { s_hmdAnglesInitialized = false; return false; }
     if (!s_hmdAnglesInitialized)
     {
-        s_prevHmdPitch = cp; s_prevHmdYaw = cy;
+        s_prevHmdPitch = angles[0]; s_prevHmdYaw = angles[1]; s_prevHmdRoll = angles[2];
         s_hmdAnglesInitialized = true;
-        *deltaPitch = 0.0f; *deltaYaw = 0.0f;
+        *deltaPitch = 0.0f; *deltaYaw = 0.0f; *deltaRoll = 0.0f;
         return false;
     }
-    *deltaPitch = VR_AngleNorm180(cp - s_prevHmdPitch);
-    *deltaYaw   = VR_AngleNorm180(cy - s_prevHmdYaw);
-    s_prevHmdPitch = cp; s_prevHmdYaw = cy;
+    *deltaPitch = VR_AngleNorm180(angles[0] - s_prevHmdPitch);
+    *deltaYaw   = VR_AngleNorm180(angles[1] - s_prevHmdYaw);
+    *deltaRoll  = VR_AngleNorm180(angles[2] - s_prevHmdRoll);
+    s_prevHmdPitch = angles[0]; s_prevHmdYaw = angles[1]; s_prevHmdRoll = angles[2];
     return true;
 }
 

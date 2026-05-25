@@ -26,6 +26,10 @@ void VR_Shutdown();
 // Returns true when VR was successfully initialised.
 bool VR_IsEnabled();
 
+// Optional VR-owned startup window resolution override. This is intentionally
+// static module state for now so a future VR config file or launcher can feed it.
+bool VR_GetCustomGameResolution(int* width, int* height);
+
 // ---- Per-frame hooks ---------------------------------------------------
 
 // Phase 1: Apply HMD orientation + position to refdef (center/cyclopean).
@@ -54,7 +58,12 @@ bool VR_GetHMDViewAngles(float* pitch, float* yaw);
 // Add this to viewangles each frame so mouse/gamepad input accumulates on
 // top of HMD head rotation.  Returns false on the first valid frame or
 // when no pose is available.
-bool VR_GetHMDAngleDelta(float* deltaPitch, float* deltaYaw);
+bool VR_GetHMDAngleDelta(float* deltaPitch, float* deltaYaw, float* deltaRoll);
+inline bool VR_GetHMDAngleDelta(float* deltaPitch, float* deltaYaw)
+{
+    float deltaRoll;
+    return VR_GetHMDAngleDelta(deltaPitch, deltaYaw, &deltaRoll);
+}
 
 // Phase 3b: Capture one eye's rendered scene into its per-eye staging buffer.
 // Call from RB_StandardDrawCommandsCommon after each viewInfo renders.

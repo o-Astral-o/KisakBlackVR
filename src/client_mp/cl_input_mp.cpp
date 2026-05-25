@@ -483,11 +483,12 @@ usercmd_s *__cdecl CL_CreateCmd(usercmd_s *result, int localClientNum)
         // that mouse and gamepad still contribute while HMD rotation drives
         // the primary aim direction.
         {
-            float hmdDeltaPitch, hmdDeltaYaw;
-            if (VR_GetHMDAngleDelta(&hmdDeltaPitch, &hmdDeltaYaw))
+            float hmdDeltaPitch, hmdDeltaYaw, hmdDeltaRoll;
+            if (VR_GetHMDAngleDelta(&hmdDeltaPitch, &hmdDeltaYaw, &hmdDeltaRoll))
             {
                 LocalClientGlobals->viewangles[0] += hmdDeltaPitch;
                 LocalClientGlobals->viewangles[1] += hmdDeltaYaw;
+                LocalClientGlobals->viewangles[2] += hmdDeltaRoll;
             }
         }
     }

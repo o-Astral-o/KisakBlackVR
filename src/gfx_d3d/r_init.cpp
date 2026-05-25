@@ -836,6 +836,12 @@ bool __cdecl R_SetCustomResolution(GfxWindowParms *wndParms)
     int monitorHeight; // [esp+0h] [ebp-8h] BYREF
     int monitorWidth; // [esp+4h] [ebp-4h] BYREF
 
+    if ( VR_GetCustomGameResolution(&wndParms->displayWidth, &wndParms->displayHeight) )
+    {
+        return !R_GetMonitorDimensions(&monitorWidth, &monitorHeight)
+                || wndParms->displayWidth <= monitorWidth && wndParms->displayHeight <= monitorHeight;
+    }
+
     if ( sscanf(r_customMode->current.string, "%ix%i", &wndParms->displayWidth, &wndParms->displayHeight) != 2 )
         return 0;
     return !R_GetMonitorDimensions(&monitorWidth, &monitorHeight)
